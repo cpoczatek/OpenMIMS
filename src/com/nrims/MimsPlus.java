@@ -719,7 +719,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         stateChanged(getRoi(), MimsPlusEvent.ATTR_ROI_MOVED);
         
         ui.getRoiManager().resetSpinners(thisroi);
-
+        updateHistogram(true); 
         bMoving = false;
         return;
       }
