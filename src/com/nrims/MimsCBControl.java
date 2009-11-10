@@ -213,7 +213,6 @@ public class MimsCBControl extends javax.swing.JPanel {
       return contrastAdjuster1;
    }
    
-   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
    private void initComponents() {
 
       contrastAdjuster1 = new com.nrims.ContrastAdjuster(ui);
@@ -311,9 +310,8 @@ public class MimsCBControl extends javax.swing.JPanel {
                .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addContainerGap())
       );
-   }// </editor-fold>//GEN-END:initComponents
-
-private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+   }
+private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {
    MimsPlus imp = null;   
       
    // Get the title of the window currently selected in the combobox.
@@ -327,9 +325,9 @@ private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
       jRadioButton1.setSelected(imp.getAutoContrastAdjust());
       updateHistogram();           
    }
-}//GEN-LAST:event_jComboBox1ActionPerformed
+}
 
-private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton1ActionPerformed
+private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {
    MimsPlus imp = null;   
       
    // Get the title of the window currently selected in the combobox.
@@ -344,9 +342,9 @@ private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN
          ui.autoContrastImage(imp);
    }   
    updateHistogram();
-}//GEN-LAST:event_jRadioButton1ActionPerformed
+}
 
-private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox2ActionPerformed
+private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
 
    if (holdUpdate)
       return;
@@ -378,9 +376,8 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
    ll.run(lutLabel);
 
    imp.setLut(label);
-}//GEN-LAST:event_jComboBox2ActionPerformed
-
-   // Variables declaration - do not modify//GEN-BEGIN:variables
+}
+   
    private com.nrims.ContrastAdjuster contrastAdjuster1;
    private javax.swing.JComboBox jComboBox1;
    private javax.swing.JComboBox jComboBox2;
@@ -389,5 +386,5 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
    private javax.swing.JLabel jLabel5;
    private javax.swing.JPanel jPanel1;
    private javax.swing.JRadioButton jRadioButton1;
-   // End of variables declaration//GEN-END:variables
+   
 }
