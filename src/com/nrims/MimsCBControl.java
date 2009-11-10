@@ -58,7 +58,9 @@ public class MimsCBControl extends javax.swing.JPanel {
         chart = ChartFactory.createHistogram("", "Pixel Value", "", null, PlotOrientation.VERTICAL, true, true, false);
         chart.setBackgroundPaint(this.getBackground());
         chart.removeLegend();
-        
+
+        //empty comment
+
         // Set the renderer.
         XYPlot plot = (XYPlot) chart.getPlot();                                       
         XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
@@ -348,6 +350,8 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
 
    if (holdUpdate)
       return;
+
+   //empty comment
 
    // Get the selected LUT  
    String label = (String)jComboBox2.getSelectedItem();
