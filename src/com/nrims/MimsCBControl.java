@@ -6,6 +6,9 @@
 
 package com.nrims;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.Prefs;
 import ij.WindowManager;
 import ij.plugin.LutLoader;
 import ij.process.ImageProcessor;
@@ -15,6 +18,8 @@ import java.awt.Dimension;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import org.jfree.chart.ChartFactory;
@@ -35,6 +40,9 @@ public class MimsCBControl extends javax.swing.JPanel {
    private JFreeChart chart;
    private ChartPanel chartPanel;
    boolean holdUpdate = false;
+   private File lutDir;
+   private String[] ijLutNames = new String[] { "Grays", "Fire", "Ice", "Spectrum", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Red/Green", "Invert LUT" };
+   private ArrayList<String> ijLutNameArray = new ArrayList<String>();
 
     public MimsCBControl(UI ui) {
        this.ui = ui;       
@@ -43,6 +51,7 @@ public class MimsCBControl extends javax.swing.JPanel {
        Dimension d = new Dimension(350, 200);
        jPanel1.setMinimumSize(d); jPanel1.setPreferredSize(d); jPanel1.setMaximumSize(d);
        jPanel1.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+       setupLutComboBox();
        setupHistogram();
     }
 
@@ -50,6 +59,37 @@ public class MimsCBControl extends javax.swing.JPanel {
       holdUpdate = true;
       jComboBox2.setSelectedItem(lut);
       holdUpdate = false;
+   }
+
+   void setupLutComboBox(){
+
+      // Get all the lut files.
+      lutDir = new File(Prefs.getHomeDir(), "luts");
+      File[] lutFiles = new File[0];
+      if (lutDir.exists())
+         lutFiles = lutDir.listFiles(new LutFileFilter());
+
+      // Assemple IJ luts and file luts into one String[] object.
+      int i = 0;
+      String[] lutNames = new String[ijLutNames.length + lutFiles.length];
+      for (String ijLutName : ijLutNames) {
+         ijLutNameArray.add(ijLutName);
+         lutNames[i] = ijLutName;
+         i++;
+      }
+      for (File lutFile : lutFiles) {
+         lutNames[i] = lutFile.getName().substring(0, lutFile.getName().indexOf(".lut"));
+         i++;
+      }
+
+      // Construct the combobox.
+      jComboBox2.setModel(new javax.swing.DefaultComboBoxModel(lutNames));
+      jComboBox2.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jComboBox2ActionPerformed(evt);
+         }
+      });
+
    }
     
     private void setupHistogram() {
@@ -241,13 +281,6 @@ public class MimsCBControl extends javax.swing.JPanel {
          }
       });
 
-      jComboBox2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Grays", "Fire", "Ice", "Spectrum", "3-3-2 RGB", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Red/Green", "Invert LUT" }));
-      jComboBox2.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jComboBox2ActionPerformed(evt);
-         }
-      });
-
       jLabel5.setText("Lookup Table :");
 
       jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
@@ -349,34 +382,63 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
    if (holdUpdate)
       return;
 
-   //empty comment
-
    // Get the selected LUT  
    String label = (String)jComboBox2.getSelectedItem();
+   boolean ijlut = false;
 
-   // Get the selected window.
-   String title = (String)jComboBox1.getSelectedItem();
-   MimsPlus imp = null;
-   if (title != null) 
-      imp = (MimsPlus)windows.get(title);    
-   if (imp != null)
-      WindowManager.setCurrentWindow(imp.getWindow());
-  
    // Manipulate the string
-   String lutLabel = "";
-   if (label.equals("Red/Green"))
-      lutLabel = "redgreen";
-   else if (label.equals("Invert LUT"))
-      lutLabel = "invert";
-   else
-      lutLabel = label.toLowerCase();
-      
-   // Change the LUT
    LutLoader ll = new LutLoader();
-   ll.run(lutLabel);
+   if (ijLutNameArray.contains(label)) {
+      ijlut = true;
+      if (label.equals("Red/Green"))
+         label = "redgreen";
+      else if (label.equals("Invert LUT"))
+         label = "invert";
+      else
+         label = label.toLowerCase();
+   }
 
-   imp.setLut(label);
+   applyLutToAllWindows(label, ijlut);
 }
+
+   private void applyLutToAllWindows(String lutlabel, boolean ijlut) {
+
+      LutLoader ll = new LutLoader();
+      ImagePlus current_imp =  WindowManager.getCurrentImage();
+      
+      MimsPlus[] massImages = ui.getOpenMassImages();
+      MimsPlus[] ratioImages = ui.getOpenRatioImages();
+      MimsPlus[] sumImages = ui.getOpenSumImages();
+
+      // Apply to mass images.
+      for (MimsPlus mp : massImages) {
+         WindowManager.setCurrentWindow(mp.getWindow());
+         if (ijlut)
+            ll.run(lutlabel);
+         else           
+            IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());            
+      }
+
+      // Apply to ratio images.      
+      for (MimsPlus mp : ratioImages) {
+         WindowManager.setCurrentWindow(mp.getWindow());
+         if (ijlut)
+            ll.run(lutlabel);
+         else
+            IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());
+      }
+
+      // Apply to sum images.      
+      for (MimsPlus mp : sumImages) {
+         WindowManager.setCurrentWindow(mp.getWindow());
+         if (ijlut)
+            ll.run(lutlabel);
+         else
+            IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());
+      }
+
+      WindowManager.setTempCurrentImage(current_imp);
+   }
    
    private com.nrims.ContrastAdjuster contrastAdjuster1;
    private javax.swing.JComboBox jComboBox1;
@@ -387,4 +449,10 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
    private javax.swing.JPanel jPanel1;
    private javax.swing.JRadioButton jRadioButton1;
    
+}
+
+class LutFileFilter implements FileFilter {
+   public boolean accept(File pathname) {
+      return (pathname.getAbsolutePath().endsWith(".lut"));
+   }
 }
