@@ -2020,7 +2020,7 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
                                                                                          
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
-     int c = 0;
+    int c = 0;
 /*     try {
         MimsRoiManager rm = getRoiManager();
         if (rm != null) {

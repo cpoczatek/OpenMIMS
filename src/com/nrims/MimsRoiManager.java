@@ -1137,11 +1137,13 @@ public class MimsRoiManager extends PlugInJFrame implements ListSelectionListene
         if (listModel.size() == 0) {
             return error("The selection list is empty.");
         }
+        int[] indexes = getAllIndexes();
+        /*
         int[] indexes = jlist.getSelectedIndices();
         if (indexes.length == 0) {
             indexes = getAllIndexes();
         }
-        
+        */
         return saveMultiple(indexes, name, true);            
 
         /* Allways save a .zip since we're saving positions as well.
