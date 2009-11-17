@@ -27,7 +27,7 @@ import java.io.RandomAccessFile;
  */
 public class Nrrd_Reader implements Opener {
 
-    public final String uint8Types="uchar, unsigned char, uint8, uint8_t";
+   public final String uint8Types="uchar, unsigned char, uint8, uint8_t";
 	public final String int16Types="short, short int, signed short, signed short int, int16, int16_t";
 	public final String uint16Types="ushort, unsigned short, unsigned short int, uint16, uint16_t";
 	public final String int32Types="int, signed int, int32, int32_t";
@@ -36,6 +36,7 @@ public class Nrrd_Reader implements Opener {
     private File file = null;
     private int currentIndex = 0;
     private NrrdFileInfo fi = null;
+    private boolean header = false;
 
     public Nrrd_Reader(File imageFile) {
 
@@ -49,7 +50,11 @@ public class Nrrd_Reader implements Opener {
            fi = getHeaderInfo();
         } catch (IOException io) {System.out.println("Error reading file "+file.getAbsolutePath());}
 
-        if (fi.nMasses != fi.massNames.length) {
+        if (fi.massNames == null) {
+           fi.massNames = new String[fi.nMasses];
+           for (int i = 0; i < fi.nMasses; i++)
+              fi.massNames[i] = Integer.toString(i);
+        } else if (fi.nMasses != fi.massNames.length) {
             System.out.print("Error! Number of masses ("+fi.nMasses+") does not equal " +
                     "number of mass names referenced: "+fi.massNames);
             System.out.println();
@@ -64,18 +69,19 @@ public class Nrrd_Reader implements Opener {
     // Reads header and gets metadata.
 	public NrrdFileInfo getHeaderInfo() throws IOException {
 
-        if (IJ.debugMode) IJ.log("Entering Nrrd_Reader.readHeader():");
+      if (IJ.debugMode) IJ.log("Entering Nrrd_Reader.readHeader():");
 
-        // Setup file header.
-        NrrdFileInfo fi = new NrrdFileInfo();
-		fi.directory=file.getParent(); fi.fileName=file.getName();
+      // Setup file header.
+      NrrdFileInfo fi = new NrrdFileInfo();
+	   fi.directory=file.getParent(); fi.fileName=file.getName();
 
 		// Need RAF in order to ensure that we know file offset.
 		RandomAccessFile in = new RandomAccessFile(file.getAbsolutePath(),"r");
 
-        // Initialize some strings.
+      // Initialize some strings.
 		String thisLine,noteType,noteValue, noteValuelc;
 		fi.fileFormat = FileInfo.RAW;
+      int lineskip = 0;
 
 		// Parse the header file, until reach an empty line.
 		while(true) {
@@ -89,8 +95,8 @@ public class Nrrd_Reader implements Opener {
 
             // Get the key/value pair
 			noteType=getFieldPart(thisLine,0);
-            String originalNoteType = noteType; //keep case for notes
-            noteType = noteType.toLowerCase(); // case irrelevant
+         String originalNoteType = noteType; //keep case for notes
+         noteType = noteType.toLowerCase(); // case irrelevant
 			noteValue=getFieldPart(thisLine,1);
 			noteValuelc=noteValue.toLowerCase();
 
@@ -108,7 +114,7 @@ public class Nrrd_Reader implements Opener {
 					if(i==0) fi.width=fi.sizes[0];
 					if(i==1) fi.height=fi.sizes[1];
 					if(i==2) fi.nImages=fi.sizes[2];
-                    if(i==3) fi.nMasses=fi.sizes[3];
+               if(i==3) fi.nMasses=fi.sizes[3];
 				}
 			}
 
@@ -149,8 +155,8 @@ public class Nrrd_Reader implements Opener {
 					fi.fileType=FileInfo.GRAY8;
 				}
 
-                //16 bit signed/unsigned checks were flipped?
-                else if(uint16Types.indexOf(noteValuelc)>=0) {
+            //16 bit signed/unsigned checks were flipped?
+            else if(uint16Types.indexOf(noteValuelc)>=0) {
 					fi.fileType=FileInfo.GRAY16_UNSIGNED;
 				} else if(int16Types.indexOf(noteValuelc)>=0) {
 					fi.fileType=FileInfo.GRAY16_SIGNED;
@@ -181,6 +187,14 @@ public class Nrrd_Reader implements Opener {
 				if(noteValuelc.equals("gz")) noteValuelc="gzip";
 				fi.encoding=noteValuelc;
 			}
+
+         if (noteType.equals("data file")) {
+            header = true;
+            fi = setDataFile(fi, noteValue);
+         }
+
+         if (noteType.equals("line skip"))
+            lineskip = Integer.valueOf(noteValue).intValue();
 
             // All the following are Mims specific headers.
             int i = noteType.indexOf(Opener.Nrrd_seperator);
@@ -241,10 +255,16 @@ public class Nrrd_Reader implements Opener {
             //case sensitive text
             if (thisLine.startsWith(Opener.Mims_notes)) {
                 fi.notes = originalvalue;
-            }
+            }           
 		}
 
-		fi.longOffset = in.getFilePointer();
+      if (header) {
+         RandomAccessFile datain = new RandomAccessFile(new File(fi.directory, fi.fileName),"r");
+         for (int i = 0; i < lineskip; i++) {
+            thisLine=datain.readLine();
+         }
+         fi.longOffset = datain.getFilePointer();
+      }
 
 		return (fi);
 	}
@@ -257,6 +277,26 @@ public class Nrrd_Reader implements Opener {
 		if(fieldIndex==0) return fieldParts[0];
 		else return fieldParts[1];
 	}
+
+   private NrrdFileInfo setDataFile(NrrdFileInfo fi, String noteValue) {
+      File datafile = new File(noteValue);
+      if (datafile.exists()){
+        fi.directory = datafile.getParent();
+        fi.fileName = datafile.getName();
+        return fi;
+      } else
+         datafile = new File(fi.directory, noteValue);
+
+      if (datafile.exists()) {
+        fi.directory = datafile.getParent();
+        fi.fileName = datafile.getName();
+        return fi;
+      } else {
+         IJ.error("FileOpener", "File " + noteValue + " does not exist. \n " +
+                 "File " + fi.directory + System.getProperty("file.separator") + noteValue + " does not exist.");
+      }
+      return fi;
+   }
 
 	String getSubField(String str, int fieldIndex) {
 		String fieldDescriptor=getFieldPart(str,1);
@@ -296,7 +336,8 @@ public class Nrrd_Reader implements Opener {
          return null;
       }
 
-      return (short[])imp.getProcessor().getPixels();
+      short[] pixels = (short[])imp.getProcessor().getPixels();
+      return pixels;
    }
 
     public void setStackIndex(int index) throws IndexOutOfBoundsException {
