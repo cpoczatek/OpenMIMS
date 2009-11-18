@@ -93,7 +93,7 @@ public class Nrrd_Reader implements Opener {
 
 			if(thisLine.indexOf("#")==0) continue; // ignore comments
 
-            // Get the key/value pair
+         // Get the key/value pair
 			noteType=getFieldPart(thisLine,0);
          String originalNoteType = noteType; //keep case for notes
          noteType = noteType.toLowerCase(); // case irrelevant
