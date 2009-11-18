@@ -763,26 +763,27 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         if(this.ui.isOpening()) {
             return;
         }
-        
+
+        // Get the X and Y position of the mouse.
         int x = (int) e.getPoint().getX();
         int y = (int) e.getPoint().getY();
         int mX = getWindow().getCanvas().offScreenX(x);
         int mY = getWindow().getCanvas().offScreenY(y);        
         String msg = "" + mX + "," + mY ;
 
+        // Get the slice number.
         int cslice = getCurrentSlice();
         boolean stacktest = isStack();
         if (this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) {
             stacktest = stacktest || this.getNumeratorImage().isStack();
             if(stacktest) cslice = this.getNumeratorImage().getCurrentSlice();
         }
-        if (stacktest) {
+        if (stacktest)
             msg += "," + cslice + " = ";
-        } else {
+        else 
             msg += " = ";
-        }
 
-
+        // Get pixel data for the mouse location.
         if((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && (this.internalDenominator!=null && this.internalNumerator!=null) ) {
             float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
             float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
@@ -790,8 +791,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             String opstring = "";
             if(ui.getMedianFilterRatios()) { opstring = "-med->"; } else { opstring = "=";}
             msg += "S (" + (int)ngl + " / " + (int)dgl + ") " + opstring + " " + IJ.d2s(ratio, 4);
-        } 
-        else if(this.nType == SUM_IMAGE) {
+        } else if(this.nType == SUM_IMAGE) {
             float ngl, dgl;
             if (internalNumerator != null && internalDenominator != null) {
                ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
@@ -801,20 +801,18 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             int[] gl = getPixel(mX, mY);
             float s = Float.intBitsToFloat(gl[0]);
             msg += IJ.d2s(s,0);
-        }
-        else {
+        } else {
             MimsPlus[] ml = ui.getOpenMassImages() ;
             for(int i = 0 ; i < ml.length ; i++ ) {
                 int [] gl = ml[i].getPixel(mX,mY);
                 msg += gl[0] ;
-                if( i+1 < ml.length ) {
+                if( i+1 < ml.length )
                     msg += ", ";
-                }
             }
         }
-            
+
+        // Loop over all Rois, determine which one to highlight.
         int displayDigits = 2;
-        //should be in preferences
         java.util.Hashtable rois = ui.getRoiManager().getROIs();
         Roi smallestRoi = null;
         double smallestRoiArea = 0.0;
@@ -857,6 +855,8 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
                   if (smallestRoi == null) {
                      smallestRoi = roi;
                      smallestRoiArea = stats.area;
+                     if (linecheck)
+                        smallestRoiArea = 0;
                   } else {                     
                      if (stats.area < smallestRoiArea || linecheck) {
                         smallestRoi = roi;
@@ -866,9 +866,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
                } 
             }
         } 
-        
+
+        // Highlight the "inner most" Roi.
         setRoi(smallestRoi);
-        stats = this.getStatistics();
         if (smallestRoi != null) {           
            if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE)
               msg += "\t ROI " + roi.getName() + ": L=" + IJ.d2s(roi.getLength(), 0);
