@@ -16,6 +16,7 @@ import ij.macro.Interpreter;
 import ij.measure.Calibration;
 import ij.plugin.frame.*;
 import ij.plugin.filter.ParticleAnalyzer;
+import ij.process.ImageStatistics;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -540,7 +541,64 @@ public class MimsRoiManager extends PlugInJFrame implements ListSelectionListene
             updatePlots(true);
         } else {
             disablespinners();
-        }      
+        }
+
+        // Display data for a group of rois.
+        if (indices.length > 1) {
+           
+           // Get the group of selected rois. Ignore Line type rois.
+           Roi[] rois = getSelectedROIs();
+           ArrayList<Roi> roilist = new ArrayList<Roi>();
+           for (int i = 0; i < rois.length; i++) {
+              if (rois[i].getType() != Roi.LINE && rois[i].getType() != Roi.FREELINE && rois[i].getType() != Roi.POLYLINE)
+                 roilist.add(rois[i]);
+           }
+           if (roilist.size() == 0)
+              return;
+
+           // Get last selected window.
+           ImagePlus imp = getImage();
+           if (imp == null)
+              return;
+
+           // get the MimsPlus version.
+           MimsPlus mp = ui.getImageByName(imp.getTitle());
+           if (mp == null)
+              return;
+           if (mp.getMimsType() == MimsPlus.HSI_IMAGE)
+              mp = mp.internalRatio;
+           if (mp == null)
+              return;
+           
+           // Collect all the pixels within the highlighted rois.
+           ArrayList<Double> pixelvals = new ArrayList<Double>();
+           for (Roi roi : roilist) {
+               mp.setRoi(roi);
+               double[] roipixels = mp.getRoiPixels();
+               for (double pixel : roipixels) {
+                  pixelvals.add(pixel);
+               }
+           }
+           
+           // Calculate the mean.
+           double mean = 0;
+           double stdev;
+           int n = pixelvals.size();
+           for ( int i=0; i<n; i++ ) {
+              mean += pixelvals.get(i);
+           }
+           mean /= n;
+           
+           // Calculate the standard deviation.
+           double sum = 0;
+           for ( int i=0; i<n; i++ ) {
+              double v = pixelvals.get(i) - mean;
+              sum += v * v;
+           }
+           stdev = Math.sqrt( sum / ( n - 1 ) );
+
+           ui.updateStatus("\t\tA = " + n + ", M = " + IJ.d2s(mean) + ", SD = " + IJ.d2s(stdev));
+        }
         
         holdUpdate = false;
     }
