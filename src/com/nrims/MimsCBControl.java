@@ -416,7 +416,8 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
          if (ijlut)
             ll.run(lutlabel);
          else           
-            IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());            
+            IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());
+         mp.setLut(lutlabel);
       }
 
       // Apply to ratio images.      
@@ -426,6 +427,7 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
             ll.run(lutlabel);
          else
             IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());
+         mp.setLut(lutlabel);
       }
 
       // Apply to sum images.      
@@ -435,6 +437,7 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
             ll.run(lutlabel);
          else
             IJ.open((new File(lutDir, lutlabel+".lut")).getAbsolutePath());
+         mp.setLut(lutlabel);
       }
 
       WindowManager.setTempCurrentImage(current_imp);
