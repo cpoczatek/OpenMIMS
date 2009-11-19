@@ -2617,6 +2617,22 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             }
         }
 
+        // Hsi images.
+        tempimages = getOpenHSIImages();
+        for(int i=0; i<tempimages.length; i++){
+            if(name.equals(tempimages[i].getTitle())) {
+                return tempimages[i];
+            }
+        }
+
+        // Sum images.
+        tempimages = getOpenSumImages();
+        for(int i=0; i<tempimages.length; i++){
+            if(name.equals(tempimages[i].getTitle())) {
+                return tempimages[i];
+            }
+        }
+
         return mp;
     }
    
