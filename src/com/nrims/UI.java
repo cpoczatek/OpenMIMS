@@ -2078,12 +2078,22 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
                      fc.setCurrentDirectory(new java.io.File(lastFolder));
                  }
                  if( this.getImageFilePrefix() != null ) {
-                    fc.setSelectedFile(new java.io.File(this.getImageFilePrefix()));
+                    fc.setSelectedFile(new java.io.File(this.getImageFilePrefix()+NRRD_EXTENSION));
                  }
                  int returnVal = fc.showSaveDialog(jTabbedPane1);
                  if (returnVal == JFileChooser.APPROVE_OPTION) {
                      fileName = fc.getSelectedFile().getAbsolutePath();
                      File file  = new File(fileName);
+                     if (file.exists()){
+                        int n = JOptionPane.showConfirmDialog(
+                                this,
+                                "File already exists.\n" + file.getAbsolutePath() + "\n" + "Overwrite?\n",
+                                "Warning",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.WARNING_MESSAGE);
+                        if (n == JOptionPane.NO_OPTION)
+                           return;
+                     }
                      lastFolder = file.getParent();
                      setIJDefaultDir(lastFolder);
                      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
