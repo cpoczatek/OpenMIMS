@@ -1775,7 +1775,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
 
         //Update notes gui
-        imgNotes.setOutputFormatedText(image.getNotes());
+        if(image!=null) {
+            imgNotes.setOutputFormatedText(image.getNotes());
+        }
 }                                                     
 
     public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props){
@@ -1962,6 +1964,17 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
         IJ.noImage();
         return;
     }
+
+    int p = 0;
+    try {
+        MimsPlus mp = (MimsPlus) imp;
+        if(mp.getMimsType()==MimsPlus.MASS_IMAGE) {
+            p = mp.getCurrentSlice();
+        }
+    } catch (Exception e) {
+    }
+
+
     ImagePlus imp2 = null;
     try {
         ImageWindow win = imp.getWindow();
@@ -1978,11 +1991,35 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
         loc.y += bounds.y;
         Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
         Robot robot = new Robot();
+        robot.delay(100);
         Image img = robot.createScreenCapture(r);
         if (img != null) {
             imp2 = new ImagePlus("Grab of " + imp.getTitle(), img);
             imp2.show();
         }
+
+        //autosave in working directory
+        File file = image.getImageFile();
+
+        String dir = file.getParent() + file.separator;
+        ij.io.FileSaver saver = new ij.io.FileSaver(imp2);
+        String name = imp2.getTitle().replaceAll(" : ", "_");
+        name = name.replaceAll(" ", "_");
+        name = name.replaceAll("/", "_");
+        name = name.replaceAll("\\", "_");
+        if(p!=0) {
+            name = name + "_p" + p;
+        }
+        name = name + ".png";
+
+        int n = 1;
+        while(new java.io.File(dir+name).exists()) {
+            name = name.substring(0, name.length()-4);
+            name = name + "_" + n + ".png";
+        }
+
+        saver.saveAsPng(dir + name);
+
     } catch (Exception e) {
         ij.IJ.log(e.getMessage());
     }
