@@ -749,7 +749,10 @@ public synchronized void update() {
             return;
         
         bUpdating = true ;
-        
+
+        // Get the current list of ratio images.
+        Object[] current_list = listModel.toArray();
+
         // Clear the list.
         listModel.removeAllElements();
         
@@ -766,10 +769,20 @@ public synchronized void update() {
            for(int j=i-1; j >= 0; j--) {
               Double d2 = new Double(massNames[j]);
               if (Math.abs(d2-d1) <= maxDiff)
-                 listModel.addElement(i+":"+j);                 
+                 listModel.addElement(i+":"+j);
            }           
-        }        
-        
+        }
+
+        // Add any ratios that existed in the old list
+        for (int k = 0; k < current_list.length; k++){
+           String[] num_den = ((String)current_list[k]).split(":");
+           int num = new Integer(num_den[0]).intValue();
+           int den = new Integer(num_den[1]).intValue();
+           Object element = new String(num+":"+den);
+           if (num < massNames.length && den < massNames.length && !listModel.contains(element))
+              listModel.addElement(element);
+        }
+
         // Clear selection by default
         jList1.clearSelection();
         
