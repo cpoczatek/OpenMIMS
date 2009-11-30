@@ -613,7 +613,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             } else {
                 resetViewMenu();
                 mimsData = new com.nrims.MimsData(this, image);
-                hsiControl = new HSIView(this);
+                //hsiControl = new HSIView(this);
                 cbControl = new MimsCBControl(this);
                 mimsStackEditing = new MimsStackEditing(this, image);
                 mimsTomography = new MimsTomography(this);
