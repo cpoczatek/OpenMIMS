@@ -2006,7 +2006,8 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
         String name = imp2.getTitle().replaceAll(" : ", "_");
         name = name.replaceAll(" ", "_");
         name = name.replaceAll("/", "_");
-        name = name.replaceAll("\\", "_");
+        //double escapte for literal '\'
+        name = name.replaceAll("\\\\", "_");
         if(p!=0) {
             name = name + "_p" + p;
         }
