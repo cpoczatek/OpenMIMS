@@ -207,7 +207,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
 
     private void setActiveClass(String className) {
         // remove ROIs from the RoiManager, if required
-        if (roiManager.jlist.getModel().getSize() > 0) {
+        if (roiManager.roijlist.getModel().getSize() > 0) {
             roiManager.selectAll();
             roiManager.delete();
             roiManager.getImage().setRoi((Roi) null);

@@ -143,7 +143,18 @@ public class MimsJTable {
                   rois[i].setLocation(xy[0], xy[1]);
                   image.setRoi(rois[i]);
                   tempstats = image.getStatistics();
-                  data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), 2);
+                  if (j == 0) {
+                     if (stats[k].startsWith("group"))
+                        data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
+                     else
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), 2);
+                  } else {
+                     if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
+                        continue;
+                     else
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), 2);
+
+                  }
                   col++;
                }
             }
@@ -156,17 +167,37 @@ public class MimsJTable {
    }
 
    public String[] getColumnNames(){
-      String[] columnNames = new String[rois.length * images.length * stats.length + 1];
-      columnNames[0] = "slice";
 
+      // initialze variables.
+      ArrayList<String> columnNamesArray = new ArrayList<String>();
+      String header = "";
+      columnNamesArray.add("slice");
+      String tableOnly = "(table only)";
+
+      // Generate header based on image, roi, stat.
       int col = 1;
       for (int j = 0; j < images.length; j++) {
          for (int i = 0; i < rois.length; i++) {
             for (int k = 0; k < stats.length; k++) {
-               columnNames[col] = stats[k] + "_m" + images[j].getRoundedTitle() + "_r" + (ui.getRoiManager().getIndex(rois[i].getName())+1);
+               String stat = stats[k];
+               if (j == 0) {
+                  if (stats[k].endsWith(tableOnly))
+                     stat = stats[k].substring(0, stats[k].indexOf(tableOnly) - 1);
+               } else {
+                  if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
+                     continue;
+               }
+               header = stat + "_m" + images[j].getRoundedTitle() + "_r" + (ui.getRoiManager().getIndex(rois[i].getName())+1);
+               columnNamesArray.add(header);
                col++;
             }
          }
+      }
+
+      // Fill in columnNames array.
+      String[] columnNames = new String[columnNamesArray.size()];
+      for (int i = 0; i < columnNames.length; i++) {
+         columnNames[i] = columnNamesArray.get(i);
       }
 
       return columnNames;
