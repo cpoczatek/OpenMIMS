@@ -429,7 +429,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 // Load Rois.
                 if (file.getAbsolutePath().endsWith(ROIS_EXTENSION) ||
                     file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
-                   getRoiManager().open(file.getAbsolutePath());
+                   getRoiManager().open(file.getAbsolutePath(), true);
                    updateAllImages();
                 }
 

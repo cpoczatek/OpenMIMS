@@ -45,6 +45,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     JPanel panel;
     static Frame instance;
     static final String DEFAULT_GROUP = "...";
+    static final String GROUP_FILE_NAME = "group";
+    static final String GROUP_MAP_FILE_NAME = "group_map";
     JList roijlist;
     JList groupjlist;
     DefaultListModel roiListModel;
@@ -144,9 +146,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          }});
         JButton dassign = new JButton("Deassign");
         dassign.setMargin( new Insets(0, 0, 0, 0) );
-        delete.addActionListener(new ActionListener() {
+        dassign.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
-            //deleteActionPerformed(evt);
+            deassignActionPerformed(evt);
          }});
 
         // Assemble
@@ -238,14 +240,33 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
        for(int i = idxs.length-1; i >=0; i--) {
           int indexToDelete = idxs[i];
           String groupNameToDelete = (String)groupListModel.get(indexToDelete);
-          for (Object key : groupsMap.keySet()) {
-             String groupName = (String)groupsMap.get(key);
-             if (groupName.matches(groupNameToDelete))
-                groupsMap.remove((String)key);
+          for (int id = 0; id < roijlist.getModel().getSize(); id++) {
+             String roiName = roijlist.getModel().getElementAt(id).toString();
+             String groupName = (String)groupsMap.get(roiName);
+             if (groupName != null) {
+                if (groupName.equals(groupNameToDelete))
+                   groupsMap.remove(roiName);
+             }
           }
           groupListModel.removeElementAt(indexToDelete);
           groups.remove(groupNameToDelete);
        }
+    }
+
+    // Assigns all selected rois to the selected group.
+    void deassignActionPerformed(ActionEvent e) {
+
+       // Must have at least 1 roi selected to make an assignment.
+       int[] Roiidxs = roijlist.getSelectedIndices();
+       if (Roiidxs.length < 1)
+          return;
+
+       // Deassign all selected Rois.
+       for (int i = 0; i < Roiidxs.length; i++) {
+          String roiName = (String)roiListModel.get(Roiidxs[i]);
+          groupsMap.remove(roiName);
+       }
+
     }
 
     // Assigns all selected rois to the selected group.
@@ -458,7 +479,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             label = roijlist.getSelectedValue().toString();
       }
 
-      if (!label.matches(""))
+      if (!label.equals(""))
          xylist = (ArrayList<Integer[]>)locations.get(label);
       else
          return;
@@ -477,6 +498,17 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          return;
       }
 
+   }
+
+   // Use this method instead of groupListModel.clear() because we do not
+   // want the "..." listing to dissapear, because it represents all Rois.
+   private void clearGroupListModel() {
+      for (int i = groupListModel.getSize()-1; i >= 0; i--) {
+         String group = (String)groupListModel.get(i);
+         if (!group.equals(DEFAULT_GROUP)) {
+            groupListModel.remove(i);
+         }
+      }
    }
 
     private void posSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {
@@ -628,7 +660,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         } else if (command.equals("Rename")) {
             rename(null);
         } else if (command.equals("Open")) {
-            open(null);
+            open(null, false);
         } else if (command.equals("Save")) {
             //save(null); //opens with defaul imagej path
             String path = ui.getImageDir();
@@ -667,11 +699,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     // Checks to see if the group assigned to roiName is contained within groupNames.
     private boolean containsRoi(String[] groupNames, String roiName){
        for (String groupName : groupNames) {
-          if (groupName.matches(DEFAULT_GROUP))
+          if (groupName.equals(DEFAULT_GROUP))
              return true;
           if (groupsMap.get(roiName) == null)
              return false;
-          if (((String)groupsMap.get(roiName)).matches(groupName))
+          if (((String)groupsMap.get(roiName)).equals(groupName))
              return true;
        }
        return false;
@@ -693,9 +725,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
        int[] indices = groupjlist.getSelectedIndices();
        String[] groupNames = new String[indices.length];
        for (int i = 0; i < indices.length; i++){
-          groupNames[i] = (String)groupListModel.getElementAt(indices[i]);
-          if (groupNames[i].matches(DEFAULT_GROUP))
-             defaultGroupSelected = true;
+          groupNames[i] = (String)groupListModel.getElementAt(indices[i]);          
+          if (groupNames[i].equals(DEFAULT_GROUP))
+             defaultGroupSelected = true;          
        }
 
        // Show only Rois that are part of the selected groups.
@@ -715,7 +747,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
        ui.updateAllImages();
 
-       holdUpdate = true;
+       holdUpdate = false;
     }
 
     public void roivalueChanged(ListSelectionEvent e) {
@@ -1031,12 +1063,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         rois.put(label, roi);
 
         // Assign group.
-        String group = "";
         int[] indices = groupjlist.getSelectedIndices();
-        if (indices.length > 0)
-           group = (String)groupListModel.getElementAt(indices[0]);
-        if (indices.length == 1 && !group.matches(DEFAULT_GROUP))
-           groupsMap.put(label, group);
+        if (indices.length > 0) {
+           String group = (String)groupListModel.getElementAt(indices[0]);
+           if (indices.length == 1 && !group.equals(DEFAULT_GROUP))
+              groupsMap.put(label, group);
+        }
 
         return true;
     }
@@ -1295,7 +1327,20 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         return slice;
     }
 
-    void open(String path) {
+    void open(String path, boolean force) {
+
+       // Does the user want to overwrite current Roi set?
+       if (!force && roiListModel.size() > 0) {
+          int n = JOptionPane.showConfirmDialog(
+                  this,
+                  "Opening an ROI file will delete all current ROIs and ROI groups.\nContinue?\n",
+                  "Warning",
+                  JOptionPane.YES_NO_OPTION,
+                  JOptionPane.WARNING_MESSAGE);
+          if (n == JOptionPane.NO_OPTION)
+             return;
+        }
+
         ImagePlus imp = getImage();
         if (imp == null) return;
         Macro.setOptions(null);
@@ -1308,9 +1353,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                 return;
             }
             path = directory + name;
-        }
-        if (Recorder.record) {
-            Recorder.record("mimsRoiManager", "Open", path);
         }
         if (path.endsWith(".zip")) {
             openZip(path);
@@ -1333,8 +1375,20 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
     // Modified on 2005/11/15 by Ulrik Stervbo to only read .roi files and to not empty the current list
     void openZip(String path) {
-        ZipInputStream in = null;
+       
+       // Delete rois.
+       roiListModel.clear();
+       rois = new Hashtable();
+       locations = new HashMap<String, ArrayList<Integer[]>>();
+
+       // Delete groups.
+       clearGroupListModel();
+       groups = new ArrayList<String>();
+       groupsMap = new HashMap<String, String>();
+
+       ZipInputStream in = null;
         ByteArrayOutputStream out;
+        ObjectInputStream ois;
         int nRois = 0;
         try {
             in = new ZipInputStream(new FileInputStream(path));
@@ -1361,12 +1415,33 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                         nRois++;
                     }
                 }
-                if (name.endsWith(".pos")) {
-                    ObjectInputStream ois = new ObjectInputStream(in);
+                else if (name.endsWith(".pos")) {
+                    ois = new ObjectInputStream(in);
                     HashMap temp_loc = new HashMap<String, ArrayList<Integer[]>>();
                     try {
                         temp_loc = (HashMap<String, ArrayList<Integer[]>>)ois.readObject();
                         this.locations = temp_loc;
+                    } catch(ClassNotFoundException e) {
+                        error(e.toString());
+                        System.out.println(e.toString());
+                    }
+                }
+                else if (name.equals(GROUP_FILE_NAME)) {
+                    ois = new ObjectInputStream(in);
+                    try {                        
+                        this.groups = (ArrayList<String>)ois.readObject();
+                        for (int i = 0; i < groups.size(); i++) {
+                           groupListModel.addElement((String)groups.get(i));
+                        }
+                    } catch(ClassNotFoundException e) {
+                        error(e.toString());
+                        System.out.println(e.toString());
+                    }
+                }
+                else if (name.equals(GROUP_MAP_FILE_NAME)) {
+                    ois = new ObjectInputStream(in);
+                    try {
+                        this.groupsMap = (HashMap<String, String>)ois.readObject();
                     } catch(ClassNotFoundException e) {
                         error(e.toString());
                         System.out.println(e.toString());
@@ -1505,6 +1580,20 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             ObjectOutputStream obj_out = new ObjectOutputStream(zos);
             obj_out.writeObject(locations);
             obj_out.flush();
+
+            // save groups
+            label = GROUP_FILE_NAME;
+            zos.putNextEntry(new ZipEntry(label));
+            ObjectOutputStream obj_out1 = new ObjectOutputStream(zos);
+            obj_out1.writeObject(groups);
+            obj_out1.flush();
+
+            // save group mapping
+            label = GROUP_MAP_FILE_NAME;
+            zos.putNextEntry(new ZipEntry(label));
+            ObjectOutputStream obj_out2 = new ObjectOutputStream(zos);
+            obj_out2.writeObject(groupsMap);
+            obj_out2.flush();
 
             out.close();
             savedpath = path;

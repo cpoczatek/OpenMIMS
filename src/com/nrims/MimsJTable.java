@@ -144,9 +144,13 @@ public class MimsJTable {
                   image.setRoi(rois[i]);
                   tempstats = image.getStatistics();
                   if (j == 0) {
-                     if (stats[k].startsWith("group"))
-                        data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
-                     else
+                     if (stats[k].startsWith("group")) {
+                        String group = "null";
+                        if (ui.getRoiManager().getRoiGroup(rois[i].getName()) == null)
+                           data[ii][col] = group;
+                        else
+                           data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
+                     } else
                         data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), 2);
                   } else {
                      if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
