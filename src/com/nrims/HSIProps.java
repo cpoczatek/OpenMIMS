@@ -42,14 +42,14 @@ public class HSIProps implements java.io.Serializable {
 
         numMassIdx = numerator;
         denMassIdx = denominator;
-        maxRatio = 1.0 ;
-        minRatio = 0.01 ;
+        maxRatio = 100;
+        minRatio = 37;
         minNum = 3 ;
         minDen = 3 ;
         maxRGB = 255 ;
         minRGB = 0 ;
         transparency = 0 ;
-        label = 0 ;
+        label = 2 ;
         ratioScaleFactor = -1.0;
 
         //TODO: this is for testing and should be fixed

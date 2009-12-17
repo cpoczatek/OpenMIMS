@@ -1152,7 +1152,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       String prefix = filename.substring(0, filename.lastIndexOf("."));
       return prefix;
    }
-   
+
+   public String getFilePrefix(String fileName) {
+      String prefix = fileName.substring(0, fileName.lastIndexOf("."));
+      return prefix;
+   }
     
    private void initComponentsCustom() {
        //For non netbeans gui initialization....
@@ -1661,14 +1665,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         String nrrdFileName = name;
         if (!name.endsWith(NRRD_EXTENSION))
            nrrdFileName = name+NRRD_EXTENSION;
-
+        
         ImagePlus[] imp = getOpenMassImages();
 		  if (imp == null) return;
 		  Nrrd_Writer nw = new Nrrd_Writer(this);
         File dataFile = nw.save(imp, directory, nrrdFileName);
 
+        String baseFileName = getFilePrefix(dataFile.getAbsolutePath());
         // Save the ROI files to zip.
-        String roisFileName = fileName+ROIS_EXTENSION;
+        String roisFileName = baseFileName+ROIS_EXTENSION;
         int[] indexes = getRoiManager().getAllIndexes();
         if (indexes.length > 0)
            getRoiManager().saveMultiple(indexes, roisFileName, false);
@@ -1683,7 +1688,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            int denIndex = ratioprops.getDenMassIdx();
            int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
            int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-           objectFileName = fileName + "_m" + numMass + "_m" + denMass + RATIO_EXTENSION;
+           objectFileName = baseFileName + "_m" + numMass + "_m" + denMass + RATIO_EXTENSION;
            f_out = new FileOutputStream(objectFileName);
            obj_out = new ObjectOutputStream(f_out);
            obj_out.writeObject(ratioprops);
@@ -1699,7 +1704,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            int denIndex = hsiprops.getDenMassIdx();
            int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
            int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-           objectFileName = fileName + "_m" + numMass + "_m" + denMass + HSI_EXTENSION;
+           objectFileName = baseFileName + "_m" + numMass + "_m" + denMass + HSI_EXTENSION;
            f_out = new FileOutputStream(objectFileName);
            obj_out = new ObjectOutputStream(f_out);
            obj_out.writeObject(hsiprops);
@@ -1716,11 +1721,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                int denIndex = sumProps.getDenMassIdx();
                int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
                int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-               objectFileName = fileName + "_m" + numMass + "_m" + denMass + SUM_EXTENSION;
+               objectFileName = baseFileName + "_m" + numMass + "_m" + denMass + SUM_EXTENSION;
            } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
               int parentIndex = sumProps.getParentMassIdx();
               int parentMass = Math.round(new Float(getOpener().getMassNames()[parentIndex]));
-              objectFileName = fileName + "_m" + parentMass + SUM_EXTENSION;
+              objectFileName = baseFileName + "_m" + parentMass + SUM_EXTENSION;
            } else {
               continue;
            }
@@ -1729,7 +1734,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            obj_out.writeObject(sumProps);
         }}
 
-        getmimsAction().writeAction(new File(fileName+ACT_EXTIONSION));
+        //getmimsAction().writeAction(new File(baseFileName+ACT_EXTIONSION));
 
       } catch (FileNotFoundException e) {
          e.printStackTrace();
