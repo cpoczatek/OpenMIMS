@@ -84,6 +84,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
 
             // If the current slice is the one which the
             // roi was created then we want to show the roi in red.
+            g.setColor(Color.RED);
             String name = "";
             if (ui.getSyncROIsAcrossPlanes()) {
                 name = "" + (id + 1);
@@ -119,6 +120,14 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             if (cRoi != null && cRoi.toString().equals(roi.toString())) {
                 bDraw = false;
             }
+
+            if(roiManager.isSelected(label)) {
+                g.setColor(Color.GREEN);
+            } else {
+                g.setColor(Color.RED);
+            }
+
+
             if (bDraw) {
                 switch (roi.getType()) {
                     case Roi.COMPOSITE: {

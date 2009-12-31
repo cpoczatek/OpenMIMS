@@ -639,7 +639,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     @Override
     public void mousePressed(MouseEvent e) {
 
-      if(getRoi() != null && !(ij.IJ.controlKeyDown())) {
+      if(getRoi() != null ) {
 
          // Set the moving flag so we know if user is attempting to move a roi.
          // Line Rois have to be treated differently because their state is never MOVING .
@@ -651,21 +651,29 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
          else bMoving = false;
 
          // Highlight the roi in the jlist that the user is selecting
-         if (roi.getName() != null) {
-            int i = ui.getRoiManager().getIndex(roi.getName());
-            ui.getRoiManager().select(i);
-         }
+          if (roi.getName() != null) {
+              int i = ui.getRoiManager().getIndex(roi.getName());
+              if (!(ij.IJ.controlKeyDown())) {
+                  ui.getRoiManager().select(i);
+              }
+              if (ij.IJ.controlKeyDown()) {
+                  bStateChanging = true;
+                  ui.getRoiManager().selectAdd(i);
+              }
+          }
 
          // Get the location so that if the user simply declicks without
          // moving, a duplicate roi is not created at the same location.
          Rectangle r = getRoi().getBounds();
          x1 = r.x; y1 = r.y; w1 = r.width; h1 = r.height;
 
-      }else if(getRoi() != null && ij.IJ.controlKeyDown()) {
+      }else if(getRoi() != null && ( ij.IJ.shiftKeyDown() && ij.IJ.controlKeyDown() ) ) {
           this.killRoi();
           bMoving = false;
-      }
 
+      }
+      bStateChanging = false;
+      
     }
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -674,6 +682,8 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        //strings.add(0, "Hello");
        //strings.add(1, "World");
        //System.out.println(strings.size());
+
+        if(bStateChanging = true ) return;
 
          float[] pix;
          if (this.nType == HSI_IMAGE ) {
@@ -725,7 +735,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       }
       if (bMoving) {
         Roi thisroi = getRoi();
-
+        if(thisroi==null) return;
         // Prevent duplicate roi at same location
         Rectangle r = thisroi.getBounds();
         x2 = r.x; y2 = r.y; w2 = r.width; h2 = r.height;

@@ -669,6 +669,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             measure();
         } else if (command.equals("Deselect")) {
             select(-1);
+            ui.updateAllImages();
         } else if (command.equals("Show All")) {
             showall();
         } else if (command.equals("More>>")) {
@@ -783,60 +784,75 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         // Display data for a group of rois.
         if (indices.length > 1) {
 
-           // Get the group of selected rois. Ignore Line type rois.
-           Roi[] rois = getSelectedROIs();
-           ArrayList<Roi> roilist = new ArrayList<Roi>();
-           for (int i = 0; i < rois.length; i++) {
-              if (rois[i].getType() != Roi.LINE && rois[i].getType() != Roi.FREELINE && rois[i].getType() != Roi.POLYLINE)
-                 roilist.add(rois[i]);
-           }
-           if (roilist.size() == 0)
-              return;
-
-           // Get last selected window.
-           ImagePlus imp = getImage();
-           if (imp == null)
-              return;
-
-           // get the MimsPlus version.
-           MimsPlus mp = ui.getImageByName(imp.getTitle());
-           if (mp == null)
-              return;
-           if (mp.getMimsType() == MimsPlus.HSI_IMAGE)
-              mp = mp.internalRatio;
-           if (mp == null)
-              return;
-
-           // Collect all the pixels within the highlighted rois.
-           ArrayList<Double> pixelvals = new ArrayList<Double>();
-           for (Roi roi : roilist) {
-               mp.setRoi(roi);
-               double[] roipixels = mp.getRoiPixels();
-               for (double pixel : roipixels) {
-                  pixelvals.add(pixel);
-               }
-           }
-
-           // Calculate the mean.
-           double mean = 0;
-           double stdev;
-           int n = pixelvals.size();
-           for ( int i=0; i<n; i++ ) {
-              mean += pixelvals.get(i);
-           }
-           mean /= n;
-
-           // Calculate the standard deviation.
-           double sum = 0;
-           for ( int i=0; i<n; i++ ) {
-              double v = pixelvals.get(i) - mean;
-              sum += v * v;
-           }
-           stdev = Math.sqrt( sum / ( n - 1 ) );
-
-           ui.updateStatus("\t\tA = " + n + ", M = " + IJ.d2s(mean) + ", SD = " + IJ.d2s(stdev));
+           selectedRoisStats();
         }
 
+        holdUpdate = false;
+    }
+
+    public void selectedRoisStats() {
+
+        // Get the group of selected rois. Ignore Line type rois.
+        Roi[] rois = getSelectedROIs();
+        ArrayList<Roi> roilist = new ArrayList<Roi>();
+        for (int i = 0; i < rois.length; i++) {
+            if (rois[i].getType() != Roi.LINE && rois[i].getType() != Roi.FREELINE && rois[i].getType() != Roi.POLYLINE) {
+                roilist.add(rois[i]);
+            }
+        }
+        if (roilist.size() == 0) {
+            return;
+        }
+
+        // Get last selected window.
+        ImagePlus imp = getImage();
+        if (imp == null) {
+            return;
+        }
+
+        // get the MimsPlus version.
+        MimsPlus mp = ui.getImageByName(imp.getTitle());
+        if (mp == null) {
+            return;
+        }
+        Roi originalroi = mp.getRoi();
+        if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+            mp = mp.internalRatio;
+        }
+        if (mp == null) {
+            return;
+        }
+
+        // Collect all the pixels within the highlighted rois.
+        ArrayList<Double> pixelvals = new ArrayList<Double>();
+        for (Roi roi : roilist) {
+            mp.setRoi(roi);
+            double[] roipixels = mp.getRoiPixels();
+            for (double pixel : roipixels) {
+                pixelvals.add(pixel);
+            }
+        }
+
+        // Calculate the mean.
+        double mean = 0;
+        double stdev;
+        int n = pixelvals.size();
+        for (int i = 0; i < n; i++) {
+            mean += pixelvals.get(i);
+        }
+        mean /= n;
+
+        // Calculate the standard deviation.
+        double sum = 0;
+        for (int i = 0; i < n; i++) {
+            double v = pixelvals.get(i) - mean;
+            sum += v * v;
+        }
+        stdev = Math.sqrt(sum / (n - 1));
+
+        mp.setRoi(originalroi);
+        ui.updateStatus("\t\tA = " + n + ", M = " + IJ.d2s(mean) + ", SD = " + IJ.d2s(stdev));
+        
         holdUpdate = false;
     }
 
@@ -1779,7 +1795,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             }
         }
         if (s1 != null) {
-            imp.setRoi(s1);
+            //imp.setRoi(s1);
+            this.add(s1);
         }
         if (Recorder.record) {
             Recorder.record("mimsRoiManager", "Combine");
@@ -2210,6 +2227,48 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
     }
 
+    public void selectAdd(int index) {
+        int n = roijlist.getModel().getSize();
+        if (index < 0) {
+           roijlist.clearSelection();
+           return;
+        } else if (index > -1 && index < n) {
+            int[] selected = roijlist.getSelectedIndices();
+            int s = selected.length + 1;
+            ArrayList newselected = new ArrayList();
+            for(int i = 0; i<selected.length; i++) {
+                newselected.add(selected[i]);
+            }
+            if(newselected.contains(index)) {
+                newselected.remove((Object)index);
+            } else {
+                newselected.add(index);
+            }
+            int[] ns = new int[newselected.size()];
+            for(int i = 0; i<ns.length; i++) {
+                ns[i]=(Integer)newselected.get(i);
+            }
+            roijlist.setSelectedIndices(ns);
+        }
+
+        selectedRoisStats();
+
+    }
+
+    public boolean isSelected(String name) {
+        boolean b = false;
+        Object[] selectednames = roijlist.getSelectedValues();
+
+        for(int i=0; i<selectednames.length; i++) {
+            String sname = (String)selectednames[i];
+            if(name.equals(sname)) {
+                b = true;
+                return b;
+            }
+        }
+
+        return b;
+    }
     /** Overrides PlugInFrame.close(). */
     @Override
     public void close() {

@@ -971,14 +971,16 @@ private void compressButtonActionPerformed(java.awt.event.ActionEvent evt) {
    }
 
    // Do the compression.
-   compressPlanes(blockSize);
+   boolean done = compressPlanes(blockSize);
 
    // Do some autocontrasting stuff.
-    int nmasses = image.getNMasses();
-    for (int mindex = 0; mindex < nmasses; mindex++) {
-        images[mindex].setSlice(1);
-        images[mindex].updateAndDraw();
-        ui.autoContrastImage(images[mindex]);
+    if (done) {
+        int nmasses = image.getNMasses();
+        for (int mindex = 0; mindex < nmasses; mindex++) {
+            images[mindex].setSlice(1);
+            images[mindex].updateAndDraw();
+            ui.autoContrastImage(images[mindex]);
+        }
     }
 
     compressTextField.setText("");
@@ -1003,7 +1005,7 @@ public void uncompressPlanes() {
         this.resetSpinners();   
 }
 
-private void compressPlanes(int blockSize) {
+private boolean compressPlanes(int blockSize) {
 
         // initializing stuff.
         int nmasses = image.getNMasses();
@@ -1040,8 +1042,9 @@ private void compressPlanes(int blockSize) {
                 // Check for bad data.
                 double m = cp.getProcessor().getMax();
                 if (m > 65535) {
+                    IJ.error("Cannot compress. Over 16 bit limit.");
                     System.out.println("ERROR! over limit of 16 bit processing!");
-                    return;
+                    return false;
                 }
 
                 // Build up the stacks
@@ -1071,6 +1074,7 @@ private void compressPlanes(int blockSize) {
             }
             images[mindex].updateAndDraw();
         }
+        return true;
     }
 
     protected void resetSpinners() {

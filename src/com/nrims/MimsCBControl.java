@@ -203,10 +203,19 @@ public class MimsCBControl extends javax.swing.JPanel {
       double x3 = contrastAdjuster1.max;
       double x4 = contrastAdjuster1.max;
       
+      double y1 = -99999999;
+      double y2 = 99999999;
+      double y3 = 99999999;
+      double y4 = -99999999;
+      /*
+       * Does not work under Sun jre, but does under openjdk
+       * larger finite numbers like 9^25 also don't work
+       * possibly because java.awt.polygon uses ints?
       double y1 = Double.NEGATIVE_INFINITY;
       double y2 = Double.POSITIVE_INFINITY;
       double y3 = Double.POSITIVE_INFINITY;
       double y4 = Double.NEGATIVE_INFINITY;
+      */
       
       // Displays polygon.
       XYPolygonAnnotation a = new XYPolygonAnnotation(new double[] {x1, y1, x2, y2, x3, y3, x4, y4},
