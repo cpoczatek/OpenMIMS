@@ -1188,7 +1188,7 @@ private boolean compressPlanes(int blockSize) {
           throw new NullPointerException("translations is null: AutoTrack has failed.");
     }
    
-private class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionListener{
+public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionListener{
    
    Frame instance;
    ButtonGroup buttonGroup = new ButtonGroup();

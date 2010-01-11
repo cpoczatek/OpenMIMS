@@ -48,7 +48,7 @@ public class HSIProps implements java.io.Serializable {
         minDen = 3 ;
         maxRGB = 255 ;
         minRGB = 0 ;
-        transparency = 0 ;
+        transparency = 2 ;
         label = 2 ;
         ratioScaleFactor = -1.0;
 

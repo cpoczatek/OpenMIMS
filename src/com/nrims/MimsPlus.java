@@ -683,7 +683,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        //strings.add(1, "World");
        //System.out.println(strings.size());
 
-        if(bStateChanging = true ) return;
+        if(bStateChanging) return;
 
          float[] pix;
          if (this.nType == HSI_IMAGE ) {
