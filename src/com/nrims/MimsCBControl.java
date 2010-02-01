@@ -43,6 +43,7 @@ public class MimsCBControl extends javax.swing.JPanel {
    private File lutDir;
    private String[] ijLutNames = new String[] { "Grays", "Fire", "Ice", "Spectrum", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Red/Green", "Invert LUT" };
    private ArrayList<String> ijLutNameArray = new ArrayList<String>();
+   public com.nrims.managers.compositeManager compManager;
 
     public MimsCBControl(UI ui) {
        this.ui = ui;       
@@ -450,6 +451,13 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
       }
 
       WindowManager.setTempCurrentImage(current_imp);
+   }
+
+   public void showCompositeManager() {
+       if(this.compManager==null) {
+           compManager = new com.nrims.managers.compositeManager(ui);
+       }
+       compManager.setVisible(true);
    }
    
    private com.nrims.ContrastAdjuster contrastAdjuster1;

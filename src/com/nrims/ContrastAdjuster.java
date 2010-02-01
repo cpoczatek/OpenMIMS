@@ -273,7 +273,9 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 		else
 			brightnessValue = brightnessSlider.getValue();
 		notify();
-                ui.getCBControl().updateContrastWindow();
+        ui.getCBControl().updateContrastWindow();
+
+        ui.recomputeComposite(imp);
 	}
 
         // TODO fix this.   

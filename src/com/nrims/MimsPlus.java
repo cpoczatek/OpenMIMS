@@ -34,6 +34,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     static final public int SEG_IMAGE = 3 ;
     static final public int SUM_IMAGE = 4 ;
 
+    static final public int COMPOSITE_IMAGE = 5 ;
+
+
     // Internal images for test data display.
     public MimsPlus internalRatio;
     public MimsPlus internalNumerator;
@@ -47,6 +50,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     public SumProps sumProps = null;
     public RatioProps ratioProps = null;
     public HSIProps hsiProps = null;
+
+
+    public CompositeProps compProps = null;
 
     // Lut
     public String lut = "Grays";
@@ -63,6 +69,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     private int x1, x2, y1, y2, w1, w2, h1, h2;
     private boolean bIsStack = false ;
     private HSIProcessor hsiProcessor = null ;
+
+    private CompositeProcessor compProcessor = null ;
+
     private com.nrims.UI ui = null;
     private EventListenerList fStateListeners = null ;
 
@@ -176,6 +185,53 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       // Compute pixel values.
       computeRatio();
     }
+
+
+
+   //use for composite images
+   public MimsPlus(UI ui, CompositeProps compprops) {
+       super();
+       this.ui = ui;
+       this.nType = MimsPlus.COMPOSITE_IMAGE;
+       fStateListeners = new EventListenerList() ;
+       setupCompositeImage(compprops);
+   }
+
+   public void setupCompositeImage(CompositeProps compprops) {
+       compProps = compprops;
+       MimsPlus[] imgs = compprops.getImages();
+
+       Opener op = ui.getOpener();
+       int width = op.getWidth();
+       int height = op.getHeight();
+       int[] rgbPixels = new int[width * height];
+       ImageProcessor ip = new ColorProcessor(width, height, rgbPixels);
+       title = "Comp: ";
+       for (int i = 0; i < imgs.length; i++) {
+           if (imgs[i] != null) {
+               title += imgs[i].getShortTitle() + " : ";
+           } else {
+               title += "- : ";
+           }
+       }
+       setProcessor(title, ip);
+
+       //fill in pixels
+       computeComposite();
+   }
+
+   public synchronized boolean computeComposite() {
+
+      setCompositeProcessor(new CompositeProcessor(this));
+      try {
+         getCompositeProcessor().setProps(compProps);
+      } catch (Exception e) {
+         ui.updateStatus("Failed computing Composite image");
+      }
+      return true;
+   }
+
+
 
     // Use hsi images.
     public MimsPlus(UI ui, HSIProps props) {
@@ -388,7 +444,8 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        ui.addToImagesList(this);
 
        // Autocontrast image by default.
-       ui.autoContrastImage(this);
+       if((this.getMimsType()==MimsPlus.MASS_IMAGE) ||(this.getMimsType()==MimsPlus.RATIO_IMAGE) ||(this.getMimsType()==MimsPlus.SUM_IMAGE))
+          ui.autoContrastImage(this);
     }
 
 
@@ -509,27 +566,31 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     public boolean equals(MimsPlus mp){
 
-       if (mp.getMimsType() != getMimsType())
-          return false;
+        if (mp.getMimsType() != getMimsType()) {
+            return false;
+        }
 
-       if (mp.getMimsType() == MASS_IMAGE){
-          if (mp.getMassIndex() == getMassIndex())
-             return true;
-       } else if (mp.getMimsType() == RATIO_IMAGE) {
-          if (mp.getRatioProps().equals(getRatioProps())){
-             return true;
-          }
-       } else if (mp.getMimsType() == SUM_IMAGE) {
-          if (mp.getSumProps().equals(getSumProps())) {
-             return true;
-          }
-       } else if (mp.getMimsType() == HSI_IMAGE) {
-          if (mp.getHSIProps().equals(getHSIProps())) {
-             return true;
-          }
-       } else if (mp.getMimsType() == SEG_IMAGE) {
-          // TODO: Not sure what to add here
-       }
+        if (mp.getMimsType() == MASS_IMAGE) {
+            if (mp.getMassIndex() == getMassIndex()) {
+                return true;
+            }
+        } else if (mp.getMimsType() == RATIO_IMAGE) {
+            if (mp.getRatioProps().equals(getRatioProps())) {
+                return true;
+            }
+        } else if (mp.getMimsType() == SUM_IMAGE) {
+            if (mp.getSumProps().equals(getSumProps())) {
+                return true;
+            }
+        } else if (mp.getMimsType() == HSI_IMAGE) {
+            if (mp.getHSIProps().equals(getHSIProps())) {
+                return true;
+            }
+        } else if (mp.getMimsType() == COMPOSITE_IMAGE) {
+            //TODO: ??
+        } else if (mp.getMimsType() == SEG_IMAGE) {
+            // TODO: Not sure what to add here
+        }
 
        return false;
     }
@@ -692,7 +753,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             internalRatio.killRoi();
          } else if(this.nType == RATIO_IMAGE || this.nType == SUM_IMAGE) {
              pix = (float[])getProcessor().getPixels();
-         } else if(this.nType == SEG_IMAGE) {
+         } else if( (this.nType == SEG_IMAGE) || (this.nType == COMPOSITE_IMAGE)) {
              return;
          } else {
             short[] spix = (short[])getProcessor().getPixels();
@@ -1210,6 +1271,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     }
     public void setHSIProcessor( HSIProcessor processor ) { this.hsiProcessor = processor ; }
     public HSIProcessor getHSIProcessor() { return hsiProcessor ; }
+
+
+    public void setCompositeProcessor( CompositeProcessor processor ) { this.compProcessor = processor ; }
+    public CompositeProcessor getCompositeProcessor() { return compProcessor ; }
+
+
 
     public void setAutoContrastAdjust( boolean auto ) { this.autoAdjustContrast = auto ; }
     public boolean getAutoContrastAdjust() { return autoAdjustContrast ; }

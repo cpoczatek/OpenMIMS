@@ -5,7 +5,6 @@
  */
 package com.nrims;
 
-import com.nrims.imageNotes;
 import com.nrims.data.*;
 
 import ij.IJ;
@@ -107,7 +106,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsPlus[] ratioImages = new MimsPlus[maxMasses];
     public MimsPlus[] hsiImages = new MimsPlus[maxMasses];
     private MimsPlus[] segImages = new MimsPlus[maxMasses];
-    private MimsPlus[] sumImages = new MimsPlus[2 * maxMasses];    
+    private MimsPlus[] sumImages = new MimsPlus[2 * maxMasses];
+
+    private MimsPlus[] compImages = new MimsPlus[2 * maxMasses];
+
     private MimsData mimsData = null;
     private MimsLog mimsLog = null;
     private MimsRoiControl roiControl = null;    
@@ -269,12 +271,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          i++;         
       }     
       
-      // Sum images has a larger array size.
+      // Sum and composite images has a larger array size.
       while (ii < 2 * maxMasses) {
          if (mp.getMimsType() == MimsPlus.SUM_IMAGE && sumImages[ii] == null) {
             inserted = true;
             sumImages[ii] = mp;
             getCBControl().addWindowtoList(mp);
+            return true;
+         }
+         ii++;
+         if (mp.getMimsType() == MimsPlus.COMPOSITE_IMAGE && compImages[ii] == null) {
+            inserted = true;
+            compImages[ii] = mp;
             return true;
          }
          ii++;
@@ -1016,6 +1024,32 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }        
     }                  
 
+
+    public void recomputeAllComposite() {
+        MimsPlus[] openComp = this.getOpenCompositeImages();
+        for (int i = 0; i < openComp.length; i++) {
+            openComp[i].computeComposite();
+            openComp[i].updateAndDraw();
+        }
+    }
+
+
+    public void recomputeComposite(MimsPlus img) {
+        MimsPlus[] openComp = this.getOpenCompositeImages();
+        for (int i = 0; i < openComp.length; i++) {
+            CompositeProps props = openComp[i].compProps;
+            MimsPlus[] parentImgs = props.getImages();
+            for (int j = 0; j < parentImgs.length; j++) {
+                if(parentImgs[j]!=null) {
+                    if(img.equals(parentImgs[j])) {
+                        openComp[i].computeComposite();
+                        openComp[i].updateAndDraw();
+                    }
+                }
+            }
+        }
+    }
+
     public int getHSIImageIndex(HSIProps props) {
         if (props == null) {
             return -1;
@@ -1051,6 +1085,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             MimsPlus rp[] = this.getOpenRatioImages();
             MimsPlus hsi[] = this.getOpenHSIImages();
             MimsPlus sum[] = this.getOpenSumImages();
+            MimsPlus comp[] = this.getOpenCompositeImages();
 
             // Set mass images.
             int nSlice = evt.getSlice();
@@ -1073,11 +1108,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         for (int i = 0; i < rp.length; i++) {
                             rp[i].computeRatio();
                         }
+
+                        // Update composite images.
+                        for (int i = 0; i < comp.length; i++) {
+                            comp[i].computeComposite();
+                        }
                     } else {
                         if (mplus.getMimsType()==MimsPlus.RATIO_IMAGE)
                             mplus.computeRatio();
                         else if (mplus.getMimsType()==MimsPlus.HSI_IMAGE)
                             mplus.computeHSI();
+                        else if (mplus.getMimsType()==MimsPlus.COMPOSITE_IMAGE)
+                            mplus.computeComposite();
                     }
                 }
                 // Update rois in sum images
@@ -1257,6 +1299,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       jSeparator4 = new javax.swing.JSeparator();
       genStackMenuItem = new javax.swing.JMenuItem();
       TestMenuItem = new javax.swing.JMenuItem();
+        compositeMenuItem = new javax.swing.JMenuItem();
 
       jMenuItem9.setText("Export all images");
 
@@ -1465,11 +1508,21 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       TestMenuItem.setText("Test");
       TestMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            TestMenuItemActionPerformed(evt);
-         }
-      });
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+  	TestMenuItemActionPerformed(evt);
+            }
+        });
       utilitiesMenu.add(TestMenuItem);
+
+        compositeMenuItem.setText("Composite");
+        compositeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                compositeMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(compositeMenuItem);
+
+        jMenuBar1.add(utilitiesMenu);
 
       jMenuBar1.add(utilitiesMenu);
 
@@ -2118,6 +2171,23 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
                                                                                          
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
+
+    MimsPlus[] imgs = getOpenMassImages();
+    for(int i=0; i < imgs.length; i++) {
+        System.out.println("image ID = "+imgs[i].getID());
+    }
+
+    imgs = getOpenRatioImages();
+    for(int i=0; i < imgs.length; i++) {
+        System.out.println("image ID = "+imgs[i].getID());
+    }
+
+    imgs = getOpenSumImages();
+    for(int i=0; i < imgs.length; i++) {
+        System.out.println("image ID = "+imgs[i].getID());
+    }
+
+    System.out.println("----------------");
     int c = 0;
 /*     try {
         MimsRoiManager rm = getRoiManager();
@@ -2164,6 +2234,40 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
      ij.plugin.BrowserLauncher.openURL(s);
      } catch(Exception e) {}
      */
+
+    //batch convert to nrrd test
+    /*
+    try {
+        // User sets file prefix name
+        JFileChooser fc = new JFileChooser();
+        fc.setMultiSelectionEnabled(true);
+        if (lastFolder != null) {
+            fc.setCurrentDirectory(new java.io.File(lastFolder));
+        }
+
+        int returnVal = fc.showSaveDialog(jTabbedPane1);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File[] files = fc.getSelectedFiles();
+            System.out.println("Num files: "+files.length);
+
+            for(int i = 0; i < files.length; i++) {
+                loadMIMSFile(files[i]);
+                //for(int j = 0; j<1000000; j++) {}
+
+                System.out.println("File: "+files[i].getAbsolutePath());
+                
+                String newfile = files[i].getParent()+File.separator+this.getImageFilePrefix()+NRRD_EXTENSION;
+                System.out.println("New File: "+newfile);
+                //saveSession(newfile);
+            }
+
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    */
+
 }//GEN-LAST:event_TestMenuItemActionPerformed
 
 private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveMIMSjMenuItemActionPerformed
@@ -2276,6 +2380,20 @@ private void exportPNGjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 private void imageNotesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageNotesMenuItemActionPerformed
     this.imgNotes.setVisible(true);
 }//GEN-LAST:event_imageNotesMenuItemActionPerformed
+
+private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compositeMenuItemActionPerformed
+
+    cbControl.showCompositeManager();
+   /*
+    MimsPlus[] foo = getOpenMassImages();
+    MimsPlus[] imgs = {foo[0],foo[1],foo[2]};
+    //?
+    CompositeProps props = new CompositeProps(imgs);
+    MimsPlus comp = new MimsPlus(this, props);
+    this.compImages[0] = comp;
+    comp.show();
+    */
+}//GEN-LAST:event_compositeMenuItemActionPerformed
 
 
    // Method for saving action file and writing backup action files.
@@ -2605,6 +2723,27 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mp;
     }
 
+
+    public MimsPlus[] getOpenCompositeImages() {
+        int i, nOpen = 0;
+        for (i = 0; i < maxMasses; i++) {
+            if (compImages[i] != null) {
+                nOpen++;
+            }
+        }
+        MimsPlus[] mp = new MimsPlus[nOpen];
+        if (nOpen == 0) {
+            return mp;
+        }
+        for (i = 0        , nOpen = 0; i < maxMasses; i++) {
+            if (compImages[i] != null) {
+                mp[nOpen++] = compImages[i];
+            }
+        }
+        return mp;
+    }
+
+
     public MimsPlus[] getOpenHSIImages() {
         int i, nOpen = 0;
         for (i = 0; i < maxMasses; i++) {
@@ -2925,6 +3064,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     public static void main(String args[]) {
         
         for (int i = 0; i < args.length; i++) {
+            System.out.println("Arg "+i+" "+args[i]);
            if (args[i].startsWith("-ijpath") && i+1 < args.length) {
 					//Prefs.setHomeDir(args[i+1]);
             }
@@ -2947,44 +3087,45 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return bDebug;
     }
 
-   // Variables declaration - do not modify//GEN-BEGIN:variables
-   private javax.swing.JMenuItem TestMenuItem;
-   private javax.swing.JMenuItem aboutMenuItem;
-   private javax.swing.JMenuItem captureImageMenuItem;
-   private javax.swing.JMenuItem closeAllHSIMenuItem;
-   private javax.swing.JMenuItem closeAllRatioMenuItem;
-   private javax.swing.JMenuItem closeAllSumMenuItem;
-   private javax.swing.JMenu closeMenu;
-   private javax.swing.JMenu editMenu;
-   private javax.swing.JMenuItem exitMenuItem;
-   private javax.swing.JMenuItem exportPNGjMenuItem;
-   private javax.swing.JMenu exportjMenu;
-   private javax.swing.JMenu fileMenu;
-   private javax.swing.JMenuItem genStackMenuItem;
-   private javax.swing.JMenuItem imageNotesMenuItem;
-   private javax.swing.JMenuItem importIMListMenuItem;
-   private javax.swing.JMenuBar jMenuBar1;
-   private javax.swing.JMenuItem jMenuItem1;
-   private javax.swing.JMenuItem jMenuItem2;
-   private javax.swing.JMenuItem jMenuItem3;
-   private javax.swing.JMenuItem jMenuItem4;
-   private javax.swing.JMenuItem jMenuItem9;
-   private javax.swing.JPanel jPanel1;
-   private javax.swing.JPopupMenu jPopupMenu1;
-   private javax.swing.JSeparator jSeparator1;
-   private javax.swing.JSeparator jSeparator2;
-   private javax.swing.JSeparator jSeparator3;
-   private javax.swing.JSeparator jSeparator4;
-   private javax.swing.JSeparator jSeparator7;
-   private javax.swing.JSeparator jSeparator8;
-   private javax.swing.JTabbedPane jTabbedPane1;
-   private javax.swing.JTextField mainTextField;
-   private javax.swing.JMenuItem openNewMenuItem;
-   private javax.swing.JMenuItem saveMIMSjMenuItem;
-   private javax.swing.JMenuItem sumAllMenuItem;
-   private javax.swing.JMenu utilitiesMenu;
-   private javax.swing.JMenu viewMenu;
-   // End of variables declaration//GEN-END:variables
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem TestMenuItem;
+    private javax.swing.JMenuItem aboutMenuItem;
+    private javax.swing.JMenuItem captureImageMenuItem;
+    private javax.swing.JMenuItem closeAllHSIMenuItem;
+    private javax.swing.JMenuItem closeAllRatioMenuItem;
+    private javax.swing.JMenuItem closeAllSumMenuItem;
+    private javax.swing.JMenu closeMenu;
+    private javax.swing.JMenuItem compositeMenuItem;
+    private javax.swing.JMenu editMenu;
+    private javax.swing.JMenuItem exitMenuItem;
+    private javax.swing.JMenuItem exportPNGjMenuItem;
+    private javax.swing.JMenu exportjMenu;
+    private javax.swing.JMenu fileMenu;
+    private javax.swing.JMenuItem genStackMenuItem;
+    private javax.swing.JMenuItem imageNotesMenuItem;
+    private javax.swing.JMenuItem importIMListMenuItem;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem9;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPopupMenu jPopupMenu1;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JSeparator jSeparator3;
+    private javax.swing.JSeparator jSeparator4;
+    private javax.swing.JSeparator jSeparator7;
+    private javax.swing.JSeparator jSeparator8;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTextField mainTextField;
+    private javax.swing.JMenuItem openNewMenuItem;
+    private javax.swing.JMenuItem saveMIMSjMenuItem;
+    private javax.swing.JMenuItem sumAllMenuItem;
+    private javax.swing.JMenu utilitiesMenu;
+    private javax.swing.JMenu viewMenu;
+    // End of variables declaration//GEN-END:variables
 
    private File extractFromZipfile(ZipFile zipFile, ZipEntry zipEntry, File destinationFile) {
                   

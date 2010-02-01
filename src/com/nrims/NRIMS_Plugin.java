@@ -37,6 +37,6 @@ public class NRIMS_Plugin implements PlugIn {
         ui.run(arg + options);
         if(ui.isVisible() == false) ui.setVisible(true);
     }
-    
+
     private static com.nrims.UI ui = null ;
  }
