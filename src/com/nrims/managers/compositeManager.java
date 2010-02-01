@@ -214,19 +214,35 @@ public class compositeManager extends javax.swing.JFrame {
     }//GEN-LAST:event_displayButtonActionPerformed
 
     private void redButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_redButtonActionPerformed
-        redTextField.setText((String)jList1.getSelectedValue());
+        if(redTextField.getText().equals("")) {
+            redTextField.setText((String)jList1.getSelectedValue());
+        } else {
+            redTextField.setText("");
+        }
     }//GEN-LAST:event_redButtonActionPerformed
 
     private void greenButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_greenButtonActionPerformed
-        greenTextField.setText((String)jList1.getSelectedValue());
+        if(greenTextField.getText().equals("")) {
+            greenTextField.setText((String)jList1.getSelectedValue());
+        } else {
+            greenTextField.setText("");
+        }
     }//GEN-LAST:event_greenButtonActionPerformed
 
     private void blueButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_blueButtonActionPerformed
-        blueTextField.setText((String)jList1.getSelectedValue());
+        if(blueTextField.getText().equals("")) {
+            blueTextField.setText((String)jList1.getSelectedValue());
+        } else {
+            blueTextField.setText("");
+        }
     }//GEN-LAST:event_blueButtonActionPerformed
 
     private void grayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_grayButtonActionPerformed
-        grayTextField.setText((String)jList1.getSelectedValue());
+        if(grayTextField.getText().equals("")) {
+            grayTextField.setText((String)jList1.getSelectedValue());
+        } else {
+            grayTextField.setText("");
+        }
     }//GEN-LAST:event_grayButtonActionPerformed
 
     private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
