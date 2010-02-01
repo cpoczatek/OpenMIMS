@@ -238,6 +238,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if( rm!=null ) {
                 rm.resetRoiLocationsLength();
             }
+
+            //Autocontrast mass images.
+            //Should add option to apply settings from previous image?
+            autoContrastImages(getOpenMassImages());
        }
       });      
       //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.im"));
@@ -680,8 +684,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             MimsPlus[] mp = getOpenMassImages();
             for(int i = 0; i < mp.length; i++) {
                cbControl.addWindowtoList(mp[i]);
-            }    
-            
+            }
+
             //hide mass images if needed
             if (this.hiddenWindows != null) {
                 applyHiddenWindows(hiddenWindows);
@@ -1638,6 +1642,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         return img;
    }
+
+   public void autoContrastImages(MimsPlus[] imgs) {
+       for(int i=0; i<imgs.length; i++) {
+           if(imgs[i]!=null) {
+               autoContrastImage(imgs[i]);
+           }
+       }
+   }
    
    public void autoContrastImage(MimsPlus img) {
                   
@@ -1796,6 +1808,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        // Load the new file.
        loadMIMSFile();
        
+       //Autocontrast mass images.
+       //Should add option to apply settings from previous image?
+       autoContrastImages(getOpenMassImages());
+
        // Generate all images that were previously open.
        restoreState(rto_props, hsi_props, sum_props);
 
