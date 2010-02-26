@@ -209,7 +209,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        title = "Comp: ";
        for (int i = 0; i < imgs.length; i++) {
            if (imgs[i] != null) {
-               title += imgs[i].getShortTitle() + " : ";
+               title += imgs[i].getRoundedTitle() + " : ";
            } else {
                title += "- : ";
            }
@@ -220,16 +220,16 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        computeComposite();
    }
 
-   public synchronized boolean computeComposite() {
+    public synchronized boolean computeComposite() {
 
-      setCompositeProcessor(new CompositeProcessor(this));
-      try {
-         getCompositeProcessor().setProps(compProps);
-      } catch (Exception e) {
-         ui.updateStatus("Failed computing Composite image");
-      }
-      return true;
-   }
+        setCompositeProcessor(new CompositeProcessor(this));
+        try {
+            getCompositeProcessor().setProps(compProps);
+        } catch (Exception e) {
+            ui.updateStatus("Failed computing Composite image");
+        }
+        return true;
+    }
 
 
 
@@ -494,14 +494,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     //returns the rounded mass value(s) of an image, eg "26" or "27/26"
     public String getRoundedTitle() {
-        if (this.getMimsType() == this.MASS_IMAGE) {
+        if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
             String tempstring = this.getTitle();
             int colonindex = tempstring.indexOf(":");
             tempstring = tempstring.substring(1, colonindex-1);
             int massint = java.lang.Math.round(Float.parseFloat(tempstring));
             return Integer.toString(massint);
         }
-        if (this.getMimsType() == this.RATIO_IMAGE) {
+        if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
             String tempstring = this.getTitle();
             int colonindex = tempstring.indexOf(":");
             int slashindex = tempstring.indexOf("/");
@@ -510,6 +510,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             int nint = java.lang.Math.round(Float.parseFloat(neumstring));
             int dint = java.lang.Math.round(Float.parseFloat(denstring));
             return Integer.toString(nint)+"/"+Integer.toString(dint);
+        }
+        if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
+            SumProps props = this.getSumProps();
+            int ind = props.getParentMassIdx();
+            return "sum " + ui.getMassImage(ind).getRoundedTitle();
         }
         return "0";
     }
@@ -942,6 +947,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
 
         // Highlight the "inner most" Roi.
+        if(smallestRoi!=null) {
+            smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
+        }
         setRoi(smallestRoi);
         if (smallestRoi != null) {
            if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE)

@@ -136,8 +136,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     // fileName name of the .im image file to be opened.
     public UI(String fileName) {
-      super("NRIMS Analysis Module");
-
+        super("NRIMS Analysis Module");
+      
       System.out.println("Ui constructor");
       System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
 
@@ -1234,6 +1234,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        this.imgNotes = new imageNotes();
        this.imgNotes.setVisible(false);
 
+       //hide testing
+      TestMenuItem.setVisible(false);
+      
        //what is this?
 /*
       // Open action.
@@ -2172,23 +2175,11 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
 
-    MimsPlus[] imgs = getOpenMassImages();
-    for(int i=0; i < imgs.length; i++) {
-        System.out.println("image ID = "+imgs[i].getID());
-    }
 
-    imgs = getOpenRatioImages();
-    for(int i=0; i < imgs.length; i++) {
-        System.out.println("image ID = "+imgs[i].getID());
-    }
+    int a=0;
+    int b =1;
+    System.out.println("a: " + a + " b: " + b + " a/b: " + (a/b) + " b/a: " + (b/a) );
 
-    imgs = getOpenSumImages();
-    for(int i=0; i < imgs.length; i++) {
-        System.out.println("image ID = "+imgs[i].getID());
-    }
-
-    System.out.println("----------------");
-    int c = 0;
 /*     try {
         MimsRoiManager rm = getRoiManager();
         if (rm != null) {
@@ -3076,7 +3067,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             public void run() {
                 System.out.println("Ui.run called");
                 new UI(null).setVisible(true);
-            }
+                }
             
         });
 
