@@ -35,6 +35,8 @@ public class HSIProps implements java.io.Serializable {
     //--------------------------------------
     //End of v2
 
+    private double mag = 1.0;
+
     /** Creates a new instance of HSIProps */
     public HSIProps() {}
 
@@ -103,6 +105,8 @@ public class HSIProps implements java.io.Serializable {
     public float getBackgroundRatio() { return this.backgroundRatio; }
     public void setDataFileName(String fileName) { dataFileName = fileName;}
     public String getDatFileName() { return dataFileName; }
+    public void setMag(double m) { mag = m;}
+    public double getMag() { return mag; }
     /**
      * Set this class' properties from another class
      */
@@ -122,6 +126,7 @@ public class HSIProps implements java.io.Serializable {
         backgroundRatio = props.getBackgroundRatio();
         xloc = props.getXWindowLocation();
         yloc = props.getYWindowLocation();
+        mag = props.getMag();
     }
    
     /**
@@ -145,6 +150,7 @@ public class HSIProps implements java.io.Serializable {
         props.setXWindowLocation(xloc);
         props.setYWindowLocation(yloc);
         props.setRatioScaleFactor(ratioScaleFactor);
+        props.setMag(mag);
     }
     
     public HSIProps clone() {

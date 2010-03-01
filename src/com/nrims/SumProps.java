@@ -18,7 +18,9 @@ public class SumProps implements java.io.Serializable {
    private double ratioScaleFactor;
    //--------------------------------
    //End of v2
-    
+
+   private double mag = 1.0;
+
     // Use for Mass Images.
     public SumProps(int massIndex) {
        this.parentMassIdx = massIndex;
@@ -85,5 +87,9 @@ public class SumProps implements java.io.Serializable {
     public String getDataFileName() { return dataFileName; }
 
     // Type of sum image (either Mass or Ratio).
-    public int getSumType() { return sumType; }    
+    public int getSumType() { return sumType; }
+
+    // The window location
+    public void setMag(double m) { this.mag = m; }
+    public double getMag() { return this.mag; }
 }

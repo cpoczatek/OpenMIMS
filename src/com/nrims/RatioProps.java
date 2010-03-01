@@ -16,6 +16,7 @@ public class RatioProps implements java.io.Serializable {
     //End of v2
     private double minLUT;
     private double maxLUT;
+    private double mag = 1.0;
 
 
    // Create an empty ratio props object.
@@ -65,6 +66,9 @@ public class RatioProps implements java.io.Serializable {
    public double getMinLUT() { return this.minLUT; }
    public void setMaxLUT(double max) { this.maxLUT = max; }
    public double getMaxLUT() { return this.maxLUT; }
+
+   public void setMag(double m) { this.mag = m; }
+   public double getMag() { return this.mag; }
 }
 
 

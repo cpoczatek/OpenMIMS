@@ -126,6 +126,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     
     private Point[] windowPositions = null;
     private int[] hiddenWindows = null;
+    private double[] windowZooms = null;
 
     protected MimsLineProfile lineProfile;
     protected MimsAction mimsAction = null; 
@@ -309,6 +310,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private synchronized void closeCurrentImage() {
         this.windowPositions = gatherWindowPosistions();
         this.hiddenWindows = gatherHiddenWindows();
+        this.windowZooms = this.gatherWindowZooms();
         for (int i = 0; i < maxMasses; i++) {
             if (segImages[i] != null) {
                 segImages[i].removeListener(this);
@@ -611,6 +613,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
                     wo.run("tile");
                 }
+                if (this.windowZooms != null) {
+                   applyWindowZooms(windowZooms);
+                }
 
             } catch (Exception x) {
                 updateStatus(x.toString());
@@ -736,6 +741,24 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return hidden;
     }
 
+     public double[] gatherWindowZooms() {
+        double[] zooms = new double[maxMasses];
+
+        MimsPlus[] images = this.getOpenMassImages();
+        if(images.length==0) return null;
+
+        for( int i = 0; i < images.length; i++) {
+            if( images[i].getCanvas() != null) {
+                zooms[i]=images[i].getCanvas().getMagnification();
+            } else {
+                zooms[i] = 1.0;
+            }
+        }
+
+        return zooms;
+    }
+
+
     public void applyWindowPositions(Point[] positions) {
         for(int i = 0; i < positions.length; i++) {
            if ( positions[i] != null && massImages[i] != null)
@@ -753,12 +776,34 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    public void applyWindowZooms(double[] zooms) {
+        for (int i = 0; i < zooms.length; i++) {
+            if (massImages[i] != null) {
+                if (massImages[i].getCanvas() != null) {
+                   double z = massImages[i].getCanvas().getMagnification();
+
+                   if(massImages[i].getCanvas().getMagnification() < zooms[i]) {
+                       while(massImages[i].getCanvas().getMagnification() < zooms[i]) {
+                           massImages[i].getCanvas().zoomIn(0, 0);
+                       }
+                   }
+
+                   if(massImages[i].getCanvas().getMagnification() > zooms[i]) {
+                       while(massImages[i].getCanvas().getMagnification() > zooms[i]) {
+                           massImages[i].getCanvas().zoomOut(0, 0);
+                       }
+                   }
+                }
+            }
+        }
+    }
+
     private void resetViewMenu() {
         int c=0;
         for(int i = 0; i< windowPositions.length; i++) {
             if(windowPositions[i]!=null) c++;
         }
-        System.out.println("count: "+c);
+        //System.out.println("count: "+c);
 
         for (int i = 0; i < viewMassMenuItems.length; i++) {
             if (i < image.getNMasses()) {
@@ -846,6 +891,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (massImages[i].equals(im)) {
                     windowPositions[i] = im.getXYLoc();
                     viewMassMenuItems[i].setSelected(false);
+                    //windowZooms[i] = im.getCanvas().getMagnification();
 
                 }
             }
@@ -2802,6 +2848,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           hsi_props[i].setYWindowLocation(hsi[i].getWindow().getY());
           hsi_props[i].setNumMassValue(getMassValue(hsi_props[i].getNumMassIdx()));
           hsi_props[i].setDenMassValue(getMassValue(hsi_props[i].getDenMassIdx()));
+
+          hsi_props[i].setMag(hsi[i].getCanvas().getMagnification());
        }
        return hsi_props;
     }
@@ -2819,6 +2867,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
           rto_props[i].setMinLUT(rto[i].getDisplayRangeMin());
           rto_props[i].setMaxLUT(rto[i].getDisplayRangeMax());
+
+          rto_props[i].setMag(rto[i].getCanvas().getMagnification());
        }
        return rto_props;
     }
@@ -2837,6 +2887,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           } else if (sum_props[i].getSumType() == SumProps.MASS_IMAGE) {
              sum_props[i].setParentMassValue(getMassValue(sum_props[i].getParentMassIdx()));
           }
+          sum_props[i].setMag(sum[i].getCanvas().getMagnification());
        }
        return sum_props;
     }

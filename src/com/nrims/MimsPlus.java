@@ -446,8 +446,39 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        // Autocontrast image by default.
        if((this.getMimsType()==MimsPlus.MASS_IMAGE) ||(this.getMimsType()==MimsPlus.RATIO_IMAGE) ||(this.getMimsType()==MimsPlus.SUM_IMAGE))
           ui.autoContrastImage(this);
-    }
 
+       this.restoreMag();
+       }
+
+    public void restoreMag() {
+        if(this.getCanvas()==null) return;
+        double mag = 1.0;
+
+        if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
+            mag = this.getHSIProps().getMag();
+        }
+        if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+            mag = this.getRatioProps().getMag();
+        }
+        if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
+            mag = this.getSumProps().getMag();
+        }
+
+        double z = this.getCanvas().getMagnification();
+
+        if (this.getCanvas().getMagnification() < mag) {
+            while (this.getCanvas().getMagnification() < mag) {
+                this.getCanvas().zoomIn(0, 0);
+            }
+        }
+
+        if (this.getCanvas().getMagnification() > mag) {
+            while (this.getCanvas().getMagnification() > mag) {
+                this.getCanvas().zoomOut(0, 0);
+            }
+        }
+        
+    }
 
    @Override
     public int getWidth() {
@@ -789,6 +820,20 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
              }
          }
 
+         //check magnification and update
+         //ignoring tool type to start
+         if (this.getCanvas() != null) {
+             double mag = this.getCanvas().getMagnification();
+            if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
+                this.getHSIProps().setMag(mag);
+            }
+            if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+                this.getRatioProps().setMag(mag);
+            }
+            if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
+                this.getSumProps().setMag(mag);
+            }
+        }
     }
     /**
      * Catch drawing ROIs to enable updating other images with the same ROI
