@@ -75,7 +75,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     private com.nrims.UI ui = null;
     private EventListenerList fStateListeners = null ;
 
-    /** Creates a new instance of mimsPlus */
+    /* Constructors */
     public MimsPlus(UI ui) {
         super();
         this.ui = ui;
@@ -197,6 +197,18 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        setupCompositeImage(compprops);
    }
 
+    // Use hsi images.
+    public MimsPlus(UI ui, HSIProps props) {
+      super();
+      this.ui = ui;
+      this.hsiProps = props;
+      this.nType = HSI_IMAGE;
+      this.xloc = props.getXWindowLocation();
+      this.yloc = props.getYWindowLocation();
+
+      setupHSIImage(props);
+    }
+
    public void setupCompositeImage(CompositeProps compprops) {
        compProps = compprops;
        MimsPlus[] imgs = compprops.getImages();
@@ -229,20 +241,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             ui.updateStatus("Failed computing Composite image");
         }
         return true;
-    }
-
-
-
-    // Use hsi images.
-    public MimsPlus(UI ui, HSIProps props) {
-      super();
-      this.ui = ui;
-      this.hsiProps = props;
-      this.nType = HSI_IMAGE;
-      this.xloc = props.getXWindowLocation();
-      this.yloc = props.getYWindowLocation();
-
-      setupHSIImage(props);
     }
 
     public void setupHSIImage(HSIProps props) {
