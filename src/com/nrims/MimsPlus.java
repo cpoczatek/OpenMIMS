@@ -28,6 +28,7 @@ import javax.swing.event.EventListenerList;
  */
 public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
+    /* Public constants */
     static final public int MASS_IMAGE = 0 ;
     static final public int RATIO_IMAGE = 1 ;
     static final public int HSI_IMAGE  =  2 ;
@@ -76,13 +77,22 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     private EventListenerList fStateListeners = null ;
 
     /* Constructors */
+
+    /**
+     * Generic constructor
+     * @param ui user interface to be used in the MimsPlus object
+     */
     public MimsPlus(UI ui) {
         super();
         this.ui = ui;
         fStateListeners = new EventListenerList() ;
     }
 
-    // Use for mass images.
+    /**
+     * Constructor to use for mass images.
+     * @param ui
+     * @param index
+     */
     public MimsPlus(UI ui, int index ) {
         super();
         this.ui = ui;
@@ -105,7 +115,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         fStateListeners = new EventListenerList() ;
     }
 
-    // Use for segmented images.
+    /**
+     * Constructor to use for segmented images.
+     * @param ui
+     * @param width
+     * @param height
+     * @param pixels
+     * @param name
+     */
     public MimsPlus(UI ui,int width, int height, int[] pixels, String name) {
         super();
         this.ui=ui;
@@ -122,7 +139,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         } catch (Exception x) { IJ.log(x.toString());}
     }
 
-   // This contructor is used for making SUM images.
+    /**
+     * Constructor for sum images.
+     * @param ui
+     * @param sumProps
+     * @param sumlist
+     */
    public MimsPlus(UI ui, SumProps sumProps, ArrayList<Integer> sumlist) {
       super();
       this.ui = ui;
@@ -158,7 +180,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       computeSum(sumlist);
    }
 
-   // Use for ratio images.
+   /**
+    * Constructor for ratio images.
+    * @param ui
+    * @param props
+    */
    public MimsPlus(UI ui, RatioProps props) {
       super();
       this.ui = ui;
@@ -188,7 +214,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
 
 
-   //use for composite images
+   /**
+    * Constructor for composite images.
+    * @param ui
+    * @param compprops
+    */
    public MimsPlus(UI ui, CompositeProps compprops) {
        super();
        this.ui = ui;
@@ -197,7 +227,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        setupCompositeImage(compprops);
    }
 
-    // Use hsi images.
+    /**
+     * Constructor for HSI images.
+     * @param ui
+     * @param props
+     */
     public MimsPlus(UI ui, HSIProps props) {
       super();
       this.ui = ui;
@@ -209,6 +243,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       setupHSIImage(props);
     }
 
+    /**
+    * Initialization for composite image graphics.
+    * @param compprops
+    */
    public void setupCompositeImage(CompositeProps compprops) {
        compProps = compprops;
        MimsPlus[] imgs = compprops.getImages();
@@ -232,8 +270,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        computeComposite();
    }
 
-    public synchronized boolean computeComposite() {
-
+    /**
+    * Composite image readiness status
+    * @return status (true for success, false for failure)
+    */
+    public synchronized boolean computeComposite()
+    {
         setCompositeProcessor(new CompositeProcessor(this));
         try {
             getCompositeProcessor().setProps(compProps);
@@ -243,6 +285,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         return true;
     }
 
+   /**
+    * Sets up HSI image
+    * @param props HSI properties to use
+    */
     public void setupHSIImage(HSIProps props) {
 
       // Set props incase changes
@@ -268,7 +314,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       computeHSI();
     }
 
-   public synchronized boolean computeHSI() {
+    /**
+     * Compute HSI image; return true for success
+     * @return true for success, false for failure
+     */
+    public synchronized boolean computeHSI()
+    {
 
       // Set up internal images for data display.
        RatioProps rProps = new RatioProps(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx());
@@ -285,7 +336,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       return true;
    }
 
-    public synchronized void computeRatio() {
+   /**
+    * Computes ratios values
+    */
+    public synchronized void computeRatio()
+    {
 
        // Get numerator and denominator mass indexes.
        int numIndex = ratioProps.getNumMassIdx();
@@ -363,6 +418,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        }
     }
 
+   /**
+    * Computes sum values.
+    * @param sumlist
+    */
     public synchronized void computeSum(ArrayList<Integer> sumlist) {
 
        // initialize variables.
@@ -430,24 +489,32 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     }
 
-    public void showWindow(){
+    /**
+     * Shows the current window.
+     */
+    public void showWindow()
+    {
+        show();
 
-       show();
+        // Set window location.
+        if (xloc > -1 & yloc > -1) {
+            getWindow().setLocation(xloc, yloc);
+        }
 
-       // Set window location.
-       if (xloc > -1 & yloc > -1)
-          getWindow().setLocation(xloc, yloc);
+        // Add image to list og images in UI.
+        ui.addToImagesList(this);
 
-       // Add image to list og images in UI.
-       ui.addToImagesList(this);
+        // Autocontrast image by default.
+        if ((this.getMimsType() == MimsPlus.MASS_IMAGE) || (this.getMimsType() == MimsPlus.RATIO_IMAGE) || (this.getMimsType() == MimsPlus.SUM_IMAGE)) {
+            ui.autoContrastImage(this);
+        }
 
-       // Autocontrast image by default.
-       if((this.getMimsType()==MimsPlus.MASS_IMAGE) ||(this.getMimsType()==MimsPlus.RATIO_IMAGE) ||(this.getMimsType()==MimsPlus.SUM_IMAGE))
-          ui.autoContrastImage(this);
+        this.restoreMag();
+    }
 
-       this.restoreMag();
-       }
-
+    /**
+     * Restores previous magnification.
+     */
     public void restoreMag() {
         if(this.getCanvas()==null) return;
         double mag = 1.0;
@@ -496,21 +563,26 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     //not hit from MimsStackEditing.concatImages()
     //only used when opening a multiplane image
+    /**
+     * Appends image to stack.
+     * @param nImage
+     * @throws Exception
+     */
     public void appendImage(int nImage) throws Exception {
-        if(ui.getOpener() == null) {
+        if (ui.getOpener() == null) {
             throw new Exception("No image opened?");
         }
-        if(nImage >= ui.getOpener().getNImages()) {
+        if (nImage >= ui.getOpener().getNImages()) {
             throw new Exception("Out of Range");
         }
         ij.ImageStack stack = getStack();
         ui.getOpener().setStackIndex(nImage);
-        stack.addSlice(null,ui.getOpener().getPixels(massIndex));
-        setStack(null,stack);
-        setSlice(nImage+1);
+        stack.addSlice(null, ui.getOpener().getPixels(massIndex));
+        setStack(null, stack);
+        setSlice(nImage + 1);
         //setProperty("Info", srcImage.getInfo());
-        bIgnoreClose = true ;
-        bIsStack = true ;
+        bIgnoreClose = true;
+        bIsStack = true;
     }
 
     @Override
@@ -521,12 +593,17 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         else return "";
     }
 
-    //returns the rounded mass value(s) of an image, eg "26" or "27/26"
+
+
+    /**
+     * String representing the rounded mass value (like "26" for "26.13").
+     * @return text string containing the rounded value
+     */
     public String getRoundedTitle() {
         if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
             String tempstring = this.getTitle();
             int colonindex = tempstring.indexOf(":");
-            tempstring = tempstring.substring(1, colonindex-1);
+            tempstring = tempstring.substring(1, colonindex - 1);
             int massint = java.lang.Math.round(Float.parseFloat(tempstring));
             return Integer.toString(massint);
         }
@@ -534,11 +611,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             String tempstring = this.getTitle();
             int colonindex = tempstring.indexOf(":");
             int slashindex = tempstring.indexOf("/");
-            String neumstring = tempstring.substring(1,slashindex);
-            String denstring = tempstring.substring(slashindex+2, colonindex-1);
+            String neumstring = tempstring.substring(1, slashindex);
+            String denstring = tempstring.substring(slashindex + 2, colonindex - 1);
             int nint = java.lang.Math.round(Float.parseFloat(neumstring));
             int dint = java.lang.Math.round(Float.parseFloat(denstring));
-            return Integer.toString(nint)+"/"+Integer.toString(dint);
+            return Integer.toString(nint) + "/" + Integer.toString(dint);
         }
         if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
             SumProps props = this.getSumProps();
@@ -548,30 +625,46 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         return "0";
     }
 
+    /**
+     * Returns numerator image if such exists.
+     * @return numerator image
+     */
     public MimsPlus getNumeratorImage() {
-        if(this.getMimsType()==this.RATIO_IMAGE) {
+        if (this.getMimsType() == this.RATIO_IMAGE) {
             return this.ui.getMassImage(this.getRatioProps().getNumMassIdx());
-        }else if(this.getMimsType()==this.HSI_IMAGE) {
+        } else if (this.getMimsType() == this.HSI_IMAGE) {
             return this.ui.getMassImage(this.getHSIProps().getNumMassIdx());
         } else {
             return null;
         }
     }
 
+    /**
+     * Returns denominator image if such exists.
+     * @return denominator image
+     */
     public MimsPlus getDenominatorImage() {
-        if(this.getMimsType()==this.RATIO_IMAGE) {
+        if (this.getMimsType() == this.RATIO_IMAGE) {
             return this.ui.getMassImage(this.getRatioProps().getDenMassIdx());
-        }else if(this.getMimsType()==this.HSI_IMAGE) {
+        } else if (this.getMimsType() == this.HSI_IMAGE) {
             return this.ui.getMassImage(this.getHSIProps().getDenMassIdx());
         } else {
             return null;
         }
     }
 
+    /**
+     * Set the "ignore close" flag to the value of b
+     * @param b "ignore close" value
+     */
     public void setbIgnoreClose(boolean b) {
         this.bIgnoreClose = b;
     }
 
+    /**
+     * Get current location
+     * @return the Point object containing the current location
+     */
     public java.awt.Point getXYLoc() {
         return new java.awt.Point(this.xloc, this.yloc);
     }
@@ -598,7 +691,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
     }
 
-    public boolean equals(MimsPlus mp){
+    /**
+     * Compares the input MimsPlus object (mp) to the current class.
+     * @param mp
+     * @return true if a match, false otherwise
+     */
+    public boolean equals(MimsPlus mp) {
 
         if (mp.getMimsType() != getMimsType()) {
             return false;
@@ -626,7 +724,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             // TODO: Not sure what to add here
         }
 
-       return false;
+        return false;
     }
 
     @Override
@@ -670,9 +768,17 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         //ui.imageClosed(this);
         //ui.getCBControl().removeWindowfromList(this);
     }
-    public void windowStateChanged(WindowEvent e) {}
+
+    /**
+     * Stub method
+     * @param e window event to respond to
+     */
+    public void windowStateChanged(WindowEvent e) {
+    }
+
     @Override
     public void windowDeactivated(WindowEvent e) {}
+
     @Override
     public void windowActivated(WindowEvent e) {
         ui.setActiveMimsPlus(this);
@@ -689,10 +795,13 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         if(sm!=null) sm.resetImage(this);
 
     }
+
     @Override
     public void windowDeiconified(WindowEvent e) {}
+
     @Override
     public void windowIconified(WindowEvent e) {}
+
     @Override
     public void windowOpened(WindowEvent e) {
         if(ui.getDebug()) {
@@ -727,10 +836,13 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             ui.updateStatus("mimsPlus::windowOpened listener installed");
         }
     }
+
     @Override
     public void mouseExited(MouseEvent e){ ui.updateStatus(" "); }
+
     @Override
     public void mouseEntered(MouseEvent e) {}
+
     @Override
     public void mousePressed(MouseEvent e) {
 
@@ -770,6 +882,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       bStateChanging = false;
       
     }
+
     @Override
     public void mouseClicked(MouseEvent e) {
 
@@ -833,10 +946,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             }
         }
     }
-    /**
-     * Catch drawing ROIs to enable updating other images with the same ROI
-     * @param e MouseEvent
-     */
+
     @Override
     public void mouseReleased(MouseEvent e) {
       if (bStateChanging) {
@@ -878,6 +988,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
    }
 
     //rollover pixel value code
+
+    /**
+     * Handling mouse move
+     * @param e mouse move event
+     */
     public void mouseMoved(MouseEvent e) {
 
         if(this.ui.isOpening()) {
@@ -1117,47 +1232,64 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
     }
 
+    /**
+     * Updates historgram values
+     * @param force force update (true or false)
+     */
     public void updateHistogram(boolean force) {
-      if(roi==null) return;
-      // Update histogram (area Rois only).
-      if ((roi.getType() == roi.FREEROI) || (roi.getType() == roi.OVAL) ||
-          (roi.getType() == roi.POLYGON) || (roi.getType() == roi.RECTANGLE)) {
-         int imageLabel = ui.getRoiManager().getIndex(roi.getName()) + 1;
-         String label = getShortTitle() + " Roi: (" + imageLabel + ")";
-         double[] roiPix;
-         if (this.nType == HSI_IMAGE) {
-            internalRatio.setRoi(getRoi());
-            roiPix = internalRatio.getRoiPixels();
-            internalRatio.killRoi();
-         } else {
-            roiPix = this.getRoiPixels();
-         }
-         if (roiPix != null) {
-            ui.getRoiControl().updateHistogram(roiPix, label, force);
-         }
-      }
+        if (roi == null) {
+            return;
+        }
+        // Update histogram (area Rois only).
+        if ((roi.getType() == roi.FREEROI) || (roi.getType() == roi.OVAL) ||
+                (roi.getType() == roi.POLYGON) || (roi.getType() == roi.RECTANGLE)) {
+            int imageLabel = ui.getRoiManager().getIndex(roi.getName()) + 1;
+            String label = getShortTitle() + " Roi: (" + imageLabel + ")";
+            double[] roiPix;
+            if (this.nType == HSI_IMAGE) {
+                internalRatio.setRoi(getRoi());
+                roiPix = internalRatio.getRoiPixels();
+                internalRatio.killRoi();
+            } else {
+                roiPix = this.getRoiPixels();
+            }
+            if (roiPix != null) {
+                ui.getRoiControl().updateHistogram(roiPix, label, force);
+            }
+        }
 
-   }
+    }
 
     // Line profiles for ratio images and HSI images should be identical.
+
+    /**
+     * Update image line profile.
+     */
     public void updateLineProfile() {
-      if(roi==null) return;
-      // Line profiles for ratio images and HSI images should be identical.
-      if ((roi.getType() == roi.LINE) || (roi.getType() == roi.POLYLINE) || (roi.getType() == roi.FREELINE)) {
-         if (this.nType == HSI_IMAGE) {
-            internalRatio.setRoi(getRoi());
-            ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(internalRatio);
-            internalRatio.killRoi();
-            ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
-         } else {
-            ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(this);
-            ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
-         }
-      }
+        if (roi == null) {
+            return;
+        }
+        // Line profiles for ratio images and HSI images should be identical.
+        if ((roi.getType() == roi.LINE) || (roi.getType() == roi.POLYLINE) || (roi.getType() == roi.FREELINE)) {
+            if (this.nType == HSI_IMAGE) {
+                internalRatio.setRoi(getRoi());
+                ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(internalRatio);
+                internalRatio.killRoi();
+                ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
+            } else {
+                ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(this);
+                ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
+            }
+        }
 
    }
 
     // TODO - needs to more easily handle HSI images
+
+   /**
+    * Obtain ROI pixel values.
+    * @return Array of pixel values
+    */
     public double[] getRoiPixels() {
         if (this.getRoi()==null) return null;
 
@@ -1205,22 +1337,36 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
     }
 
-    public void addListener( MimsUpdateListener inListener ) {
-         fStateListeners.add(MimsUpdateListener.class, inListener );
+    /**
+     * Adds listener tp the object.
+     * @param inListener Listener to add
+     */
+    public void addListener(MimsUpdateListener inListener) {
+        fStateListeners.add(MimsUpdateListener.class, inListener);
     }
-
-    public void removeListener(MimsUpdateListener inListener ) {
-         fStateListeners.remove(MimsUpdateListener.class, inListener );
-    }
-
-   public void setLut(String label) {
-      lut = label;
-   }
 
     /**
-     * extends setSlice to notify listeners when the frame updates
-     * enabling synchronization with other windows
+     * Removes listener from the object.
+     * @param inListener Listener to remove
      */
+    public void removeListener(MimsUpdateListener inListener) {
+        fStateListeners.remove(MimsUpdateListener.class, inListener);
+    }
+
+    /**
+     * Set LUT
+     * @param label Label for LUT
+     */
+    public void setLut(String label) {
+        lut = label;
+    }
+
+   /**
+    * extends setSlice to notify listeners when the frame updates
+    * enabling synchronization with other windows
+    * @param slice
+    * @param attr
+    */
     private void stateChanged(int slice, int attr) {
         bStateChanging = true ;
         MimsPlusEvent event = new MimsPlusEvent(this, slice, attr);
@@ -1283,17 +1429,27 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         stateChanged(index,MimsPlusEvent.ATTR_UPDATE_SLICE);
     }
 
+    /**
+     * Set slice as current
+     * @param index
+     * @param updateRatioHSI
+     */
     public synchronized void setSlice(int index, boolean updateRatioHSI) {
-        if(getCurrentSlice() == index) {
+        if (getCurrentSlice() == index) {
             return;
         }
         super.setSlice(index);
-        if(bStateChanging) {
+        if (bStateChanging) {
             return;
         }
-        stateChanged(index,MimsPlusEvent.ATTR_UPDATE_SLICE, false);
+        stateChanged(index, MimsPlusEvent.ATTR_UPDATE_SLICE, false);
     }
 
+    /**
+     * Set slice as current
+     * @param index
+     * @param mplus
+     */
     public synchronized void setSlice(int index, MimsPlus mplus) {
         if(this.getCurrentSlice() == index) {
             return;
@@ -1305,9 +1461,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         stateChanged(index,MimsPlusEvent.ATTR_UPDATE_SLICE, mplus);
     }
 
+    /**
+     * Set the allow close flag
+     * @param allowClose
+     */
     public void setAllowClose(boolean allowClose){
         this.allowClose = allowClose;
     }
+
     @Override
     public void close() {
         if (allowClose) {
@@ -1320,26 +1481,89 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             ui.massImageClosed(this);
         }
     }
+
+    /**
+     * Set HSI processor
+     * @param processor
+     */
     public void setHSIProcessor( HSIProcessor processor ) { this.hsiProcessor = processor ; }
+
+    /**
+     *
+     * @return HSI processor
+     */
     public HSIProcessor getHSIProcessor() { return hsiProcessor ; }
 
-
+    /**
+     * Sets Composite processor
+     * @param processor
+     */
     public void setCompositeProcessor( CompositeProcessor processor ) { this.compProcessor = processor ; }
+
+    /**
+     *
+     * @return composite processor
+     */
     public CompositeProcessor getCompositeProcessor() { return compProcessor ; }
 
-
-
+    /**
+     * Sets auto comtrast adjust flag (true/false)
+     * @param auto auto comtrast adjust flag
+     */
     public void setAutoContrastAdjust( boolean auto ) { this.autoAdjustContrast = auto ; }
+
+    /**
+     *
+     * @return auto comtrast adjust flag
+     */
     public boolean getAutoContrastAdjust() { return autoAdjustContrast ; }
 
+    /**
+     *
+     * @return "is stack" flag
+     */
     public boolean isStack() { return bIsStack ; }
+
+    /**
+     * Sets "is stack" flag
+     * @param isS
+     */
     public void setIsStack(boolean isS) { bIsStack = isS; }
 
+    /**
+     *
+     * @return mass index
+     */
     public int getMassIndex() { return massIndex; }
+
+    /**
+     *
+     * @return MIMS type
+     */
     public int getMimsType() { return nType ; }
+
+    /**
+     *
+     * @return sum properties
+     */
     public SumProps getSumProps() { return sumProps; }
+
+    /**
+     *
+     * @return ratio properties
+     */
     public RatioProps getRatioProps() { return ratioProps; }
+
+    /**
+     *
+     * @return HSI properties
+     */
     public HSIProps getHSIProps() { return getHSIProcessor().getHSIProps(); }
+
+    /**
+     *
+     * @return UI object
+     */
     public UI getUI() { return ui ; }
 
 }
