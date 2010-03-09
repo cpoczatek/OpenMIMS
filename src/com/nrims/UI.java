@@ -52,9 +52,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-/* 
- * The main user interface of the NRIMS ImageJ plugin.
- */
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.jfree.chart.ChartPanel;
@@ -63,6 +61,10 @@ import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.ui.TextAnchor;
+
+/**
+ * The main user interface of the NRIMS ImageJ plugin.
+ */
 public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListener {
 
     public static final long serialVersionUID = 1;
@@ -135,7 +137,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     private String revisionNumber = "";
 
-    // fileName name of the .im image file to be opened.
+    /**
+     * Constructor
+     * Creates a new instance of the OpenMIMS analysis interface.
+     * @param fileName path to the OpenMIMS file to analyze
+     */
     public UI(String fileName) {
         super("NRIMS Analysis Module");
       
@@ -249,7 +255,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       });      
       //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.im"));
    }
-    
+
+    /**
+     * Insertion status of the current MimsPlus object
+     * @param mp object to be inserted
+     * @return success/failure of insertion
+     */
    public boolean addToImagesList(MimsPlus mp) {
       int i = 0; int ii = 0; boolean inserted=false;
       while (i < maxMasses) {
@@ -292,6 +303,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       return inserted;
    }
 
+   /**
+    * Swap crosshairs from hidden to shown or vice versa
+    * @param chartpanel GUI element to be affected
+    */
    void showHideCrossHairs(ChartPanel chartpanel) {
       Plot plot = chartpanel.getChart().getPlot();
       if (!(plot instanceof XYPlot))
@@ -364,6 +379,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /**
+     * Brings up the graphical pane for selecting files to be opened.
+     */
     public synchronized void loadMIMSFile() {
         javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
         fc.setMultiSelectionEnabled(true);        
@@ -388,6 +406,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         openFiles(files);
     }
 
+    /**
+     * Open the file(s) for futher processing.
+     * @param files list of files to open
+     */
     public void openFiles(File[] files) {
 
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
