@@ -16,46 +16,45 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * OpenMIMS auto tracking code adapted from below.
- * Also dependent on the TurboReg plugin.
- *
- * Original authorship:
- * EPFL/STI/IOA/LIB
- * Philippe Thevenaz
- * Bldg. BM-Ecublens 4.137
- * Station 17
- * CH-1015 Lausanne VD
- * Switzerland
- *
- * phone (CET): +41(21)693.51.61
- * fax: +41(21)693.37.01
- * RFC-822: philippe.thevenaz@epfl.ch
- * X-400: /C=ch/A=400net/P=switch/O=epfl/S=thevenaz/G=philippe/
- * URL: http://bigwww.epfl.ch/
- *
- * This work is based on the following paper:
- *
- * P. Thevenaz, U.E. Ruttimann, M. Unser
- * A Pyramid Approach to Subpixel Registration Based on Intensity
- * IEEE Transactions on Image Processing
- * vol. 7, no. 1, pp. 27-41, January 1998.
- *
- * This paper is available on-line at
- * http://bigwww.epfl.ch/publications/thevenaz9801.html
- *
- * Other relevant on-line publications are available at
- * http://bigwww.epfl.ch/publications/
- *
- *
- *
- *
- * Additional help available at http://bigwww.epfl.ch/thevenaz/stackreg/
- * Ancillary TurboReg_ plugin available at: http://bigwww.epfl.ch/thevenaz/turboreg/
- *
- * You'll be free to use this software for research purposes, but you
- * should not redistribute it without our consent. In addition, we expect
- * you to include a citation or acknowledgment whenever you present or
- * publish results that are based on it.
+ * OpenMIMS auto tracking code adapted from below.<br>
+ * Also dependent on the TurboReg plugin.<br>
+ * <br>
+ * Original authorship:<br>
+ * EPFL/STI/IOA/LIB<br>
+ * Philippe Thevenaz<br>
+ * Bldg. BM-Ecublens 4.137<br>
+ * Station 17<br>
+ * CH-1015 Lausanne VD<br>
+ * Switzerland<br>
+ *<br>
+ * phone (CET): +41(21)693.51.61<br>
+ * fax: +41(21)693.37.01<br>
+ * RFC-822: philippe.thevenaz@epfl.ch<br>
+ * X-400: /C=ch/A=400net/P=switch/O=epfl/S=thevenaz/G=philippe/<br>
+ * URL: http://bigwww.epfl.ch/<br>
+ *<br>
+ * This work is based on the following paper:<br>
+ *<br>
+ * P. Thevenaz, U.E. Ruttimann, M. Unser<br>
+ * A Pyramid Approach to Subpixel Registration Based on Intensity<br>
+ * IEEE Transactions on Image Processing<br>
+ * vol. 7, no. 1, pp. 27-41, January 1998.<br>
+ *<br>
+ * This paper is available on-line at<br>
+ * http://bigwww.epfl.ch/publications/thevenaz9801.html<br>
+ *<br>
+ * Other relevant on-line publications are available at<br>
+ * http://bigwww.epfl.ch/publications/<br>
+ *<br>
+ *<br>
+ *<br>
+ * Additional help available at http://bigwww.epfl.ch/thevenaz/stackreg/<br>
+ * Ancillary TurboReg_ plugin available at: http://bigwww.epfl.ch/thevenaz/turboreg/<br>
+ *<br>
+ * You'll be free to use this software for research purposes, but you<br>
+ * should not redistribute it without our consent. In addition, we expect<br>
+ * you to include a citation or acknowledgment whenever you present or<br>
+ * publish results that are based on it.<br>
  *
  */
 public class AutoTrack implements Runnable {
