@@ -286,7 +286,20 @@ public class Mims_Reader implements Opener {
      * Formats a double precision to a string
      */
     private String DecimalToStr(double v, int fraction) {
-        DecimalFormat df = new DecimalFormat("0.00");
+     
+        /*
+         * Caused exceptions when the return
+         * value is passed to a Double() const.
+         * Because DecimalFormat uses location.
+         * Switched , and . if location was non-US sometimes.
+         * Which is dumb.
+         */
+        java.text.DecimalFormatSymbols symbols = new java.text.DecimalFormatSymbols();
+        symbols.setDecimalSeparator('.');
+        symbols.setGroupingSeparator(',');
+        
+        DecimalFormat df = new DecimalFormat("0.00", symbols);
+
         if (fraction != 2) {
             String format;
             format = "0";

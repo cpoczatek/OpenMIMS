@@ -108,8 +108,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
         // Set processor.
         ij.process.ImageProcessor ip = new ij.process.ShortProcessor(width, height, pixels, null);
-        Double massNumber = new Double(op.getMassNames()[index]);
-        String title = "m" + massNumber + " : " + ui.getImageFilePrefix();
+        //Don't do this, massNames should allready have the correctly formated string
+        //Double massNumber = new Double(op.getMassNames()[index]);
+        String title = "m" + op.getMassNames()[index] + " : " + ui.getImageFilePrefix();
         setProcessor(title, ip);
         getProcessor().setMinAndMax(0, 65535);
         fStateListeners = new EventListenerList() ;
