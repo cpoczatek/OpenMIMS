@@ -84,7 +84,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private int ratioScaleFactor = 10000;
     private double medianFilterRadius = 1;
     
-    private boolean bDebug = false;    
+    private boolean bDebug = false;
     private boolean bSyncStack = true;
     private boolean bSyncROIs = true;
     private boolean bSyncROIsAcrossPlanes = true;
@@ -766,6 +766,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      public double[] gatherWindowZooms() {
         double[] zooms = new double[maxMasses];
 
+        for(int i=0; i< zooms.length; i++) { zooms[i] = 1.0; }
+
         MimsPlus[] images = this.getOpenMassImages();
         if(images.length==0) return null;
 
@@ -803,7 +805,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (massImages[i] != null) {
                 if (massImages[i].getCanvas() != null) {
                    double z = massImages[i].getCanvas().getMagnification();
-
+                   if(z==0.0) continue;
                    if(massImages[i].getCanvas().getMagnification() < zooms[i]) {
                        while(massImages[i].getCanvas().getMagnification() < zooms[i]) {
                            massImages[i].getCanvas().zoomIn(0, 0);
