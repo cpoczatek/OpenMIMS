@@ -232,7 +232,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   Thread.sleep(250);
                } catch (Exception e){}
             }
-
+            
             File file = new File("/nrims/home3/zkaufman/DOCS/TrackingDocuments/TAJBAKHSH", getImageFilePrefix()+NRRD_EXTENSION);
             saveSession(file.getAbsolutePath(), true);
             */
@@ -1333,259 +1333,254 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
  */
    }
    
-   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-   private void initComponents() {
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
 
-      jMenuItem9 = new javax.swing.JMenuItem();
-      jPopupMenu1 = new javax.swing.JPopupMenu();
-      jTabbedPane1 = new javax.swing.JTabbedPane();
-      jPanel1 = new javax.swing.JPanel();
-      mainTextField = new javax.swing.JTextField();
-      jMenuBar1 = new javax.swing.JMenuBar();
-      fileMenu = new javax.swing.JMenu();
-      openNewMenuItem = new javax.swing.JMenuItem();
-      jMenuItem1 = new javax.swing.JMenuItem();
-      saveMIMSjMenuItem = new javax.swing.JMenuItem();
-      jSeparator7 = new javax.swing.JSeparator();
-      aboutMenuItem = new javax.swing.JMenuItem();
-      jSeparator2 = new javax.swing.JSeparator();
-      exitMenuItem = new javax.swing.JMenuItem();
-      editMenu = new javax.swing.JMenu();
-      jMenuItem3 = new javax.swing.JMenuItem();
-      jMenuItem4 = new javax.swing.JMenuItem();
-      viewMenu = new javax.swing.JMenu();
-      jMenuItem2 = new javax.swing.JMenuItem();
-      jSeparator8 = new javax.swing.JSeparator();
-      utilitiesMenu = new javax.swing.JMenu();
-      imageNotesMenuItem = new javax.swing.JMenuItem();
-      jSeparator1 = new javax.swing.JSeparator();
-      sumAllMenuItem = new javax.swing.JMenuItem();
-      importIMListMenuItem = new javax.swing.JMenuItem();
-      captureImageMenuItem = new javax.swing.JMenuItem();
-      jSeparator3 = new javax.swing.JSeparator();
-      exportjMenu = new javax.swing.JMenu();
-      exportPNGjMenuItem = new javax.swing.JMenuItem();
-      closeMenu = new javax.swing.JMenu();
-      closeAllRatioMenuItem = new javax.swing.JMenuItem();
-      closeAllHSIMenuItem = new javax.swing.JMenuItem();
-      closeAllSumMenuItem = new javax.swing.JMenuItem();
-      jSeparator4 = new javax.swing.JSeparator();
-      genStackMenuItem = new javax.swing.JMenuItem();
-      TestMenuItem = new javax.swing.JMenuItem();
+        jMenuItem9 = new javax.swing.JMenuItem();
+        jPopupMenu1 = new javax.swing.JPopupMenu();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        jPanel1 = new javax.swing.JPanel();
+        mainTextField = new javax.swing.JTextField();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        fileMenu = new javax.swing.JMenu();
+        openNewMenuItem = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        saveMIMSjMenuItem = new javax.swing.JMenuItem();
+        jSeparator7 = new javax.swing.JSeparator();
+        aboutMenuItem = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JSeparator();
+        exitMenuItem = new javax.swing.JMenuItem();
+        editMenu = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        jMenuItem4 = new javax.swing.JMenuItem();
+        viewMenu = new javax.swing.JMenu();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        jSeparator8 = new javax.swing.JSeparator();
+        utilitiesMenu = new javax.swing.JMenu();
+        imageNotesMenuItem = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JSeparator();
+        sumAllMenuItem = new javax.swing.JMenuItem();
+        importIMListMenuItem = new javax.swing.JMenuItem();
+        captureImageMenuItem = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JSeparator();
+        exportjMenu = new javax.swing.JMenu();
+        exportPNGjMenuItem = new javax.swing.JMenuItem();
+        closeMenu = new javax.swing.JMenu();
+        closeAllRatioMenuItem = new javax.swing.JMenuItem();
+        closeAllHSIMenuItem = new javax.swing.JMenuItem();
+        closeAllSumMenuItem = new javax.swing.JMenuItem();
+        jSeparator4 = new javax.swing.JSeparator();
+        genStackMenuItem = new javax.swing.JMenuItem();
         compositeMenuItem = new javax.swing.JMenuItem();
+        jSeparator5 = new javax.swing.JSeparator();
+        debugCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
+        TestMenuItem = new javax.swing.JMenuItem();
 
-      jMenuItem9.setText("Export all images");
+        jMenuItem9.setText("Export all images");
 
-      setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-      setTitle("NRIMS Analysis Module");
-      setName("NRIMSUI"); // NOI18N
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("NRIMS Analysis Module");
+        setName("NRIMSUI"); // NOI18N
 
-      jTabbedPane1.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            jTabbedPane1StateChanged(evt);
-         }
-      });
-
-      jPanel1.setName("Images"); // NOI18N
-
-      org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
-      jPanel1.setLayout(jPanel1Layout);
-      jPanel1Layout.setHorizontalGroup(
-         jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-         .add(0, 710, Short.MAX_VALUE)
-      );
-      jPanel1Layout.setVerticalGroup(
-         jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-         .add(0, 348, Short.MAX_VALUE)
-      );
-
-      jTabbedPane1.addTab("Images", jPanel1);
-
-      mainTextField.setEditable(false);
-      mainTextField.setText("Ready");
-      mainTextField.setToolTipText("Status");
-
-      fileMenu.setText("File");
-
-      openNewMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-      openNewMenuItem.setMnemonic('o');
-      openNewMenuItem.setText("Open MIMS Image");
-      openNewMenuItem.setToolTipText("Open a MIMS image from an existing .im file.");
-      openNewMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            openMIMSImageMenuItemActionPerformed(evt);
-         }
-      });
-      fileMenu.add(openNewMenuItem);
-      openNewMenuItem.getAccessibleContext().setAccessibleDescription("Open a MIMS Image");
-
-      jMenuItem1.setText(SAVE_IMAGE);
-      jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            saveMIMSjMenuItemActionPerformed(evt);
-         }
-      });
-      fileMenu.add(jMenuItem1);
-
-      saveMIMSjMenuItem.setText(SAVE_SESSION);
-      saveMIMSjMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            saveMIMSjMenuItemActionPerformed(evt);
-         }
-      });
-      fileMenu.add(saveMIMSjMenuItem);
-      fileMenu.add(jSeparator7);
-
-      aboutMenuItem.setText("About OpenMIMS");
-      aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            aboutMenuItemActionPerformed(evt);
-         }
-      });
-      fileMenu.add(aboutMenuItem);
-      fileMenu.add(jSeparator2);
-
-      exitMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-      exitMenuItem.setMnemonic('x');
-      exitMenuItem.setText("Exit");
-      exitMenuItem.setToolTipText("Quit the NRIMS Application.");
-      exitMenuItem.setName("ExitMenuItem"); // NOI18N
-      exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            exitMenuItemActionPerformed(evt);
-         }
-      });
-      fileMenu.add(exitMenuItem);
-
-      jMenuBar1.add(fileMenu);
-
-      editMenu.setText("Edit");
-
-      jMenuItem3.setText("Preferences...");
-      jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jMenuItem3ActionPerformed(evt);
-         }
-      });
-      editMenu.add(jMenuItem3);
-
-      jMenuItem4.setText("Restore MIMS");
-      jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jMenuItem4ActionPerformed(evt);
-         }
-      });
-      editMenu.add(jMenuItem4);
-
-      jMenuBar1.add(editMenu);
-
-      viewMenu.setText("View");
-
-      jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.ALT_MASK));
-      jMenuItem2.setText("Tile Windows");
-      jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jMenuItem2ActionPerformed(evt);
-         }
-      });
-      viewMenu.add(jMenuItem2);
-      viewMenu.add(jSeparator8);
-
-      jMenuBar1.add(viewMenu);
-
-      utilitiesMenu.setText("Utilities");
-
-      imageNotesMenuItem.setText("Image Notes");
-      imageNotesMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            imageNotesMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(imageNotesMenuItem);
-      utilitiesMenu.add(jSeparator1);
-
-      sumAllMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.ALT_MASK));
-      sumAllMenuItem.setText("Sum all Open");
-      sumAllMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            sumAllMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(sumAllMenuItem);
-
-      importIMListMenuItem.setText("Import .im List");
-      importIMListMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            importIMListMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(importIMListMenuItem);
-
-      captureImageMenuItem.setText("Capture current Image");
-      captureImageMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            captureImageMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(captureImageMenuItem);
-      utilitiesMenu.add(jSeparator3);
-
-      exportjMenu.setText("Export...");
-
-      exportPNGjMenuItem.setText("Export All Derived (png)");
-      exportPNGjMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            exportPNGjMenuItemActionPerformed(evt);
-         }
-      });
-      exportjMenu.add(exportPNGjMenuItem);
-
-      utilitiesMenu.add(exportjMenu);
-
-      closeMenu.setText("Close...");
-
-      closeAllRatioMenuItem.setText("Close All Ratio Images");
-      closeAllRatioMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            closeAllRatioMenuItemActionPerformed(evt);
-         }
-      });
-      closeMenu.add(closeAllRatioMenuItem);
-
-      closeAllHSIMenuItem.setText("Close All HSI Images");
-      closeAllHSIMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            closeAllHSIMenuItemActionPerformed(evt);
-         }
-      });
-      closeMenu.add(closeAllHSIMenuItem);
-
-      closeAllSumMenuItem.setText("Close All Sum Images");
-      closeAllSumMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            closeAllSumMenuItemActionPerformed(evt);
-         }
-      });
-      closeMenu.add(closeAllSumMenuItem);
-
-      utilitiesMenu.add(closeMenu);
-      utilitiesMenu.add(jSeparator4);
-
-      genStackMenuItem.setText("Generate Stack");
-      genStackMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            genStackMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(genStackMenuItem);
-
-      TestMenuItem.setText("Test");
-      TestMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-  	TestMenuItemActionPerformed(evt);
+        jTabbedPane1.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jTabbedPane1StateChanged(evt);
             }
         });
-      utilitiesMenu.add(TestMenuItem);
+
+        jPanel1.setName("Images"); // NOI18N
+        jPanel1.setPreferredSize(new java.awt.Dimension(703, 428));
+
+        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(0, 703, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(0, 333, Short.MAX_VALUE)
+        );
+
+        jTabbedPane1.addTab("Images", jPanel1);
+
+        mainTextField.setEditable(false);
+        mainTextField.setText("Ready");
+        mainTextField.setToolTipText("Status");
+
+        fileMenu.setText("File");
+
+        openNewMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+        openNewMenuItem.setMnemonic('o');
+        openNewMenuItem.setText("Open MIMS Image");
+        openNewMenuItem.setToolTipText("Open a MIMS image from an existing .im file.");
+        openNewMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openMIMSImageMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(openNewMenuItem);
+        openNewMenuItem.getAccessibleContext().setAccessibleDescription("Open a MIMS Image");
+
+        jMenuItem1.setText(SAVE_IMAGE);
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveMIMSjMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(jMenuItem1);
+
+        saveMIMSjMenuItem.setText(SAVE_SESSION);
+        saveMIMSjMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveMIMSjMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(saveMIMSjMenuItem);
+        fileMenu.add(jSeparator7);
+
+        aboutMenuItem.setText("About OpenMIMS");
+        aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                aboutMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(aboutMenuItem);
+        fileMenu.add(jSeparator2);
+
+        exitMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+        exitMenuItem.setMnemonic('x');
+        exitMenuItem.setText("Exit");
+        exitMenuItem.setToolTipText("Quit the NRIMS Application.");
+        exitMenuItem.setName("ExitMenuItem"); // NOI18N
+        exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exitMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(exitMenuItem);
+
+        jMenuBar1.add(fileMenu);
+
+        editMenu.setText("Edit");
+
+        jMenuItem3.setText("Preferences...");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        editMenu.add(jMenuItem3);
+
+        jMenuItem4.setText("Restore MIMS");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
+        editMenu.add(jMenuItem4);
+
+        jMenuBar1.add(editMenu);
+
+        viewMenu.setText("View");
+
+        jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.ALT_MASK));
+        jMenuItem2.setText("Tile Windows");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        viewMenu.add(jMenuItem2);
+        viewMenu.add(jSeparator8);
+
+        jMenuBar1.add(viewMenu);
+
+        utilitiesMenu.setText("Utilities");
+
+        imageNotesMenuItem.setText("Image Notes");
+        imageNotesMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                imageNotesMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(imageNotesMenuItem);
+        utilitiesMenu.add(jSeparator1);
+
+        sumAllMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.ALT_MASK));
+        sumAllMenuItem.setText("Sum all Open");
+        sumAllMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sumAllMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(sumAllMenuItem);
+
+        importIMListMenuItem.setText("Import .im List");
+        importIMListMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                importIMListMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(importIMListMenuItem);
+
+        captureImageMenuItem.setText("Capture current Image");
+        captureImageMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                captureImageMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(captureImageMenuItem);
+        utilitiesMenu.add(jSeparator3);
+
+        exportjMenu.setText("Export...");
+
+        exportPNGjMenuItem.setText("Export All Derived (png)");
+        exportPNGjMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportPNGjMenuItemActionPerformed(evt);
+            }
+        });
+        exportjMenu.add(exportPNGjMenuItem);
+
+        utilitiesMenu.add(exportjMenu);
+
+        closeMenu.setText("Close...");
+
+        closeAllRatioMenuItem.setText("Close All Ratio Images");
+        closeAllRatioMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeAllRatioMenuItemActionPerformed(evt);
+            }
+        });
+        closeMenu.add(closeAllRatioMenuItem);
+
+        closeAllHSIMenuItem.setText("Close All HSI Images");
+        closeAllHSIMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeAllHSIMenuItemActionPerformed(evt);
+            }
+        });
+        closeMenu.add(closeAllHSIMenuItem);
+
+        closeAllSumMenuItem.setText("Close All Sum Images");
+        closeAllSumMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeAllSumMenuItemActionPerformed(evt);
+            }
+        });
+        closeMenu.add(closeAllSumMenuItem);
+
+        utilitiesMenu.add(closeMenu);
+        utilitiesMenu.add(jSeparator4);
+
+        genStackMenuItem.setText("Generate Stack");
+        genStackMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                genStackMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(genStackMenuItem);
 
         compositeMenuItem.setText("Composite");
         compositeMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -1594,38 +1589,53 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(compositeMenuItem);
+        utilitiesMenu.add(jSeparator5);
+
+        debugCheckBoxMenuItem.setText("Debug");
+        debugCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                debugCheckBoxMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(debugCheckBoxMenuItem);
+
+        TestMenuItem.setText("Test");
+        TestMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TestMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(TestMenuItem);
 
         jMenuBar1.add(utilitiesMenu);
 
-      jMenuBar1.add(utilitiesMenu);
+        setJMenuBar(jMenuBar1);
 
-      setJMenuBar(jMenuBar1);
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 715, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mainTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 715, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE)
+                .add(18, 18, 18)
+                .add(mainTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(28, 28, 28))
+        );
 
-      org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
-      getContentPane().setLayout(layout);
-      layout.setHorizontalGroup(
-         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-         .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-            .addContainerGap()
-            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-               .add(org.jdesktop.layout.GroupLayout.LEADING, jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 715, Short.MAX_VALUE)
-               .add(org.jdesktop.layout.GroupLayout.LEADING, mainTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 715, Short.MAX_VALUE))
-            .addContainerGap())
-      );
-      layout.setVerticalGroup(
-         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-         .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-            .addContainerGap()
-            .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE)
-            .add(18, 18, 18)
-            .add(mainTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .add(28, 28, 28))
-      );
+        getAccessibleContext().setAccessibleDescription("NRIMS Analyais Module");
 
-      getAccessibleContext().setAccessibleDescription("NRIMS Analyais Module");
-
-      pack();
-   }// </editor-fold>//GEN-END:initComponents
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
 
     /**
      * restores any closed or modified massImages
@@ -2124,21 +2134,40 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
     String message = "OpenMIMS v0.8 Revision: " + this.revisionNumber + "\n\n";
-    message += "OpenMIMS was Developed at NRIMS, the National Resource\n";
-    message += "for Imaging Mass Spectrometry.\n";
-    message += "http://www.nrims.hms.harvard.edu/\n";
-    message += "\nDeveloped by:\n Doug Benson, Collin Poczatek\n ";
+    message += "OpenMIMS was developed at NRIMS, the National Resource \n";
+    message += "for Imaging Mass Spectrometry. \n";
+    message += "http://www.nrims.hms.harvard.edu/ \n";
+    message += "\nDeveloped by:\n Doug Benson, Collin Poczatek \n ";
     message += "Boris Epstein, Philipp Gormanns\n Stefan Reckow, ";
-    message += "Rob Gonzales, Zeke Kaufman.";
-    message += "\n\nOpenMIMS uses or depends upon:\n";
-    message += " TurboReg:  http://bigwww.epfl.ch/thevenaz/turboreg/\n";
-    message += " jFreeChart:  http://www.jfree.org/jfreechart/\n";
-    message += " FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/\n";
+    message += "Rob Gonzales,\n Zeke Kaufman.";
+    message += "\n\nOpenMIMS has modified, uses, or depends upon: \n";
+    message += "    TurboReg:  http://bigwww.epfl.ch/thevenaz/turboreg/ \n";
+    message += "    libSVM: http://www.csie.ntu.edu.tw/~cjlin/libsvm/ \n";
+    message += "    NRRD file format: http://teem.sourceforge.net/nrrd/ \n";
+    message += "    nrrd plugins: http://flybrain.stanford.edu/nrrd \n";
+    message += "    jFreeChart:  http://www.jfree.org/jfreechart/ \n";
+    message += "    FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ \n";
+    message += "\nPlease cite OpenMIMS or any of the \n";
+    message += "above projects when applicable. \n";
+    
+    javax.swing.JFrame frame = new javax.swing.JFrame("About OpenMIMS");
+    frame.setSize(400, 300);
 
-    javax.swing.JOptionPane pane = new javax.swing.JOptionPane(message);
-    javax.swing.JDialog dialog = pane.createDialog(new javax.swing.JFrame(), "About OpenMIMS");
+    javax.swing.JScrollPane scroll = new javax.swing.JScrollPane();
+    frame.add(scroll);
+    javax.swing.JTextArea area = new javax.swing.JTextArea();
+    area.setEditable(false);
+    area.append(message);
 
-    dialog.setVisible(true);
+    area.setColumns(20);
+    area.setRows(5);
+    
+    scroll.setViewportView(area);
+    int x = java.awt.MouseInfo.getPointerInfo().getLocation().x;
+    int y =java.awt.MouseInfo.getPointerInfo().getLocation().y;
+    frame.setLocation(x,y);
+    frame.setVisible(true);
+
 }//GEN-LAST:event_aboutMenuItemActionPerformed
 
 private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_captureImageMenuItemActionPerformed
@@ -2245,11 +2274,19 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
 
-
+    try{
     int a=0;
     int b =1;
     System.out.println("a: " + a + " b: " + b + " a/b: " + (a/b) + " b/a: " + (b/a) );
+    }catch(Exception e) {
+        System.out.println(e.getLocalizedMessage());
+        System.out.println(e.toString());
 
+        StackTraceElement[] foo = e.getStackTrace();
+        for(int i=0; i<foo.length; i++) {
+            System.out.println(foo[i].toString());
+        }
+    }
 /*     try {
         MimsRoiManager rm = getRoiManager();
         if (rm != null) {
@@ -2456,6 +2493,10 @@ private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
     */
 }//GEN-LAST:event_compositeMenuItemActionPerformed
 
+private void debugCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_debugCheckBoxMenuItemActionPerformed
+    this.bDebug = debugCheckBoxMenuItem.isSelected();
+    //System.out.println(this.bDebug);
+}//GEN-LAST:event_debugCheckBoxMenuItemActionPerformed
 
    // Method for saving action file and writing backup action files.
    public void saveAction(java.awt.event.ActionEvent evt) {
@@ -3162,6 +3203,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuItem closeAllSumMenuItem;
     private javax.swing.JMenu closeMenu;
     private javax.swing.JMenuItem compositeMenuItem;
+    private javax.swing.JCheckBoxMenuItem debugCheckBoxMenuItem;
     private javax.swing.JMenu editMenu;
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JMenuItem exportPNGjMenuItem;
@@ -3182,6 +3224,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JSeparator jSeparator3;
     private javax.swing.JSeparator jSeparator4;
+    private javax.swing.JSeparator jSeparator5;
     private javax.swing.JSeparator jSeparator7;
     private javax.swing.JSeparator jSeparator8;
     private javax.swing.JTabbedPane jTabbedPane1;
