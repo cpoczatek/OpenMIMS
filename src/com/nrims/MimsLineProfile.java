@@ -185,12 +185,14 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         ij.measure.ResultsTable table = new ij.measure.ResultsTable();
         table.setHeading(1, "Position");
         table.setHeading(2, plot.getLegendItems().get(0).getLabel() + " : width " + linewidth);
-        table.incrementCounter();
+        //table.incrementCounter();
 
+        //end of table bug?
         for (int i = 0; i < data.getItemCount(0); i++) {
+            table.incrementCounter();
             table.addValue(1, data.getXValue(0, i));
             table.addValue(2, data.getYValue(0, i));
-            table.incrementCounter();
+            
         }
 
         table.show("");
