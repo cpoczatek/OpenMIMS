@@ -630,6 +630,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         addPopupItem("Split");
         addPopupItem("Particles");
         addPopupItem("Squares");
+        addPopupItem("Pixel values");
         addPopupItem("Add [t]");
         addPopupItem("Save As");
         add(pm);
@@ -688,6 +689,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         } else if (command.equals("Squares")) {
             if(squaresManager==null) { squaresManager = new SquaresManager(); }
             squaresManager.showFrame();
+        } else if (command.equals("Pixel values")) {
+            roiPixelvalues();
         } else if (command.equals("Save As")) {
             String path = ui.getImageDir();
             previouslySaved = false;
@@ -2057,6 +2060,43 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         for(int i = 0; i < rois.length; i++) {
             roiSquares(rois[i], img, params);
         }
+    }
+
+    //Should this be moved to mimsroicontrol?
+    //
+    public void roiPixelvalues() {
+        MimsPlus img = null;
+        try{
+            img = (MimsPlus)WindowManager.getCurrentImage();
+        } catch(Exception E){
+            return;
+        }
+        roiPixelvalues(img);
+    }
+
+    public void roiPixelvalues(MimsPlus img) {
+        if(img.getMimsType()==MimsPlus.HSI_IMAGE) {
+            roiPixelvalues(img.internalRatio);
+            return;
+        }
+
+        img.killRoi();
+        Roi[] rois = this.getSelectedROIs();
+        if(rois==null) return;
+        Roi roi = rois[0];
+        img.setRoi(roi);
+        double[] values = img.getRoiPixels();
+        img.killRoi();
+        
+        ij.measure.ResultsTable rTable = new ij.measure.ResultsTable();
+        rTable.addColumns();
+        rTable.setHeading(0, "Value");
+        
+        for(int i = 0; i<values.length; i++) {
+            rTable.incrementCounter();
+            rTable.addValue(0, values[i]);
+        }
+        rTable.show(img.getRoundedTitle()+"-roi-"+roi.getName());
     }
 
     ImagePlus getImage() {

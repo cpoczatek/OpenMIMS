@@ -1048,11 +1048,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
 
         // Loop over all Rois, determine which one to highlight.
-        int displayDigits = 2;
+        int displayDigits = 3;
         java.util.Hashtable rois = ui.getRoiManager().getROIs();
         Roi smallestRoi = null;
         double smallestRoiArea = 0.0;
         ij.process.ImageStatistics stats = null;
+        ij.process.ImageStatistics numeratorStats = null;
+        ij.process.ImageStatistics denominatorStats = null;
+
         for(Object key:rois.keySet()) {
             Roi roi = (Roi)rois.get(key);
             if (!((DefaultListModel)ui.getRoiManager().getList().getModel()).contains(roi.getName()))
@@ -1089,6 +1092,17 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
                      killRoi();
                   }
 
+                  //get numerator and denominator stats
+                  if ((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE)&& internalNumerator!=null && internalDenominator!=null) {
+                      internalNumerator.setRoi(roi);
+                      numeratorStats = internalNumerator.getStatistics();
+                      internalNumerator.killRoi();
+
+                      internalDenominator.setRoi(roi);
+                      denominatorStats = internalDenominator.getStatistics();
+                      internalDenominator.killRoi();
+                  }
+
                   // Set as smallest Roi that the mouse is within.
                   if (smallestRoi == null) {
                      smallestRoi = roi;
@@ -1105,6 +1119,13 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             }
         }
 
+        double sf=1.0;
+        if(this.getMimsType()==HSI_IMAGE) {
+            sf=this.getHSIProps().getRatioScaleFactor();
+        }
+        if(this.getMimsType()==RATIO_IMAGE) {
+            sf=this.getRatioProps().getRatioScaleFactor();
+        }
         // Highlight the "inner most" Roi.
         if(smallestRoi!=null) {
             smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
@@ -1117,6 +1138,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
               msg += "\t ROI " + roi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
            updateHistogram(true);
            updateLineProfile();
+           if((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE) && numeratorStats!=null && denominatorStats!=null) {
+               double ratio_means = sf*(numeratorStats.mean/denominatorStats.mean);
+               msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
+           }
         }
         ui.updateStatus(msg);
     }
@@ -1177,14 +1202,25 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
 
        // precision
-       int displayDigits = 2;
+       int displayDigits = 3;
 
        // Get the ROI, (the area in yellow).
       Roi roi = getRoi();
 
+        double sf = 1.0;
+        if (this.getMimsType() == HSI_IMAGE) {
+            sf = this.getHSIProps().getRatioScaleFactor();
+        }
+        if (this.getMimsType() == RATIO_IMAGE) {
+            sf = this.getRatioProps().getRatioScaleFactor();
+        }
+
       // Display stats in the message bar.
       if (roi != null) {
-         ij.process.ImageStatistics stats = this.getStatistics();
+          ij.process.ImageStatistics stats = this.getStatistics();
+          ij.process.ImageStatistics numeratorStats = null;
+          ij.process.ImageStatistics denominatorStats = null;
+
          if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
             this.internalRatio.setRoi(roi);
              stats =  this.internalRatio.getStatistics();
@@ -1193,6 +1229,19 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             msg += "\t ROI " + roi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
          }
 
+          //get numerator denominator stats
+          if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE) && internalNumerator != null && internalDenominator != null) {
+              internalNumerator.setRoi(roi);
+              numeratorStats = internalNumerator.getStatistics();
+              internalNumerator.killRoi();
+
+              internalDenominator.setRoi(roi);
+              denominatorStats = internalDenominator.getStatistics();
+              internalDenominator.killRoi();
+
+              double ratio_means = sf*numeratorStats.mean/denominatorStats.mean;
+              msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
+          }
          ui.updateStatus(msg);
 
          setRoi(roi);
