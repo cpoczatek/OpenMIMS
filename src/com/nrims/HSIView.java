@@ -32,7 +32,7 @@ public class HSIView extends JPanel {
     public HSIView(UI ui) {
         this.ui = ui;
         initComponents();
-        props.setRatioScaleFactor((double)ui.getRatioScaleFactor());
+        props.setRatioScaleFactor((double)ui.getPreferences().getscaleFactor());
         ratioSFjSpinner.setValue(props.getRatioScaleFactor());
         rartioMaxjSpinner.setModel(new SpinnerNumberModel(1.0, 0.001, 65535.0, 1));
         ratioMinjSpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 65535.0, 1));
@@ -761,15 +761,20 @@ public synchronized void update() {
                 
         // Maximum difference between atomic weight
         // to appear by defualt on the ratio list.
-        double maxDiff = 1.5;
+        double maxDiff = ui.getPreferences().getRatioSpan();
+        boolean reciprocals = ui.getPreferences().getRatioReciprocals();
         
         // Populate the list.        
         for(int i=massNames.length-1; i >= 1; i--) { 
            Double d1 = new Double(massNames[i]);
            for(int j=i-1; j >= 0; j--) {
               Double d2 = new Double(massNames[j]);
-              if (Math.abs(d2-d1) <= maxDiff)
+              if (Math.abs(d2-d1) <= maxDiff) {
                  listModel.addElement(i+":"+j);
+                 if(reciprocals) {
+                     listModel.addElement(j+":"+i);
+                 }
+              }
            }           
         }
 
