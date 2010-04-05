@@ -135,6 +135,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     private imageNotes imgNotes;
 
+    private PrefFrame prefs;
+
     private String revisionNumber = "";
 
     /**
@@ -160,6 +162,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       initComponents();
       initComponentsCustom();
+      //read in preferences so values are gettable
+      //by various tabs (ie mimsTomography, HSIView, etc.
+      //when constructed further down
+      prefs = new PrefFrame();
 
       ijapp = IJ.getInstance();
       if (ijapp == null || (ijapp != null && !ijapp.isShowing())) {
@@ -517,6 +523,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         try {
             currentlyOpeningImages = true;
 
+            //what is this going to do?
             closeCurrentImage();
             
             // Clear selections in the jlist (prevents exceptions from being thrown).
@@ -535,6 +542,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                
             } catch (IOException e) {
                 IJ.log("Failed to open " + file + "......  :\n" + e.getStackTrace());
+                e.printStackTrace();
                 return;
             }
 
@@ -1305,7 +1313,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        this.imgNotes.setVisible(false);
 
        //hide testing
-      TestMenuItem.setVisible(false);
+      //TestMenuItem.setVisible(false);
       
        //what is this?
 /*
@@ -1819,8 +1827,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
       
-       PrefFrame pf = new PrefFrame();
-       pf.showFrame();
+       if(this.prefs==null) { prefs = new PrefFrame(); }
+       prefs.showFrame();
         
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
@@ -2009,11 +2017,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                  closeEnough(sum_props[i].getDenMassIdx(), sum_props[i].getDenMassValue())) {
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
+                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
              }
           } else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
              if (closeEnough(sum_props[i].getParentMassIdx(), sum_props[i].getParentMassValue())) {
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
+                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
              }
           }
        }
@@ -2274,6 +2284,20 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
 
+    /* 
+    //Poking around for roi locations exception
+
+    MimsRoiManager rm = getRoiManager();
+    String name = rm.getSelectedROIs()[0].getName();
+    HashMap locations = rm.getRoiLocations();
+    ArrayList pos = (ArrayList)locations.get(name);
+
+    System.out.println("Roi: " + name);
+    System.out.println("locations size : " + locations.size());
+    System.out.println("pos size: " + pos.size());
+    */
+
+    /* Random exception testing
     try{
     int a=0;
     int b =1;
@@ -2287,6 +2311,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
             System.out.println(foo[i].toString());
         }
     }
+    */
 /*     try {
         MimsRoiManager rm = getRoiManager();
         if (rm != null) {
@@ -2914,6 +2939,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           hsi_props[i].setNumMassValue(getMassValue(hsi_props[i].getNumMassIdx()));
           hsi_props[i].setDenMassValue(getMassValue(hsi_props[i].getDenMassIdx()));
 
+          //should this be set inside getprops?
+          //maybe...
           hsi_props[i].setMag(hsi[i].getCanvas().getMagnification());
        }
        return hsi_props;
@@ -2930,6 +2957,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           rto_props[i].setNumMassValue(getMassValue(rto_props[i].getNumMassIdx()));
           rto_props[i].setDenMassValue(getMassValue(rto_props[i].getDenMassIdx()));
 
+          //should these be set inside getprops?
+          //maybe...
           rto_props[i].setMinLUT(rto[i].getDisplayRangeMin());
           rto_props[i].setMaxLUT(rto[i].getDisplayRangeMax());
 
@@ -2952,6 +2981,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           } else if (sum_props[i].getSumType() == SumProps.MASS_IMAGE) {
              sum_props[i].setParentMassValue(getMassValue(sum_props[i].getParentMassIdx()));
           }
+
+          //should these be set inside getprops?
+          //maybe...
+          sum_props[i].setMinLUT(sum[i].getDisplayRangeMin());
+          sum_props[i].setMaxLUT(sum[i].getDisplayRangeMax());
+
           sum_props[i].setMag(sum[i].getCanvas().getMagnification());
        }
        return sum_props;
@@ -3070,6 +3105,10 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     
     public boolean isUpdating() {
         return bUpdating;
+    }
+
+    public PrefFrame getPreferences() {
+        return prefs;
     }
 
     public Opener getOpener() {

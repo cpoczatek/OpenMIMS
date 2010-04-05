@@ -18,8 +18,10 @@ public class SumProps implements java.io.Serializable {
    private double ratioScaleFactor;
    //--------------------------------
    //End of v2
-
    private double mag = 1.0;
+   private double minLUT;
+   private double maxLUT;
+
 
     // Use for Mass Images.
     public SumProps(int massIndex) {
@@ -46,6 +48,9 @@ public class SumProps implements java.io.Serializable {
        numMassValue = -1.0;
        denMassValue = -1.0;
        ratioScaleFactor = -1.0;
+
+       minLUT = 0.0;
+       maxLUT = 1.0;
     }
           
     // The mass index of the Numerator.
@@ -92,4 +97,9 @@ public class SumProps implements java.io.Serializable {
     // The window location
     public void setMag(double m) { this.mag = m; }
     public double getMag() { return this.mag; }
+
+    public void setMinLUT(double min) { this.minLUT = min; }
+    public double getMinLUT() { return this.minLUT; }
+    public void setMaxLUT(double max) { this.maxLUT = max; }
+    public double getMaxLUT() { return this.maxLUT; }
 }
