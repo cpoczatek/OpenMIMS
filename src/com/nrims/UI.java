@@ -541,8 +541,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 }
                
             } catch (IOException e) {
-                IJ.log("Failed to open " + file + "......  :\n" + e.getStackTrace());
-                e.printStackTrace();
+                IJ.log("Failed to open " + file + "......  :\n\n");
+                logException(e);
                 return;
             }
 
@@ -1825,6 +1825,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       
    }
 
+    public void logException(Exception e) {
+        IJ.log(e.toString());
+
+        StackTraceElement[] trace = e.getStackTrace();
+        for (int i = 0; i < trace.length; i++) {
+            IJ.log(trace[i].toString());
+        }
+    }
+
+
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
       
        if(this.prefs==null) { prefs = new PrefFrame(); }
@@ -2247,7 +2257,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
         saver.saveAsPng(dir + name);
 
     } catch (Exception e) {
-        ij.IJ.log(e.getMessage());
+        logException(e);
     }
 
 }//GEN-LAST:event_captureImageMenuItemActionPerformed
@@ -2297,7 +2307,8 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     System.out.println("pos size: " + pos.size());
     */
 
-    /* Random exception testing
+     //Random exception testing
+    /*
     try{
     int a=0;
     int b =1;
@@ -2308,6 +2319,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
 
         StackTraceElement[] foo = e.getStackTrace();
         for(int i=0; i<foo.length; i++) {
+            System.out.println("foo["+i+"]");
             System.out.println(foo[i].toString());
         }
     }
