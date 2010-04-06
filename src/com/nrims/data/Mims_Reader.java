@@ -2,6 +2,7 @@ package com.nrims.data;
 
 import java.io.*;
 import java.text.DecimalFormat;
+import com.nrims.common.*;
 
 /**
  * Class responsible for opening MIMS files.
@@ -13,7 +14,7 @@ public class Mims_Reader implements Opener {
      */
     public static final int BITS_PER_PIXEL = 16;
     private File file = null;
-    private RandomAccessFile in;
+    private RandomAccessEndianFile in;
     private int verbose = 0;
     private int width,  height,  nMasses,  nImages;
     private HeaderImage ihdr;
@@ -25,6 +26,12 @@ public class Mims_Reader implements Opener {
     private String[] massNames;
     private double counting_time;
     private String notes = "";
+
+    /* flag describing the byte order in file */
+    private boolean big_endian_flag = true;
+
+    /* file type for MIMS .im images */
+    private static final int MIMS_IMAGE_TYPE_INDEX = 27;
 
     private Mims_Reader() {}
 
@@ -80,7 +87,7 @@ public class Mims_Reader implements Opener {
 
         checkMassIndex(index);
 
-        int i, j;
+        int i, j, b1, b2, gl;
         int pixelsPerImage = width * height;
         int bytesPerMass = pixelsPerImage * 2;
         short[] spixels = new short[pixelsPerImage];
@@ -91,20 +98,68 @@ public class Mims_Reader implements Opener {
         }
         in.seek(offset);
 
-        int gl = -1;
+        gl = -1;
         i = index + 1;
 
         byte[] bArray = new byte[bytesPerMass];
         in.read(bArray);
 
         for (i = 0, j=0; i < pixelsPerImage; i++, j += 2) {
-            int b1 = bArray[j] & 0xff;
-            int b2 = bArray[j + 1] & 0xff;
+
+            if ( getBigEndianFlag() )
+            {
+                b1 = bArray[j] & 0xff;
+                b2 = bArray[j + 1] & 0xff;
+            } else {
+                b2 = bArray[j] & 0xff;
+                b1 = bArray[j + 1] & 0xff;
+            }
+
             gl = (b2 + (b1 << 8));
             spixels[i] = (short) gl;
         }
 
         return spixels;
+    }
+
+    public void setBigEndianFlag(boolean flag)
+    {
+        big_endian_flag = flag;
+    }
+
+    public boolean getBigEndianFlag()
+    {
+        return( big_endian_flag );
+    }
+
+    private void guessEndianOrder()
+            throws FileNotFoundException, IOException
+    {
+        File tmp_file = getImageFile();
+
+        if ( tmp_file == null )
+        {
+            return;
+        }
+
+        RandomAccessFile tmp_in = new RandomAccessFile( tmp_file, "r");
+
+        int tmp_int = tmp_in.readInt(); /* Skipping the first 4 bytes */
+
+        tmp_int = tmp_in.readInt();
+
+        if ( tmp_int == MIMS_IMAGE_TYPE_INDEX )
+        {
+            setBigEndianFlag( true );
+        }
+
+        if ( DataUtilities.intReverseByteOrder( tmp_int ) ==
+                MIMS_IMAGE_TYPE_INDEX )
+        {
+            setBigEndianFlag( false );
+        }
+
+        tmp_in.close();
     }
 
     /**
@@ -117,13 +172,13 @@ public class Mims_Reader implements Opener {
             throw new NullPointerException("DefAnalysis cannot be null in readDefAnalyais.");
         }
 
-        dhdr.release = in.readInt();
-        dhdr.analysis_type = in.readInt();
-        dhdr.header_size = in.readInt();
-        int noused = in.readInt();
-        dhdr.data_included = in.readInt();
-        dhdr.sple_pos_x = in.readInt();
-        dhdr.sple_pos_y = in.readInt();
+        dhdr.release = in.readIntEndian();
+        dhdr.analysis_type = in.readIntEndian();
+        dhdr.header_size = in.readIntEndian();
+        int noused = in.readIntEndian();
+        dhdr.data_included = in.readIntEndian();
+        dhdr.sple_pos_x = in.readIntEndian();
+        dhdr.sple_pos_y = in.readIntEndian();
         dhdr.analysis_name = getChar(32);
         dhdr.username = getChar(16);
         dhdr.sample_name = getChar(16);
@@ -151,28 +206,28 @@ public class Mims_Reader implements Opener {
      */
     private void readAutoCal(AutoCal ac) throws IOException {
         ac.mass = getChar(64);
-        ac.begin = in.readInt();
-        ac.period = in.readInt();
+        ac.begin = in.readIntEndian();
+        ac.period = in.readIntEndian();
     }
 
     /**
      * Reads a Table element structure from the SIMS file header.
      */
     private void readTabelts(Tabelts te) throws IOException {
-        te.num_elt = in.readInt();
-        te.num_isotop = in.readInt();
-        te.quantity = in.readInt();
+        te.num_elt = in.readIntEndian();
+        te.num_isotop = in.readIntEndian();
+        te.quantity = in.readIntEndian();
     }
 
     /**
      * Reads a PolyAtomic element/structure from the SIMS file header.
      */
     private void readPolyAtomic(PolyAtomic pa) throws IOException {
-        pa.flag_numeric = in.readInt();
-        pa.numeric_value = in.readInt();
-        pa.nb_elts = in.readInt();
-        pa.nb_charges = in.readInt();
-        pa.charge = in.readInt();
+        pa.flag_numeric = in.readIntEndian();
+        pa.numeric_value = in.readIntEndian();
+        pa.nb_elts = in.readIntEndian();
+        pa.nb_charges = in.readIntEndian();
+        pa.charge = in.readIntEndian();
         String unused = getChar(64);
         pa.tabelts = new Tabelts[5];
         for (int i = 0; i < 5; i++) {
@@ -187,9 +242,9 @@ public class Mims_Reader implements Opener {
     private void readSigRef(SigRef sr) throws IOException {
         sr.polyatomic = new PolyAtomic();
         readPolyAtomic(sr.polyatomic);
-        sr.detector = in.readInt();
-        sr.offset = in.readInt();
-        sr.quantity = in.readInt();
+        sr.detector = in.readIntEndian();
+        sr.offset = in.readIntEndian();
+        sr.quantity = in.readIntEndian();
     }
 
     /**
@@ -201,17 +256,17 @@ public class Mims_Reader implements Opener {
         }
 
         mask.filename = getChar(16);
-        mask.analysis_duration = in.readInt();
-        mask.cycle_number = in.readInt();
-        mask.scantype = in.readInt();
-        mask.magnification = in.readShort();
-        mask.sizetype = in.readShort();
-        mask.size_detector = in.readShort();
-        short unused = in.readShort();
-        mask.beam_blanking = in.readInt();
-        mask.sputtering = in.readInt();
-        mask.sputtering_duration = in.readInt();
-        mask.auto_calib_in_analysis = in.readInt();
+        mask.analysis_duration = in.readIntEndian();
+        mask.cycle_number = in.readIntEndian();
+        mask.scantype = in.readIntEndian();
+        mask.magnification = in.readShortEndian();
+        mask.sizetype = in.readShortEndian();
+        mask.size_detector = in.readShortEndian();
+        short unused = in.readShortEndian();
+        mask.beam_blanking = in.readIntEndian();
+        mask.sputtering = in.readIntEndian();
+        mask.sputtering_duration = in.readIntEndian();
+        mask.auto_calib_in_analysis = in.readIntEndian();
 
         if (this.verbose > 2) {
             System.out.println("mask.filename:" + mask.filename);
@@ -230,16 +285,16 @@ public class Mims_Reader implements Opener {
 
         mask.autocal = new AutoCal();
         readAutoCal(mask.autocal);
-        int sig_ref_int = in.readInt();
+        int sig_ref_int = in.readIntEndian();
         mask.sig_ref = new SigRef();
         readSigRef(mask.sig_ref);
-        nMasses = in.readInt();
+        nMasses = in.readIntEndian();
         if (this.verbose > 2) {
             System.out.println("mask.nMasses:" + nMasses);//	Read the Tab_mass *tab_mass[10]..
         }
         int tab_mass_ptr;
         for (int i = 0; i < 10; i++) {
-            tab_mass_ptr = in.readInt();
+            tab_mass_ptr = in.readIntEndian();
             if (this.verbose > 2) {
                 System.out.println("mask.tmp:" + tab_mass_ptr);
             }
@@ -255,15 +310,15 @@ public class Mims_Reader implements Opener {
         if (tab == null) {
             throw new NullPointerException();
         }
-        int unused = in.readInt();
-        int unuseds2 = in.readInt();
-        tab.mass_amu = in.readDouble();
-        tab.matrix_or_trace = in.readInt();
-        tab.detector = in.readInt();
-        tab.waiting_time = in.readDouble();
-        tab.counting_time = in.readDouble();
-        tab.offset = in.readInt();
-        tab.mag_field = in.readInt();
+        int unused = in.readIntEndian();
+        int unuseds2 = in.readIntEndian();
+        tab.mass_amu = in.readDoubleEndian();
+        tab.matrix_or_trace = in.readIntEndian();
+        tab.detector = in.readIntEndian();
+        tab.waiting_time = in.readDoubleEndian();
+        tab.counting_time = in.readDoubleEndian();
+        tab.offset = in.readIntEndian();
+        tab.mag_field = in.readIntEndian();
 
         // Set some local variables.
         counting_time = tab.counting_time;
@@ -323,19 +378,19 @@ public class Mims_Reader implements Opener {
         if (ihdr == null) {
             throw new NullPointerException();
         }
-        ihdr.size_self = in.readInt();
-        ihdr.type = in.readShort();
-        ihdr.w = in.readShort();
+        ihdr.size_self = in.readIntEndian();
+        ihdr.type = in.readShortEndian();
+        ihdr.w = in.readShortEndian();
         this.width = ihdr.w;
-        ihdr.h = in.readShort();
+        ihdr.h = in.readShortEndian();
         this.height = ihdr.h;
-        ihdr.d = in.readShort();
-        ihdr.n = in.readShort();
-        nImages = ihdr.z = in.readShort();
+        ihdr.d = in.readShortEndian();
+        ihdr.n = in.readShortEndian();
+        nImages = ihdr.z = in.readShortEndian();
         if (nImages < 1) {
             nImages = 1;
         }
-        ihdr.raster = in.readInt();
+        ihdr.raster = in.readIntEndian();
         ihdr.nickname = getChar(64);
 
         if (this.verbose > 1) {
@@ -390,7 +445,9 @@ public class Mims_Reader implements Opener {
     public Mims_Reader(File imageFile) throws IOException, NullPointerException {
 
         this.file = imageFile;
-        in = new RandomAccessFile(file, "r");
+        guessEndianOrder();
+        in = new RandomAccessEndianFile(file, "r");
+        in.setBigEndianFlag( this.getBigEndianFlag() );
 
         readHeader();
         currentIndex = 0;
