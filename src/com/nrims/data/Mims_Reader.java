@@ -151,9 +151,7 @@ public class Mims_Reader implements Opener {
         if ( tmp_int == MIMS_IMAGE_TYPE_INDEX )
         {
             setBigEndianFlag( true );
-        }
-
-        if ( DataUtilities.intReverseByteOrder( tmp_int ) ==
+        } else if ( DataUtilities.intReverseByteOrder( tmp_int ) ==
                 MIMS_IMAGE_TYPE_INDEX )
         {
             setBigEndianFlag( false );
