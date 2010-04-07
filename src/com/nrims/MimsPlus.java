@@ -1050,22 +1050,25 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         // Loop over all Rois, determine which one to highlight.
         int displayDigits = 3;
         java.util.Hashtable rois = ui.getRoiManager().getROIs();
+
         Roi smallestRoi = null;
         double smallestRoiArea = 0.0;
         ij.process.ImageStatistics stats = null;
+        ij.process.ImageStatistics smallestRoiStats = null;
         ij.process.ImageStatistics numeratorStats = null;
         ij.process.ImageStatistics denominatorStats = null;
 
         for(Object key:rois.keySet()) {
-            Roi roi = (Roi)rois.get(key);
-            if (!((DefaultListModel)ui.getRoiManager().getList().getModel()).contains(roi.getName()))
+            Roi loopRoi = (Roi)rois.get(key);
+
+            if (!((DefaultListModel)ui.getRoiManager().getList().getModel()).contains(loopRoi.getName()))
                continue;
             int slice=1;
-            if(this.getMimsType()==this.RATIO_IMAGE) {
+            if(this.getMimsType()==MimsPlus.RATIO_IMAGE) {
                 int neum = getRatioProps().getNumMassIdx();
                 slice = ui.getMassImage(neum).getCurrentSlice();
             }
-            if(this.getMimsType()==this.HSI_IMAGE ) {
+            if(this.getMimsType()==MimsPlus.HSI_IMAGE ) {
                 int neum = getHSIProps().getNumMassIdx();
                 slice = ui.getMassImage(neum).getCurrentSlice();
             } else {
@@ -1074,45 +1077,48 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
             boolean linecheck = false;
             int c = -1;
-            if( (roi.getType() == roi.LINE) || (roi.getType() == roi.POLYLINE) || (roi.getType() == roi.FREELINE) ) {
-                c = roi.isHandle(x, y);
+            if( (loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE) || (loopRoi.getType() == Roi.FREELINE) ) {
+                c = loopRoi.isHandle(x, y);
                 if(c != -1) linecheck=true;
 
             }
 
-            if(roi.contains(mX, mY) || linecheck) {
+            if(loopRoi.contains(mX, mY) || linecheck) {
+
                if (ui.getSyncROIsAcrossPlanes() || ui.getRoiManager().getSliceNumber(key.toString()) == slice) {
                   if (this.getMimsType()==HSI_IMAGE && internalRatio!=null) {
-                      internalRatio.setRoi(roi);
+                      internalRatio.setRoi(loopRoi);
                       stats = internalRatio.getStatistics();
                       internalRatio.killRoi();
                   } else {
-                     setRoi(roi);
+                     setRoi(loopRoi);
                      stats = this.getStatistics();
                      killRoi();
                   }
 
                   //get numerator and denominator stats
                   if ((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE)&& internalNumerator!=null && internalDenominator!=null) {
-                      internalNumerator.setRoi(roi);
+                      internalNumerator.setRoi(loopRoi);
                       numeratorStats = internalNumerator.getStatistics();
                       internalNumerator.killRoi();
 
-                      internalDenominator.setRoi(roi);
+                      internalDenominator.setRoi(loopRoi);
                       denominatorStats = internalDenominator.getStatistics();
                       internalDenominator.killRoi();
                   }
 
-                  // Set as smallest Roi that the mouse is within.
+                  // Set as smallest Roi that the mouse is within and save stats
                   if (smallestRoi == null) {
-                     smallestRoi = roi;
-                     smallestRoiArea = stats.area;
+                     smallestRoi = loopRoi;
+                     smallestRoiStats = stats;
+                     smallestRoiArea = smallestRoiStats.area;
                      if (linecheck)
                         smallestRoiArea = 0;
                   } else {
                      if (stats.area < smallestRoiArea || linecheck) {
-                        smallestRoi = roi;
+                        smallestRoi = loopRoi;
                         smallestRoiArea = stats.area;
+                        smallestRoiStats = stats;
                      }
                   }
                }
@@ -1130,12 +1136,13 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         if(smallestRoi!=null) {
             smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
         }
+        //set image roi for vizualization
         setRoi(smallestRoi);
         if (smallestRoi != null) {
            if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE)
               msg += "\t ROI " + roi.getName() + ": L=" + IJ.d2s(roi.getLength(), 0);
            else
-              msg += "\t ROI " + roi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
+              msg += "\t ROI " + roi.getName() + ": A=" + IJ.d2s(smallestRoiStats.area, 0) + ", M=" + IJ.d2s(smallestRoiStats.mean, displayDigits) + ", Sd=" + IJ.d2s(smallestRoiStats.stdDev, displayDigits);
            updateHistogram(true);
            updateLineProfile();
            if((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE) && numeratorStats!=null && denominatorStats!=null) {
