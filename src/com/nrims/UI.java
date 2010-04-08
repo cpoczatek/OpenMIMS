@@ -701,7 +701,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 jTabbedPane1.setComponentAt(6, segmentation);
 
                 mimsData.setMimsImage(image);
-                hsiControl.updateImage();    
+                hsiControl.updateImage();
+                roiControl.updateImage();
             }
             
             jTabbedPane1.addChangeListener(new ChangeListener() {

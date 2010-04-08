@@ -32,8 +32,12 @@ public class MimsRoiControl extends javax.swing.JPanel {
         jCheckBox2.setSelected(ui.getSyncROIs());
         jCheckBox3.setSelected(ui.getAddROIs());
         jCheckBox5.setSelected(ui.getSyncROIsAcrossPlanes());
-        jTextField1.setText(ui.getOpener().getImageFile().getName()+".txt");
+        jTextField1.setText(ui.getOpener().getImageFile().getName());
         measure.setName(jTextField1.getText());
+    }
+
+    public void updateImage() {
+        jTextField1.setText(ui.getOpener().getImageFile().getName());
     }
     
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -341,6 +345,10 @@ private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 // TODO add your handling code here:
     // If not appending reset the data in the table
     if(jCheckBox4.isSelected() == false ) measure.reset();
+
+    //not the right place
+    //measure.setName(ui.getOpener().getImageFile().getName());
+    
     measure.measureSums();
     
     if (ij.WindowManager.getFrame(measure.getName()) != null) {
