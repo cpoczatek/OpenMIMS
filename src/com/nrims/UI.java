@@ -297,7 +297,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             getCBControl().addWindowtoList(mp);
             return true;
          }
-         ii++;
          if (mp.getMimsType() == MimsPlus.COMPOSITE_IMAGE && compImages[ii] == null) {
             inserted = true;
             compImages[ii] = mp;
