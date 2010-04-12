@@ -42,8 +42,6 @@ public class PrefFrame extends PlugInJFrame {
         jLabel3 = new javax.swing.JLabel();
         ratioReciprocalsCheckBox = new javax.swing.JCheckBox();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
         jLabel1.setText("When exporting images:");
 
         HSIcheckbox.setText("include HSI images");
