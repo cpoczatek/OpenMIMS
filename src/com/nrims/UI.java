@@ -1879,9 +1879,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         // Save the ROI files to zip.
         String roisFileName = baseFileName+ROIS_EXTENSION;
-        int[] indexes = getRoiManager().getAllIndexes();
-        if (indexes.length > 0)
-           getRoiManager().saveMultiple(indexes, roisFileName, false);
+        Roi[] rois = getRoiManager().getAllROIs();
+        if (rois.length > 0)
+           getRoiManager().saveMultiple(rois, roisFileName, false);
 
         // Contruct a unique name for each ratio image and save.
         MimsPlus ratio[] = getOpenRatioImages();
@@ -2293,6 +2293,17 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
                                                                                          
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
+
+    MimsRoiManager rm = this.getRoiManager();
+    HashMap h = rm.getRoiLocations();
+
+    for (Object key : h.keySet()) {
+        ArrayList<Integer[]> xylist = (ArrayList<Integer[]>) h.get(key);
+        System.out.println("roi: "+key+" -> ");
+        for(int i = 0; i<xylist.size(); i++) {
+            System.out.println(xylist.get(i)[0]+","+xylist.get(i)[1]);
+        }
+    }
 
     /* 
     //Poking around for roi locations exception

@@ -64,8 +64,8 @@ public class Measure {
     public void setName(String name) {
         if (name != null) {
             fileName = name;
-            if (!fileName.endsWith(".txt")) {
-                fileName += ".txt";
+            if (!fileName.endsWith(".csv")) {
+                fileName += ".csv";
             }
         }
     }
@@ -513,6 +513,8 @@ public class Measure {
             rois = new Roi[0];
         }
 
+        //why are we checking sum image size?
+        //shouldn't it allways be 1?
         int nSlices = mSumImages[0].getImageStackSize();
         if (nSlices < 1) {
             nSlices = 1;
@@ -526,6 +528,57 @@ public class Measure {
             nrois = 1;
         }
 
+        // Generate column headers.
+        //Add filename, roi name, and group name columns
+        //This only works since only the label column can have strings in it
+        //because of the trick where labels have tabs in them
+        //or not
+        
+        //rTable.setHeading(ncol++, "filename");
+        //rTable.setHeading(ncol++, "roiname");
+        //rTable.setHeading(ncol++, "groupname");
+        
+
+        for (int imgIndex = 0; imgIndex < mSumImages.length; imgIndex++) {
+            for (int statIndex = 0; statIndex < bMeasure.length; statIndex++) {
+                if (bMeasure[statIndex]) {
+                    String hd = mSumImages[imgIndex].getRoundedTitle();
+                    hd = hd + "_" + measureNames[statIndex];
+                    if (ncol == currentMaxColumns - 2) {
+                        rTable.addColumns();
+                        currentMaxColumns = currentMaxColumns * 2;
+                    }
+                    rTable.setHeading(ncol++, hd);
+                }
+            }
+        }
+
+        // Fill in table values.
+        for (int roiIndex = 0; roiIndex < rois.length; roiIndex++) {
+            rTable.incrementCounter();
+            ncol = 0;
+
+            for (int imgIndex = 0; imgIndex < mSumImages.length; imgIndex++) {
+                if (rois.length > 0) {
+                   mSumImages[imgIndex].setRoi(rois[roiIndex]);
+                   if (mSumImages[imgIndex].getProcessor() != null && rois[roiIndex] != null) {
+                      ncol = addResults(mSumImages[imgIndex], 0, rois.length > 0 ? rois[roiIndex] : null, 1, ncol);
+                   }
+                }
+            }
+        }
+
+        // Set row labels.
+        for (int j = 0; j < rTable.getCounter(); j++) {
+            String label = ui.getImageFilePrefix() + "," + rm.getRoiGroup(rois[j].getName()) + "," + rois[j].getName() ;
+            rTable.setLabel(label, j);
+        }
+
+
+
+        //Old format, wach row and image
+        //Switching to each row an roi
+        /*
         // Generate column headers.
         for (int r = 1; r <= nrois; r++) {
             for (int m = 0; m < bMeasure.length; m++) {
@@ -565,6 +618,9 @@ public class Measure {
             String label = ui.getImageFilePrefix()+" "+mSumImages[j].getTitle();
             rTable.setLabel(label, j);
         }
+        //end old format
+         */
+
 
         // Show table.
         rTable.show(fileName);

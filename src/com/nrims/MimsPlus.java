@@ -620,8 +620,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
         if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
             SumProps props = this.getSumProps();
-            int ind = props.getParentMassIdx();
-            return "sum " + ui.getMassImage(ind).getRoundedTitle();
+            if (props.getSumType() == SumProps.MASS_IMAGE) {
+                int ind = props.getParentMassIdx();
+                return "sum " + ui.getMassImage(ind).getRoundedTitle();
+            } else if (props.getSumType() == SumProps.RATIO_IMAGE) {
+                int den = props.getDenMassIdx();
+                int num = props.getNumMassIdx();
+                return "sum " + ui.getMassImage(num).getRoundedTitle() + "/" + ui.getMassImage(den).getRoundedTitle();
+            }
         }
         return "0";
     }

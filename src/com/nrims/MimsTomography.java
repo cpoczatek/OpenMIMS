@@ -177,7 +177,7 @@ public class MimsTomography extends javax.swing.JPanel {
        MimsRoiManager rm = ui.getRoiManager();
        Roi[] rois = rm.getSelectedROIs();
        if (rois.length == 0)
-          rois = rm.getAllROIs();
+          rois = rm.getAllListedROIs();
        if (rois.length >= 1) {
           tomoChart.setRois(rois);
        } else {
@@ -234,7 +234,7 @@ public class MimsTomography extends javax.swing.JPanel {
        // Get selected rois.
        Roi[] rois = rm.getSelectedROIs();
        if (rois.length == 0)
-          rois = rm.getAllROIs();
+          rois = rm.getAllListedROIs();
        if (rois.length >= 1) {
           table.setRois(rois);
        } else {

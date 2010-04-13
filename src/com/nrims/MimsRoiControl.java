@@ -34,6 +34,14 @@ public class MimsRoiControl extends javax.swing.JPanel {
         jCheckBox5.setSelected(ui.getSyncROIsAcrossPlanes());
         jTextField1.setText(ui.getOpener().getImageFile().getName());
         measure.setName(jTextField1.getText());
+
+        //disabling add and sync checkboxes
+        //these settings make little/no sense now
+        //need to be refactored out
+        this.jCheckBox2.setEnabled(false);
+        this.jCheckBox3.setEnabled(false);
+        this.jCheckBox5.setEnabled(false);
+
     }
 
     public void updateImage() {
@@ -346,8 +354,7 @@ private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     // If not appending reset the data in the table
     if(jCheckBox4.isSelected() == false ) measure.reset();
 
-    //not the right place
-    //measure.setName(ui.getOpener().getImageFile().getName());
+    measure.setName(jTextField1.getText());
     
     measure.measureSums();
     

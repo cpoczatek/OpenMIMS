@@ -137,6 +137,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          public void actionPerformed(ActionEvent evt) {
             deleteActionPerformed(evt);
          }});
+         JButton rename = new JButton("Rename");
+         rename.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent evt) {
+            renameActionPerformed(evt);
+         }});
+
 
         // Assign, Deassign Button.
         JButton assign = new JButton("Assign");
@@ -164,9 +170,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         JPanel southPanel2  = new JPanel();
 
         // Left pane - south panel
-        southPanel1.setLayout(new GridLayout(1,2));
+        southPanel1.setLayout(new GridLayout(2,2));
         southPanel1.add(create);
         southPanel1.add(delete);
+        southPanel1.add(rename);
 
         // Left pane
         Dimension dLeft = new Dimension(165, 325);
@@ -223,9 +230,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     void createActionPerformed(ActionEvent e) {
         String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
-        s = s.trim();
         if (s == null || s == "")
            return;
+        s = s.trim();
         if (groups.contains(s))
            return;
         else {
@@ -251,6 +258,49 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
           groupListModel.removeElementAt(indexToDelete);
           groups.remove(groupNameToDelete);
        }
+    }
+
+    void renameActionPerformed(ActionEvent e) {
+        int[] idxs = groupjlist.getSelectedIndices();
+        if(idxs.length==0) return;
+        int index = idxs[0];
+        String groupName = (String)groupListModel.get(index);
+        if(groupName.equals(DEFAULT_GROUP)) return;
+
+        String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
+                    JOptionPane.PLAIN_MESSAGE,null,null,"");
+        if (newName == null || newName.equals("") )
+           return;
+        newName = newName.trim();
+        
+        //collect all rois of that group
+        ArrayList<Roi> grprois = new ArrayList<Roi>();
+        for (int id = 0; id < roijlist.getModel().getSize(); id++) {
+            String roiName = roijlist.getModel().getElementAt(id).toString();
+            String roigroupName = (String) groupsMap.get(roiName);
+            if (roigroupName != null) {
+                if (roigroupName.equals(groupName)) {
+                    grprois.add(this.getRoiByName(roiName));
+                    
+                }
+            }
+        }
+
+        //deassign all rois
+        for(int i = 0; i<grprois.size(); i++) {
+                groupsMap.remove(grprois.get(i).getName());
+        }
+        //reassign all rois
+        for(int i = 0; i<grprois.size(); i++) {
+            groupsMap.put(grprois.get(i).getName(), newName);
+        }
+
+        //update groups
+        groups.remove(groupName);
+        groups.add(newName);
+
+        //update list
+        groupListModel.setElementAt(newName, index);
     }
 
     // Assigns all selected rois to the selected group.
@@ -744,10 +794,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
        }
 
        // Disable delete button if Default Group is one of the groups selected.
-       if (defaultGroupSelected)
+       //this is why the delete button is a class variable andd the others aren't...
+       if (defaultGroupSelected) {
           delete.setEnabled(false);
-       else
+
+       } else {
           delete.setEnabled(true);
+       }
 
        ui.updateAllImages();
 
@@ -1151,7 +1204,21 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         return isStandard;
     }
 
+
+
+    public void renameNumeric() {
+        //Roi[] rois = java.util.Arrays.sort(this.getAllROIs(),);
+
+
+    }
+
     String getLabel(ImagePlus imp, Roi roi) {
+        /*
+        String label = "";
+        label += this.getAllROIs().length;
+        return label;
+
+        */
         Rectangle r = roi.getBounds();
         int xc = r.x + r.width / 2;
         int yc = r.y + r.height / 2;
@@ -1521,7 +1588,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             indexes = getAllIndexes();
         }
         */
-        return saveMultiple(indexes, name, true);
+        Roi[] tmprois = getAllROIs();
+        return saveMultiple(tmprois, name, true);
+        //return saveMultiple(indexes, name, true);
 
         /* Allways save a .zip since we're saving positions as well.
         //only called if one roi selected...
@@ -1560,7 +1629,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         */
     }
 
-    boolean saveMultiple(int[] indexes, String path, boolean bPrompt) {
+    boolean saveMultiple(Roi[] rois, String path, boolean bPrompt) {
         Macro.setOptions(null);
         if (bPrompt) {
             String defaultname = ui.getImageFilePrefix();
@@ -1582,14 +1651,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(path));
             DataOutputStream out = new DataOutputStream(new BufferedOutputStream(zos));
             RoiEncoder re = new RoiEncoder(out);
-            for (int i = 0; i < indexes.length; i++) {
-                String label = roiListModel.get(indexes[i]).toString();
-                Roi roi = (Roi) rois.get(label);
+            for (int i = 0; i < rois.length; i++) {
+                String label = rois[i].getName();
                 if (!label.endsWith(".roi")) {
                     label += ".roi";
                 }
                 zos.putNextEntry(new ZipEntry(label));
-                re.write(roi);
+                re.write(rois[i]);
                 out.flush();
             }
 
@@ -2198,8 +2266,18 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
        return rois;
     }
 
-    /** Gets all ROIs. */
+    /** Gets all ROIs in rois hash. */
     public Roi[] getAllROIs() {
+        Object[] ob = rois.values().toArray();
+        Roi[] r = new Roi[ob.length];
+        for(int i = 0; i< ob.length; i++) {
+            r[i] = (Roi)ob[i];
+        }
+        return r;
+    }
+
+    /** Gets all listed ROIs. */
+    public Roi[] getAllListedROIs() {
 
        // Get size.
        int size = roijlist.getModel().getSize();
@@ -2378,7 +2456,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
       }
    }
 
-
+//this should be moved to managers package
     public class ParticlesManager extends com.nrims.PlugInJFrame implements ActionListener {
 
         Frame instance;
@@ -2536,6 +2614,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
     }
 
+    //this should be moved to managers package
     public class SquaresManager extends com.nrims.PlugInJFrame implements ActionListener {
 
         Frame instance;
@@ -2676,6 +2755,28 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
     }
 
+    //Compares roi's by name for sorting.
+    //Roi's with int-castable names are compared as ints
+    //Roi's with non-int-castable names are ??????????????????????????
+    public abstract class RoiNameComparator implements Comparator<Roi> {
+        public int compare(Roi roia, Roi roib) {
+            int comp = 0;
+            //this should never actually happen
+            //since roi names are forced to be unique
+            if(roia.getName().equals(roib.getName())) {
+                return comp;
+            }
+            int a=0, b=0;
+            try{
+                a = Integer.parseInt(roia.getName());
+            }catch(Exception e){
+                //do something
+
+            }
+
+            return comp;
+        }
+    }
 
 }
 
