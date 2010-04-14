@@ -475,11 +475,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
          // Difference in sizes
          int size_orig = xylist.size();
-         int size_diff = size_orig - size_new;
-         if(size_diff<0) return;
+         int size_diff = size_new - size_orig;
+         if(size_diff>0) updateRoiLocations(false);
 
-         // Create prepend/append array.
-         for (int i = 0; i < size_orig - size_diff; i++) {
+         // Remove positions
+         // size_diff must be negative here so
+         // decrimenting instead of incrementing
+         for (int i = 0; i > size_diff; i--) {
+             System.out.println("removing 1...");
             xylist.remove(xylist.size()-1);
          }
       }
@@ -508,8 +511,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             int img_size = ui.getmimsAction().getSize();
             int diff = locations_size - img_size;
             if(diff < 0) {
+               //grow locations arraylist
                updateRoiLocations(false);
             } else if(diff > 0) {
+               //shrink locations arraylist
                updateRoiLocations();
             }
          }
