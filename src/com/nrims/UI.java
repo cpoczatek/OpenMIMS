@@ -168,6 +168,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       initComponents();
       initComponentsCustom();
+      im_file_path = null;
       //read in preferences so values are gettable
       //by various tabs (ie mimsTomography, HSIView, etc.
       //when constructed further down
@@ -3260,21 +3261,30 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 skip_next = false;
         }
 
-        EventQueue.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                System.out.println("Ui.run called");
-                UI ui_to_run = new UI(null);
-                ui_to_run.setVisible(true);
-                File[] files_arr = new File[1];;
+        if (im_file_path != null) {
+            EventQueue.invokeLater(new Runnable() {
 
-                if ( im_file_path != null)
+                @Override
+                public void run() {
+                    System.out.println("Ui.run called");
+                    File[] files_arr = new File[1];
+                    UI ui_to_run = new UI(im_file_path);
+                    ui_to_run.setVisible(true);
                     files_arr[0] = new File(im_file_path);
                     ui_to_run.openFiles(files_arr);
                 }
-            
-        });
+            });
+        } else {
+            EventQueue.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    System.out.println("Ui.run called");
+                    UI ui_to_run = new UI(null);
+                    ui_to_run.setVisible(true);
+                }
+            });
+        }
 
         
     }
