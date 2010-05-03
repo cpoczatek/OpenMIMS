@@ -139,6 +139,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     private String revisionNumber = "";
 
+    private static String im_file_path = null;
+    /*
+     * Private stings for option parsing
+     */
+    private static final String IMFILE_OPTION = "-imfile";
+
     /**
      * Constructor
      * Creates a new instance of the OpenMIMS analysis interface.
@@ -3231,12 +3237,27 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        
+        Boolean skip_next = false;
+        im_file_path = null;
+
         for (int i = 0; i < args.length; i++) {
-            System.out.println("Arg "+i+" "+args[i]);
-           if (args[i].startsWith("-ijpath") && i+1 < args.length) {
-					//Prefs.setHomeDir(args[i+1]);
-            }
+            System.out.println("Arg " + i + " " + args[i]);
+
+            if (!skip_next) {
+                if (args[i].startsWith("-ijpath") && i + 1 < args.length) {
+                    //Prefs.setHomeDir(args[i+1]);
+                    skip_next = true;
+                }
+                
+                if ( (args[i].equals(IMFILE_OPTION)) &&
+                       i + 1 < args.length )
+                {
+                    im_file_path = args[i+1];
+                    skip_next = true;
+                }
+
+            } else
+                skip_next = false;
         }
 
         EventQueue.invokeLater(new Runnable() {
@@ -3244,7 +3265,13 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             @Override
             public void run() {
                 System.out.println("Ui.run called");
-                new UI(null).setVisible(true);
+                UI ui_to_run = new UI(null);
+                ui_to_run.setVisible(true);
+                File[] files_arr = new File[1];;
+
+                if ( im_file_path != null)
+                    files_arr[0] = new File(im_file_path);
+                    ui_to_run.openFiles(files_arr);
                 }
             
         });
