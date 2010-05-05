@@ -1,5 +1,6 @@
 package SVM;
 
+import NelderMead.*;
 import SVM.libsvm.*;
 import com.nrims.segmentation.SegmentationProperties;
 import java.io.*;
@@ -57,7 +58,7 @@ class svm_train {
                 }
             }
             accuracy = 100.0 * total_correct / prob.l;
-            System.out.print("Cross Validation Accuracy = " + 100.0 * total_correct / prob.l + "%\n");
+            System.out.print("Cross Validation Accuracy = " + 100.0 * total_correct / prob.l + "%"+ " C = " + this.param.C + " g = " + this.param.gamma + "\n");
         }
 
         return accuracy;
@@ -75,21 +76,51 @@ class svm_train {
         initParameters(props);
         read_problem();
 
+//testing parameter search
+        //case 0 -> grid,  case 1 -> NelderMead
 
-        int[] gamma = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
-        //   int[] gamma = new int[]{0,4,8,12,16,20,24,28,32};
-        for (int e = 0; e < gamma.length; e++) {
+        int gridmethod = 1;
 
-            for (int r = 0; r < gamma.length; r++) {
+        if (gridmethod == 0) {
+            //parameter grid search
+            int[] gamma = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+            //Original default grid
+            //   int[] gamma = new int[]{0,4,8,12,16,20,24,28,32};
+            for (int g = 0; g < gamma.length; g++) {
 
-                double acc = do_cross_validation(e, r, cvFold);
-                if (acc > bestAcc) {
-                    bestAcc = acc;
-                    bestg = e;
-                    bestc = r;
+                for (int c = 0; c < gamma.length; c++) {
+
+                    double acc = do_cross_validation(g, c, 2);
+                    if (acc > bestAcc) {
+                        bestAcc = acc;
+                        bestg = g;
+                        bestc = c;
+                    }
                 }
             }
+
+            System.out.print("times = " + 31 * 31 + ", gamma = " + bestg + ", c = " + bestc + ", acc = " + bestAcc + "%\n");
+
+        } else if (gridmethod == 1) {
+
+            //Nelder-Mead search
+        accuracyCostFunction cost = new accuracyCostFunction();
+        cost.setCVFold(cvFold);
+        Point[] initialSimplex = {
+            new Point(new double[]{(3200 * Math.random()), (3200 * Math.random())}),
+            new Point(new double[]{(3200 * Math.random()), (3200 * Math.random())}),
+            new Point(new double[]{(3200 * Math.random()), (3200 * Math.random())})};
+
+        NelderMead nm = new NelderMead(cost, initialSimplex);
+        Point minP = nm.search();
+        bestg = (int) java.lang.Math.round(minP.get(1) / 100);
+        bestc = (int) java.lang.Math.round(minP.get(2) / 100);
+        bestAcc = 100 - cost.at(minP);
+
+        double min = cost.at(minP);
+        System.out.print("times = " + cost.getTimesCalled() + ", gamma = " + param.gamma + ", c = " + param.C + ", acc = " + min + "%\n");
         }
+
         param.gamma = bestg;
         param.C = bestc;
         System.out.println(bestAcc);
@@ -295,4 +326,28 @@ class svm_train {
 
     //fp.close();
     }
+
+        private class accuracyCostFunction implements Function {
+
+        int times = 0;
+        int cvfold = 5;
+
+        public double at(Point p) {
+            times++;
+            final int gamma = (int) java.lang.Math.round(p.get(1) / 100);
+            final int c = (int) java.lang.Math.round(p.get(2) / 100);
+            //cross validation level hard coded at 5
+
+            return 100 - do_cross_validation(gamma, c, cvfold);
+        }
+
+        public void setCVFold(int f) {
+            cvfold = f;
+        }
+
+        public int getTimesCalled() {
+            return times;
+        }
+    }
+
 }

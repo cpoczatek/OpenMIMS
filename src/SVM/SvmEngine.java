@@ -35,6 +35,8 @@ public class SvmEngine extends com.nrims.segmentation.SegmentationEngine {
         svm_scale sc = new svm_scale();
         ArrayList<String> tempTrainData = sc.run(convData, this.getProperties(), true);
 
+        System.out.println("scaling params: "+ this.SCALINGPARAMS);
+
         this.setProgress(50);
         svm_train st = new svm_train();
         svm_model model = st.run(this.getProperties(), tempTrainData);
