@@ -1005,7 +1005,7 @@ public void uncompressPlanes() {
         this.resetSpinners();   
 }
 
-private boolean compressPlanes(int blockSize) {
+public boolean compressPlanes(int blockSize) {
 
         // initializing stuff.
         int nmasses = image.getNMasses();
