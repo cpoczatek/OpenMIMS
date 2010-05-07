@@ -678,9 +678,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     @Override
     public void show() {
+        //this is a little weird...
         super.show() ;
         ij.gui.ImageWindow win = getWindow();
-        if(win == null && getWindow() != null) {
+        if(win != null || getWindow() != null) {
             if(!(getWindow().getCanvas() instanceof MimsCanvas )) {
                 if (getStackSize() > 1) {
                     new StackWindow(this, new MimsCanvas(this, ui));

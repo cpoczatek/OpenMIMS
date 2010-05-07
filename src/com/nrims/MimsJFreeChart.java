@@ -78,6 +78,15 @@ public class MimsJFreeChart extends JFrame {
          chartpanel.getPopupMenu().addSeparator();
          chartpanel.getPopupMenu().add(xhairs);
 
+         JMenuItem logscale = new JMenuItem("Log/Linear scale");
+         logscale.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               ui.logLinScale(chartpanel);
+            }
+         });
+         chartpanel.getPopupMenu().addSeparator();
+         chartpanel.getPopupMenu().add(logscale);
+
          // Add key listener.
          KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             public boolean dispatchKeyEvent(KeyEvent e) {

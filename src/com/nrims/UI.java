@@ -318,6 +318,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * Swap crosshairs from hidden to shown or vice versa
     * @param chartpanel GUI element to be affected
     */
+   //can these 2 methods be moved to MimsJFreeChart????
    void showHideCrossHairs(ChartPanel chartpanel) {
       Plot plot = chartpanel.getChart().getPlot();
       if (!(plot instanceof XYPlot))
@@ -328,6 +329,36 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
       xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
       xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
+   }
+
+    /**
+    * Change y axis from linear to log scale or vice versa
+    * @param chartpanel GUI element to be affected
+    */
+   
+   void logLinScale(ChartPanel chartpanel) {
+      Plot plot = chartpanel.getChart().getPlot();
+
+      if (!(plot instanceof XYPlot))
+         return;
+
+
+      XYPlot xyplot = (XYPlot) plot;
+      org.jfree.chart.axis.ValueAxis axis = xyplot.getRangeAxis();
+      String label = axis.getLabel();
+
+       if (!(axis instanceof org.jfree.chart.axis.LogarithmicAxis)) {
+           org.jfree.chart.axis.LogarithmicAxis logaxis = new org.jfree.chart.axis.LogarithmicAxis(label);
+           logaxis.setRange(axis.getLowerBound(), axis.getUpperBound());
+           logaxis.setAutoRange(true);
+           logaxis.setStrictValuesFlag(false);
+           xyplot.setRangeAxis(logaxis);
+       } else {
+           org.jfree.chart.axis.NumberAxis linaxis = new org.jfree.chart.axis.NumberAxis(label);
+           linaxis.setAutoRange(true);
+           xyplot.setRangeAxis(linaxis);
+       }
+
    }
 
     /**
@@ -2300,6 +2331,7 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
 
+    /*
     MimsRoiManager rm = this.getRoiManager();
     HashMap h = rm.getRoiLocations();
 
@@ -2310,7 +2342,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
             System.out.println(xylist.get(i)[0]+","+xylist.get(i)[1]);
         }
     }
-
+*/
     /* 
     //Poking around for roi locations exception
 
@@ -2388,7 +2420,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
      */
 
     //batch convert to nrrd test
-    /*
+    
     try {
         // User sets file prefix name
         JFileChooser fc = new JFileChooser();
@@ -2407,10 +2439,12 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
                 //for(int j = 0; j<1000000; j++) {}
 
                 System.out.println("File: "+files[i].getAbsolutePath());
-                
+
+                int planes = this.getOpener().getNImages();
+                this.getmimsStackEditing().compressPlanes(planes);
                 String newfile = files[i].getParent()+File.separator+this.getImageFilePrefix()+NRRD_EXTENSION;
                 System.out.println("New File: "+newfile);
-                //saveSession(newfile);
+                saveSession(newfile,true);
             }
 
         }
@@ -2418,7 +2452,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     } catch (Exception e) {
         e.printStackTrace();
     }
-    */
+    
 
 }//GEN-LAST:event_TestMenuItemActionPerformed
 
