@@ -680,6 +680,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
     void addPopupMenu() {
         pm = new JPopupMenu();
+        pm.setBorderPainted(true);
+        pm.setBorder(new javax.swing.border.LineBorder(Color.BLACK));
         addPopupItem("Duplicate");
         addPopupItem("Combine");
         addPopupItem("Split");
@@ -791,11 +793,30 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
        // Show only Rois that are part of the selected groups.
        roiListModel.removeAllElements();
+       ArrayList<String> names = new ArrayList<String>();
+       ArrayList<Integer> numeric = new ArrayList<Integer>();
        for (Object object : rois.keySet()) {
           String roiName = (String)object;
           boolean contains = containsRoi(groupNames, roiName);
-          if (contains)
-             roiListModel.addElement(roiName);
+          if (contains) {
+              //keep track of numeric and non-numeric names separately
+              if(isNumericName(roiName)) {
+                  numeric.add(Integer.parseInt(roiName));
+              } else {
+                  names.add(roiName);
+              }
+
+          }
+       }
+       //add the Rois sorted numerically
+       Collections.sort(numeric);
+       for(int i=0; i<numeric.size(); i++) {
+           roiListModel.addElement(""+numeric.get(i));
+       }
+       //add the Rois sorted lexigraphically
+       Collections.sort(names);
+       for(int i=0; i<names.size(); i++) {
+           roiListModel.addElement(names.get(i));
        }
 
        // Disable delete button if Default Group is one of the groups selected.
@@ -1109,6 +1130,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             error("The active image does not have a selection.");
             return false;
         }
+
+        /*
         String name = roi.getName();
         if (isStandardName(name)) {
             name = null;
@@ -1118,6 +1141,19 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         if (label == null) {
             return false;
         }
+        */
+
+        String label = "";
+        if(rois.isEmpty()) {
+            label += 1;
+        } else {
+            String maxname = getMaxNumericRoi().getName();
+            int m = Integer.parseInt(maxname);
+            m = m +1;
+            label += m;
+        }
+
+
         roiListModel.addElement(label);
         roi.setName(label);
         Calibration cal = imp.getCalibration();
@@ -1161,6 +1197,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         if (roi == null) {
             return false;
         }
+
+        /*
         String name = roi.getName();
         if (isStandardName(name)) {
             name = null;
@@ -1170,6 +1208,19 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         if (label == null) {
             return false;
         }
+        */
+        
+        String label = "";
+        if(rois.isEmpty()) {
+            label += 1;
+        } else {
+            String maxname = getMaxNumericRoi().getName();
+            int m = Integer.parseInt(maxname);
+            m = m +1;
+            label += m;
+        }
+
+
         roiListModel.addElement(label);
         roi.setName(label);
         Calibration cal = imp.getCalibration();
@@ -1211,8 +1262,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
 
 
-    public void renameNumeric() {
-        //Roi[] rois = java.util.Arrays.sort(this.getAllROIs(),);
+    public void renameNumericRois() {
+        Roi[] numrois = getNumericRoisSorted();
+        int max = numrois.length;
+
+        for(int i = 0; i<max; i++) {
+            rename(numrois[i].getName(),""+(i+1));
+        }
 
 
     }
@@ -1311,6 +1367,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             this.resetTitle();
 
         }
+
+        boolean deletednumeric = false;
         for (int i = count - 1; i >= 0; i--) {
             boolean delete = false;
             for (int j = 0; j < index.length; j++) {
@@ -1321,6 +1379,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             if (delete) {
                 locations.remove(roiListModel.get(i));
                 rois.remove(roiListModel.get(i));
+                if( isNumericName((String)roiListModel.get(i)) ) {
+                    deletednumeric = true;
+                }
                 roiListModel.remove(i);
             }
         }
@@ -1328,6 +1389,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             Recorder.record("mimsRoiManager", "Delete");
         }
 
+        //rename any numericly named rois
+        if(deletednumeric) {
+            renameNumericRois();
+        }
+        
         ui.updateAllImages();
 
         return true;
@@ -1365,8 +1431,45 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         roiListModel.set(index, name2);
         roijlist.setSelectedIndex(index);
 
+        if(isNumericName(name) && !(isNumericName(name2))) {
+            renameNumericRois();
+        }
+
         if (Recorder.record) {
             Recorder.record("mimsRoiManager", "Rename", name2);
+        }
+        return true;
+    }
+
+
+    boolean rename(String name, String name2) {
+        
+        Roi roi = (Roi) rois.get(name);
+        if(roi == null) {
+            return false;
+        }
+
+        // update rois hashtable
+        rois.remove(name);
+        roi.setName(name2);
+        rois.put(name2, roi);
+
+        // update locations array.
+        locations.put(name2, locations.get(name));
+        locations.remove(name);
+
+        // update groups map.
+        String group = (String) groupsMap.remove(name);
+        if (group != null) {
+            groupsMap.put(name2, group);
+        }
+
+        // update the list display.
+        //wrong way?
+        if(roiListModel.contains(name)) {
+            roiListModel.setElementAt(name2, roiListModel.indexOf(name));
+            //roiListModel.removeElement(name);
+            //roiListModel.addElement(name2);
         }
         return true;
     }
@@ -2464,7 +2567,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
       }
    }
 
-//this should be moved to managers package
+//REFACTOR this should be moved to managers package
     public class ParticlesManager extends com.nrims.PlugInJFrame implements ActionListener {
 
         Frame instance;
@@ -2622,7 +2725,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
     }
 
-    //this should be moved to managers package
+    //REFACTOR this should be moved to managers package
     public class SquaresManager extends com.nrims.PlugInJFrame implements ActionListener {
 
         Frame instance;
@@ -2763,26 +2866,83 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
     }
 
+
+    //Various methods to deal with transitionsing to
+    //simple numeric roi names
+
     //Compares roi's by name for sorting.
     //Roi's with int-castable names are compared as ints
     //Roi's with non-int-castable names are ??????????????????????????
     public abstract class RoiNameComparator implements Comparator<Roi> {
         public int compare(Roi roia, Roi roib) {
-            int comp = 0;
+            
             //this should never actually happen
             //since roi names are forced to be unique
             if(roia.getName().equals(roib.getName())) {
-                return comp;
+                return 0;
             }
             int a=0, b=0;
             try{
                 a = Integer.parseInt(roia.getName());
+                b = Integer.parseInt(roib.getName());
             }catch(Exception e){
-                //do something
+                return 0;
 
             }
 
-            return comp;
+            if(a<b) return -1;
+            if(a>b) return 1;
+            return 0;
+        }
+    }
+
+    public Roi getMaxNumericRoi() {
+        Roi[] tmprois = getNumericRoisSorted();
+        return tmprois[tmprois.length-1];
+    }
+
+     public Roi[] getNumericRois() {
+        Roi[] tmprois = getAllROIs();
+        ArrayList<Roi> numrois = new ArrayList<Roi>();
+
+        for(int i = 0; i< tmprois.length; i++) {
+            if(hasNumericName(tmprois[i]))
+                numrois.add(tmprois[i]);
+        }
+
+        Roi[] returnrois = new Roi[numrois.size()];
+
+        for(int i = 0; i< returnrois.length; i++) {
+            returnrois[i]=(Roi)numrois.get(i);
+        }
+
+        return returnrois;
+     }
+
+     public Roi[] getNumericRoisSorted() {
+        Roi[] returnrois = getNumericRois();
+
+        Comparator<Roi> byName = new RoiNameComparator(){};
+        java.util.Arrays.sort(returnrois, byName);
+
+        return returnrois;
+     }
+
+    public boolean hasNumericName(Roi r) {
+        try {
+            int a = Integer.parseInt(r.getName());
+            return true;
+        }catch(Exception e){
+            return false;
+        }
+    }
+
+    public boolean isNumericName(String name) {
+        try {
+            int a = Integer.parseInt(name);
+            return true;
+        }catch(Exception e){
+            return false;
         }
     }
 

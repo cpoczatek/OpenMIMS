@@ -47,7 +47,12 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             return;
         }
 
-        g.setColor(Color.RED);
+        //make color prefernce selectable
+        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+            g.setColor(Color.WHITE);
+        } else {
+            g.setColor(Color.RED);
+        }
         Roi cRoi = mImp.getRoi();
         javax.swing.JList list = roiManager.getList();
 
@@ -84,16 +89,22 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
 
             // If the current slice is the one which the
             // roi was created then we want to show the roi in red.
-            
+
+            //make color preference selectable
             if(roiManager.isSelected(label)) {
                 g.setColor(Color.GREEN);
             } else {
-                g.setColor(Color.RED);
+                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+                    g.setColor(Color.WHITE);
+                } else {
+                    g.setColor(Color.RED);
+                }
             }
 
             String name = "";
             if (ui.getSyncROIsAcrossPlanes()) {
-                name = "" + (id + 1);
+                //name = "" + (id + 1);
+                name += label;
                 java.awt.Rectangle r = roi.getBounds();
                 int x = screenX(r.x + r.width / 2);
                 int y = screenY(r.y + r.height / 2);
@@ -133,7 +144,12 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                 switch (roi.getType()) {
                     case Roi.COMPOSITE: {
                         roi.setImage(imp);
-                        roi.setInstanceColor(Color.RED);
+                        //make color preference selectable
+                        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+                            g.setColor(Color.WHITE);
+                        } else {
+                            g.setColor(Color.RED);
+                        }
                         roi.draw(g);
                         break; 
                     }
