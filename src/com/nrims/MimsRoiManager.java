@@ -114,7 +114,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         });
 
         // Group scrollpane.
-        Dimension d2 = new Dimension(225, 425);
+        Dimension d2 = new Dimension(225, 450);
         JScrollPane groupscrollpane = new JScrollPane(groupjlist);
         groupscrollpane.setPreferredSize(d2);
         groupscrollpane.setMinimumSize(d2);
@@ -158,16 +158,18 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          }});
 
         // Assemble
-        Dimension d1 = new Dimension(200, 325);
+        Dimension d1 = new Dimension(200, 350);
         JPanel leftPanel    = new JPanel(new BorderLayout());
         JPanel rightPanel   = new JPanel(new BorderLayout());
         JPanel centerPanel1 = new JPanel();
         JPanel eastPanel1   = new JPanel();
         JPanel westPanel1   = new JPanel();
         JPanel southPanel1  = new JPanel();
+        JPanel northPanel1  = new JPanel();
         JPanel centerPanel2 = new JPanel();
         JPanel westPanel2   = new JPanel();
         JPanel southPanel2  = new JPanel();
+        JPanel northPanel2  = new JPanel();
 
         // Left pane - south panel
         southPanel1.setLayout(new GridLayout(2,2));
@@ -175,19 +177,27 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         southPanel1.add(delete);
         southPanel1.add(rename);
 
+        // Left pane - north panel
+        northPanel1.add(new JLabel("Groups"));
+
         // Left pane
-        Dimension dLeft = new Dimension(165, 325);
+        Dimension dLeft = new Dimension(165, 350);
         leftPanel.setPreferredSize(dLeft);
         leftPanel.add(groupscrollpane, BorderLayout.CENTER);
         leftPanel.add(southPanel1, BorderLayout.SOUTH);
+        leftPanel.add(northPanel1, BorderLayout.NORTH);
 
         // Right pane - south panel
-        southPanel2.setLayout(new GridLayout(1,2));
+        southPanel2.setLayout(new GridLayout(2,2));
         southPanel2.add(assign);
         southPanel2.add(dassign);
+        southPanel2.add(new JLabel(""));
+
+        // Right pane - north panel
+        northPanel2.add(new JLabel("Rois"));
 
         // Right pane - center panel
-        Dimension dRight = new Dimension(165, 325);
+        Dimension dRight = new Dimension(165, 350);
         rightPanel.setPreferredSize(dRight);
         rightPanel.setMaximumSize(dRight);
         rightPanel.setMinimumSize(dRight);
@@ -196,7 +206,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         panel.setLayout(new FlowLayout());
-        panel.setPreferredSize(new Dimension(200, 325));
+        panel.setPreferredSize(new Dimension(200, 350));
         addButton("Delete");
         addButton("Rename");
         addButton("Open");
@@ -218,6 +228,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         //rightPanel.add(panel, BorderLayout.EAST);
         rightPanel.add(roiscrollpane, BorderLayout.CENTER);
         rightPanel.add(southPanel2, BorderLayout.SOUTH);
+        rightPanel.add(northPanel2, BorderLayout.NORTH);
 
         add(leftPanel);
         add(rightPanel);
@@ -1431,9 +1442,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         roiListModel.set(index, name2);
         roijlist.setSelectedIndex(index);
 
-        if(isNumericName(name) && !(isNumericName(name2))) {
-            renameNumericRois();
-        }
+        // Is this really necessary?
+        // if(isNumericName(name) && !(isNumericName(name2))) {
+        //    renameNumericRois();
+        // }
 
         if (Recorder.record) {
             Recorder.record("mimsRoiManager", "Rename", name2);
