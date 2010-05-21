@@ -1401,9 +1401,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
 
         //rename any numericly named rois
-        if(deletednumeric) {
-            renameNumericRois();
-        }
+        //if(deletednumeric) {
+        //    renameNumericRois();
+        //}
         
         ui.updateAllImages();
 
