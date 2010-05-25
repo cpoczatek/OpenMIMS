@@ -921,7 +921,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             for (int i = 0; i < pix.length; i++) {
                 dpix[i] = (new Float(pix[i])).doubleValue();
             }
-            ui.getRoiControl().updateHistogram(dpix, getShortTitle(), true);
+            ui.getmimsTomography().updateHistogram(dpix, getShortTitle(), true);
 
             //TODO: this should be somewhere else
              if (this.nType == HSI_IMAGE) {
@@ -1318,7 +1318,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
                 roiPix = this.getRoiPixels();
             }
             if (roiPix != null) {
-                ui.getRoiControl().updateHistogram(roiPix, label, force);
+                ui.getmimsTomography().updateHistogram(roiPix, label, force);
             }
         }
 

@@ -58,7 +58,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     JPopupMenu pm;
     JButton moreButton;
     JButton delete;
-    JCheckBox cbShowAll;
+    JCheckBox cbHideAll;
     JCheckBox cbAllPlanes;
     JSpinner xPosSpinner, yPosSpinner, widthSpinner, heightSpinner;
     JLabel xLabel, yLabel, wLabel, hLabel;
@@ -68,12 +68,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     private String savedpath = "";
     boolean previouslySaved = false;
     boolean bAllPlanes = true;
-    Measure scratch;
     HashMap locations = new HashMap<String, ArrayList<Integer[]>>();
     HashMap groupsMap = new HashMap<String, String>();
     ArrayList groups = new ArrayList<String>();
     ParticlesManager partManager;
     SquaresManager squaresManager;
+    String hideAllRois = new String("Hide All Rois");
+    String moveAllRois = new String("Move All");
 
     public MimsRoiManager(UI ui, com.nrims.data.Opener im) {
         super("MIMS ROI Manager");
@@ -94,7 +95,18 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         // JList stuff - for ROIs
         roiListModel = new DefaultListModel();
-        roijlist = new JList(roiListModel);
+        roijlist = new JList(roiListModel) {
+           protected void processMouseEvent(MouseEvent e) {
+              if (e.getID() == MouseEvent.MOUSE_PRESSED || e.getID() == MouseEvent.MOUSE_DRAGGED) {
+                 if (roijlist.getCellBounds(0, roiListModel.size() - 1).contains(e.getPoint()) == false) {
+                    roijlist.clearSelection();
+                    e.consume();
+                 } else {
+                    super.processMouseEvent(e);
+                 }
+              }
+        }
+        };
         roijlist.setCellRenderer(new ComboBoxRenderer());
         roijlist.addKeyListener(ij);
         roijlist.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -114,7 +126,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         });
 
         // Group scrollpane.
-        Dimension d2 = new Dimension(225, 450);
+        Dimension d2 = new Dimension(230, 450);
         JScrollPane groupscrollpane = new JScrollPane(groupjlist);
         groupscrollpane.setPreferredSize(d2);
         groupscrollpane.setMinimumSize(d2);
@@ -128,16 +140,19 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         // Create, Delete Button.
         JButton create = new JButton("New");
+        create.setMargin( new Insets(0, 0, 0, 0) );
         create.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
             createActionPerformed(evt);
          }});
         delete = new JButton("Delete");
+        delete.setMargin( new Insets(0, 0, 0, 0) );
         delete.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
             deleteActionPerformed(evt);
          }});
          JButton rename = new JButton("Rename");
+         rename.setMargin( new Insets(0, 0, 0, 0) );
          rename.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
             renameActionPerformed(evt);
@@ -146,6 +161,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         // Assign, Deassign Button.
         JButton assign = new JButton("Assign");
+        assign.setMargin( new Insets(0, 0, 0, 0) );
         assign.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
             assignActionPerformed(evt);
@@ -205,30 +221,48 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         //Right pane - east panel
         panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        panel.setLayout(new FlowLayout());
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT));
         panel.setPreferredSize(new Dimension(200, 350));
+
+        // Placeholders.
+        JLabel emptySpace1 = new JLabel("");
+        emptySpace1.setBorder(BorderFactory.createEmptyBorder(5, 70, 5, 70));
+        JLabel emptySpace2 = new JLabel("");
+        emptySpace2.setBorder(BorderFactory.createEmptyBorder(5, 70, 5, 70));
+        JLabel emptySpace3 = new JLabel("");
+        emptySpace3.setBorder(BorderFactory.createEmptyBorder(0, 70, 5, 70));
+        JLabel emptySpace4 = new JLabel("");
+        emptySpace4.setBorder(BorderFactory.createEmptyBorder(5, 70, 5, 70));
+
+        panel.add(emptySpace1);
         addButton("Delete");
         addButton("Rename");
         addButton("Open");
         addButton("Save");
         addButton("Measure");
-        addButton("Deselect");
         addButton("More>>");
         addPopupMenu();
-        addCheckbox("Show All", true);
-
+        
         //order of these calls determines position...
+        panel.add(emptySpace2);
         setupPosLabels();
         setupPosSpinners();
-        addCheckbox("All planes", true);
-        panel.add(new JLabel(""));
+        panel.add(emptySpace3);
         setupSizeLabels();
         setupSizeSpinners();
-
+        
+        // Add checkboxes.
+        panel.add(emptySpace4);
+        addCheckbox(moveAllRois, true);
+        addCheckbox(hideAllRois, false);
+        
         //rightPanel.add(panel, BorderLayout.EAST);
         rightPanel.add(roiscrollpane, BorderLayout.CENTER);
         rightPanel.add(southPanel2, BorderLayout.SOUTH);
         rightPanel.add(northPanel2, BorderLayout.NORTH);
+
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         add(leftPanel);
         add(rightPanel);
@@ -415,8 +449,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     void setupPosLabels() {
         xLabel = new JLabel("X Pos.");
         yLabel = new JLabel("Y Pos.");
-        xLabel.setPreferredSize(new Dimension(90, 20));
-        yLabel.setPreferredSize(new Dimension(90, 20));
+        xLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        yLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        xLabel.setPreferredSize(new Dimension(90, 15));
+        yLabel.setPreferredSize(new Dimension(90, 15));
 
         panel.add(xLabel);
         panel.add(yLabel);
@@ -425,8 +461,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     void setupSizeLabels() {
         wLabel = new JLabel("Width");
         hLabel = new JLabel("Height");
-        wLabel.setPreferredSize(new Dimension(90, 20));
-        hLabel.setPreferredSize(new Dimension(90, 20));
+        wLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        hLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        wLabel.setPreferredSize(new Dimension(90, 15));
+        hLabel.setPreferredSize(new Dimension(90, 15));
 
         panel.add(wLabel);
         panel.add(hLabel);
@@ -658,13 +696,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
     void addCheckbox(String label, boolean bEnabled) {
         JCheckBox cb = new JCheckBox(label);
-        cb.setPreferredSize(new Dimension(90, 30));
+        cb.setPreferredSize(new Dimension(130, 20));
         cb.setMaximumSize(cb.getPreferredSize());
         cb.setMinimumSize(cb.getPreferredSize());
-        if (label.equals("Show All")) {
-            cbShowAll = cb;
-        }else if (label.equals("All planes")) {
-            cb.setPreferredSize(new Dimension(100, 30));
+        if (label.equals(hideAllRois)) {
+            cbHideAll = cb;
+        } else if (label.equals(moveAllRois)) {
+            cb.setPreferredSize(new Dimension(175, 20));
             cb.setMaximumSize(cb.getPreferredSize());
             cb.setMinimumSize(cb.getPreferredSize());
             cbAllPlanes = cb;
@@ -739,8 +777,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         } else if (command.equals("Deselect")) {
             select(-1);
             ui.updateAllImages();
-        } else if (command.equals("Show All")) {
-            showall();
+        } else if (command.equals(hideAllRois)) {
+            hideAll();
         } else if (command.equals("More>>")) {
             Point ploc = panel.getLocation();
             Point bloc = moreButton.getLocation();
@@ -763,7 +801,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             String path = ui.getImageDir();
             previouslySaved = false;
             save(path);
-        } else if (command.equals("All planes")) {
+        } else if (command.equals(moveAllRois)) {
             bAllPlanes = cbAllPlanes.isSelected();
         }
     }
@@ -1028,7 +1066,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
 
     void showall() {
-        if (getImage() != null) {
+       if (getImage() != null) {
+            ui.updateAllImages();
+        }
+    }
+
+    void hideAll() {
+       if (getImage() != null) {
             ui.updateAllImages();
         }
     }
@@ -1823,84 +1867,38 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
     void measure() {
 
-       Measure measure = ui.getRoiControl().getMeasure();
-       if (scratch == null) scratch = new Measure(ui);
-       scratch.setOptionsTheSame(measure);
+       // initialize table.
+       MimsJTable table = new MimsJTable(ui);
 
-        // If not appending reset the data in the table
-        if (ui.getRoiControl().append()) {
-           scratch.setResize(false);
-        } else {
-           scratch.reset();
-           scratch.setResize(true);
-        }
+       // Get current plane.
+       ImagePlus imp = getImage();
+       ArrayList planes = new ArrayList<Integer>();
+       planes.add(ui.getOpenMassImages()[0].getCurrentSlice());
+       table.setPlanes(planes);
 
-        MimsPlus[] imp = new MimsPlus[1];
-        imp[0] = (MimsPlus)getImage();
-        if (imp[0].getMimsType() == MimsPlus.MASS_IMAGE ||
-            imp[0].getMimsType() == MimsPlus.RATIO_IMAGE ||
-            imp[0].getMimsType() == MimsPlus.SUM_IMAGE) {
-           scratch.generateRoiTable(imp, true);
-        }
+       // Get selected stats.
+       String[] statnames = ui.getmimsTomography().getStatNames();
+       table.setStats(statnames);
+       
+       // Get rois.
+       Roi[] rois = getAllListedROIs();
+       if (rois.length >= 1) {
+          table.setRois(rois);
+       } else {
+          System.out.println("No rois");
+          return;
+       }
+       
+       // Get image.
+       MimsPlus[] images = new MimsPlus[1];
+       images[0] = (MimsPlus) WindowManager.getCurrentImage();
+       table.setImages(images);
+          
+       // Generate table.
+       table.createRoiTable();
+       table.showFrame();
     }
-
-    boolean measure_old() {
-        ImagePlus imp = getImage();
-        if (imp == null) {
-            return false;
-        }
-        int[] indexes = roijlist.getSelectedIndices();
-        if (indexes.length == 0) {
-            indexes = getAllIndexes();
-        }
-        if (indexes.length == 0) {
-            return false;
-        }
-        int nLines = 0;
-        for (int i = 0; i < indexes.length; i++) {
-            String label = roiListModel.get(indexes[i]).toString();
-            Roi roi = (Roi) rois.get(label);
-            if (roi.isLine()) {
-                nLines++;
-            }
-        }
-        if (nLines > 0 && nLines != indexes.length) {
-            error("All items must be areas or all must be lines.");
-            return false;
-        }
-
-        int nSlices = 1;
-        String label = roiListModel.get(indexes[0]).toString();
-        if (getSliceNumber(label) == -1 || indexes.length == 1) {
-            int setup = IJ.setupDialog(imp, 0);
-            if (setup == PlugInFilter.DONE) {
-                return false;
-            }
-            nSlices = setup == PlugInFilter.DOES_STACKS ? imp.getStackSize() : 1;
-        }
-        int currentSlice = imp.getCurrentSlice();
-        for (int slice = 1; slice <= nSlices; slice++) {
-            if (nSlices > 1) {
-                imp.setSlice(slice);
-            }
-            for (int i = 0; i < indexes.length; i++) {
-                if (restore(indexes[i], nSlices == 1)) {
-                    IJ.run("Measure");
-                } else {
-                    break;
-                }
-            }
-        }
-        imp.setSlice(currentSlice);
-        if (indexes.length > 1) {
-            IJ.run("Select None");
-        }
-        if (Recorder.record) {
-            Recorder.record("mimsRoiManager", "Measure");
-        }
-        return true;
-    }
-
+    
     void duplicate() {
         ImagePlus imp = getImage();
         if (imp == null) {
@@ -2330,7 +2328,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             ui.updateLineProfile(profileP.getProfile(), imp.getShortTitle() + " : " + roi.getName(), imp.getProcessor().getLineWidth());
         } else {
             String label = imp.getShortTitle() + " ROI: " + roi.getName();
-            ui.getRoiControl().updateHistogram(roipix, label, force);
+            ui.getmimsTomography().updateHistogram(roipix, label, force);
         }
     }
 
@@ -2537,12 +2535,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     public void mouseExited(MouseEvent e) {
     }
 
-    public void setShowAll(boolean bEnabled) {
-        cbShowAll.setSelected(bEnabled);
-    }
-
-    public boolean getShowAll() {
-        boolean bEnabled = cbShowAll.isSelected();
+    public boolean getHideRois() {
+        boolean bEnabled = cbHideAll.isSelected();
         return bEnabled;
     }
 

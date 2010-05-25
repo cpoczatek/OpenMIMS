@@ -4,14 +4,12 @@ import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -42,6 +40,27 @@ public class MimsJTable {
       this.ui = ui;
    }
 
+   // This method is used by the RoiManager "measure"
+   // button to create smaller tables with one row per Roi.
+   public void createRoiTable(){
+
+      // Get the data.
+      Object[][] data = getRoiDataSet();
+
+      // Setup column headers.
+      String[] columnNames = new String[stats.length+2];
+      columnNames[0] = "Image : Roi Label";
+      columnNames[1] = "Slice";
+      for (int i = 0; i < stats.length; i++){
+         columnNames[i+2] = stats[i];
+      }
+
+      // Generate and display table.
+      displayTable(data, columnNames);
+   }
+
+   // This method is used by the Tomography tab "table"
+   // button to create larger tables with one row per plane.
    public void createTable(boolean appendResults) {
 
       // Cant append if frame doesnt exist
@@ -75,12 +94,22 @@ public class MimsJTable {
          return;
       } else {
 
-         // Create frame.
-         frame = new JFrame("Measure");
+         // Get data.
          data = getDataSet();
+
+         // Get columns.
          String[] columnNames = getColumnNames();
 
-         int width = 100;
+         // Display table.
+         displayTable(data, columnNames);
+
+      }
+   }
+
+   // Displays a table given data and column headers.
+   public void displayTable(Object[][] data, String[] columnNames){
+      
+         int width = 110;
          DefaultTableModel tm = new DefaultTableModel(data, columnNames);
          table = new JTable(tm);
          for (int i = 0; i < columnNames.length; i++) {
@@ -106,15 +135,68 @@ public class MimsJTable {
             saveActionPerformed(evt);
          }});
          menu.add(menuItem);
-         frame.setJMenuBar(menuBar);
 
+         // Generate frame.
+         frame = new JFrame("Measure");
+         frame.setJMenuBar(menuBar);
          frame.setContentPane(scrollPane);
          frame.setSize(600, 400);
-         //Display the window.
          frame.pack();
-      }
    }
 
+   // Use this method when getting data for single planes.
+   // Produces a differently formated table than getDataSet().
+   public Object[][] getRoiDataSet(){
+
+      // Image check.
+      if (images.length != 1)
+         return null;
+
+      // Slice check.
+      if (planes.size() != 1)
+         return null;
+
+      // Roi check.
+      if (rois.length == 0)
+         return null;
+
+      // initialize data.
+      Object data[][] = new Object[rois.length][stats.length+2];
+
+      // Set the plane.
+      int plane = (Integer) planes.get(0);
+      MimsPlus image = images[0];
+      if (image.getMimsType() == MimsPlus.MASS_IMAGE)
+         image.setSlice(plane, false);
+      else if (image.getMimsType() == MimsPlus.RATIO_IMAGE)
+         image.setSlice(plane, image);
+
+      // Fill in the data.
+      for (int row = 0; row < rois.length; row++) {
+         for (int col = 0; col < stats.length+2; col++) {
+            Integer[] xy = ui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
+            rois[row].setLocation(xy[0], xy[1]);
+            image.setRoi(rois[row]);
+            ImageStatistics tempstats = image.getStatistics();
+            if (col == 0)
+               data[row][col] = images[0].getShortTitle() + " : (" + rois[row].getName() + ")";
+            else if (col == 1)
+               data[row][col] = plane;
+            else {
+               double value = MimsJFreeChart.getSingleStat(tempstats, stats[col-2]);
+               int precision = 2;
+               if (stats[col-2] == "area")
+                  precision = 0;
+               data[row][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[col-2]), precision);
+            }
+          }
+       }
+
+      return data;
+   }
+
+
+   // Use this method when getting data for multiple planes.
    public Object[][] getDataSet() {
 
       // initialize variables.

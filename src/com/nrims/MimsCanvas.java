@@ -43,7 +43,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
     void drawOverlay(Graphics g) {
         MimsRoiManager roiManager = ui.getRoiManager();
         Hashtable rois = roiManager.getROIs();
-        if (rois == null || rois.isEmpty() || roiManager.getShowAll() == false) {
+        if (rois == null || rois.isEmpty() || roiManager.getHideRois()) {
             return;
         }
 

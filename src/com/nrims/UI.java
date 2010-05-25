@@ -113,8 +113,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsPlus[] compImages = new MimsPlus[2 * maxMasses];
 
     private MimsData mimsData = null;
-    private MimsLog mimsLog = null;
-    private MimsRoiControl roiControl = null;    
+    private MimsLog mimsLog = null;   
     private MimsCBControl cbControl = new MimsCBControl(this);
     private MimsStackEditing mimsStackEditing = null;
     private MimsRoiManager roiManager = null;
@@ -699,7 +698,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (mimsData == null) {
                 initializeViewMenu();
                 mimsData = new com.nrims.MimsData(this, image);
-                roiControl = new MimsRoiControl(this);
                 hsiControl = new HSIView(this);
                 mimsLog = new MimsLog(this, image);
                 mimsStackEditing = new MimsStackEditing(this, image);
@@ -712,7 +710,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 jTabbedPane1.setTitleAt(0, "MIMS Data");
                 jTabbedPane1.add("Process", hsiControl);
                 jTabbedPane1.add("Contrast", cbControl);
-                jTabbedPane1.add("Analysis", roiControl);
                 jTabbedPane1.add("Stack Editing", mimsStackEditing);
                 jTabbedPane1.add("Tomography", mimsTomography);
                 jTabbedPane1.add("Segmentation", segmentation);
@@ -721,7 +718,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             } else {
                 resetViewMenu();
                 mimsData = new com.nrims.MimsData(this, image);
-                //hsiControl = new HSIView(this);
                 cbControl = new MimsCBControl(this);
                 mimsStackEditing = new MimsStackEditing(this, image);
                 mimsTomography = new MimsTomography(this);
@@ -732,14 +728,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 jTabbedPane1.setTitleAt(0, "MIMS Data");
                 jTabbedPane1.setComponentAt(1, hsiControl);
                 jTabbedPane1.setComponentAt(2, cbControl);
-                jTabbedPane1.setComponentAt(3, roiControl);
-                jTabbedPane1.setComponentAt(4, mimsStackEditing);
-                jTabbedPane1.setComponentAt(5, mimsTomography);
-                jTabbedPane1.setComponentAt(6, segmentation);
+                jTabbedPane1.setComponentAt(3, mimsStackEditing);
+                jTabbedPane1.setComponentAt(4, mimsTomography);
+                jTabbedPane1.setComponentAt(5, segmentation);
 
                 mimsData.setMimsImage(image);
                 hsiControl.updateImage();
-                roiControl.updateImage();
             }
             
             jTabbedPane1.addChangeListener(new ChangeListener() {
@@ -3136,10 +3130,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
     public MimsLog getmimsLog() {
         return mimsLog;
-    }
-
-    public MimsRoiControl getRoiControl() {
-        return roiControl;
     }
     
     public MimsCBControl getCBControl(){

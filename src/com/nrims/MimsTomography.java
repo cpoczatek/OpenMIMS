@@ -8,7 +8,18 @@ package com.nrims;
 
 import com.nrims.data.Opener;
 import ij.gui.Roi;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.data.statistics.HistogramDataset;
 
 /**
  * @author  cpoczatek
@@ -19,11 +30,15 @@ public class MimsTomography extends javax.swing.JPanel {
     private Opener image;
     MimsJFreeChart tomoChart = null;
     MimsJTable table = null;
+    private JFreeChart chart;
+    private ChartPanel chartPanel;
     
     /** Creates new form mimsTomography */
     public MimsTomography(UI ui) {
         System.out.println("MimsTomography constructor");
         initComponents();
+        setupHistogram();
+        
         this.ui = ui;
         this.image = ui.getOpener();
         tomoChart = null;
@@ -50,6 +65,10 @@ public class MimsTomography extends javax.swing.JPanel {
       jTextField1 = new javax.swing.JTextField();
       jLabel5 = new javax.swing.JLabel();
       currentPlaneCheckBox = new javax.swing.JCheckBox();
+      jSeparator1 = new javax.swing.JSeparator();
+      histogramjPanel = new javax.swing.JPanel();
+      histogramUpdatejCheckBox = new javax.swing.JCheckBox();
+      profilejButton = new javax.swing.JButton();
 
       setToolTipText("");
 
@@ -82,9 +101,33 @@ public class MimsTomography extends javax.swing.JPanel {
          }
       });
 
-      jLabel5.setText("Image List (eg: 2,4,8-25,45...)");
+      jLabel5.setText("Planes (eg: 2,4,8-25,45...)");
 
       currentPlaneCheckBox.setText("Current plane only");
+
+      jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
+
+      histogramjPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+
+      javax.swing.GroupLayout histogramjPanelLayout = new javax.swing.GroupLayout(histogramjPanel);
+      histogramjPanel.setLayout(histogramjPanelLayout);
+      histogramjPanelLayout.setHorizontalGroup(
+         histogramjPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGap(0, 364, Short.MAX_VALUE)
+      );
+      histogramjPanelLayout.setVerticalGroup(
+         histogramjPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGap(0, 258, Short.MAX_VALUE)
+      );
+
+      histogramUpdatejCheckBox.setText("AutoUpdate Histogram");
+
+      profilejButton.setText("Line Profile");
+      profilejButton.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            profilejButtonActionPerformed(evt);
+         }
+      });
 
       javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
       this.setLayout(layout);
@@ -95,58 +138,128 @@ public class MimsTomography extends javax.swing.JPanel {
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                .addGroup(layout.createSequentialGroup()
                   .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                     .addComponent(jLabel3)
+                     .addGroup(layout.createSequentialGroup()
+                        .addGap(13, 13, 13)
+                        .addComponent(jLabel3))
                      .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
-                     .addComponent(jLabel4))
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
                      .addComponent(jLabel5)
-                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
-                     .addComponent(currentPlaneCheckBox)))
+                     .addComponent(currentPlaneCheckBox)
+                     .addGroup(layout.createSequentialGroup()
+                        .addGap(37, 37, 37)
+                        .addComponent(jLabel4))
+                     .addGroup(layout.createSequentialGroup()
+                        .addGap(1, 1, 1)
+                        .addComponent(jTextField1))))
                .addGroup(layout.createSequentialGroup()
                   .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                      .addComponent(plotButton, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
                      .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE))
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                   .addComponent(appendCheckBox)))
-            .addContainerGap(28, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGap(18, 18, 18)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addComponent(histogramUpdatejCheckBox)
+               .addComponent(histogramjPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+               .addComponent(profilejButton, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addContainerGap())
       );
       layout.setVerticalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(layout.createSequentialGroup()
             .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-               .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addComponent(jSeparator1, javax.swing.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
+               .addGroup(layout.createSequentialGroup()
+                  .addGap(22, 22, 22)
+                  .addComponent(histogramjPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                  .addComponent(histogramUpdatejCheckBox)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                  .addComponent(profilejButton))
+               .addGroup(layout.createSequentialGroup()
                   .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                     .addComponent(jLabel3)
-                     .addComponent(jLabel4))
+                     .addComponent(jLabel4)
+                     .addComponent(jLabel3))
                   .addGap(10, 10, 10)
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(2, 2, 2)
+                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(6, 6, 6)
+                        .addComponent(currentPlaneCheckBox))
+                     .addComponent(jScrollPane1))
+                  .addGap(20, 20, 20)
                   .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                      .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
-                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-               .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                  .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(currentPlaneCheckBox)))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
-                  .addGap(18, 18, 18)
-                  .addComponent(plotButton)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(jButton1))
-               .addGroup(layout.createSequentialGroup()
-                  .addGap(35, 35, 35)
-                  .addComponent(appendCheckBox)))
-            .addGap(39, 39, 39))
+                        .addGap(8, 8, 8)
+                        .addComponent(plotButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton1))
+                     .addGroup(layout.createSequentialGroup()
+                        .addGap(26, 26, 26)
+                        .addComponent(appendCheckBox)))))
+            .addContainerGap())
       );
    }// </editor-fold>//GEN-END:initComponents
+
+       private void setupHistogram() {
+        // Create arbitrary dataset
+        HistogramDataset dataset = new HistogramDataset();
+
+        // Create chart using the ChartFactory
+        chart = ChartFactory.createHistogram("", "Pixel Value", "", dataset, PlotOrientation.VERTICAL, true, true, false);
+        chart.setBackgroundPaint(this.getBackground());
+
+        XYPlot plot = (XYPlot) chart.getPlot();
+        XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
+        renderer.setDrawBarOutline(false);
+        renderer.setShadowVisible(false);
+        renderer.setBarPainter(new StandardXYBarPainter());
+
+        // Listen for key pressed events.
+       KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+          public boolean dispatchKeyEvent(KeyEvent e) {
+             if (e.getID() == KeyEvent.KEY_PRESSED) {
+                chartPanel.keyPressed(e);
+             }
+             return false;
+          }
+       });
+
+        // Movable range and domain.
+        plot.setDomainPannable(true);
+        plot.setRangePannable(true);
+
+        chartPanel = new ChartPanel(chart);
+        chartPanel.setSize(350, 250);
+        histogramjPanel.add(chartPanel);
+    }
+
+    public void updateHistogram(double[] pixelvalues, String label, boolean forceupdate) {
+       if(pixelvalues == null) {
+          return;
+       } else if (pixelvalues.length == 0) {
+          return;
+       }
+       if (forceupdate || histogramUpdatejCheckBox.isSelected()) {
+          HistogramDataset dataset = new HistogramDataset();
+
+          dataset.addSeries(label, pixelvalues, 100);
+
+          org.jfree.chart.plot.XYPlot plot = (XYPlot) chart.getPlot();
+          plot.setDataset(dataset);
+
+          chart.fireChartChanged();
+       }
+    }
 
     private void plotButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_plotButtonActionPerformed
 
@@ -254,6 +367,21 @@ public class MimsTomography extends javax.swing.JPanel {
        table.createTable(appendCheckBox.isSelected());
        table.showFrame();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    // When the button is pressed a new window is opened
+    // which contains a line plot, if a Line Roi is drawn.
+    private void profilejButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_profilejButtonActionPerformed
+       if (ui.lineProfile == null) {
+          ui.lineProfile = new MimsLineProfile(ui);
+          double[] foo = new double[100];
+          for (int i = 0; i < 100; i++) {
+             foo[i] = 10;
+          }
+          ui.updateLineProfile(foo, "line", 1);
+       } else {
+          ui.lineProfile.setVisible(true);
+       }
+    }//GEN-LAST:event_profilejButtonActionPerformed
     
     public void resetImageNamesList() {
         
@@ -308,14 +436,28 @@ public class MimsTomography extends javax.swing.JPanel {
        
        return images;
     }
-    
-    private String[] getStatNames(){
+
+    // Get the selected statistics.
+    public String[] getStatNames(){
+
+       // initialize array and get selected statistics.
        Object[] objs = new Object[statJList.getSelectedValues().length];
        objs = statJList.getSelectedValues();
-       String[] statnames = new String[objs.length];
-       for (int i = 0; i < objs.length; i++) {
-          statnames[i] = (String) objs[i];
+       
+       // If no statistics selected, use Area, Mean, and StdDev by default.
+       String[] statnames;
+       if (objs.length == 0) {
+          statnames = new String[3];
+          statnames[0] = "area";
+          statnames[1] = "mean";
+          statnames[2] = "stddev";
+       } else {
+         statnames = new String[objs.length];
+         for (int i = 0; i < objs.length; i++) {
+            statnames[i] = (String) objs[i];
+         }
        }
+
        return statnames;
     }
 
@@ -340,10 +482,12 @@ public class MimsTomography extends javax.swing.JPanel {
 
        return planes;
     }
- 
+
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JCheckBox appendCheckBox;
    private javax.swing.JCheckBox currentPlaneCheckBox;
+   private javax.swing.JCheckBox histogramUpdatejCheckBox;
+   private javax.swing.JPanel histogramjPanel;
    private javax.swing.JList imageJList;
    private javax.swing.JButton jButton1;
    private javax.swing.JLabel jLabel3;
@@ -351,8 +495,10 @@ public class MimsTomography extends javax.swing.JPanel {
    private javax.swing.JLabel jLabel5;
    private javax.swing.JScrollPane jScrollPane1;
    private javax.swing.JScrollPane jScrollPane2;
+   private javax.swing.JSeparator jSeparator1;
    private javax.swing.JTextField jTextField1;
    private javax.swing.JButton plotButton;
+   private javax.swing.JButton profilejButton;
    private javax.swing.JList statJList;
    // End of variables declaration//GEN-END:variables
 }
