@@ -146,9 +146,9 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                         roi.setImage(imp);
                         //make color preference selectable
                         if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
-                            g.setColor(Color.WHITE);
+                            roi.setInstanceColor(Color.WHITE);
                         } else {
-                            g.setColor(Color.RED);
+                            roi.setInstanceColor(Color.RED);
                         }
                         roi.draw(g);
                         break; 

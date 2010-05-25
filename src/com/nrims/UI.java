@@ -16,6 +16,7 @@ import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
 import ij.process.ImageStatistics;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -1248,6 +1249,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             // MOUSE_RELEASE catches drawing new ROIs             
             if (bSyncROIs) {
                 int i;
+                if(evt.getRoi()!= null) evt.getRoi().setStrokeColor(Color.yellow);  // needed to highlight current ROI on all images
+                                                                                    // previous code did not highlight ShapeRoi objects
                 MimsPlus mp = (MimsPlus) evt.getSource();
                 for (i = 0; i < image.getNMasses(); i++) {
                     if (massImages[i] != mp && massImages[i] != null && bOpenMass[i]) {

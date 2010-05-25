@@ -635,8 +635,9 @@ public class SegUtils extends javax.swing.SwingWorker<Boolean,Void>{
     private void calcROIs(){
         // setup values to report progress
         int progress = 0;
-        int step = 100/(classNames.length*2+1);
-        
+        //int step = 100/(classNames.length*2+1);
+        int step = 100/(classNames.length);
+
         // create an image from the classification result in order to find ROIs
         ByteProcessor ip = new ByteProcessor(width,height);
 
@@ -645,22 +646,29 @@ public class SegUtils extends javax.swing.SwingWorker<Boolean,Void>{
         ip.setPixels(classification);
         ImagePlus classMap = new ImagePlus("",ip);
         classes = new ClassManager();
-        
+
+        ArrayList l = new ArrayList();
+        for(int i=0; i<classification.length; i++) l.add(new Byte(classification[i]));
+
         // find all ROIs using particle analyzer
-        for(byte classID=0; classID<classNames.length; classID++){                        
+        ip.snapshot();
+        for(byte classID=0; classID<classNames.length; classID++){
             classMap.getProcessor().setThreshold(classID, classID, ImageProcessor.BLACK_AND_WHITE_LUT);
-            int options = ParticleAnalyzer.ADD_TO_MANAGER;
-            ParticleAnalyzer pa = new ParticleAnalyzer(options, 0, Analyzer.getResultsTable(), minSize, maxSize);
-            pa.analyze(classMap);
-            RoiManager rm = (RoiManager)WindowManager.getFrame("ROI Manager");
+            ((ByteProcessor)classMap.getProcessor()).applyLut();
+            NrimsParticleAnalyzer pa = new NrimsParticleAnalyzer(classMap, 0, -1 & 0xff, minSize);//options, 0, Analyzer.getResultsTable(), minSize, maxSize);
+            ArrayList<Roi> rois = pa.analyze();
+            //RoiManager rm = (RoiManager)WindowManager.getFrame("ROI Manager");
+            //if(rm== null) continue;
+            //for(Roi roi : rm.getRoisAsArray()) classes.addRoi(classNames[classID], roi);
+            //rm.close();
             classes.addClass(classNames[classID]);
-            if(rm== null) continue;                        
-            for(Roi roi : rm.getRoisAsArray()) classes.addRoi(classNames[classID], roi);
-            rm.close();
+            for(Roi roi : rois) classes.addRoi(classNames[classID], roi);
+
             progress += step;
             setProgress(progress);
+            ip.reset();
         }
-            
+/*
         // handle overlapping ROIs        
         long start = System.currentTimeMillis();
         int comparisons = 0;
@@ -797,9 +805,10 @@ public class SegUtils extends javax.swing.SwingWorker<Boolean,Void>{
 //        System.out.println("comparisons:" + comparisons);
 //        System.out.println("intersections:" + intersections);
 //        System.out.println("subtractions:" + subtractions);
-//        System.out.println("overlaps:" + overlaps);        
+//        System.out.println("overlaps:" + overlaps);
+ */
     }
-    
+  
     // helper method trying to convert a ShapeRoi object into a single Roi
     // returns null, if the shape corresponds to no ROI
     private static Roi tryConvert(ShapeRoi shapeRoi){
