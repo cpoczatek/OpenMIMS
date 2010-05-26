@@ -14,6 +14,7 @@ import ij.WindowManager;
 import ij.gui.Roi;
 import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
+import ij.process.ColorProcessor;
 import ij.process.ImageStatistics;
 
 import java.awt.Color;
@@ -361,6 +362,37 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
    }
 
+   /**
+    * Extract and show table of plot's underlying data
+    * @param chartpanel GUI element to be affected
+    */
+
+   //Todo, clean up
+      public void displayProfileData(ChartPanel chartpanel) {
+        org.jfree.chart.plot.XYPlot plot = (XYPlot) chartpanel.getChart().getPlot();
+        org.jfree.data.xy.XYDataset data = plot.getDataset();
+
+        ij.measure.ResultsTable table = new ij.measure.ResultsTable();
+        table.setHeading(1, "Plane");
+        for(int i = 0; i<plot.getLegendItems().getItemCount(); i++) {
+            table.setHeading(i+2, plot.getLegendItems().get(i).getLabel() );
+        }
+        
+        //table.incrementCounter();
+
+        //end of table bug?
+        for (int i = 0; i < data.getItemCount(0); i++) {
+            table.incrementCounter();
+            table.addValue(1, data.getXValue(0, i));
+
+            for(int j = 0; j < plot.getLegendItems().getItemCount(); j++) {
+                table.addValue(j+1, data.getYValue(j, i));
+            }
+        }
+
+        table.show("");
+    }
+
     /**
      * Closes the current image and its associated set of windows if the mode is set to close open windows.
      */
@@ -538,6 +570,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
             }
 
+            //Todo: if a bs file this still gets called and throws?
+            
             // This 3 lines solves some strange updating issues.
             // Has to do with syncing images by changing the slice.
             int startslice = massImages[0].getCurrentSlice();
@@ -1407,6 +1441,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jSeparator3 = new javax.swing.JSeparator();
         exportjMenu = new javax.swing.JMenu();
         exportPNGjMenuItem = new javax.swing.JMenuItem();
+        exportHSI_RGBA = new javax.swing.JMenuItem();
         closeMenu = new javax.swing.JMenu();
         closeAllRatioMenuItem = new javax.swing.JMenuItem();
         closeAllHSIMenuItem = new javax.swing.JMenuItem();
@@ -1584,6 +1619,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         exportjMenu.add(exportPNGjMenuItem);
+
+        exportHSI_RGBA.setText("Export HSI (RGBA, QVis)");
+        exportHSI_RGBA.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportHSI_RGBAActionPerformed(evt);
+            }
+        });
+        exportjMenu.add(exportHSI_RGBA);
 
         utilitiesMenu.add(exportjMenu);
 
@@ -2328,7 +2371,27 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
 
-    /*
+/*
+    MimsRoiManager rm = this.getRoiManager();
+    Roi[] rois = rm.getAllROIs();
+    ij.gui.ShapeRoi[] shaperois = new ij.gui.ShapeRoi[rois.length];
+
+    for(int i=0; i< rois.length; i++) {
+        shaperois[i] = new ij.gui.ShapeRoi(rois[i]);
+    }
+
+    for(int i=0; i< shaperois.length; i++) {
+        for(int j=0; j< shaperois.length; j++) {
+            if(i!=j) {
+                ij.gui.ShapeRoi intersection = (ij.gui.ShapeRoi)shaperois[i].clone();
+                intersection.not(shaperois[j]);
+                rm.add(intersection);
+            }
+        }
+    }
+*/
+
+  /*
     MimsRoiManager rm = this.getRoiManager();
     HashMap h = rm.getRoiLocations();
 
@@ -2340,7 +2403,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
         }
     }
 */
-    /* 
+     
     //Poking around for roi locations exception
 
     MimsRoiManager rm = getRoiManager();
@@ -2351,7 +2414,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     System.out.println("Roi: " + name);
     System.out.println("locations size : " + locations.size());
     System.out.println("pos size: " + pos.size());
-    */
+    
 
      //Random exception testing
     /*
@@ -2417,7 +2480,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
      */
 
     //batch convert to nrrd test
-    
+    /*
     try {
         // User sets file prefix name
         JFileChooser fc = new JFileChooser();
@@ -2449,7 +2512,7 @@ private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
     } catch (Exception e) {
         e.printStackTrace();
     }
-    
+    */
 
 }//GEN-LAST:event_TestMenuItemActionPerformed
 
@@ -2582,6 +2645,188 @@ private void debugCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt
     this.bDebug = debugCheckBoxMenuItem.isSelected();
     //System.out.println(this.bDebug);
 }//GEN-LAST:event_debugCheckBoxMenuItemActionPerformed
+
+private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportHSI_RGBAActionPerformed
+    // Testing, to be moved to a manager class
+
+    MimsPlus img;
+    try {
+        img = (MimsPlus) ij.WindowManager.getCurrentImage();
+    } catch (Exception e) {
+        return;
+    }
+
+    if (img.getMimsType() != MimsPlus.HSI_IMAGE) {
+        return;
+    }
+
+    HSIProps props = img.getHSIProps();
+    MimsPlus denimg = this.getMassImage(props.getDenMassIdx());
+    float[][] hsitables = HSIProcessor.getHsiTables();
+    int r, g, b;
+    double rScale = 65535.0 / (props.getMaxRatio() - props.getMinRatio());
+
+    float[] pix = (float[]) img.internalRatio.getProcessor().getPixels();
+    float[] denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
+    //for testing, to delete
+    int[] foo = new int[pix.length];
+
+    byte[][] plane_rgba = new byte[pix.length][4];
+
+    int numIndex = props.getNumMassIdx();
+    int denIndex = props.getDenMassIdx();
+    int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
+    int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
+
+    java.io.FileOutputStream out = null;
+    String dir = this.getImageDir();
+    String fileprefix = this.getImageFilePrefix();
+    fileprefix += "_m"+numMass+"m"+denMass+"_rgba";
+
+    //stupid rgb max min crap
+    //needs to change to not be unitless
+    int rgbMax = props.getMaxRGB();
+    int rgbMin = props.getMinRGB();
+    if (rgbMax == rgbMin) {
+        rgbMax++;
+    }
+    double rgbGain = 255.0 / (double) (rgbMax - rgbMin);
+
+
+    try {
+        //write rgba data
+        out = new java.io.FileOutputStream(dir+fileprefix+".raw");
+    } catch (Exception e) {
+        e.printStackTrace();
+        return;
+    }
+
+    for (int j = 1; j < denimg.getStackSize(); j++) {
+
+        img.setSlice(j, img);
+        //don't call on internal images?
+        //denimg.setSlice(j, true);
+        pix = (float[]) img.internalRatio.getProcessor().getPixels();
+        denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
+
+        //stupid rgb
+        double denMax = img.internalRatio.getProcessor().getMax();
+        double denMin = img.internalRatio.getProcessor().getMin();
+        double denGain = denMax > denMin ? 255.0 / ( denMax - denMin ) : 1.0 ;
+        double denSpan = (denMax-denMin);
+
+
+        for (int i = 0; i < pix.length; i++) {
+            float ratioval = pix[i];
+
+            int iratio = 0;
+            if (ratioval > props.getMinRatio()) {
+                if (ratioval < props.getMaxRatio()) {
+                    iratio = (int) ((ratioval - props.getMinRatio()) * rScale);
+                    if (iratio < 0) {
+                        iratio = 0;
+                    } else if (iratio > 65535) {
+                        iratio = 65535;
+                    }
+                } else {
+                    iratio = 65535;
+                }
+            } else {
+                iratio = 0;
+            }
+
+            r = (int) (hsitables[0][iratio] * 255) << 16;
+            g = (int) (hsitables[1][iratio] * 255) << 8;
+            b = (int) (hsitables[2][iratio] * 255);
+
+            foo[i] = r + g + b;
+
+            plane_rgba[i][0] = (byte) (hsitables[0][iratio] * 255);
+            plane_rgba[i][1] = (byte) (hsitables[1][iratio] * 255);
+            plane_rgba[i][2] = (byte) (hsitables[2][iratio] * 255);
+
+            //alpha should be better...
+            //testing hard coded min=800 max=8000;
+            /*
+            double alpha = java.lang.Math.max(denpix[i], 800);
+            alpha = java.lang.Math.min(alpha, 8000);
+            alpha = alpha / (8000 - 800);
+            plane_rgba[i][3] = (byte) (255 * alpha);
+            */
+
+
+            double scaled = (denpix[i] - denMin)/denSpan;
+            //System.out.println(denOut+ " ");
+            int outValue = (int) ((double) scaled* rgbGain);
+            //System.out.println("rgbgain: "+rgbGain);
+            //System.out.println(outValue+ " ");
+            if (outValue < 0) {
+                outValue = 0;
+            } else if (outValue > 255) {
+                outValue = 255;
+            }
+
+            plane_rgba[i][3] = (byte) (outValue);
+        }
+
+        try {
+            for (int i = 0; i < plane_rgba.length; i++) {
+                out.write(plane_rgba[i]);
+            }
+            out.flush();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+    }
+    try {
+        out.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    java.io.BufferedWriter bw = null;
+    try {
+        //write training data
+        bw = new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(dir + fileprefix + ".dat")));
+        /*
+        ObjectFileName: 090826-3-4_PT-4x999_concat_rgba.raw
+        TaggedFileName: ---
+        Resolution: 256 256 449
+        SliceThickness: 1 1 1
+        Format: UCHAR4
+        NbrTags: 0
+        ObjectType: TEXTURE_VOLUME_OBJECT
+        ObjectModel: RGBA
+        GridType: EQUIDISTANT
+         */
+        int x = denimg.getWidth();
+        int y = denimg.getHeight();
+        int z = denimg.getStackSize();
+        String name = fileprefix + ".raw";
+
+        bw.write("ObjectFileName: " + name + "\n");
+        bw.write("TaggedFileName: ---" + "\n");
+        bw.write("Resolution: " + x + " " + y + " "+ z + "\n");
+        bw.write("SliceThickness: 1 1 1" + "\n");
+        bw.write("Format: UCHAR4\n");
+        bw.write("NbrTags: 0\n");
+        bw.write("ObjectType: TEXTURE_VOLUME_OBJECT\n");
+        bw.write("ObjectModel: RGBA\n");
+        bw.write("GridType: EQUIDISTANT\n");
+
+        bw.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+
+    ImagePlus iplus = new ImagePlus("test", new ColorProcessor(256, 256, foo));
+    iplus.show();
+    
+}//GEN-LAST:event_exportHSI_RGBAActionPerformed
 
    // Method for saving action file and writing backup action files.
    public void saveAction(java.awt.event.ActionEvent evt) {
@@ -3332,6 +3577,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JCheckBoxMenuItem debugCheckBoxMenuItem;
     private javax.swing.JMenu editMenu;
     private javax.swing.JMenuItem exitMenuItem;
+    private javax.swing.JMenuItem exportHSI_RGBA;
     private javax.swing.JMenuItem exportPNGjMenuItem;
     private javax.swing.JMenu exportjMenu;
     private javax.swing.JMenu fileMenu;
