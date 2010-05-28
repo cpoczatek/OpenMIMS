@@ -3,6 +3,7 @@ package com.nrims;
 import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -19,7 +20,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
@@ -131,21 +136,16 @@ public class MimsJTable {
 
    // Displays a table given data and column headers.
    public void displayTable(Object[][] data, String[] columnNames){
-      
-         int width = 110;
+
+         // Create table and set column width.
          DefaultTableModel tm = new DefaultTableModel(data, columnNames);
          table = new JTable(tm);
-         for (int i = 0; i < columnNames.length; i++) {
-            TableColumn col = table.getColumnModel().getColumn(i);
-            col.setMinWidth(width);
-            col.setPreferredWidth(width);
-         }
+         table = autoResizeColWidth(table, tm);
 
          //Create the scroll pane and add the table to it.
          JScrollPane scrollPane = new JScrollPane(table);
-         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
          scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-                 
+              
          // Create the menu bar.
          JMenuBar menuBar = new JMenuBar();
          JMenu menu;
@@ -611,5 +611,52 @@ public class MimsJTable {
    void setPlanes(ArrayList planes) {
       this.planes = planes;
    }
+
+   public JTable autoResizeColWidth(JTable table, DefaultTableModel model) {
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setModel(model);
+
+        int margin = 5;
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            int                     vColIndex = i;
+            DefaultTableColumnModel colModel  = (DefaultTableColumnModel) table.getColumnModel();
+            TableColumn             col       = colModel.getColumn(vColIndex);
+            int                     width     = 0;
+
+            // Get width of column header
+            TableCellRenderer renderer = col.getHeaderRenderer();
+
+            if (renderer == null) {
+                renderer = table.getTableHeader().getDefaultRenderer();
+            }
+
+            Component comp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(), false, false, 0, 0);
+
+            width = comp.getPreferredSize().width;
+
+            // Get maximum width of column data
+            for (int r = 0; r < table.getRowCount(); r++) {
+                renderer = table.getCellRenderer(r, vColIndex);
+                comp     = renderer.getTableCellRendererComponent(table, table.getValueAt(r, vColIndex), false, false,
+                        r, vColIndex);
+                width = Math.max(width, comp.getPreferredSize().width);
+            }
+
+            // Add margin
+            width += 2 * margin;
+
+            // Set the width
+            col.setPreferredWidth(width);
+        }
+
+        ((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(
+            SwingConstants.LEFT);
+
+        // table.setAutoCreateRowSorter(true);
+        table.getTableHeader().setReorderingAllowed(false);
+
+        return table;
+    }
 
 }
