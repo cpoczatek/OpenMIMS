@@ -590,6 +590,8 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     public String getShortTitle() {
         String tempstring = this.getTitle();
         int colonindex = tempstring.indexOf(":");
+        if (getMimsType() == SUM_IMAGE)
+           colonindex = tempstring.indexOf(":", colonindex+1);
         if(colonindex>0) return tempstring.substring(0, colonindex-1);
         else return "";
     }

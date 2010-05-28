@@ -105,7 +105,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                     super.processMouseEvent(e);
                  }
               }
-        }
+           }
         };
         roijlist.setCellRenderer(new ComboBoxRenderer());
         roijlist.addKeyListener(ij);
@@ -275,15 +275,25 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     void createActionPerformed(ActionEvent e) {
         String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
-        if (s == null || s == "")
-           return;
-        s = s.trim();
-        if (groups.contains(s))
-           return;
-        else {
-           groups.add(s);
-           groupListModel.addElement(s);
-        }
+        addGroup(s);
+    }
+
+    // Programatically add a group.
+    void addGroup(String s) {
+        
+       if (s == null)
+          return;
+
+       s = s.trim();
+       if (s.equals(""))
+          return;
+
+       if (groups.contains(s))
+          return;
+       else {
+          groups.add(s);
+          groupListModel.addElement(s);
+       }
     }
 
     // Deletes selected groups and all associations.
@@ -531,7 +541,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          // size_diff must be negative here so
          // decrimenting instead of incrementing
          for (int i = 0; i > size_diff; i--) {
-             System.out.println("removing 1...");
             xylist.remove(xylist.size()-1);
          }
       }

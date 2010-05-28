@@ -4,6 +4,7 @@ import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileWriter;
@@ -35,6 +36,18 @@ public class MimsJTable {
    Object[][] data;
    ArrayList planes;
    JFrame frame;
+   boolean roiTable = false;
+
+   static String AREA = "area";
+   static String GROUP = "group";
+
+   static String FILENAME = "file";
+   static String ROIGROUP = "Roi group";
+   static String ROINAME = "Roi name";
+   static String SLICE = "Slice";
+   
+   static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
+   static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
 
    public MimsJTable(UI ui) {
       this.ui = ui;
@@ -44,16 +57,26 @@ public class MimsJTable {
    // button to create smaller tables with one row per Roi.
    public void createRoiTable(){
 
+      // Set roiTable flag.
+      roiTable = true;
+
       // Get the data.
       Object[][] data = getRoiDataSet();
 
       // Setup column headers.
-      String[] columnNames = new String[stats.length+2];
-      columnNames[0] = "Image : Roi Label";
-      columnNames[1] = "Slice";
-      for (int i = 0; i < stats.length; i++){
-         columnNames[i+2] = stats[i];
-      }
+      String[] columnNames = getRoiManagerColumnNames();
+
+      // Generate and display table.
+      displayTable(data, columnNames);
+   }
+
+   // For sum images.
+   public void createSumTable(boolean appendResults){
+
+      // Get the data.
+      Object[][] data = getSumImageDataSet();
+
+      String[] columnNames = getSumImageColumnNames();
 
       // Generate and display table.
       displayTable(data, columnNames);
@@ -122,7 +145,7 @@ public class MimsJTable {
          JScrollPane scrollPane = new JScrollPane(table);
          table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
          scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
+                 
          // Create the menu bar.
          JMenuBar menuBar = new JMenuBar();
          JMenu menu;
@@ -137,10 +160,12 @@ public class MimsJTable {
          menu.add(menuItem);
 
          // Generate frame.
-         frame = new JFrame("Measure");
+         String title = ui.getImageFilePrefix();
+         if (roiTable)
+            title += " : " + images[0].getShortTitle();
+         frame = new JFrame(title);
          frame.setJMenuBar(menuBar);
          frame.setContentPane(scrollPane);
-         frame.setSize(600, 400);
          frame.pack();
    }
 
@@ -161,35 +186,149 @@ public class MimsJTable {
          return null;
 
       // initialize data.
-      Object data[][] = new Object[rois.length][stats.length+2];
-
-      // Set the plane.
+      int nRows = rois.length;
+      int nCols = ROIMANAGER_MANDATORY_COLUMNS.length + stats.length;
+      Object data[][] = new Object[nRows][nCols];
       int plane = (Integer) planes.get(0);
       MimsPlus image = images[0];
+      Roi roi;
+      String stat;
+
+      // Set the plane.      
       if (image.getMimsType() == MimsPlus.MASS_IMAGE)
          image.setSlice(plane, false);
       else if (image.getMimsType() == MimsPlus.RATIO_IMAGE)
          image.setSlice(plane, image);
 
+      // Fill in "mandatory" fields... ususally non-numeric file/Roi information.
+      for (int row = 0; row < rois.length; row++) {
+         roi = rois[row];
+         for (int col = 0; col < ROIMANAGER_MANDATORY_COLUMNS.length; col++) {
+            stat = ROIMANAGER_MANDATORY_COLUMNS[col];
+            if (stat.equals(ROIGROUP)) {
+               String group = ui.getRoiManager().getRoiGroup(roi.getName());
+               if (group == null)
+                  group = "null";
+               data[row][col] = group;
+            } else if (stat.equals(ROINAME))
+               data[row][col] = roi.getName();
+            else if (stat.equals(SLICE))
+               data[row][col] = images[0].getCurrentSlice();
+            else
+               data[row][col] = "null";
+         }
+      }
+
       // Fill in the data.
       for (int row = 0; row < rois.length; row++) {
-         for (int col = 0; col < stats.length+2; col++) {
+         roi = rois[row];
+         int colnum = SUM_IMAGE_MANDOTORY_COLUMNS.length;
+         
+         for (int col = 0; col < stats.length; col++) {
+            stat = stats[col];
+
+            // Set decimal precision.
+            int precision = 2;
+
+            // Set the ROI location.
             Integer[] xy = ui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
             rois[row].setLocation(xy[0], xy[1]);
             image.setRoi(rois[row]);
             ImageStatistics tempstats = image.getStatistics();
-            if (col == 0)
-               data[row][col] = images[0].getShortTitle() + " : (" + rois[row].getName() + ")";
-            else if (col == 1)
-               data[row][col] = plane;
-            else {
-               double value = MimsJFreeChart.getSingleStat(tempstats, stats[col-2]);
-               int precision = 2;
-               if (stats[col-2] == "area")
-                  precision = 0;
-               data[row][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[col-2]), precision);
-            }
-          }
+
+            // "Group" is a mandatory row, so ignore if user selected it.
+            if (stat.startsWith(GROUP))
+               continue;
+
+            // No decimal for area statistic.
+            if (stat.equals(AREA))
+               precision = 0;
+            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stat), precision);
+
+            colnum++;
+         }
+     }
+
+     return data;
+   }
+
+   // Use this method when getting data for single planes.
+   // Produces a differently formated table than getDataSet().
+   public Object[][] getSumImageDataSet(){
+
+      // Roi check.
+      if (rois.length == 0)
+         return null;
+
+      // initialize data.
+      int nRows = rois.length;
+      int nCols = (SUM_IMAGE_MANDOTORY_COLUMNS.length + stats.length) * images.length;
+      Object data[][] = new Object[nRows][nCols];
+      Roi roi;
+      MimsPlus image;
+      String stat;
+      ImageStatistics tempstats;      
+
+      // Fill in "mandatory" fields... ususally non-numeric file/Roi information.
+      for (int row = 0; row < rois.length; row++) {
+         roi = rois[row];
+         for (int col = 0; col < SUM_IMAGE_MANDOTORY_COLUMNS.length; col++) {
+            stat = SUM_IMAGE_MANDOTORY_COLUMNS[col];
+            if (stat.equals(FILENAME))
+               data[row][col] = ui.getImageFilePrefix();
+            else if (stat.equals(ROIGROUP)) {
+               String group = ui.getRoiManager().getRoiGroup(roi.getName());
+               if (group == null)
+                  group = "null";
+               data[row][col] = group;
+            } else if (stat.equals(ROINAME))
+               data[row][col] = roi.getName();
+            else
+               data[row][col] = "null";
+         }
+      }
+
+      // Fill in rest of data... statistics.
+      for (int row = 0; row < rois.length; row++) {
+         roi = rois[row];
+         int colnum = SUM_IMAGE_MANDOTORY_COLUMNS.length;
+
+         for (int col1 = 0; col1 < images.length; col1++) {
+            image = images[col1];            
+
+               for (int col2 = 0; col2 < stats.length; col2++) {
+                  stat = stats[col2];
+                  
+                  // Set decimal percision.
+                  int precision = 2;
+                  
+                  // Sum images, by definition, are only 1 plane. Since Rois
+                  // can have different location on different planes, we will
+                  // choose the location for the currently displayed slice.
+                  int plane = ui.getMassImages()[0].getCurrentSlice();
+                  Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), plane);
+                  roi.setLocation(xy[0], xy[1]);
+                  image.setRoi(roi);
+                  tempstats = image.getStatistics();
+
+                  // "Group" is a mandatory row, so ignore if user selected it.
+                  if (stat.startsWith(GROUP))
+                     continue;
+
+                  // Some stats we only want to put in once, like "area".
+                  if (col1 == 0) {
+                     if (stat.equals(AREA))
+                        precision = 0;                     
+                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stat), precision);
+                  } else {
+                     if (stat.equals(AREA))
+                        continue;
+                     else
+                        data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stat), precision);
+                  }
+                  colnum++;
+               }
+           }
        }
 
       return data;
@@ -221,11 +360,14 @@ public class MimsJTable {
                image.setSlice(plane, image);
             for (int i = 0; i < rois.length; i++) {
                for (int k = 0; k < stats.length; k++) {
+                  int precision = 2;
                   Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
                   rois[i].setLocation(xy[0], xy[1]);
                   image.setRoi(rois[i]);
                   tempstats = image.getStatistics();
                   if (j == 0) {
+                     if (stats[k].startsWith("area"))
+                        precision = 0;
                      if (stats[k].startsWith("group")) {
                         String group = "null";
                         if (ui.getRoiManager().getRoiGroup(rois[i].getName()) == null)
@@ -233,12 +375,12 @@ public class MimsJTable {
                         else
                            data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
                      } else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), 2);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), precision);
                   } else {
                      if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
                         continue;
                      else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), 2);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), precision);
 
                   }
                   col++;
@@ -270,10 +412,13 @@ public class MimsJTable {
                   if (stats[k].endsWith(tableOnly))
                      stat = stats[k].substring(0, stats[k].indexOf(tableOnly) - 1);
                } else {
-                  if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
+                  if ((stats[k].startsWith(GROUP) || stats[k].equalsIgnoreCase(AREA)))
                      continue;
-               }
-               header = stat + "_m" + images[j].getRoundedTitle() + "_r" + (ui.getRoiManager().getIndex(rois[i].getName())+1);
+               }  
+               String prefix = "_";
+               if (images[j].getType() == MimsPlus.MASS_IMAGE || images[j].getType() == MimsPlus.RATIO_IMAGE)
+                  prefix = "_m";
+               header = stat + prefix + images[j].getRoundedTitle() + "_r" + (ui.getRoiManager().getIndex(rois[i].getName())+1);
                columnNamesArray.add(header);
                col++;
             }
@@ -286,6 +431,82 @@ public class MimsJTable {
          columnNames[i] = columnNamesArray.get(i);
       }
 
+      return columnNames;
+   }
+
+   // Setup column headers for sum image table.
+   private String[] getSumImageColumnNames() {
+
+      // initialze variables.
+      ArrayList<String> columnNamesArray = new ArrayList<String>();
+      MimsPlus image;
+      String stat;      
+
+      // Mandatory columns first.
+      for (int col = 0; col < SUM_IMAGE_MANDOTORY_COLUMNS.length; col++) {
+         String header = SUM_IMAGE_MANDOTORY_COLUMNS[col];
+         if (header.equals(FILENAME))
+            columnNamesArray.add(FILENAME);
+         else if (header.equals(ROIGROUP))
+            columnNamesArray.add(ROIGROUP);
+         else if (header.equals(ROINAME))
+            columnNamesArray.add(ROINAME);
+         else
+            columnNamesArray.add("null");
+      }
+
+      // Data column headers.
+      for (int col1 = 0; col1 < images.length; col1++) {
+         image = images[col1];
+         for (int col2 = 0; col2 < stats.length; col2++) {
+            stat = stats[col2];
+            String label = stat + " " + image.getRoundedTitle();
+
+            if (stat.startsWith(GROUP))
+               continue;
+
+            if (col1 > 0 && stat.equals(AREA))
+               continue;
+            else
+               columnNamesArray.add(label);
+         }
+      }
+
+      // Assemble column headers.
+      String[] columnNames = new String[columnNamesArray.size()];
+      for (int i = 0; i < columnNames.length; i++) {
+         columnNames[i] = columnNamesArray.get(i);
+      }
+
+      return columnNames;
+   }
+
+   // Setup column headers for sum image table.
+   private String[] getRoiManagerColumnNames(){
+
+      // Fill in preliminary mandatory columns headers.
+      ArrayList<String> columnNamesArray = new ArrayList<String>();
+      int colnum = 0;
+      for (int i = 0; i < ROIMANAGER_MANDATORY_COLUMNS.length; i++){
+         columnNamesArray.add(ROIMANAGER_MANDATORY_COLUMNS[i]);
+         colnum++;
+      }
+
+      // Fill in headers for stats.
+      for (int i = 0; i < stats.length; i++){
+         if (stats[i].startsWith(GROUP))
+               continue;
+         columnNamesArray.add(stats[i]);
+         colnum++;
+      }
+
+      // Assemble column headers.
+      String[] columnNames = new String[columnNamesArray.size()];
+      for (int i = 0; i < columnNames.length; i++) {
+         columnNames[i] = columnNamesArray.get(i);
+      }
+
+      // Return.
       return columnNames;
    }
 

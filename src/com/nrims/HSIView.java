@@ -428,9 +428,18 @@ public class HSIView extends JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void rgbMaxjSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rgbMaxjSliderStateChanged
-        if (bUpdating || (currentImage.getMimsType()!=currentImage.HSI_IMAGE)) {
-            return;
-        }
+        if (props == null)
+           return;
+
+        if (bUpdating)
+           return;
+
+        if (currentImage == null)
+           return;
+
+        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
+           return;
+
         int val = rgbMaxjSlider.getValue();
 
         props.setMaxRGB(val);
@@ -449,33 +458,68 @@ public class HSIView extends JPanel {
 }//GEN-LAST:event_rgbMaxjSliderStateChanged
 
     private void denThresholdjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_denThresholdjSpinnerStateChanged
-        if (bUpdating || (currentImage.getMimsType()!=currentImage.HSI_IMAGE)) {
-            return;
-        }
+        if (props == null)
+           return;
+
+        if (bUpdating)
+           return;
+
+        if (currentImage == null)
+           return;
+
+        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
+           return;
+
         props.setMinDen(new Integer(denThresholdjSpinner.getValue().toString()));
         update();
 }//GEN-LAST:event_denThresholdjSpinnerStateChanged
 
     private void numThresholdjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_numThresholdjSpinnerStateChanged
-        if (bUpdating || (currentImage.getMimsType()!=currentImage.HSI_IMAGE)) {
-            return;
-        }
+        if (props == null)
+           return;
+
+        if (bUpdating)
+           return;
+
+        if (currentImage == null)
+           return;
+
+        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
+           return;
+        
         props.setMinNum(new Integer(numThresholdjSpinner.getValue().toString()));
         update();
 }//GEN-LAST:event_numThresholdjSpinnerStateChanged
 
     private void ratioMinjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ratioMinjSpinnerStateChanged
-        if (bUpdating || (currentImage.getMimsType()!=currentImage.HSI_IMAGE)) {
-            return;
-        }
+        if (props == null)
+           return;
+
+        if (bUpdating)
+           return;
+
+        if (currentImage == null)
+           return;
+
+        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
+           return;
+
         props.setMinRatio(new Double(ratioMinjSpinner.getValue().toString()));
         update();
 }//GEN-LAST:event_ratioMinjSpinnerStateChanged
 
     private void rartioMaxjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rartioMaxjSpinnerStateChanged
-       if (bUpdating || (currentImage.getMimsType()!=currentImage.HSI_IMAGE)) {
-            return;
-        }
+        if (props == null)
+           return;
+
+        if (bUpdating)
+           return;
+
+        if (currentImage == null)
+           return;
+
+        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
+           return;
 
         props.setMaxRatio(new Double(rartioMaxjSpinner.getValue().toString()));
         update();
@@ -511,7 +555,19 @@ public class HSIView extends JPanel {
 }//GEN-LAST:event_displayHSIjButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        if (props == null || (currentImage.getMimsType()!=currentImage.HSI_IMAGE)) return;
+        
+        if (props == null)
+           return;
+
+        if (bUpdating)
+           return;
+        
+        if (currentImage == null)
+           return;
+           
+        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
+           return;
+
         MimsPlus mp = currentImage;
 
         ui.autoContrastImage(mp);

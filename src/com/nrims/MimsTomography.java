@@ -8,10 +8,15 @@ package com.nrims;
 
 import com.nrims.data.Opener;
 import ij.gui.Roi;
+import java.awt.Component;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import javax.swing.DefaultListModel;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -35,7 +40,6 @@ public class MimsTomography extends javax.swing.JPanel {
     
     /** Creates new form mimsTomography */
     public MimsTomography(UI ui) {
-        System.out.println("MimsTomography constructor");
         initComponents();
         setupHistogram();
         
@@ -43,11 +47,8 @@ public class MimsTomography extends javax.swing.JPanel {
         this.image = ui.getOpener();
         tomoChart = null;
 
-        imageJList.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = image.getMassNames();
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });        
+        imageJList.setModel(new DefaultListModel());
+        imageJList.setCellRenderer(new ImageListRenderer());
     }
     
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -320,7 +321,6 @@ public class MimsTomography extends javax.swing.JPanel {
 
        // initialize variables.
        MimsRoiManager rm = ui.getRoiManager();
-       rm.showFrame();
 
        if (!appendCheckBox.isSelected() || table == null) {
           table = new MimsJTable(ui);
@@ -355,7 +355,7 @@ public class MimsTomography extends javax.swing.JPanel {
           return;
        }
 
-       // images
+       // Get selected images.
        MimsPlus[] images = getImages();
        if (images.length >= 1) {
           table.setImages(images);
@@ -363,8 +363,20 @@ public class MimsTomography extends javax.swing.JPanel {
           System.out.println("No images selected");
           return;
        }
+
+       // Is at least 1 mass or ratio image present.
+       boolean isOneMassOrRatioImagePresent = false;
+       for (int i = 0; i < images.length; i++)
+          if (images[i].getMimsType() == MimsPlus.MASS_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE)
+             isOneMassOrRatioImagePresent = true;
        
-       table.createTable(appendCheckBox.isSelected());
+       // Show Roi formatted table if only dealing with one plane
+       if (isOneMassOrRatioImagePresent && planes.size() != 1)
+         table.createTable(appendCheckBox.isSelected());
+       else
+         table.createSumTable(appendCheckBox.isSelected());
+
+       // Show table
        table.showFrame();
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -384,42 +396,37 @@ public class MimsTomography extends javax.swing.JPanel {
     }//GEN-LAST:event_profilejButtonActionPerformed
     
     public void resetImageNamesList() {
-        
+
+        // Get all the open images we want in the list.
         MimsPlus[] rp = ui.getOpenRatioImages();
-                        
-        java.util.ArrayList<String> strings = new java.util.ArrayList<String>();
-        String[] tempstrings = ui.getOpener().getMassNames();
-        
-        for(int j=0; j<tempstrings.length; j++) {
-            strings.add(tempstrings[j]);
-        }
-        
-        for(int i=0; i<rp.length; i++) {
-            String foo;
-            foo = rp[i].getTitle();
-            foo = foo.substring(foo.indexOf("_m")+1);
-            foo = foo.replaceAll("_", "/");
-            foo = foo.replaceAll("m", "");
-            strings.add(foo);
-        }
-        
-        final String[] str = new String[strings.size()];
-        for(int k=0; k<str.length; k++)
-            str[k]=strings.get(k);
+        MimsPlus[] mp = ui.getOpenMassImages();
+        MimsPlus[] sp = ui.getOpenSumImages();
+
+        // Build array of image names.
+        java.util.ArrayList<MimsPlus> images = new java.util.ArrayList<MimsPlus>();
+        for(int j=0; j<mp.length; j++) 
+            images.add(mp[j]);
+        for(int j=0; j<rp.length; j++)
+            images.add(rp[j]);
+        for(int j=0; j<sp.length; j++)
+            images.add(sp[j]);
+
+        // Insert into list.
+        final MimsPlus[] img = new MimsPlus[images.size()];
+        for(int k=0; k<images.size(); k++)
+            img[k]=images.get(k);
         
         imageJList.setModel(new javax.swing.AbstractListModel() {
-            public int getSize() { return str.length; }
-            public Object getElementAt(int i) { return str[i]; }
+            public int getSize() { return img.length; }
+            public Object getElementAt(int i) { return img[i]; }
         });
-        
-        
     }
     
     private MimsPlus[] getImages(){
        
        // Get selected images.
        int[] num = imageJList.getSelectedIndices();
-       
+
        // Get all open mass and ratio images.
        MimsPlus[] mp = ui.getOpenMassImages();
        MimsPlus[] rp = ui.getOpenRatioImages();
@@ -427,11 +434,7 @@ public class MimsTomography extends javax.swing.JPanel {
        // Build list of images.
        MimsPlus[] images = new MimsPlus[num.length];
        for (int i = 0; i < num.length; i++) {
-          if (num[i] < mp.length) {
-             images[i] = mp[num[i]];
-          } else if (num[i] >= mp.length && num[i] < mp.length + rp.length) {
-             images[i] = rp[num[i]-mp.length];
-          }
+          images[i] = (MimsPlus)imageJList.getModel().getElementAt(num[i]);
        }
        
        return images;
@@ -482,6 +485,33 @@ public class MimsTomography extends javax.swing.JPanel {
 
        return planes;
     }
+
+    class ImageListRenderer extends JLabel implements ListCellRenderer {
+
+      public ImageListRenderer() {
+         setOpaque(true);
+         setHorizontalAlignment(LEFT);
+         setVerticalAlignment(CENTER);
+      }
+
+      public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+
+         // Extract simple title from value.
+         MimsPlus image = (MimsPlus) value;
+         String label = image.getRoundedTitle();
+         setText(label);
+
+         if (isSelected) {
+            setBackground(list.getSelectionBackground());
+            setForeground(list.getSelectionForeground());
+         } else {
+            setBackground(list.getBackground());
+            setForeground(list.getForeground());
+         }
+
+         return this;
+      }
+   }
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JCheckBox appendCheckBox;
