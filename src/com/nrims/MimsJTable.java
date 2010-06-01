@@ -66,7 +66,7 @@ public class MimsJTable {
       roiTable = true;
 
       // Get the data.
-      Object[][] data = getRoiDataSet();
+      data = getRoiDataSet();
 
       // Setup column headers.
       String[] columnNames = getRoiManagerColumnNames();
@@ -79,7 +79,7 @@ public class MimsJTable {
    public void createSumTable(boolean appendResults){
 
       // Get the data.
-      Object[][] data = getSumImageDataSet();
+      data = getSumImageDataSet();
 
       String[] columnNames = getSumImageColumnNames();
 
