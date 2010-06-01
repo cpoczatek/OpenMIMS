@@ -141,6 +141,7 @@ public class MimsJTable {
          DefaultTableModel tm = new DefaultTableModel(data, columnNames);
          table = new JTable(tm);
          table = autoResizeColWidth(table, tm);
+         table.setAutoCreateRowSorter(true);
 
          //Create the scroll pane and add the table to it.
          JScrollPane scrollPane = new JScrollPane(table);
@@ -651,7 +652,7 @@ public class MimsJTable {
         }
 
         ((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(
-            SwingConstants.LEFT);
+            SwingConstants.CENTER);
 
         // table.setAutoCreateRowSorter(true);
         table.getTableHeader().setReorderingAllowed(false);
