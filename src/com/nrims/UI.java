@@ -266,7 +266,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             autoContrastImages(getOpenMassImages());
        }
       });      
-      loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.im"));
+      //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.im"));
    }
 
     /**
