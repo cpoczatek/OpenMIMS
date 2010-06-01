@@ -39,6 +39,7 @@ public class MimsJTable {
    MimsPlus images[];
    Roi[] rois;
    Object[][] data;
+   String[] columnNames;
    ArrayList planes;
    JFrame frame;
    boolean roiTable = false;
@@ -69,7 +70,7 @@ public class MimsJTable {
       data = getRoiDataSet();
 
       // Setup column headers.
-      String[] columnNames = getRoiManagerColumnNames();
+      columnNames = getRoiManagerColumnNames();
 
       // Generate and display table.
       displayTable(data, columnNames);
@@ -81,7 +82,7 @@ public class MimsJTable {
       // Get the data.
       data = getSumImageDataSet();
 
-      String[] columnNames = getSumImageColumnNames();
+      columnNames = getSumImageColumnNames();
 
       // Generate and display table.
       displayTable(data, columnNames);
@@ -126,7 +127,7 @@ public class MimsJTable {
          data = getDataSet();
 
          // Get columns.
-         String[] columnNames = getColumnNames();
+         columnNames = getColumnNames();
 
          // Display table.
          displayTable(data, columnNames);
@@ -541,7 +542,6 @@ public class MimsJTable {
 
               // Write column headers
               int col = 0;
-              String[] columnNames = getColumnNames();
               for (String name: columnNames) {
                  out.print(name);
                  if (col < columnNames.length - 1)
@@ -554,10 +554,13 @@ public class MimsJTable {
               for (int i = 0; i < data.length; i++) {
                  col = 0;
                  for (int j = 0; j < data[i].length; j++) {
+                    String value = (String)data[i][j];
+                    if (value != null) {
                     out.print((String)data[i][j]);
                     if (col < columnNames.length - 1)
                        out.print("\t");
                     col++;
+                    }
                  }
                  out.println();
               }
