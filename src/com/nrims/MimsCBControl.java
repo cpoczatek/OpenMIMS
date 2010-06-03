@@ -190,7 +190,7 @@ public class MimsCBControl extends javax.swing.JPanel {
       // Final plot adjustmetns.
       plot.getDomainAxis().setRange(0, maxVal);
       plot.setDomainGridlinesVisible(false);                 
-      chart.fireChartChanged();     
+      chart.fireChartChanged();   
    }
    
    // Update the contrast window range displayed.
@@ -257,10 +257,6 @@ public class MimsCBControl extends javax.swing.JPanel {
    // Is auto-contrast radiobutton selected.
    public boolean autoContrastRadioButtonIsSelected(){   
       return jRadioButton1.isSelected();
-   }
-   
-   public ContrastAdjuster getContrastAdjuster(){
-      return contrastAdjuster1;
    }
    
    private void initComponents() {

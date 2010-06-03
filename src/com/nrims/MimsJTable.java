@@ -5,7 +5,6 @@ import ij.gui.Roi;
 import ij.process.ImageStatistics;
 import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,8 +37,6 @@ public class MimsJTable {
    String[] stats;
    MimsPlus images[];
    Roi[] rois;
-   Object[][] data;
-   String[] columnNames;
    ArrayList planes;
    JFrame frame;
    boolean roiTable = false;
@@ -59,80 +56,49 @@ public class MimsJTable {
       this.ui = ui;
    }
 
-   // This method is used by the RoiManager "measure"
-   // button to create smaller tables with one row per Roi.
-   public void createRoiTable(){
+   // This method is used by the RoiManager "measure" button.
+   public void createRoiTable(boolean appendData){
 
       // Set roiTable flag.
       roiTable = true;
 
-      // Get the data.
-      data = getRoiDataSet();
-
-      // Setup column headers.
-      columnNames = getRoiManagerColumnNames();
+      // Get the data and column headers.
+      Object[][] data = getRoiDataSet();
+      String[] columnNames = getRoiManagerColumnNames();
 
       // Generate and display table.
-      displayTable(data, columnNames);
+      if (appendData && ableToAppendData(columnNames))
+         appendDataToTable(data, columnNames);
+      else
+         displayTable(data, columnNames);
    }
 
    // For sum images.
-   public void createSumTable(boolean appendResults){
+   public void createSumTable(boolean appendData){
 
-      // Get the data.
-      data = getSumImageDataSet();
-
-      columnNames = getSumImageColumnNames();
+      // Get the data and column headers.
+      Object[][] data = getSumImageDataSet();
+      String[] columnNames = getSumImageColumnNames();
 
       // Generate and display table.
-      displayTable(data, columnNames);
+      if (appendData && ableToAppendData(columnNames))
+         appendDataToTable(data, columnNames);
+      else
+         displayTable(data, columnNames);
    }
 
-   // This method is used by the Tomography tab "table"
-   // button to create larger tables with one row per plane.
-   public void createTable(boolean appendResults) {
+   // Tomography tab "table". One row per plane.
+   public void createTable(boolean appendData) {
 
-      // Cant append if frame doesnt exist
-      if (frame == null) {
-         appendResults = false;
-      } else if (!frame.isVisible()) {
-         appendResults = false;
-      }
+      // Get data.
+      Object[][] data = getDataSet();
+      String[] columnNames = getColumnNames();
 
-      // If attempting to append, make sure number of column match.
-      if (appendResults && data != null) {
-         appendResults = tableColumnsMatch();
-      }
-
-      // Appending results.
-      if (appendResults && data != null) {
-         Object[][] newData = getDataSet();
-         for (int i = 0; i < newData.length; i++) {
-            TableModel tm = table.getModel();
-            DefaultTableModel model = (DefaultTableModel) tm;
-            model.addRow(newData[i]);
-            model.setColumnIdentifiers(getColumnNames());
-            int width = 100;
-            for (int ii = 0; ii < getColumnNames().length; ii++) {
-               TableColumn col = table.getColumnModel().getColumn(ii);
-               col.setMinWidth(width);
-               col.setPreferredWidth(width);
-            }
-         }
-      } else if (rois.length == 0 || images.length == 0 || stats.length == 0) {
-         return;
-      } else {
-
-         // Get data.
-         data = getDataSet();
-
-         // Get columns.
-         columnNames = getColumnNames();
-
-         // Display table.
+      // Generate and display table.
+      if (appendData && ableToAppendData(columnNames))
+         appendDataToTable(data, columnNames);
+      else
          displayTable(data, columnNames);
-
-      }
    }
 
    // Displays a table given data and column headers.
@@ -169,6 +135,37 @@ public class MimsJTable {
          frame.setJMenuBar(menuBar);
          frame.setContentPane(scrollPane);
          frame.pack();
+   }
+
+   private void appendDataToTable(Object[][] data, String[] columnNames) {
+      TableModel tm = table.getModel();
+      DefaultTableModel model = (DefaultTableModel) tm;
+      for (int i = 0; i < data.length; i++) {
+         model.addRow(data[i]);
+         model.setColumnIdentifiers(columnNames);
+      }
+      autoResizeColWidth(table, model);
+
+      // Update title.
+      String title = ui.getImageFilePrefix();
+      if (roiTable)
+         title += " : " + images[0].getShortTitle();
+      frame.setTitle(title);
+   }
+
+   private boolean ableToAppendData(String[] columnNames) {
+
+      // Cant append if any of the following conditions are satisfied.
+      if (frame == null)
+         return false;
+      else if (!frame.isVisible())
+         return false;
+      else if (table == null)
+         return false;
+      else if (!tableColumnsMatch(columnNames))
+         return false;
+
+      return true;
    }
 
    // Use this method when getting data for single planes.
@@ -215,7 +212,7 @@ public class MimsJTable {
             } else if (stat.equals(ROINAME))
                data[row][col] = roi.getName();
             else if (stat.equals(SLICE))
-               data[row][col] = images[0].getCurrentSlice();
+               data[row][col] = (new Integer(images[0].getCurrentSlice())).toString();
             else
                data[row][col] = "null";
          }
@@ -539,28 +536,28 @@ public class MimsJTable {
    public void writeData(File file) {
       try {
               PrintWriter out = new PrintWriter(new FileWriter(file));
+              DefaultTableModel dtm = (DefaultTableModel)table.getModel();
 
-              // Write column headers
-              int col = 0;
-              for (String name: columnNames) {
-                 out.print(name);
-                 if (col < columnNames.length - 1)
-                     out.print("\t");
-                 col++;
+              // Write column headers              
+              for (int i = 0; i < dtm.getColumnCount(); i++) {
+                 out.print(dtm.getColumnName(i));
+                 if (i < dtm.getColumnCount() - 1)
+                     out.print("\t");                 
               }
               out.println();
 
               // Write data
-              for (int i = 0; i < data.length; i++) {
-                 col = 0;
-                 for (int j = 0; j < data[i].length; j++) {
-                    String value = (String)data[i][j];
-                    if (value != null) {
-                    out.print((String)data[i][j]);
-                    if (col < columnNames.length - 1)
-                       out.print("\t");
-                    col++;
-                    }
+              String value = "";
+              for (int i = 0; i < dtm.getRowCount(); i++) {
+                 for (int j = 0; j < dtm.getColumnCount(); j++) {
+                    Object objVal = dtm.getValueAt(i, j);
+                    if (value == null)
+                       value = "null";
+                    else
+                       value = objVal.toString();
+                    out.print(value);
+                    if (j < dtm.getColumnCount() - 1)
+                       out.print("\t");                                     
                  }
                  out.println();
               }
@@ -573,16 +570,13 @@ public class MimsJTable {
           }
    }
 
-   public boolean tableColumnsMatch() {
-
-      String[] columnNames = getColumnNames();
+   public boolean tableColumnsMatch(String[] columnNames) {
 
       int numCol1 = columnNames.length;
-      int numCol2 = table.getColumnCount();
+      int numCol2 = ((DefaultTableModel)table.getModel()).getColumnCount();
 
-      if (numCol1 != numCol2) {
+      if (numCol1 != numCol2)
          return false;
-      }
 
       return true;
    }
@@ -607,7 +601,7 @@ public class MimsJTable {
    }
 
    public void close() {
-    	data = null;
+    	table = null;
       if (frame != null)
          frame.setVisible(false);
    }
@@ -617,10 +611,13 @@ public class MimsJTable {
    }
 
    public JTable autoResizeColWidth(JTable table, DefaultTableModel model) {
+
+
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setModel(model);
 
         int margin = 5;
+        int minWidth = 75;
 
         for (int i = 0; i < table.getColumnCount(); i++) {
             int                     vColIndex = i;
@@ -649,6 +646,8 @@ public class MimsJTable {
 
             // Add margin
             width += 2 * margin;
+            if (width < minWidth)
+               width = minWidth;
 
             // Set the width
             col.setPreferredWidth(width);

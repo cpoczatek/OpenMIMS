@@ -17,6 +17,8 @@ public class RatioProps implements java.io.Serializable {
     private double minLUT;
     private double maxLUT;
     private double mag = 1.0;
+    private int    numThreshold;
+    private int    denThreshold;
 
 
    // Create an empty ratio props object.
@@ -32,10 +34,11 @@ public class RatioProps implements java.io.Serializable {
        yloc = -1;
        numMassValue = -1.0;
        denMassValue = -1.0;
-       ratioScaleFactor = -1.0;
-       //-----------
+       ratioScaleFactor = -1.0;       
        minLUT = 0.0;
        maxLUT = 1.0;
+       numThreshold = 3;
+       denThreshold = 3;
    }
 
    // Two props objects are equal if numerator and denominator are the same.
@@ -66,6 +69,11 @@ public class RatioProps implements java.io.Serializable {
    public double getMinLUT() { return this.minLUT; }
    public void setMaxLUT(double max) { this.maxLUT = max; }
    public double getMaxLUT() { return this.maxLUT; }
+
+   public void setNumThreshold(int numThresh) {this.numThreshold = numThresh; }
+   public int getNumThreshold() { return this.numThreshold; }
+   public void setDenThreshold(int denThresh) {this.denThreshold = denThresh; }
+   public int getDenThreshold() { return this.denThreshold; }
 
    public void setMag(double m) { this.mag = m; }
    public double getMag() { return this.mag; }

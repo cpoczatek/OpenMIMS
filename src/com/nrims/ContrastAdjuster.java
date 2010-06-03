@@ -284,17 +284,7 @@ public class ContrastAdjuster extends JPanel implements Runnable,
       if (b == null) return;
       
       if (b == autoB) {
-         if (imp.getMimsType() == MimsPlus.RATIO_IMAGE && !ui.getHSIView().isMedianFilterSelected()) {
-            ui.autocontrastNRIMS(imp);
-            update(imp);
-            return;
-         } else if (imp.getMimsType() == MimsPlus.HSI_IMAGE && !ui.getHSIView().isMedianFilterSelected()) {
-            ui.autocontrastNRIMS(imp);
-            update(imp);
-            return;
-         } else {
-            doAutoAdjust = true;           
-         }
+         doAutoAdjust = true;           
       } else if (b == resetB) {
          doReset = true;
       } else if (b == setB) {

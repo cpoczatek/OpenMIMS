@@ -1791,78 +1791,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            if (rp[i].getAutoContrastAdjust())
               autoContrastImage(rp[i]);
         }                
-    }   
-    
-   // Custom contrasting code for ratio images.
-   public void autocontrastNRIMS(MimsPlus img) {
-      
-      // Get the current image statistics.
-      ImageStatistics imgStats = img.getStatistics();
-
-      // Get mean and std.
-      double min = java.lang.Math.max(0.0, imgStats.mean - (2 * imgStats.stdDev));
-      double max = imgStats.mean + (imgStats.stdDev);
-
-      // Update processor
-      img.getProcessor().setMinAndMax(min, max);
-      img.updateAndDraw();
-   }
-
-   public MimsPlus autoContrastNRIMSHSI(MimsPlus img) {
-      if (img == null) return img;
-
-      HSIProps props = img.getHSIProps();
-
-        MimsPlus num = massImages[props.getNumMassIdx()];
-        MimsPlus den = massImages[props.getDenMassIdx()];
-        if(num == null || den == null) {
-            return img;
-        } else if(num.getBitDepth() != 16 || den.getBitDepth() != 16) {
-            return img;
-        }
-
-        short [] numPixels = (short[])num.getProcessor().getPixels() ;
-        short [] denPixels = (short[])den.getProcessor().getPixels() ;
-
-        double rmax = 0.0 ;
-        double rmin = 100000000.0 ;
-        double rmean = 0;
-        double rstd = 0;
-        int n = 0;
-        int nt = props.getMinNum() ;
-        int dt = props.getMinDen() ;
-
-        if(numPixels.length != denPixels.length) {
-            return img;
-        }
-        for(int i = 0 ; i < numPixels.length ; i++ ) {
-            if(numPixels[i] > nt && denPixels[i] > dt) {
-                double r = props.getRatioScaleFactor()*((double)numPixels[i]/(double)denPixels[i]);
-                rmean += r;
-                rstd += (r*r);
-                n++;
-                if(r > rmax) {
-                    rmax = r;
-                }
-                else if( r < rmin ) {
-                    rmin = r;
-                }
-            }
-        }
-        //mean and std ignoring zero value pixels
-        rmean = rmean/n;
-        rstd = rstd/n;
-        rstd = rstd - (rmean*rmean);
-        rstd = java.lang.Math.sqrt(rstd);
-        double min = java.lang.Math.max(0.0, rmean - (2 * rstd));
-        double max = rmean + (rstd);
-
-        props.setMaxRatio(max);
-        props.setMinRatio(min);
-        img.getHSIProcessor().setProps(props);
-
-        return img;
-   }
+    }      
 
    public void autoContrastImages(MimsPlus[] imgs) {
        for(int i=0; i<imgs.length; i++) {
@@ -1872,34 +1801,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
    }
    
-   public void autoContrastImage(MimsPlus img) {
-                  
-      // Use Collins autocontrasting code for ratio images (and NOT medianizing).
-      if (img.getMimsType() == MimsPlus.RATIO_IMAGE && !hsiControl.isMedianFilterSelected()) {
-         autocontrastNRIMS(img);
-      } 
-      
-      // Use Collins code for HSI images (and NOT medianizing). 
-      else if (img.getMimsType() == MimsPlus.HSI_IMAGE && !hsiControl.isMedianFilterSelected()) {
-         MimsPlus mp = autoContrastNRIMSHSI(img);
-         hsiControl.setHSIProps(mp.getHSIProcessor().getHSIProps());
-      } 
-      
-      // Anything else use imageJ autocontrasting. Have to reset everytime BEFORE
-      // autoadjusting because imageJ autoadjust is iterative and would give
-      // a different result everytime if reset was not done first.
-      else {                     
-         ContrastAdjuster ca = new ContrastAdjuster(img);
-         
-         // same as hitting reset button.
-         ca.doReset = true;
-         ca.doUpdate(img);                           
-         
-         // same as hitting auto button.
-         ca.doAutoAdjust = true;
-         ca.doUpdate(img);                           
-      }
-      
+   public void autoContrastImage(MimsPlus img) {                 
+      ContrastAdjuster ca = new ContrastAdjuster(img);
+      ca.doAutoAdjust = true;
+      ca.doUpdate(img);
    }
 
     public void logException(Exception e) {
@@ -3432,7 +3337,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
             int j = getHSIImageIndex(mp.getHSIProps());
             if (j > -1 && j < maxMasses && hsiImages[j].getHSIProps() != null) {
-                hsiControl.setHSIProps(hsiImages[j].getHSIProcessor().getHSIProps());
+                hsiControl.setProps(hsiImages[j].getHSIProcessor().getHSIProps());
                 hsiControl.setImageLabel(hsiImages[j].title);
                 hsiControl.setCurrentImage(mp);
             }
@@ -3440,12 +3345,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             int ni = mp.getRatioProps().getNumMassIdx();
             int di = mp.getRatioProps().getDenMassIdx();
             int j = getRatioImageIndex(ni,di);
-
             if (j > -1 && j < maxMasses && ratioImages[j].getRatioProps() != null) {
-                RatioProps rprops = ratioImages[j].getRatioProps();
-                HSIProps hprops = new HSIProps(ni, di);
-                hprops.setRatioScaleFactor(rprops.getRatioScaleFactor());
-                hsiControl.setHSIProps(hprops);
+                hsiControl.setProps(ratioImages[j].getRatioProps());
                 hsiControl.setImageLabel(ratioImages[j].title);
                 hsiControl.setCurrentImage(mp);
             }
@@ -3463,7 +3364,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
         if (bDebug) {
             IJ.log(msg);
-//            System.out.println(msg);
         }
     }
     

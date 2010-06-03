@@ -385,11 +385,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         float rMax = 0.0f;
         float rMin = 1000000.0f;
         float rSF = ui.getRatioScaleFactor();
+        int numThreshold = ratioProps.getNumThreshold();
+        int denThreshold = ratioProps.getDenThreshold();
+
         if( this.ratioProps.getRatioScaleFactor()>0 ) {
             rSF = ((Double)this.ratioProps.getRatioScaleFactor()).floatValue();
         }
         for (int i = 0; i < rPixels.length; i++) {
-            if( dPixels[i]!=0) {
+            if( dPixels[i] != 0 && nPixels[i] > numThreshold && dPixels[i] > denThreshold) {
                 rPixels[i] = rSF * ((float) nPixels[i] / (float) dPixels[i]);
             } else {
                 rPixels[i]=0;

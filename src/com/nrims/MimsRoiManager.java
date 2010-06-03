@@ -43,6 +43,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         MouseListener {
 
     JPanel panel;
+    MimsJTable table;
     static Frame instance;
     static final String DEFAULT_GROUP = "...";
     static final String GROUP_FILE_NAME = "group";
@@ -1877,7 +1878,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     void measure() {
 
        // initialize table.
-       MimsJTable table = new MimsJTable(ui);
+       if (table == null)
+         table = new MimsJTable(ui);
 
        // Get current plane.
        ImagePlus imp = getImage();
@@ -1904,7 +1906,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
        table.setImages(images);
           
        // Generate table.
-       table.createRoiTable();
+       table.createRoiTable(true);
        table.showFrame();
     }
     
