@@ -863,7 +863,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
 
 
-    private void autoTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                
+    public void autoTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {
 
         atManager = new AutoTrackManager();
         atManager.showFrame();              

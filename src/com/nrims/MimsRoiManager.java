@@ -564,6 +564,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                xy = new Integer[]{rec.x, rec.y};
                xylist.add(i, xy);
             }
+            locations.put(roi.getName(), xylist);
          // If exist but is not proper length, fix.
          } else {
             int locations_size = xylist.size();
