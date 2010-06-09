@@ -2555,6 +2555,7 @@ private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GE
     // Testing, to be moved to a manager class
 
     MimsPlus img;
+    
     try {
         img = (MimsPlus) ij.WindowManager.getCurrentImage();
     } catch (Exception e) {
