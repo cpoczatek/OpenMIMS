@@ -59,6 +59,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     JPopupMenu pm;
     JButton moreButton;
     JButton delete;
+    JButton rename;
     JCheckBox cbHideAll;
     JCheckBox cbAllPlanes;
     JSpinner xPosSpinner, yPosSpinner, widthSpinner, heightSpinner;
@@ -152,7 +153,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          public void actionPerformed(ActionEvent evt) {
             deleteActionPerformed(evt);
          }});
-         JButton rename = new JButton("Rename");
+         rename = new JButton("Rename");
          rename.setMargin( new Insets(0, 0, 0, 0) );
          rename.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
@@ -280,21 +281,33 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
 
     // Programatically add a group.
-    void addGroup(String s) {
+    boolean addGroup(String s) {
         
        if (s == null)
-          return;
+          return false;
+
+       if (s.equals(DEFAULT_GROUP))
+          return false;
 
        s = s.trim();
        if (s.equals(""))
-          return;
+          return false;
 
        if (groups.contains(s))
-          return;
+          return false;
        else {
           groups.add(s);
-          groupListModel.addElement(s);
+          clearGroupListModel();
+          Object[] groupsArray = groups.toArray();
+          String[] groupsStringArray = new String[groupsArray.length];
+          for (int i = 0; i < groupsArray.length; i++)
+            groupsStringArray[i] = (String)groupsArray[i];
+          java.util.Arrays.sort(groupsStringArray);
+          for (int i = 0; i < groupsStringArray.length; i++)
+            groupListModel.addElement(groupsStringArray[i]);
        }
+
+       return true;
     }
 
     // Deletes selected groups and all associations.
@@ -318,45 +331,45 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
     void renameActionPerformed(ActionEvent e) {
         int[] idxs = groupjlist.getSelectedIndices();
-        if(idxs.length==0) return;
+        if(idxs.length==0)
+           return;
         int index = idxs[0];
         String groupName = (String)groupListModel.get(index);
-        if(groupName.equals(DEFAULT_GROUP)) return;
 
         String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
-        if (newName == null || newName.equals("") )
-           return;
         newName = newName.trim();
-        
-        //collect all rois of that group
-        ArrayList<Roi> grprois = new ArrayList<Roi>();
-        for (int id = 0; id < roijlist.getModel().getSize(); id++) {
-            String roiName = roijlist.getModel().getElementAt(id).toString();
-            String roigroupName = (String) groupsMap.get(roiName);
-            if (roigroupName != null) {
+        if (newName == null || newName.equals("") || newName.equals(DEFAULT_GROUP))
+           return;
+                               
+        if (addGroup(newName)) {
+
+          // Collect all rois of that group
+          ArrayList<Roi> grprois = new ArrayList<Roi>();
+          for (int id = 0; id < roijlist.getModel().getSize(); id++) {
+             String roiName = roijlist.getModel().getElementAt(id).toString();
+             String roigroupName = (String) groupsMap.get(roiName);
+             if (roigroupName != null) {
                 if (roigroupName.equals(groupName)) {
-                    grprois.add(this.getRoiByName(roiName));
-                    
+                   grprois.add(this.getRoiByName(roiName));
                 }
-            }
-        }
+             }
+          }
 
-        //deassign all rois
-        for(int i = 0; i<grprois.size(); i++) {
-                groupsMap.remove(grprois.get(i).getName());
-        }
-        //reassign all rois
-        for(int i = 0; i<grprois.size(); i++) {
-            groupsMap.put(grprois.get(i).getName(), newName);
-        }
+          //update groups
+          groups.remove(groupName);
 
-        //update groups
-        groups.remove(groupName);
-        groups.add(newName);
+          //update list
+          groupListModel.removeElement(groupName);
 
-        //update list
-        groupListModel.setElementAt(newName, index);
+          //deassign all rois
+          for (int i = 0; i < grprois.size(); i++)
+             groupsMap.remove(grprois.get(i).getName());
+
+          //reassign all rois
+          for (int i = 0; i < grprois.size(); i++)
+             groupsMap.put(grprois.get(i).getName(), newName);
+       }
     }
 
     // Assigns all selected rois to the selected group.
@@ -378,6 +391,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     // Assigns all selected rois to the selected group.
     void assignActionPerformed(ActionEvent e) {
 
+       int MAX_LIST_LENGTH = 13;
+
        // Must have at least 1 roi selected to make an assignment.
        int[] Roiidxs = roijlist.getSelectedIndices();
        if (Roiidxs.length < 1)
@@ -388,8 +403,18 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
        // Construct and display dialog box.
        String roiList = "Assign the following Rois:\n\n";
-       for (int i = 0; i < Roiidxs.length; i++)
+       int listLength = Roiidxs.length;
+       if (listLength > MAX_LIST_LENGTH)
+          listLength = MAX_LIST_LENGTH-3;
+       for (int i = 0; i < listLength; i++)
           roiList += "\t\t" + (String)roiListModel.get(Roiidxs[i]) + "\n";
+       if (Roiidxs.length > MAX_LIST_LENGTH) {
+          roiList += ".\n";
+          roiList += ".\n";
+          roiList += ".\n";
+          roiList += "\t\t" + (String)roiListModel.get(Roiidxs[Roiidxs.length-2]) + "\n";
+          roiList += "\t\t" + (String)roiListModel.get(Roiidxs[Roiidxs.length-1]) + "\n";
+       }
        roiList += "\n";
        String s = (String)JOptionPane.showInputDialog(this, roiList, "Customized Dialog",
                     JOptionPane.PLAIN_MESSAGE, null, possibilities, DEFAULT_GROUP);
@@ -883,11 +908,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
        //this is why the delete button is a class variable andd the others aren't...
        if (defaultGroupSelected) {
           delete.setEnabled(false);
-
+          rename.setEnabled(false);
        } else {
           delete.setEnabled(true);
+          rename.setEnabled(true);
        }
-
+       
        ui.updateAllImages();
 
        holdUpdate = false;
@@ -1691,9 +1717,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                     ois = new ObjectInputStream(in);
                     try {                        
                         this.groups = (ArrayList<String>)ois.readObject();
-                        for (int i = 0; i < groups.size(); i++) {
-                           groupListModel.addElement((String)groups.get(i));
-                        }
+                        clearGroupListModel();
+                        Object[] groupsArray = groups.toArray();
+                        String[] groupsStringArray = new String[groupsArray.length];
+                        for (int i = 0; i < groupsArray.length; i++)
+                           groupsStringArray[i] = (String)groupsArray[i];
+                        java.util.Arrays.sort(groupsStringArray);
+                        for (int i = 0; i < groupsStringArray.length; i++)
+                           groupListModel.addElement(groupsStringArray[i]);
                     } catch(ClassNotFoundException e) {
                         error(e.toString());
                         System.out.println(e.toString());

@@ -39,8 +39,8 @@ public class MimsJTable {
    Roi[] rois;
    ArrayList planes;
    JFrame frame;
-   boolean roiTable = false;
 
+   static String DEFAULT_TABLE_NAME = "_data.txt";
    static String AREA = "area";
    static String GROUP = "group";
 
@@ -58,9 +58,6 @@ public class MimsJTable {
 
    // This method is used by the RoiManager "measure" button.
    public void createRoiTable(boolean appendData){
-
-      // Set roiTable flag.
-      roiTable = true;
 
       // Get the data and column headers.
       Object[][] data = getRoiDataSet();
@@ -129,8 +126,8 @@ public class MimsJTable {
 
          // Generate frame.
          String title = ui.getImageFilePrefix();
-         if (roiTable)
-            title += " : " + images[0].getShortTitle();
+         for (int i = 0; i < images.length; i++)
+            title += " : " + images[i].getShortTitle();
          frame = new JFrame(title);
          frame.setJMenuBar(menuBar);
          frame.setContentPane(scrollPane);
@@ -148,8 +145,9 @@ public class MimsJTable {
 
       // Update title.
       String title = ui.getImageFilePrefix();
-      if (roiTable)
-         title += " : " + images[0].getShortTitle();
+      for (int i = 0; i < images.length; i++)
+         title += " : " + images[i].getShortTitle();
+
       frame.setTitle(title);
    }
 
@@ -518,6 +516,7 @@ public class MimsJTable {
          if (lastFolder != null) {
             fc.setCurrentDirectory(new java.io.File(lastFolder));
          }
+         fc.setSelectedFile(new File(lastFolder, ui.getImageFilePrefix()+DEFAULT_TABLE_NAME));
 
          int returnVal = fc.showSaveDialog(frame);
          if (returnVal == JFileChooser.APPROVE_OPTION) {

@@ -566,6 +566,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
                    getRoiManager().open(file.getAbsolutePath(), true);
                    updateAllImages();
+                   getRoiManager().showFrame();
                 }
 
             }
