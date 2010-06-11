@@ -829,7 +829,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             if(partManager==null) { partManager = new ParticlesManager(); }
             partManager.showFrame();
         } else if (command.equals("Squares")) {
-            if(squaresManager==null) { squaresManager = new SquaresManager(); }
+            if(squaresManager==null) { squaresManager = new SquaresManager(this); }
             squaresManager.showFrame();
         } else if (command.equals("Pixel values")) {
             roiPixelvalues();
@@ -1279,7 +1279,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
 
 
-    boolean add(Roi roi) {
+    public boolean add(Roi roi) {
         //don't really want to be looking at current image???
         //should be refactored along with getlabel()?
         ImagePlus imp = getImage();
@@ -1337,6 +1337,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         return true;
     }
 
+    public boolean add(Roi[] roiarr) {
+        boolean val = true;
+        for(int i = 0; i < roiarr.length; i++) {
+            val = val && this.add(roiarr[i]);
+        }
+        return val;
+    }
 
     boolean isStandardName(String name) {
         if (name == null) {
@@ -2161,33 +2168,35 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         return overlap;
     }
 
-    public void roiSquares(Roi roi, MimsPlus img, double[] params) {
-
-        //check param size
-        if(params.length!=3) return;
+    public Roi[] roiSquares(Roi roi, MimsPlus img, double[] params) {
+    //check param size
+        if(params.length!=3) return null;
         //params = size, number, overlap
         int size = (int)Math.round(params[0]);
         int num = (int)Math.round(params[1]);
         boolean allowoverlap = (params[2]==1.0);
 
         img.setRoi(roi, true);
-        ImageProcessor imgproc = img.getProcessor();
 
-        int imgwidth = img.getWidth();
-        int imgheight =img.getHeight();
-        float[][] pix = new float[imgwidth][imgheight];
+        //roi bounding box
+        int x = roi.getBoundingRect().x;
+        int y = roi.getBoundingRect().y;
+        int width = roi.getBoundingRect().width;
+        int height = roi.getBoundingRect().height;
+        float[][] pix = new float[width][height];
 
         //get pixel values
-        for(int i = 0; i < imgwidth; i++) {
-            for(int j = 0; j < imgheight; j++) {
-                pix[i][j] = (float)imgproc.getPixelValue(i, j);
+        //using x,y offsets
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                pix[i][j] = (float)img.getProcessor().getPixelValue(i+x, j+y);
             }
         }
 
         //apply "mask"
-        for (int j = 0; j < imgheight; j++) {
-            for (int i = 0; i < imgwidth; i++) {
-                if (!roi.contains(i, j)) {
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                if (!roi.contains(i+x, j+y)) {
                     //pix[i][j] = 0;
                     pix[i][j] = Float.NaN;
                 }
@@ -2199,17 +2208,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         FloatProcessor proc = new FloatProcessor(pix);
         ImagePlus temp_img = new ImagePlus("temp_img", proc);
 
-        //roi bounding box
-        int x = roi.getBoundingRect().x;
-        int y = roi.getBoundingRect().y;
-        int width = roi.getBoundingRect().width;
-        int height = roi.getBoundingRect().height;
-
         //generate rois keyed to mean
         Hashtable<Double, ArrayList<Roi>> roihash = new Hashtable<Double, ArrayList<Roi>>();
 
-        for(int ix=x; ix<=x+width; ix++) {
-            for(int iy=y; iy<=y+height; iy++) {
+        for(int ix=0; ix<=width; ix++) {
+            for(int iy=0; iy<=height; iy++) {
                 Roi troi = new Roi(ix, iy, size, size);
                 temp_img.setRoi(troi);
                 double mean = temp_img.getStatistics().mean;
@@ -2277,21 +2280,41 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         }
 
-        //
-        //add to manager
-        for (Roi r : keep) {
-            rm.add(r);
-        }
-
         //cleanup
         temp_img.close();
-        //temp_img.show();
+        temp_img = null;
+        proc = null;
+        means = null;
+        roihash = null;
+        pix = null;
+
+        Roi[] rrois = new Roi[keep.size()];
+        keep.toArray(rrois);
+
+        //add back x,y offset
+        for(int i = 0; i < rrois.length; i++) {
+            int rx = rrois[i].getBoundingRect().x;
+            int ry = rrois[i].getBoundingRect().y;
+            rrois[i].setLocation(x+rx, y+ry);
+        }
+        keep = null;
+        return rrois;
+
     }
 
-    public void roiSquares(Roi[] rois, MimsPlus img, double[] params) {
+    public Roi[] roiSquares(Roi[] rois, MimsPlus img, double[] params) {
+        ArrayList<Roi> temprois = new ArrayList<Roi>();
         for(int i = 0; i < rois.length; i++) {
-            roiSquares(rois[i], img, params);
+            Roi[] r = roiSquares(rois[i], img, params);
+            for(int j = 0; j < r.length; j++) {
+                temprois.add(r[j]);
+            }
         }
+
+        Roi[] rrois = new Roi[temprois.size()];
+        temprois.toArray(rrois);
+        temprois = null;
+        return rrois;
     }
 
     //Should this be moved to mimsroicontrol?
@@ -2778,6 +2801,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     public class SquaresManager extends com.nrims.PlugInJFrame implements ActionListener {
 
         Frame instance;
+        MimsRoiManager rm;
 
         MimsPlus workingimage;
         JLabel label;
@@ -2788,9 +2812,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         JButton cancelButton;
         JButton okButton;
 
-        public SquaresManager() {
+        public SquaresManager(MimsRoiManager rm) {
             super("Squares Manager");
-
+            this.rm = rm;
+            
             if (instance != null) {
                 instance.toFront();
                 return;
@@ -2864,13 +2889,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
                     double[] params = {size, num, overlap};
 
-                    Roi[] rois = getSelectedROIs();
+                    Roi[] rois = rm.getSelectedROIs();
                     MimsPlus img = (MimsPlus)getImage();
 
                     if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
-                        roiSquares(rois, img.internalRatio, params);
+                        rm.add(roiSquares(rois, img.internalRatio, params));
                     } else {
-                        roiSquares(rois, img, params);
+                        rm.add(roiSquares(rois, img, params));
                     }
 
                 } catch(Exception x) {
