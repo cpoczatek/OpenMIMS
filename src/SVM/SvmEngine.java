@@ -14,6 +14,7 @@ public class SvmEngine extends com.nrims.segmentation.SegmentationEngine {
     public static final int RBF_KERNEL = 1,  LINEAR_KERNEL = 2,  SIGMOID_KERNEL = 3;
     public static final String SCALINGPARAMS = "scalingParams",  CVFOLD = "CV_fold",  KERNELTYPE = "kernel_type";
 
+
     public SvmEngine(int type, ArrayList<ArrayList<ArrayList<Double>>> data, SegmentationProperties props) {
         super(type, data, props);
     }
