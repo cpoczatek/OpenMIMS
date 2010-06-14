@@ -253,8 +253,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             // Generate all images that were previously open.
             // TODO: a better check than just looking at the first file?
             if( files[0].getAbsolutePath().endsWith(NRRD_EXTENSION) ||
-                    files[0].getAbsolutePath().endsWith(MIMS_EXTENSION) ) {
-            restoreState(rto_props, hsi_props, sum_props);
+               files[0].getAbsolutePath().endsWith(MIMS_EXTENSION) ) {
+                  restoreState(rto_props, hsi_props, sum_props);
             }
             MimsRoiManager rm = getRoiManager();
             if( rm!=null ) {
@@ -487,6 +487,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public void openFiles(File[] files) {
 
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            boolean onlyShowDraggedFile = true;
 
             for (int i = 0; i < files.length; i++) {
                 File file = files[i];
@@ -496,6 +497,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 }
                 if (file.getAbsolutePath().endsWith(NRRD_EXTENSION) ||
                     file.getAbsolutePath().endsWith(MIMS_EXTENSION)) {
+                    onlyShowDraggedFile = false;
                     loadMIMSFile(file);
                     break;
                 }
@@ -578,6 +580,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             int startslice = massImages[0].getCurrentSlice();
             massImages[0].setSlice(getOpener().getNImages());
             massImages[0].setSlice(startslice);
+
+            if (onlyShowDraggedFile){
+               MimsPlus[] mps = getOpenMassImages();
+               for (int i = 0; i < mps.length; i++)
+                  mps[i].hide();
+            }
 
             } catch (Exception e) {
                e.printStackTrace();
