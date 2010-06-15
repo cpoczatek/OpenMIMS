@@ -569,6 +569,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                    getRoiManager().open(file.getAbsolutePath(), true);
                    updateAllImages();
                    getRoiManager().showFrame();
+                   onlyShowDraggedFile = false;
+
                 }
 
             }
@@ -2627,8 +2629,10 @@ private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GE
         //stupid rgb
         double denMax = img.internalRatio.getProcessor().getMax();
         double denMin = img.internalRatio.getProcessor().getMin();
-        double denGain = denMax > denMin ? 255.0 / ( denMax - denMin ) : 1.0 ;
-        double denSpan = (denMax-denMin);
+        //double denSpan = (denMax-denMin);
+        //double denGain = denSpan > 0 ? 255.0 / ( denSpan ) : 1.0 ;
+        double denSpan = (props.getMaxRatio() - props.getMinRatio());
+        double denGain = denMax > denMin ? 255.0 / (denSpan) : 1.0;
 
 
         for (int i = 0; i < pix.length; i++) {
@@ -2667,12 +2671,17 @@ private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GE
             alpha = java.lang.Math.min(alpha, 8000);
             alpha = alpha / (8000 - 800);
             plane_rgba[i][3] = (byte) (255 * alpha);
-            */
+             */
 
 
-            double scaled = (denpix[i] - denMin)/denSpan;
+            //double scaled = (denpix[i] - denMin)/denSpan;
             //System.out.println(denOut+ " ");
-            int outValue = (int) ((double) scaled* rgbGain);
+            //int outValue = (int) ((double) scaled* rgbGain);
+
+            double a = (ratioval - props.getMinRatio()) / (props.getMaxRatio() - props.getMinRatio());
+            a = 255 * a;
+            int outValue = (int) java.lang.Math.round(a);
+
             //System.out.println("rgbgain: "+rgbGain);
             //System.out.println(outValue+ " ");
             if (outValue < 0) {
