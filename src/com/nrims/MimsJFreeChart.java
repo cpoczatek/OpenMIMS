@@ -87,6 +87,17 @@ public class MimsJFreeChart extends JFrame {
          chartpanel.getPopupMenu().addSeparator();
          chartpanel.getPopupMenu().add(logscale);
 
+         
+          JMenuItem asTextMenuItem = new javax.swing.JMenuItem("Display text");
+          asTextMenuItem.addActionListener(new ActionListener() {
+
+              public void actionPerformed(ActionEvent e) {
+                  ui.displayProfileData(chartpanel);
+              }
+          });
+          chartpanel.getPopupMenu().add(asTextMenuItem, 2);
+        
+
          // Add key listener.
          KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             public boolean dispatchKeyEvent(KeyEvent e) {

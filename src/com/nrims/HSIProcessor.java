@@ -179,8 +179,8 @@ public class HSIProcessor implements Runnable {
 
             //Place holder for transformed pixels...
             float[] transformedPixels = ratioPixels;
-            if(transformedPixels == null) {
-                transformedPixels = ratioPixels;
+            if (false) {
+                transformedPixels = turnoverTransform(ratioPixels, (float)0.0350, (float)0.0037, (float)(hsiProps.getRatioScaleFactor()));
             }
 
             for(int offset = 0 ; offset < numPixels.length && fThread != null ; offset++ ) {
@@ -377,7 +377,7 @@ public class HSIProcessor implements Runnable {
         return new float[][]{rTable,gTable,bTable};
     }
 
-    public float[] turnoverTransform(float[] ratiopixels, float ref, float bg, int sf) {
+    public float[] turnoverTransform(float[] ratiopixels, float ref, float bg, float sf) {
         float[] tpixels = new float[ratiopixels.length];
         for(int i =0; i< tpixels.length; i++) {
             tpixels[i] = turnoverTransform(ratiopixels[i], ref, bg, sf);
@@ -385,13 +385,13 @@ public class HSIProcessor implements Runnable {
         return tpixels;
     }
 
-    public float turnoverTransform(float ratio, float ref, float bg, int sf) {
+    public float turnoverTransform(float ratio, float ref, float bg, float sf) {
         float output=0;
         if(bg==ref) return output;
         float runscaled = ratio/sf;
         
         output = ( (runscaled-bg) / (ref-bg) )*( (1+ref) / (1+runscaled) );
-        output = output * sf;
+        output = output * 100;
         return output;
     }
 }

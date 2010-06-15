@@ -48,7 +48,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         }
 
         //make color prefernce selectable
-        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
             g.setColor(Color.WHITE);
         } else {
             g.setColor(Color.RED);
@@ -94,7 +94,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             if(roiManager.isSelected(label)) {
                 g.setColor(Color.GREEN);
             } else {
-                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
                     g.setColor(Color.WHITE);
                 } else {
                     g.setColor(Color.RED);
@@ -145,7 +145,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                     case Roi.COMPOSITE: {
                         roi.setImage(imp);
                         //make color preference selectable
-                        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+                        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
                             roi.setInstanceColor(Color.WHITE);
                         } else {
                             roi.setInstanceColor(Color.RED);

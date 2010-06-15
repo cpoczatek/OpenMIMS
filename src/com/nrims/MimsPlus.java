@@ -323,13 +323,15 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     {
 
       // Set up internal images for data display.
-       RatioProps rProps = new RatioProps(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx());
-       rProps.setRatioScaleFactor(hsiProps.getRatioScaleFactor());
-      internalRatio = new MimsPlus(ui, rProps);
-      internalNumerator = internalRatio.internalNumerator;
-      internalDenominator = internalRatio.internalDenominator;
-      setHSIProcessor(new HSIProcessor(this));
-      try {
+        RatioProps rProps = new RatioProps(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx());
+        rProps.setRatioScaleFactor(hsiProps.getRatioScaleFactor());
+        rProps.setNumThreshold(hsiProps.getMinNum());
+        rProps.setDenThreshold(hsiProps.getMinDen());
+        internalRatio = new MimsPlus(ui, rProps);
+        internalNumerator = internalRatio.internalNumerator;
+        internalDenominator = internalRatio.internalDenominator;
+        setHSIProcessor(new HSIProcessor(this));
+        try {
          getHSIProcessor().setProps(hsiProps);
       } catch (Exception e) {
          ui.updateStatus("Failed computing HSI image");

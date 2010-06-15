@@ -469,6 +469,7 @@ public class HSIView extends JPanel {
 
         if (currentImage.getMimsType() == MimsPlus.HSI_IMAGE) {
            props.setMinDen(new Integer(denThresholdjSpinner.getValue().toString()));
+           currentImage.computeHSI();
            update();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int denThreshold = ((Integer)denThresholdjSpinner.getValue()).intValue();
@@ -491,6 +492,7 @@ public class HSIView extends JPanel {
 
         if (currentImage.getMimsType() == MimsPlus.HSI_IMAGE){
            props.setMinNum(new Integer(numThresholdjSpinner.getValue().toString()));
+           currentImage.computeHSI();
            update();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int numThreshold = ((Integer)numThresholdjSpinner.getValue()).intValue();
