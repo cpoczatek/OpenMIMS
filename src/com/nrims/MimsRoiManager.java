@@ -15,6 +15,7 @@ import ij.util.Tools;
 import ij.measure.Calibration;
 import ij.plugin.frame.*;
 import ij.plugin.filter.ParticleAnalyzer;
+import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -772,6 +773,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         addPopupItem("Split");
         addPopupItem("Particles");
         addPopupItem("Squares");
+        addPopupItem("Rename Numeric");
         addPopupItem("Pixel values");
         addPopupItem("Add [t]");
         addPopupItem("Save As");
@@ -831,6 +833,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         } else if (command.equals("Squares")) {
             if(squaresManager==null) { squaresManager = new SquaresManager(this); }
             squaresManager.showFrame();
+        } else if (command.equals("Rename Numeric")) {
+            renameNumericRois();
         } else if (command.equals("Pixel values")) {
             roiPixelvalues();
         } else if (command.equals("Save As")) {
@@ -884,25 +888,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
           String roiName = (String)object;
           boolean contains = containsRoi(groupNames, roiName);
           if (contains) {
-              //keep track of numeric and non-numeric names separately
-              if(isNumericName(roiName)) {
-                  numeric.add(Integer.parseInt(roiName));
-              } else {
-                  names.add(roiName);
-              }
-
+              roiListModel.addElement(roiName);
           }
        }
-       //add the Rois sorted numerically
-       Collections.sort(numeric);
-       for(int i=0; i<numeric.size(); i++) {
-           roiListModel.addElement(""+numeric.get(i));
-       }
-       //add the Rois sorted lexigraphically
-       Collections.sort(names);
-       for(int i=0; i<names.size(); i++) {
-           roiListModel.addElement(names.get(i));
-       }
+
+       sortROIList();
 
        // Disable delete button if Default Group is one of the groups selected.
        //this is why the delete button is a class variable andd the others aren't...
@@ -1360,13 +1350,42 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
 
 
+    public void sortROIList() {
+        String[] roinames = new String[roiListModel.size()];
+        for (int i = 0; i < roinames.length; i++) {
+            roinames[i] = (String) roiListModel.getElementAt(i);
+        }
+        roiListModel.removeAllElements();
+        ArrayList<String> names = new ArrayList<String>();
+        ArrayList<Integer> numeric = new ArrayList<Integer>();
+        for(int i = 0; i < roinames.length; i++) {
+            //keep track of numeric and non-numeric names separately
+            if (isNumericName(roinames[i])) {
+                numeric.add(Integer.parseInt(roinames[i]));
+            } else {
+                names.add(roinames[i]);
+            }
+        }
+        //add the Rois sorted numerically
+        Collections.sort(numeric);
+        for (int i = 0; i < numeric.size(); i++) {
+            roiListModel.addElement("" + numeric.get(i));
+        }
+        //add the Rois sorted lexigraphically
+        Collections.sort(names);
+        for (int i = 0; i < names.size(); i++) {
+            roiListModel.addElement(names.get(i));
+        }
+    }
 
     public void renameNumericRois() {
         Roi[] numrois = getNumericRoisSorted();
         int max = numrois.length;
 
         for(int i = 0; i<max; i++) {
-            rename(numrois[i].getName(),""+(i+1));
+            //if the current name != new name then change
+            if( !( numrois[i].getName().equals( ""+(i+1) ) ) )
+                rename(numrois[i].getName(),""+(i+1));
         }
 
 
@@ -1530,7 +1549,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         roiListModel.set(index, name2);
         roijlist.setSelectedIndex(index);
 
-        // Is this really necessary?
+        // rename numerically named rois
         // if(isNumericName(name) && !(isNumericName(name2))) {
         //    renameNumericRois();
         // }
@@ -1543,6 +1562,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
 
     boolean rename(String name, String name2) {
+
+        if(name.equals(name2)) return false;
         
         Roi roi = (Roi) rois.get(name);
         if(roi == null) {
@@ -1760,6 +1781,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         if (nRois == 0) {
             error("This ZIP archive does not appear to contain \".roi\" files");
         }
+        sortROIList();
         resetRoiLocationsLength();
     }
 
@@ -2169,7 +2191,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
 
     public Roi[] roiSquares(Roi roi, MimsPlus img, double[] params) {
-    //check param size
+        //check param size
         if(params.length!=3) return null;
         //params = size, number, overlap
         int size = (int)Math.round(params[0]);
@@ -2193,12 +2215,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             }
         }
 
-        //apply "mask"
+        //apply "mask" which is a somewhat arbbitrary value
+        // of -1.0E35, very negative but "far" from Float.min_value
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
                 if (!roi.contains(i+x, j+y)) {
                     //pix[i][j] = 0;
-                    pix[i][j] = Float.NaN;
+                    pix[i][j] = (float)-1.0E35;
                 }
 
             }
@@ -2207,19 +2230,33 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         //generate temp image
         FloatProcessor proc = new FloatProcessor(pix);
         ImagePlus temp_img = new ImagePlus("temp_img", proc);
+        //temp_img.show();
 
         //generate rois keyed to mean
         Hashtable<Double, ArrayList<Roi>> roihash = new Hashtable<Double, ArrayList<Roi>>();
 
-        for(int ix=0; ix<=width; ix++) {
-            for(int iy=0; iy<=height; iy++) {
+        int nrois = 0;
+        int rejected = 0;
+        for(int ix=0; ix<=width-size; ix++) {
+            for(int iy=0; iy<=height-size; iy++) {
                 Roi troi = new Roi(ix, iy, size, size);
                 temp_img.setRoi(troi);
+                nrois++;
+                
+                 //throw out any roi containing pixels outside
+                //the original roi by checking if min is "close" to mask value
+                double min = temp_img.getStatistics().min;
+                if(min < -1.0E30) {
+                    //System.out.println("min == "+min);
+                    rejected++;
+                    continue;
+                }
+
+                //get mean value and add to hash
                 double mean = temp_img.getStatistics().mean;
                 //System.out.println("mean = "+mean);
-                //System.out.println("Double.isNaN(mean) = "+Double.isNaN(mean));
+                
                 //exclude rois outside main roi
-                if(Double.isNaN(mean)) continue;
                 if(roihash.containsKey(mean)) {
                     roihash.get(mean).add(troi);
                 } else {
@@ -2230,13 +2267,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             }
         }
 
-
-
-        //double[] means = (double[])roihash.keySet().toArray();
+        System.out.println("nrois = "+nrois+" | rejected = "+rejected);
+        
         Object[] means = roihash.keySet().toArray();
         java.util.Arrays.sort(means);
 
-        MimsRoiManager rm = ui.getRoiManager();
         ArrayList<Roi> keep = new ArrayList<Roi>();
         //find highest mean rois
         if(allowoverlap) {
@@ -2255,6 +2290,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         } else {
             //find highest mean rois checking for overlap
+            if(means.length==0) {
+                System.out.println("No rois found for roi: "+roi.getName());
+                return null;
+            }
+
             int meanindex = means.length-1;
             Roi lastadded = roihash.get(means[meanindex]).get(0);
             keep.add(lastadded);
@@ -2306,6 +2346,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         ArrayList<Roi> temprois = new ArrayList<Roi>();
         for(int i = 0; i < rois.length; i++) {
             Roi[] r = roiSquares(rois[i], img, params);
+            if(r==null) {
+                System.out.println("roiSquares returned null.");
+                continue;
+            }
             for(int j = 0; j < r.length; j++) {
                 temprois.add(r[j]);
             }
@@ -2314,7 +2358,205 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         Roi[] rrois = new Roi[temprois.size()];
         temprois.toArray(rrois);
         temprois = null;
+
+        System.out.println("input length: "+rois.length+" output length: "+rrois.length);
+
         return rrois;
+    }
+
+    //not used yet
+    //still testing
+    public Roi[] roiSquaresZ(Roi roi, MimsPlus img, double[] params) {
+
+
+        //check param size
+        if(params.length!=3) return null;
+        //params = size, number, overlap
+        int size = (int)Math.round(params[0]);
+        int num = (int)Math.round(params[1]);
+        boolean allowoverlap = (params[2] == 1.0);
+
+        
+        int stacksize = 1;
+        if (img.getMimsType() == MimsPlus.MASS_IMAGE) {
+            stacksize = img.getStackSize();
+        } else if (img.getMimsType() == MimsPlus.RATIO_IMAGE) {
+            stacksize = ui.getMassImage(img.getRatioProps().getNumMassIdx()).getStackSize();
+        } else if (img.getMimsType() == MimsPlus.HSI_IMAGE) {
+            stacksize = ui.getMassImage(img.getHSIProps().getNumMassIdx()).getStackSize();
+        }
+
+        
+        img.setRoi(roi, true);
+        ImageProcessor imgproc = img.getProcessor();
+
+        int imgwidth = img.getWidth();
+        int imgheight =img.getHeight();
+
+        //generate rois keyed to mean
+        Hashtable<Double, ArrayList<Roi>> roihash = new Hashtable<Double, ArrayList<Roi>>();
+
+        for (int p = 1; p <= stacksize; p++) {
+            //same setslice code as MimsJFreeChart.getdataset()
+            if (img.getMimsType() == MimsPlus.MASS_IMAGE) {
+               ui.getOpenMassImages()[0].setSlice(p, false);
+            } else if (img.getMimsType() == MimsPlus.RATIO_IMAGE) {
+               ui.getOpenMassImages()[0].setSlice(p, img);
+            }
+
+            float[][] pix = new float[imgwidth][imgheight];
+
+            //get pixel values
+            for (int i = 0; i < imgwidth; i++) {
+                for (int j = 0; j < imgheight; j++) {
+                    pix[i][j] = (float) imgproc.getPixelValue(i, j);
+                }
+            }
+
+
+            //apply "mask"
+            for (int j = 0; j < imgheight; j++) {
+                for (int i = 0; i < imgwidth; i++) {
+                    if (!roi.contains(i, j)) {
+                        //pix[i][j] = 0;
+                        pix[i][j] = Float.NaN;
+                    }
+
+                }
+            }
+            
+
+            //generate temp image
+            FloatProcessor proc = new FloatProcessor(pix);
+            ImagePlus temp_img = new ImagePlus("temp_img", proc);
+
+            //roi bounding box
+            int x = roi.getBoundingRect().x;
+            int y = roi.getBoundingRect().y;
+            int width = roi.getBoundingRect().width;
+            int height = roi.getBoundingRect().height;
+
+
+            for (int ix = x; ix <= x + width; ix++) {
+                for (int iy = y; iy <= y + height; iy++) {
+                    Roi troi = new Roi(ix, iy, size, size);
+                    temp_img.setRoi(troi);
+                    double mean = temp_img.getStatistics().mean;
+                    //System.out.println("mean = "+mean);
+                    //System.out.println("Double.isNaN(mean) = "+Double.isNaN(mean));
+                    //exclude rois outside main roi
+                    if (Double.isNaN(mean)) {
+                        continue;
+                    }
+                    if (roihash.containsKey(mean)) {
+                        roihash.get(mean).add(troi);
+                    } else {
+                        ArrayList<Roi> ar = new ArrayList<Roi>();
+                        ar.add(troi);
+                        roihash.put(mean, ar);
+                    }
+                }
+            }
+
+
+
+            //cleanup
+            temp_img.close();
+            temp_img = null;
+            proc = null;
+            pix = null;
+
+            //int start=0;
+            if(roihash.size()>(num*num)) {
+                //start = roihash.size();
+                //System.out.println("hash.size: " + roihash.size());
+                Object[] means = roihash.keySet().toArray();
+                java.util.Arrays.sort(means);
+                int index = 0;
+                while(roihash.size()>(num*num)) {
+                    roihash.remove(means[index]);
+                    index++;
+                }
+            }
+            //int end = roihash.size();
+            //System.out.println("end size: "+end);
+            //System.out.println("delta: "+(start-end));
+            
+        }
+
+        //double[] means = (double[])roihash.keySet().toArray();
+        Object[] means = roihash.keySet().toArray();
+        java.util.Arrays.sort(means);
+
+        ArrayList<Roi> keep = new ArrayList<Roi>();
+        //find highest mean rois
+        if(allowoverlap) {
+            int meanindex = means.length-1;
+            while(keep.size()<num) {
+                //if((Double)means[meanindex]<0) continue;
+                ArrayList fromhash = roihash.get(means[meanindex]);
+                for(Object r : fromhash) {
+                    keep.add((Roi)r);
+                    if(keep.size()==num)
+                        break;
+                }
+                meanindex--;
+                if(meanindex<0) break;
+            }
+
+        } else {
+            //find highest mean rois checking for overlap
+            int meanindex = means.length-1;
+            Roi lastadded = roihash.get(means[meanindex]).get(0);
+            keep.add(lastadded);
+
+            while(keep.size()<num) {
+                ArrayList fromhash = roihash.get(means[meanindex]);
+                for (Object r : fromhash) {
+                    Roi[] keeparray = new Roi[keep.size()];
+                    keeparray = keep.toArray(keeparray);
+
+                    if (!roiOverlap((Roi)r, keeparray)) {
+                        keep.add((Roi)r);
+                        lastadded = (Roi)r;
+                    }
+
+                    if (keep.size() == num) {
+                        break;
+                    }
+                }
+                meanindex--;
+                if(meanindex<0) break;
+            }
+
+        }
+
+
+        Roi[] rrois = new Roi[keep.size()];
+        keep.toArray(rrois);
+
+        //more cleanup
+        means = null;
+        keep = null;
+        roihash = null;
+
+        return rrois;
+
+    }
+
+    public Roi[] roiSquaresZ(Roi[] rois, MimsPlus img, double[] params) {
+        ArrayList<Roi> temprois = new ArrayList<Roi>();
+        for(int i = 0; i < rois.length; i++) {
+            Roi[] r = roiSquaresZ(rois[i], img, params);
+            for(int j = 0; j < r.length; j++) {
+                temprois.add(r[j]);
+            }
+        }
+
+        Roi[] rrois = new Roi[temprois.size()];
+        temprois.toArray(rrois);
+        return rrois;
+
     }
 
     //Should this be moved to mimsroicontrol?
@@ -2807,10 +3049,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         JLabel label;
         JTextField sizeField = new JTextField();
         JTextField numberField = new JTextField();
+        JTextField rangeField = new JTextField();
         JCheckBox allowOverlap = new JCheckBox("Allow Overlap", false);
 
         JButton cancelButton;
-        JButton okButton;
+        JButton SButton;
+        JButton ZButton;
 
         public SquaresManager(MimsRoiManager rm) {
             super("Squares Manager");
@@ -2854,16 +3098,35 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
             jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
+            /*
+            JLabel label4 = new JLabel("Range:");
+            jPanel.add(label4);
+            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            jPanel.add(rangeField);
+            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            */
+
             // Set up "OK" and "Cancel" buttons.
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
             cancelButton = new JButton("Cancel");
             cancelButton.setActionCommand("Cancel");
             cancelButton.addActionListener(this);
-            okButton = new JButton("OK");
-            okButton.setActionCommand("OK");
-            okButton.addActionListener(this);
+            
+            SButton = new JButton("Squares");
+            SButton.setActionCommand("Squares");
+            SButton.addActionListener(this);
+
+            ZButton = new JButton("SquaresZ");
+            ZButton.setActionCommand("SquaresZ");
+            ZButton.addActionListener(this);
+
             buttonPanel.add(cancelButton);
-            buttonPanel.add(okButton);
+            buttonPanel.add(SButton);
+            buttonPanel.add(ZButton);
+            //disabled till it actually works
+            ZButton.setEnabled(false);
 
             // Add elements.
             setLayout(new BorderLayout());
@@ -2873,11 +3136,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         }
 
-        // Gray out textfield when "All" images radio button selected.
+        
         public void actionPerformed(ActionEvent e) {
             if (e.getActionCommand().equals("Cancel")) {
                 closeWindow();
-            } else if (e.getActionCommand().equals("OK")) {
+            } else if (e.getActionCommand().equals("Squares")) {
                 //
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
@@ -2890,6 +3153,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                     double[] params = {size, num, overlap};
 
                     Roi[] rois = rm.getSelectedROIs();
+
+                    if(rois.length==0) {
+                        ij.IJ.error("Error", "No rois selected.");
+                        return;
+                    }
+
                     MimsPlus img = (MimsPlus)getImage();
 
                     if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
@@ -2899,14 +3168,53 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
                     }
 
                 } catch(Exception x) {
+                    x.printStackTrace();
                     ij.IJ.error("Error", "Not a number.");
-                      return;
+                    return;
                 } finally {
                     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
 
                 ui.updateAllImages();
                 closeWindow();
+            } else if (e.getActionCommand().equals("SquaresZ")) {
+
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                try {
+                    double size = Double.parseDouble(sizeField.getText());
+                    double num = Double.parseDouble(numberField.getText());
+                    double overlap = 0.0;
+                    if(allowOverlap.isSelected()) { overlap = 1.0; }
+
+
+                    double[] params = {size, num, overlap};
+
+                    Roi[] rois = rm.getSelectedROIs();
+
+                    if(rois.length==0) {
+                        ij.IJ.error("Error", "No rois selected.");
+                        return;
+                    }
+
+                    MimsPlus img = (MimsPlus)getImage();
+
+                    if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
+                        rm.add(roiSquaresZ(rois, img.internalRatio, params));
+                    } else {
+                        rm.add(roiSquaresZ(rois, img, params));
+                    }
+
+                } catch(Exception x) {
+                    x.printStackTrace();
+                    ij.IJ.error("Error", "Not a number.");
+                    return;
+                } finally {
+                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                }
+
+                ui.updateAllImages();
+                closeWindow();
+
             }
 
         }
