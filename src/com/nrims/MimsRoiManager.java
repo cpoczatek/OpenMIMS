@@ -63,6 +63,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     JButton rename;
     JCheckBox cbHideAll;
     JCheckBox cbAllPlanes;
+    JCheckBox cbHideLabels;
     JSpinner xPosSpinner, yPosSpinner, widthSpinner, heightSpinner;
     JLabel xLabel, yLabel, wLabel, hLabel;
     boolean holdUpdate = false;
@@ -78,6 +79,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     SquaresManager squaresManager;
     String hideAllRois = new String("Hide All Rois");
     String moveAllRois = new String("Move All");
+    String hideAllLabels = new String("Hide Labels");
 
     public MimsRoiManager(UI ui, com.nrims.data.Opener im) {
         super("MIMS ROI Manager");
@@ -258,6 +260,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         panel.add(emptySpace4);
         addCheckbox(moveAllRois, true);
         addCheckbox(hideAllRois, false);
+        addCheckbox(hideAllLabels, false);
         
         //rightPanel.add(panel, BorderLayout.EAST);
         rightPanel.add(roiscrollpane, BorderLayout.CENTER);
@@ -743,6 +746,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             cb.setMaximumSize(cb.getPreferredSize());
             cb.setMinimumSize(cb.getPreferredSize());
             cbAllPlanes = cb;
+        } else if (label.equals(hideAllLabels)) {
+           cb.setPreferredSize(new Dimension(175, 20));
+           cb.setMaximumSize(cb.getPreferredSize());
+           cb.setMinimumSize(cb.getPreferredSize());
+           cbHideLabels = cb;
         }
         cb.setSelected(bEnabled);
         cb.addActionListener(this);
@@ -817,6 +825,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
             ui.updateAllImages();
         } else if (command.equals(hideAllRois)) {
             hideAll();
+        } else if (command.equals(hideAllLabels)) {
+            hideLabels();
         } else if (command.equals("More>>")) {
             Point ploc = panel.getLocation();
             Point bloc = moreButton.getLocation();
@@ -867,7 +877,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
     // Determines what hapens when a group entry is clicked.
     public void groupvalueChanged(ListSelectionEvent e) {
-       if (!e.getValueIsAdjusting()) return;
+       
+       if (e != null) {
+          if (!e.getValueIsAdjusting())
+             return;
+       }
        holdUpdate = true;
        boolean defaultGroupSelected = false;
 
@@ -1099,6 +1113,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     }
 
     void hideAll() {
+       if (getImage() != null) {
+            ui.updateAllImages();
+        }
+    }
+
+    void hideLabels() {
        if (getImage() != null) {
             ui.updateAllImages();
         }
@@ -1783,6 +1803,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         }
         sortROIList();
         resetRoiLocationsLength();
+
+        // Do this so that all added Rois get sorted.
+        groupjlist.setSelectedValue(DEFAULT_GROUP, true);
+        groupvalueChanged(null);
     }
 
     String getUniqueName(String name) {
@@ -2846,6 +2870,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
     public boolean getHideRois() {
         boolean bEnabled = cbHideAll.isSelected();
         return bEnabled;
+    }
+
+    public boolean getHideLabel() {
+        return cbHideLabels.isSelected();
     }
 
     public void showFrame() {

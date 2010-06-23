@@ -43,9 +43,13 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
     void drawOverlay(Graphics g) {
         MimsRoiManager roiManager = ui.getRoiManager();
         Hashtable rois = roiManager.getROIs();
+        boolean drawLabel = true;
         if (rois == null || rois.isEmpty() || roiManager.getHideRois()) {
             return;
         }
+
+        if (roiManager.getHideLabel())
+           drawLabel = false;
 
         //make color prefernce selectable
         if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
@@ -108,7 +112,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                 java.awt.Rectangle r = roi.getBounds();
                 int x = screenX(r.x + r.width / 2);
                 int y = screenY(r.y + r.height / 2);
-                if (!(roi instanceof Line))
+                if (!(roi instanceof Line) && drawLabel)
                    g.drawString(name, x, y);
                 bDraw = true;
             } else if (!(ui.getSyncROIsAcrossPlanes()) && (roiManager.getSliceNumber(label) == mImp.getCurrentSlice()) && !isRatio) {
@@ -116,7 +120,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                 java.awt.Rectangle r = roi.getBounds();
                 int x = screenX(r.x + r.width / 2);
                 int y = screenY(r.y + r.height / 2);
-                if (!(roi instanceof Line))
+                if (!(roi instanceof Line) && drawLabel)
                    g.drawString(name, x, y);
                 bDraw = true;
                 nSyncid = nSyncid + 1;
@@ -125,7 +129,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                 java.awt.Rectangle r = roi.getBounds();
                 int x = screenX(r.x + r.width / 2);
                 int y = screenY(r.y + r.height / 2);
-                if (!(roi instanceof Line))
+                if (!(roi instanceof Line) && drawLabel)
                    g.drawString(name, x, y);
                 bDraw = true;
                 nSyncid = nSyncid + 1;

@@ -656,7 +656,7 @@ public class MimsJTable {
             SwingConstants.CENTER);
 
         // table.setAutoCreateRowSorter(true);
-        table.getTableHeader().setReorderingAllowed(false);
+        // table.getTableHeader().setReorderingAllowed(false);
 
         return table;
     }
