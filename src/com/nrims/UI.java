@@ -2096,6 +2096,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return name;
         }
 
+        if (img.getMimsType() == img.COMPOSITE_IMAGE) {
+            name = img.getTitle();
+            return name;
+        }
+
         return name;
     }
 
@@ -2561,7 +2566,7 @@ public void exportPNGs(){
         File saveName = new File(dir+name);
         if (saveName.exists()) {
            for (int j = 1; j < 1000; j++){
-              name = getExportName(hsi[i]) + "_" + j + ".png";
+              name = getExportName(ratios[i]) + "_" + j + ".png";
               saveName = new File(dir+name);
               if (!saveName.exists())
                  break;
@@ -2569,6 +2574,25 @@ public void exportPNGs(){
         }
         saver.saveAsPng(dir+name);
     }
+
+
+    MimsPlus[] comp = getOpenCompositeImages();
+    for( int i = 0; i < comp.length; i ++) {
+        ImagePlus img = (ImagePlus)comp[i];
+        ij.io.FileSaver saver = new ij.io.FileSaver(img);
+        String name = getExportName(comp[i]) + ".png";
+        File saveName = new File(dir+name);
+        if (saveName.exists()) {
+           for (int j = 1; j < 1000; j++){
+              name = getExportName(comp[i]) + "_" + j + ".png";
+              saveName = new File(dir+name);
+              if (!saveName.exists())
+                 break;
+           }
+        }
+        saver.saveAsPng(dir+name);
+    }
+
 }
 
 private void exportPNGjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportPNGjMenuItemActionPerformed

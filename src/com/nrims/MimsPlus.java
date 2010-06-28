@@ -257,14 +257,15 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        int height = op.getHeight();
        int[] rgbPixels = new int[width * height];
        ImageProcessor ip = new ColorProcessor(width, height, rgbPixels);
-       title = "Comp: ";
+       title = ui.getImageFilePrefix();
        for (int i = 0; i < imgs.length; i++) {
            if (imgs[i] != null) {
-               title += imgs[i].getRoundedTitle() + " : ";
+               title += "_" + imgs[i].getRoundedTitle().replace(" ", "-");
            } else {
-               title += "- : ";
+               title += "_n";
            }
        }
+       title += "_comp";
        setProcessor(title, ip);
 
        //fill in pixels
