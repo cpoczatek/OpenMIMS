@@ -2,8 +2,14 @@ package com.nrims;
 
 import com.nrims.data.Opener;
 import ij.*;
+import ij.gui.ImageWindow;
+import ij.gui.Roi;
+import ij.plugin.Converter;
 import ij.process.FloatProcessor;
+import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
+import ij.process.StackConverter;
 import ij.process.StackProcessor;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -15,6 +21,7 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import javax.swing.Box;
@@ -44,7 +51,6 @@ public class MimsStackEditing extends javax.swing.JPanel {
     private Opener image = null;
     private int numberMasses = -1;
     private MimsPlus[] images = null;
-    private ImageStack[] imagestacks = null;
     private boolean holdupdate = false;
     public AutoTrackManager atManager;
     public ArrayList<Integer> includeList = new ArrayList<Integer>();
@@ -59,16 +65,6 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
         this.images = ui.getMassImages();
         numberMasses = image.getNMasses();
-        imagestacks = new ImageStack[numberMasses];
-
-        resetImageStacks();
-    }
-
-    public void resetImageStacks() {
-        for (int i = 0; i < numberMasses; i++) {
-            if(images[i]!=null)
-                imagestacks[i] = this.images[i].getStack();
-        }
     }
 
     public String removeSliceList(ArrayList<Integer> remList) {
@@ -87,83 +83,185 @@ public class MimsStackEditing extends javax.swing.JPanel {
         return liststr;
     }
 
-    public void removeSlice(int plane) {
-
+    public void removeSlice(int plane) {       
+        int currentSlice = images[0].getCurrentSlice();
         for (int k = 0; k <= (numberMasses - 1); k++) {
-
-            imagestacks[k].deleteSlice(plane);
-
-            this.images[k].setStack(null, imagestacks[k]);
+            ImageStack is = new ImageStack();
+            is = images[k].getStack();
+            is.deleteSlice(plane);
+            images[k].setStack(null, is);
+            images[k].updateAndRepaintWindow();
         }
         this.ui.mimsAction.dropPlane(plane);
+        images[0].setSlice(currentSlice);
     }
 
-    public void XShiftSlice(int plane, double xval) {
+    public void XShiftSlice(double xval) {
         for (int k = 0; k <= (numberMasses - 1); k++) {
             //make sure there is no roi
             this.images[k].killRoi();
             this.images[k].getProcessor().translate(xval, 0.0);
             images[k].updateAndDraw();
-        }
-        ui.mimsAction.setShiftX(plane, xval);
+        }        
     }
 
-    public void YShiftSlice(int plane, double yval) {
+    public void YShiftSlice(double yval) {
         for (int k = 0; k <= (numberMasses - 1); k++) {
             //make sure there is no roi
             this.images[k].killRoi();
             this.images[k].getProcessor().translate(0.0, yval);
             images[k].updateAndDraw();
         }
-        ui.mimsAction.setShiftY(plane, yval);
     }
 
-    public void restoreSlice(int plane) {
-        int restoreIndex = ui.mimsAction.trueIndex(plane);
-        try {
-           
-            int openerIndex = ui.mimsAction.getOpenerIndex(restoreIndex - 1);
-            String openerName = ui.mimsAction.getOpenerName(restoreIndex - 1);
-            Opener op = ui.getFromOpenerList(openerName);
+    public void setBlockTranslationToZero(int plane) {
 
-            op.setStackIndex(openerIndex);
-            for (int k = 0; k <= (numberMasses - 1); k++) {
-                images[k].setSlice(plane);
-                /*ImagePlus imp = new ImagePlus();
-                ij.process.ShortProcessor p = new ij.process.ShortProcessor(256, 256);
-                imp.setProcessor("foo", p);
-                imp.getProcessor().setPixels(op.getPixels(k));
-                imp.show();*/
-                images[k].getProcessor().setPixels(op.getPixels(k));
-                images[k].updateAndDraw();
+       int[] planes = ui.mimsAction.getPlaneNumbersFromBlockNumber(plane);
+       int openerIndex;
+       String openerName;
+       Opener op;
+
+       short[][][] pixels = new short[numberMasses][planes.length][];
+
+       double Xmean = ui.mimsAction.getXShift(plane);
+       double Ymean = ui.mimsAction.getYShift(plane);
+       // Apply the translations.
+       for (int k = 0; k <= (numberMasses - 1); k++) {
+          for (int i = 0; i < planes.length; i++) {
+             openerIndex = ui.mimsAction.getOpenerIndex(planes[i] - 1);
+             openerName = ui.mimsAction.getOpenerName(planes[i] - 1);
+             op = ui.getFromOpenerList(openerName);
+             op.setStackIndex(openerIndex);
+             try {pixels[k][i] = op.getPixels(k);}
+             catch(IOException ioe){ioe.printStackTrace();}
+             ShortProcessor sp = new ShortProcessor(images[0].getWidth(), images[0].getHeight(), pixels[k][i], null);
+
+             // Probably not a kosher thing to do.
+             double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[0];
+             double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[1];
+
+             double xTrans = Xcurrent-Xmean;
+             double yTrans = Ycurrent-Ymean;
+             sp.translate(xTrans, yTrans);
+             pixels[k][i] = (short[]) sp.getPixels();
+          }
+       }
+
+       float[][] sumPixels = new float[numberMasses][pixels[0][0].length];
+
+       // Sum the pixels.
+       for (int k = 0; k <= (numberMasses - 1); k++) {
+          for (int i = 0; i < planes.length; i++) {
+             for (int j = 0; j < pixels[0][0].length; j++) {
+                sumPixels[k][j] += pixels[k][i][j];
+             }
+          }
+          images[k].setSlice(plane);
+          images[k].getProcessor().setPixels(sumPixels[k]);
+       }
+    }
+
+    public double[] restoreBlock(int plane) {
+
+       int[] planes = ui.mimsAction.getPlaneNumbersFromBlockNumber(plane);
+       int openerIndex;
+       String openerName;
+       Opener op;
+
+       short[][][] pixels = new short[numberMasses][planes.length][];       
+
+       // Get the smallest translation
+       double minXval = 0.0;
+       double minYval = 0.0;
+       double Xmean = ui.mimsAction.getXShift(plane);
+       double Ymean = ui.mimsAction.getYShift(plane);
+       for (int k = 0; k <= (numberMasses - 1); k++) {
+          for (int i = 0; i < planes.length; i++) {
+             double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[0];
+             double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[1];
+             double xTrans = Xcurrent-Xmean;
+             double yTrans = Ycurrent-Ymean;
+             if (xTrans < minXval)
+                minXval = xTrans;
+             if (yTrans < minYval)
+                minYval = yTrans;
+          }
+       }
+
+       // Apply the translations.
+       for (int k = 0; k <= (numberMasses - 1); k++) {
+          for (int i = 0; i < planes.length; i++) {
+             openerIndex = ui.mimsAction.getOpenerIndex(planes[i] - 1);
+             openerName = ui.mimsAction.getOpenerName(planes[i] - 1);
+             op = ui.getFromOpenerList(openerName);
+             op.setStackIndex(openerIndex);
+             try {pixels[k][i] = op.getPixels(k);}
+             catch(IOException ioe){ioe.printStackTrace();}
+             ShortProcessor sp = new ShortProcessor(images[0].getWidth(), images[0].getHeight(), pixels[k][i], null);
+
+             // Probably not a kosher thing to do.
+             double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[0];
+             double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[1];
+
+             double xTrans = Xcurrent-Xmean-minXval;
+             double yTrans = Ycurrent-Ymean-minYval;
+             sp.translate(xTrans, yTrans);
+             pixels[k][i] = (short[]) sp.getPixels();
+          }
+       }
+
+       float[][] sumPixels = new float[numberMasses][pixels[0][0].length];
+
+       // Sum the pixels.
+       for (int k = 0; k <= (numberMasses - 1); k++) {
+          for (int i = 0; i < planes.length; i++) {
+             for (int j = 0; j < pixels[0][0].length; j++) {
+                sumPixels[k][j] += pixels[k][i][j];
+             }
+          }
+          images[k].setSlice(plane);
+          images[k].getProcessor().setPixels(sumPixels[k]);
+       }
+       
+       double[] returnVal = {minXval, minYval};
+       return returnVal;
+    }
+
+    public double[] restoreSlice(int plane) {
+
+      if (ui.mimsAction.getIsCompressed()) {
+         double[] returnVal = restoreBlock(plane);
+         return returnVal;
+      }
+
+      int restoreIndex = ui.mimsAction.trueIndex(plane);
+      try {
+
+         int openerIndex = ui.mimsAction.getOpenerIndex(restoreIndex - 1);
+         String openerName = ui.mimsAction.getOpenerName(restoreIndex - 1);
+         Opener op = ui.getFromOpenerList(openerName);
+
+         op.setStackIndex(openerIndex);
+         for (int k = 0; k <= (numberMasses - 1); k++) {
+            images[k].setSlice(plane);
+            if (images[k].getProcessor() instanceof ShortProcessor) {
+               images[k].getProcessor().setPixels(op.getPixels(k));
+            } else {
+               images[k].getProcessor().setPixels(getFloatArrayFromShortArray(op.getPixels(k)));
             }
-        } catch (Exception e) {
-            System.err.println("Error re-reading plane " + restoreIndex);
-            System.err.println(e.toString());
-            e.printStackTrace();
-        }
-    }
+            images[k].updateAndDraw();
+         }
+      } catch (Exception e) {
+         System.err.println("Error re-reading plane " + restoreIndex);
+         System.err.println(e.toString());
+         e.printStackTrace();
+      }
 
-    public void restoreMIMS() {
-        untrack();
-        MimsPlus[] massImages = ui.getMassImages();
-        int currentSlice = massImages[0].getCurrentSlice();
+      double[] returnVal = {0.0, 0.0};
+      return returnVal;
+   }
 
-        // concatenate the remaining files.
-        int x = ui.mimsAction.getSize();
-        for (int i = 1; i <= ui.mimsAction.getSize(); i++) {
-           massImages[0].setSlice(i);
-           if (ui.mimsAction.isDropped(i)) insertSlice(i);
-        }
-
-        resetTrueIndexLabel();
-        resetSpinners();
-
-        massImages[0].setSlice(currentSlice);
-    }
     public void insertSlice(int plane) {
-
-        System.out.println("inside insertSlice...");
 
         if (!ui.mimsAction.isDropped(plane)) {
             System.out.println("already there...");
@@ -175,46 +273,42 @@ public class MimsStackEditing extends javax.swing.JPanel {
         int displaysize = images[0].getNSlices();
         System.out.println("try to add at: " + restoreIndex);
         try {
-            if (restoreIndex < displaysize) {
-                int currentPlane = images[0].getCurrentSlice();
-                
+            if (restoreIndex < displaysize) {               
                 int openerIndex = ui.mimsAction.getOpenerIndex(plane - 1);
                 String openerName = ui.mimsAction.getOpenerName(plane - 1);
-                Opener op = ui.getFromOpenerList(openerName);
-                                
+                Opener op = ui.getFromOpenerList(openerName);                                
                 op.setStackIndex(openerIndex);
                 for (int i = 0; i < op.getNMasses(); i++) {
                     images[i].setSlice(restoreIndex);
-                    imagestacks[i].addSlice("", images[i].getProcessor(), restoreIndex);
-                    images[i].getProcessor().setPixels(op.getPixels(i));
+                    images[i].getStack().addSlice("", images[i].getProcessor(), restoreIndex);
+                    if (images[i].getProcessor() instanceof ShortProcessor)
+                       images[i].getProcessor().setPixels(op.getPixels(i));
+                    else
+                       images[i].getProcessor().setPixels(getFloatArrayFromShortArray(op.getPixels(i)));                    
                     images[i].updateAndDraw();
-                }
-                ui.mimsAction.undropPlane(plane);
-                images[0].setSlice(currentPlane);
+                }                
             }
             if (restoreIndex >= displaysize) {
-
-                this.holdupdate = true;
-
-                int currentPlane = images[0].getCurrentSlice();
-                
+                this.holdupdate = true;                
                 int openerIndex = ui.mimsAction.getOpenerIndex(plane  - 1);
                 String openerName = ui.mimsAction.getOpenerName(plane - 1);
-                Opener op = ui.getFromOpenerList(openerName);
-                
+                Opener op = ui.getFromOpenerList(openerName);                
                 op.setStackIndex(openerIndex);
                 for (int i = 0; i < op.getNMasses(); i++) {
                     images[i].setSlice(displaysize);
-                    imagestacks[i].addSlice("", images[i].getProcessor());
-                    images[i].setStack(null, imagestacks[i]);
+                    images[i].getStack().addSlice("", images[i].getProcessor());
                     images[i].setSlice(restoreIndex);
-                    images[i].getProcessor().setPixels(op.getPixels(i));
+                    if (images[i].getProcessor() instanceof ShortProcessor)
+                       images[i].getProcessor().setPixels(op.getPixels(i));
+                    else
+                       images[i].getProcessor().setPixels(getFloatArrayFromShortArray(op.getPixels(i)));
                     images[i].updateAndDraw();
                 }
-
-                ui.mimsAction.undropPlane(plane);
-                images[0].setSlice(currentPlane);
             }
+            images[0].setSlice(restoreIndex);
+            ui.mimsAction.undropPlane(plane);
+            XShiftSlice(ui.mimsAction.getXShift(restoreIndex));
+            YShiftSlice(ui.mimsAction.getYShift(restoreIndex));
 
         } catch (Exception e) {
             System.err.println("Error re-reading plane " + restoreIndex + "from file.");
@@ -306,12 +400,12 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
                if (!holdupdate && (!ui.isUpdating())) {
                    if (redraw) {
-                       restoreSlice(plane);
-                       XShiftSlice(plane, actx + deltax);
-                       YShiftSlice(plane, acty + deltay);
+                       double[] xy = restoreSlice(plane);
+                       XShiftSlice(actx + deltax + xy[0]);
+                       YShiftSlice(acty + deltay + xy[1]);
                    } else {
-                       XShiftSlice(plane, deltax);
-                       YShiftSlice(plane, deltay);
+                       XShiftSlice(deltax);
+                       YShiftSlice(deltay);
                    }
                    ui.mimsAction.setShiftX(plane, actx + deltax);
                    ui.mimsAction.setShiftY(plane, acty + deltay);
@@ -332,59 +426,56 @@ public class MimsStackEditing extends javax.swing.JPanel {
                 images[i].setIsStack(true);
             }
         }
-
-        //label all slices of original image
-        //if (labeloriginal) {
-        //    for (int mass = 0; mass <= (numberMasses - 1); mass++) {
-        //        for (int i = 1; i <= imagestacks[mass].getSize(); i++) {
-        //            imagestacks[mass].setSliceLabel(images[mass].getTitle(), i);
-        //        }
-        //    }
-        //}
         
         //increase action size
         ui.mimsAction.addPlanes(pre, tempimage[0].getNSlices(), tempImage);
-        
+
+        // Get the stacks for the original data. These
+        // are the stack we are going to (pre)append to.
         for (int i = 0; i <= (numberMasses - 1); i++) {
-            tempstacks[i] = tempimage[i].getStack();
+            tempstacks[i] = images[i].getStack();
         }
-        //append slices, include labels
+
+        // (Pre)append slices, include labels.
         if (pre) {
-            for (int mass = 0; mass <= (numberMasses - 1); mass++) {
-                for (int i = tempstacks[mass].getSize(); i >= 1; i--) {
-                    imagestacks[mass].addSlice(tempimage[mass].getTitle(), tempstacks[mass].getProcessor(i), 0);
+            for (int mass = 0; mass < numberMasses; mass++) {
+                ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());                
+                for (int i = tempImage.getNImages(); i >= 1; i--) {
+                   tempImage.setStackIndex(i-1);
+                   try { sp.setPixels(tempImage.getPixels(mass));}
+                   catch (IOException ioe) {ioe.printStackTrace();}
+                   tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp, 0);                   
                 }
+                images[mass].setStack(null, tempstacks[mass]);
             }
-            ui.getmimsLog().Log("Concat: " + tempui.getImageFilePrefix() + " + " + ui.getImageFilePrefix());
         } else {
-            for (int mass = 0; mass <= (numberMasses - 1); mass++) {
-                for (int i = 1; i <= tempstacks[mass].getSize(); i++) {
-                    imagestacks[mass].addSlice(tempimage[mass].getTitle(), tempstacks[mass].getProcessor(i));
+            for (int mass = 0; mass < numberMasses; mass++) {
+               ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());               
+               for (int i = 1; i <= tempImage.getNImages(); i++) {
+                  tempImage.setStackIndex(i-1);
+                  try { sp.setPixels(tempImage.getPixels(mass));}
+                  catch (IOException ioe) {ioe.printStackTrace();}
+                  tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp);                  
                 }
+               images[mass].setStack(null, tempstacks[mass]);
             }
-            ui.getmimsLog().Log("Concat: " + ui.getImageFilePrefix() + " + " + tempui.getImageFilePrefix());
         }
 
-
+        // Update images.
         for (int i = 0; i <= (numberMasses - 1); i++) {
-            this.images[i].setStack(null, imagestacks[i]);
             this.images[i].updateImage();
         }
 
-        
-
+        // Add log entry.
         ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
 
-        resetImageStacks();
+        // Clean up ersidual images.
         for (int i = 0; i < tempimage.length; i++) {
             if (tempimage[i] != null) {
                 tempimage[i].setAllowClose(true);
                 tempimage[i].close();
                 tempimage[i] = null;
             }
-        }
-        for (int i = 0; i < tempstacks.length; i++) {
-            tempstacks[i] = null;
         }
 
         ui.addToOpenerList(tempui.getOpener().getImageFile().getName(), tempui.getOpener());
@@ -755,7 +846,6 @@ public class MimsStackEditing extends javax.swing.JPanel {
             if (image != null) {
                 image.setAllowClose(true);
                 image.close();
-
             }
         }
         tempUi = null;
@@ -820,12 +910,12 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
         if (!holdupdate && ((actx != xval) || (acty != yval)) && (!ui.isUpdating())) {
             if (redraw) {
-                this.restoreSlice(plane);
-                this.XShiftSlice(plane, xval);
-                this.YShiftSlice(plane, yval);
+                double[] xy = this.restoreSlice(plane);
+                this.XShiftSlice(xval + xy[0]);
+                this.YShiftSlice(yval + xy[1]);
             } else {
-                this.XShiftSlice(plane, deltax);
-                this.YShiftSlice(plane, deltay);
+                this.XShiftSlice(deltax);
+                this.YShiftSlice(deltay);
             }
             ui.mimsAction.setShiftX(plane, xval);
             ui.mimsAction.setShiftY(plane, yval);
@@ -849,12 +939,12 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
         if (!holdupdate && ((actx != xval) || (acty != yval)) && (!ui.isUpdating())) {
             if (redraw) {
-                this.restoreSlice(plane);
-                this.XShiftSlice(plane, xval);
-                this.YShiftSlice(plane, yval);
+                double[] xy = this.restoreSlice(plane);
+                this.XShiftSlice(xval + xy[0]);
+                this.YShiftSlice(yval + xy[1]);
             } else {
-                this.XShiftSlice(plane, deltax);
-                this.YShiftSlice(plane, deltay);
+                this.XShiftSlice(deltax);
+                this.YShiftSlice(deltay);
             }
             ui.mimsAction.setShiftX(plane, xval);
             ui.mimsAction.setShiftY(plane, yval);
@@ -875,48 +965,20 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
 public void untrack() {
 
-    int startPlane = ui.getOpenMassImages()[0].getCurrentSlice();
+   double xval = 0.0;
+   double yval = 0.0;
 
-        double xval = 0.0;
-        double yval = 0.0;
-
-        double actx = 0.0;
-        double acty = 0.0;
-
-        double deltax = 0.0;
-        double deltay = 0.0;
-
-        boolean redraw;
-
-        for (int plane = 1; plane <= images[0].getStackSize(); plane++) {
-            xval = 0;
-            yval = 0;
-
-            actx = ui.mimsAction.getXShift(plane);
-            acty = ui.mimsAction.getYShift(plane);
-
-            deltax = xval - actx;
-            deltay = yval - acty;
-
-            redraw = ((deltax * actx < 0) || (deltay * acty < 0));
-
-            if (!holdupdate && ((actx != xval) || (acty != yval)) && (!ui.isUpdating())) {
-                if (redraw) {
-                    this.restoreSlice(plane);
-                    this.XShiftSlice(plane, xval);
-                    this.YShiftSlice(plane, yval);
-                } else {
-                    this.XShiftSlice(plane, deltax);
-                    this.YShiftSlice(plane, deltay);
-                }
-                ui.mimsAction.setShiftX(plane, xval);
-                ui.mimsAction.setShiftY(plane, yval);
-            }
-        }
-        autoTrackButton.setEnabled(true);
-        images[0].setSlice(startPlane);
-        resetSpinners();
-        ui.getmimsLog().Log("Untracked.");
+   for (int plane = 1; plane <= images[0].getNSlices(); plane++) {
+      if (ui.mimsAction.getIsCompressed())
+         setBlockTranslationToZero(plane);
+      else
+         restoreSlice(plane);
+      this.XShiftSlice(xval);
+      this.YShiftSlice(yval);
+      ui.mimsAction.setShiftX(plane, xval);
+      ui.mimsAction.setShiftY(plane, yval);
+   }
+   ui.getmimsLog().Log("Untracked.");
 }
 
 private void sumButtonActionPerformed(java.awt.event.ActionEvent evt) {                                          
@@ -972,16 +1034,22 @@ private void compressButtonActionPerformed(java.awt.event.ActionEvent evt) {
 
    // Do the compression.
    boolean done = compressPlanes(blockSize);
+   ui.getmimsAction().setIsCompressed(done);
 
    // Do some autocontrasting stuff.
-    if (done) {
-        int nmasses = image.getNMasses();
-        for (int mindex = 0; mindex < nmasses; mindex++) {
-            images[mindex].setSlice(1);
-            images[mindex].updateAndDraw();
-            ui.autoContrastImage(images[mindex]);
-        }
-    }
+   if (done) {
+       ui.getmimsAction().setBlockSize(blockSize);
+       deleteListButton.setEnabled(false);
+       deleteListTextField.setEnabled(false);
+       reinsertButton.setEnabled(false);
+       reinsertListTextField.setEnabled(false);
+       int nmasses = image.getNMasses();
+       for (int mindex = 0; mindex < nmasses; mindex++) {
+           images[mindex].setSlice(1);
+           images[mindex].updateAndDraw();
+           ui.autoContrastImage(images[mindex]);
+       }
+   }
 
     compressTextField.setText("");
     ui.getmimsLog().Log("Compressed with blocksize: " + blockSize);
@@ -991,18 +1059,44 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         uncompressPlanes();
 }                                        
 
+// This uncompresses the image.
 public void uncompressPlanes() {
-   
-        // This uncompresses the image.
-        removeSlice(1);
-        insertSlice(1);
 
-        // This resizes the scrollbar correctly.
-        images[0].setSlice(2);
-        images[0].setSlice(1);
+   ui.getmimsAction().setIsCompressed(false);
 
-        this.resetTrueIndexLabel();
-        this.resetSpinners();   
+   MimsAction ma = ui.getmimsAction();
+   int nPlanes = ma.getSizeMinusNumberDropped();
+
+   for (int i = 0; i < numberMasses; i++) {
+      ImageStack is = new ImageStack(image.getWidth(), image.getHeight());
+      ShortProcessor sp = new ShortProcessor(image.getWidth(), image.getHeight());
+      for (int plane = 1; plane <= nPlanes; plane++) {
+         int tplane = ma.trueIndex(plane);
+         String openerName = ui.mimsAction.getOpenerName(tplane-1);
+         Opener op = ui.getFromOpenerList(openerName);
+         int imageIndex = ma.getOpenerIndex(tplane-1);
+         op.setStackIndex(imageIndex);
+         try{
+            sp.setPixels(op.getPixels(i));
+            double x = ma.getXShift(plane);
+            double y = ma.getYShift(plane);
+            sp.translate(x, y);
+            is.addSlice(openerName, sp);
+         } catch (IOException ioe) {
+            ioe.printStackTrace();
+         }
+      }
+      images[i].setStack(null, is);
+   }
+
+   // Enable the deleting and reinserting of images.
+   deleteListButton.setEnabled(true);
+   deleteListTextField.setEnabled(true);
+   reinsertButton.setEnabled(true);
+   reinsertListTextField.setEnabled(true);  
+
+   this.resetTrueIndexLabel();
+   this.resetSpinners();
 }
 
 public boolean compressPlanes(int blockSize) {
@@ -1012,6 +1106,7 @@ public boolean compressPlanes(int blockSize) {
         int currentplane = images[0].getSlice();
         int templength = images[0].getProcessor().getPixelCount();
         float[][] sumPixels = new float[nmasses][templength];
+        boolean is16Bit = true;
 
         // Set up the stacks.
         int size = images[0].getNSlices();
@@ -1040,29 +1135,33 @@ public boolean compressPlanes(int blockSize) {
                 cp = new MimsPlus(ui, sumProps, sumlist);
 
                 // Check for bad data.
-                double m = cp.getProcessor().getMax();
-                if (m > 65535) {
-                    IJ.error("Cannot compress. Over 16 bit limit.");
-                    System.out.println("ERROR! over limit of 16 bit processing!");
-                    return false;
+                double m = cp.getProcessor().getMax();                
+                if (m > 65535 && is16Bit) {
+                    System.out.println(" max = " + m);
+                    System.out.println("Warning! Over 16-bit limit, converting to 32-bit");
+                    convertMassImagesto32bit();
+                    is16Bit = false;
                 }
 
                 // Build up the stacks
-                sumPixels[mindex] = (float[]) cp.getProcessor().getPixels();
-                short[] t = new short[cp.getProcessor().getPixelCount()];
-                for (int k = 0; k < sumPixels[mindex].length; k++) {
-                    t[k] = (short) sumPixels[mindex][k];
-                }
                 String label = sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1);
-                is[mindex].addSlice(label, t);
-
+                if (cp.getProcessor() instanceof ShortProcessor) {
+                   short[] t = new short[cp.getProcessor().getPixelCount()];
+                   for (int k = 0; k < sumPixels[mindex].length; k++) {
+                      t[k] = (short) sumPixels[mindex][k];
+                   }
+                   is[mindex].addSlice(label, t);
+                } else {
+                   sumPixels[mindex] = (float[]) cp.getProcessor().getPixels();
+                   is[mindex].addSlice(label, sumPixels[mindex]);
+                }
             }
         }
-
+        
         //a little cleanup
         //multiple calls to setSlice are to get image scroll bars triggered right
         for (int mindex = 0; mindex < image.getNMasses(); mindex++) {
-            images[mindex].setStack(null, is[mindex]);
+            images[mindex].setStack(null, is[mindex]);           
             if (images[mindex].getNSlices() > 1) {
                 images[mindex].setIsStack(true);
                 images[mindex].setSlice(1);
@@ -1082,7 +1181,7 @@ public boolean compressPlanes(int blockSize) {
             if (THREAD_STATE == this.WORKING)
                return;
             holdupdate = true;
-            int plane = images[0].getCurrentSlice();
+            int plane = images[0].getCurrentSlice();            
             double xval = ui.mimsAction.getXShift(plane);
             double yval = ui.mimsAction.getYShift(plane);
             this.translateXSpinner.setValue(xval);
@@ -1370,6 +1469,104 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
     }
 
 }
+
+   public void convertMassImagesto32bit() {
+      MimsPlus[] mps = ui.getOpenMassImages();
+      for (int j = 0; j < mps.length; j++) {
+         if (mps[j] != null) {
+            if (mps[j].lock()) {
+               convert("32-bit", (ImagePlus) mps[j]);
+               mps[j].unlock();
+            }
+         }
+      }
+   }
+
+	/** Converts the ImagePlus to the specified image type. The string
+	argument corresponds to one of the labels in the Image/Type submenu
+	("8-bit", "16-bit", "32-bit", "8-bit Color", "RGB Color", "RGB Stack" or "HSB Stack"). */
+	public void convert(String item, ImagePlus imp) {
+
+		int type = imp.getType();
+		ImageStack stack = null;
+		if (imp.getStackSize()>1)
+			stack = imp.getStack();
+		String msg = "Converting to " + item;
+		IJ.showStatus(msg + "...");
+	 	long start = System.currentTimeMillis();
+	 	Roi roi = imp.getRoi();
+	 	imp.killRoi();
+	 	boolean saveChanges = imp.changes;
+		imp.changes = IJ.getApplet()==null; //if not applet, set 'changes' flag
+	 	ImageWindow win = imp.getWindow();
+		try {
+ 			if (stack!=null) {
+ 				boolean wasVirtual = stack.isVirtual();
+				// do stack conversions
+		    	if (stack.isRGB() && item.equals("RGB Color")) {
+					new ImageConverter(imp).convertRGBStackToRGB();
+		    		if (win!=null) new ImageWindow(imp, imp.getCanvas()); // replace StackWindow with ImageWindow
+		    	} else if (stack.isHSB() && item.equals("RGB Color")) {
+					new ImageConverter(imp).convertHSBToRGB();
+		    		if (win!=null) new ImageWindow(imp, imp.getCanvas());
+				} else if (item.equals("8-bit"))
+					new StackConverter(imp).convertToGray8();
+				else if (item.equals("16-bit"))
+					new StackConverter(imp).convertToGray16();
+				else if (item.equals("32-bit"))
+					new StackConverter(imp).convertToGray32();
+				else if (item.equals("RGB Color"))
+					new StackConverter(imp).convertToRGB();
+				else if (item.equals("RGB Stack"))
+					new StackConverter(imp).convertToRGBHyperstack();
+				else if (item.equals("HSB Stack"))
+					new StackConverter(imp).convertToHSBHyperstack();
+		      else throw new IllegalArgumentException();
+				if (wasVirtual) imp.setTitle(imp.getTitle());
+			} else {
+				// do single image conversions
+				Undo.setup(Undo.TYPE_CONVERSION, imp);
+		    	ImageConverter ic = new ImageConverter(imp);
+				if (item.equals("8-bit"))
+					ic.convertToGray8();
+				else if (item.equals("16-bit"))
+					ic.convertToGray16();
+				else if (item.equals("32-bit"))
+					ic.convertToGray32();
+				else if (item.equals("RGB Stack")) {
+			    	Undo.reset(); // Reversible; no need for Undo
+					ic.convertToRGBStack();
+		    	} else if (item.equals("HSB Stack")) {
+			    	Undo.reset();
+					ic.convertToHSB();
+		    	} else if (item.equals("RGB Color")) {
+					ic.convertToRGB();
+		    	} else {
+					imp.changes = saveChanges;
+					return;
+				}
+				IJ.showProgress(1.0);
+			}
+
+		}
+		catch (IllegalArgumentException e) {
+         e.printStackTrace();
+			return;
+		}
+		if (roi!=null)
+			imp.setRoi(roi);
+		IJ.showTime(imp, start, "");
+		imp.repaintWindow();
+		Menus.updateMenus();
+	}
+
+   public float[] getFloatArrayFromShortArray(short[] shortArray) {
+      float[] floatArray = new float[shortArray.length];
+      for (int i = 0; i < shortArray.length; i++) {
+         floatArray[i] = (new Short(shortArray[i])).floatValue();
+      }
+      return floatArray;
+   }
 
 }
 

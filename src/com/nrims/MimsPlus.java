@@ -5,11 +5,13 @@ import com.nrims.data.Opener;
 import ij.IJ ;
 import ij.ImagePlus;
 import ij.gui.* ;
+import ij.measure.Calibration;
 import ij.plugin.filter.RankFilters;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
+import ij.process.ShortProcessor;
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent ;
 import java.awt.event.WindowListener ;
@@ -18,6 +20,7 @@ import java.awt.event.MouseMotionListener ;
 import java.awt.event.MouseEvent ;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.MouseWheelEvent;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.DefaultListModel;
 import javax.swing.event.EventListenerList;
@@ -443,18 +446,28 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
           int templength = parentImage.getProcessor().getPixelCount();
           sumPixels = new double[templength];
-          short[] tempPixels = new short[templength];
-
+          
           Object[] o = parentImage.getStack().getImageArray();
           int numSlices = parentImage.getNSlices();
+          if (o[0] instanceof float[]) {
+            float[] tempPixels = new float[templength];
             for (int i = 0; i < sumlist.size(); i++) {
+                if (sumlist.get(i) < 1 || sumlist.get(i) > numSlices) continue;
+                tempPixels = (float[])o[sumlist.get(i)-1];
+                for (int j = 0; j < sumPixels.length; j++) {
+                    sumPixels[j] += ((int) ( tempPixels[j] ) );
+                }
+            }
+          } else if (o[0] instanceof short[]) {
+             short[] tempPixels = new short[templength];
+             for (int i = 0; i < sumlist.size(); i++) {
                 if (sumlist.get(i) < 1 || sumlist.get(i) > numSlices) continue;
                 tempPixels = (short[])o[sumlist.get(i)-1];
                 for (int j = 0; j < sumPixels.length; j++) {
                     sumPixels[j] += ((int) ( tempPixels[j] & 0xffff) );
                 }
             }
-
+          }
        }
        // Sum-ratio image
        else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
@@ -584,7 +597,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
         ij.ImageStack stack = getStack();
         ui.getOpener().setStackIndex(nImage);
-        stack.addSlice(null, ui.getOpener().getPixels(massIndex));
+        if (getProcessor() instanceof ShortProcessor)
+           stack.addSlice(null, ui.getOpener().getPixels(massIndex));
+        else
+           stack.addSlice(null, ui.getmimsStackEditing().getFloatArrayFromShortArray(ui.getOpener().getPixels(massIndex)));
         setStack(null, stack);
         setSlice(nImage + 1);
         //setProperty("Info", srcImage.getInfo());
@@ -906,6 +922,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
        //strings.add(0, "Hello");
        //strings.add(1, "World");
        //System.out.println(strings.size());
+       ArrayList<double[]> xyTranslationList = ui.getmimsAction().xyTranslationList;
 
         if(bStateChanging) return;
 
@@ -919,10 +936,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
          } else if( (this.nType == SEG_IMAGE) || (this.nType == COMPOSITE_IMAGE)) {
              return;
          } else {
-            short[] spix = (short[])getProcessor().getPixels();
-            pix = new float[spix.length];
-            for(int i = 0; i < spix.length; i++)
-                pix[i] = (new Short(spix[i])).floatValue();
+            if (getProcessor() instanceof ShortProcessor) {
+               short[] spix = (short[])getProcessor().getPixels();
+               pix = new float[spix.length];
+               for(int i = 0; i < spix.length; i++)
+                  pix[i] = (new Short(spix[i])).floatValue();
+            } else {
+               pix = (float[])getProcessor().getPixels();
+            }
          }
          if (pix != null) {
             double[] dpix = new double[pix.length];
@@ -1055,8 +1076,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         } else {
             MimsPlus[] ml = ui.getOpenMassImages() ;
             for(int i = 0 ; i < ml.length ; i++ ) {
-                int [] gl = ml[i].getPixel(mX,mY);
-                msg += gl[0] ;
+                //int [] gl = ml[i].getPixel(mX,mY);
+                //float s = Float.intBitsToFloat(gl[0]);
+                msg += ml[i].getValueAsString(mX, mY);
+                //msg += IJ.d2s(s,0);
                 if( i+1 < ml.length )
                     msg += ", ";
             }
@@ -1166,6 +1189,35 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
            }
         }
         ui.updateStatus(msg);
+    }
+
+    private String getValueAsString(int x, int y) {
+    	if (win!=null && win instanceof PlotWindow)
+    		return "";
+		Calibration cal = getCalibration();
+    	int[] v = getPixel(x, y);
+    	int type = getType();
+		switch (type) {
+			case GRAY8: case GRAY16: case COLOR_256:
+				if (type==COLOR_256) {
+					if (cal.getCValue(v[3])==v[3]) // not calibrated
+						return(", index=" + v[3] + "," + v[0] + "," + v[1] + "," + v[2]);
+					else
+						v[0] = v[3];
+				}
+				double cValue = cal.getCValue(v[0]);
+				if (cValue==v[0])
+    				return("" + v[0]);
+    			else
+    				return("" + IJ.d2s(cValue) + " ("+v[0]+")");
+    		case GRAY32:
+            DecimalFormat dec = new DecimalFormat();
+            dec.setMaximumFractionDigits(0);
+    			return("" + dec.format(Float.intBitsToFloat(v[0])));
+			case COLOR_RGB:
+    			return("" + v[0] + "," + v[1] + "," + v[2]);
+    		default: return("");
+		}
     }
 
     @Override

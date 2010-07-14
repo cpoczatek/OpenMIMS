@@ -10,12 +10,10 @@ import com.nrims.data.*;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.WindowManager;
 import ij.gui.Roi;
 import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
 import ij.process.ColorProcessor;
-import ij.process.ImageStatistics;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -25,7 +23,6 @@ import java.awt.Point;
 import java.awt.Image;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
 import java.awt.event.WindowListener;
 
 import java.io.BufferedInputStream;
@@ -50,7 +47,6 @@ import javax.swing.JOptionPane;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -58,11 +54,8 @@ import java.util.zip.ZipFile;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.annotations.XYAnnotation;
-import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.ui.TextAnchor;
 
 /**
  * The main user interface of the NRIMS ImageJ plugin.
@@ -271,7 +264,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       //Thread thread = new StartupScript(this);
       //thread.start();
 
-      //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.im"));
+      //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/100221-c6-gk14e-1x999.nrrd"));
+      loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.nrrd"));
    }
 
     /**
@@ -695,7 +689,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         massImages[i] = mp;
                         if (mp != null) {
                             massImages[i].getProcessor().setMinAndMax(0, 0);
-                            massImages[i].getProcessor().setPixels(image.getPixels(i));                            
+                            massImages[i].getProcessor().setPixels(image.getPixels(i));
                         }
                     }
                 }
@@ -725,9 +719,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (this.windowPositions != null) {
                     applyWindowPositions(windowPositions);
                 } else {
-                    //replace with mass image tile
                     ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
-
                     wo.run("tile");
                 }
                 if (this.windowZooms != null) {
@@ -2045,14 +2037,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         String name = "";
         name += this.getImageFilePrefix();
 
-           if(img.getMimsType()==img.MASS_IMAGE) {
+           if(img.getMimsType()==MimsPlus.MASS_IMAGE) {
                int index = img.getMassIndex();
                int mass = Math.round(new Float(getOpener().getMassNames()[index]));
                name += "_m" + mass;
                return name;
            }
 
-        if(img.getMimsType()==img.RATIO_IMAGE) {
+        if(img.getMimsType()==MimsPlus.RATIO_IMAGE) {
             RatioProps ratioprops = img.getRatioProps();
             int numIndex = ratioprops.getNumMassIdx();
             int denIndex = ratioprops.getDenMassIdx();
@@ -2062,7 +2054,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return name;
         }
 
-        if(img.getMimsType()==img.HSI_IMAGE) {
+        if(img.getMimsType()==MimsPlus.HSI_IMAGE) {
             HSIProps hsiprops = img.getHSIProps();
 
            int numIndex = hsiprops.getNumMassIdx();
@@ -2073,7 +2065,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            return name;
         }
 
-        if (img.getMimsType() == img.SUM_IMAGE) {
+        if (img.getMimsType() == MimsPlus.SUM_IMAGE) {
             SumProps sumProps = img.getSumProps();
             if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
                 int numIndex = sumProps.getNumMassIdx();
@@ -2091,7 +2083,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         }
 
-        if (img.getMimsType() == img.SEG_IMAGE) {
+        if (img.getMimsType() == MimsPlus.SEG_IMAGE) {
             name += "_seg";
             return name;
         }
@@ -2242,7 +2234,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
         //autosave in working directory
         File file = image.getImageFile();
 
-        String dir = file.getParent() + file.separator;
+        String dir = file.getParent() + File.separator;
         ij.io.FileSaver saver = new ij.io.FileSaver(imp2);
         String name = imp2.getTitle().replaceAll(" : ", "_");
         name = name.replaceAll(" ", "_");
@@ -2521,8 +2513,8 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
 
 public void exportPNGs(){
    File file = image.getImageFile();
-    System.out.println(file.getParent()+file.separator);
-    String dir = file.getParent()+file.separator;
+    System.out.println(file.getParent()+File.separator);
+    String dir = file.getParent()+File.separator;
 
     MimsPlus[] sum = getOpenSumImages();
     for( int i = 0; i < sum.length; i ++) {
@@ -2952,8 +2944,10 @@ private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
             }
 
             // Set the XShift, YShift, dropped val, and image name for this slice.
-            mimsStackEditing.XShiftSlice(displayIndex, Double.parseDouble(actionRowString[1]));
-            mimsStackEditing.YShiftSlice(displayIndex, Double.parseDouble(actionRowString[2]));
+            mimsStackEditing.XShiftSlice(Double.parseDouble(actionRowString[1]));
+            mimsStackEditing.YShiftSlice(Double.parseDouble(actionRowString[2]));
+            mimsAction.setShiftX(displayIndex, Double.parseDouble(actionRowString[1]));
+            mimsAction.setShiftY(displayIndex, Double.parseDouble(actionRowString[2]));
             if (Integer.parseInt(actionRowString[3]) == 1) {
                deleteList.add(trueIndex);
             }

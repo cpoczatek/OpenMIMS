@@ -10,11 +10,13 @@ import java.util.ArrayList;
 
 public class MimsAction implements Cloneable {
     
-    private ArrayList<double[]> xyTranslationList;
+    public ArrayList<double[]> xyTranslationList;
     private ArrayList<Integer> droppedList;
     private ArrayList<Integer> imageIndex;
     private ArrayList<String> imageList;
     double zeros[] = {0.0, 0.0};
+    private boolean isCompressed = false;
+    private int blockSize =1;
 
     public MimsAction(UI ui, Opener im) {
         resetAction(ui, im);
@@ -85,27 +87,133 @@ public class MimsAction implements Cloneable {
         droppedList.set(trueIndex - 1, 0);
     }
 
-    public void setShiftX(int plane, double offset) {
-        int tplane = this.trueIndex(plane);
-        double y = getXShift(plane);
-        double xy[] = {offset, y};
-        xyTranslationList.set(tplane-1, xy);                    
+    // Apply the given offset (in the x-direction)
+    // to the given plane. If image is compressed,
+    // apply offset to all planes within that block.
+    public void setShiftX(int plane, double offset) {        
+        int[] planes = new int[1];
+        int tplane = trueIndex(plane);
+        planes[0] = tplane;
+        double meanTranslation = getXShift(plane);
+
+        if (isCompressed)
+           planes = getPlaneNumbersFromBlockNumber(plane);
+
+        for (int i = 0; i < planes.length; i++) {
+           tplane = planes[i];
+           double y = xyTranslationList.get(tplane-1)[1];
+           double x = xyTranslationList.get(tplane-1)[0];
+           double xy[] = {offset, y};
+           if (isCompressed) {              
+              double diff = offset - meanTranslation;
+              xy[0] = x+diff;
+           }           
+           xyTranslationList.set(tplane-1, xy);
+        }
     }
 
+    // Apply the given offset (in the y-direction)
+    // to the given plane. If image is compressed,
+    // apply offset to all planes within that block.
     public void setShiftY(int plane, double offset) {
-        int tplane = this.trueIndex(plane);
-        double x = getXShift(plane);
-        double xy[] = {x, offset};
-        xyTranslationList.set(tplane-1, xy);    }
+        int[] planes = new int[1];
+        int tplane = trueIndex(plane);
+        planes[0] = tplane;
+        double meanTranslation = getYShift(plane);
 
-    public double getXShift(int plane) {
-        int tplane = this.trueIndex(plane);
-        return (Double)(xyTranslationList.get(tplane-1)[0]);
+       if (isCompressed)
+           planes = getPlaneNumbersFromBlockNumber(plane);
+
+        for (int i = 0; i < planes.length; i++) {
+           tplane = planes[i];
+           double y = xyTranslationList.get(tplane-1)[1];
+           double x = xyTranslationList.get(tplane-1)[0];
+           double xy[] = {x, offset};
+           if (isCompressed) {
+              double diff = offset - meanTranslation;
+              xy[1] = y +diff;
+           }
+           xyTranslationList.set(tplane-1, xy);
+        }
     }
 
+    public int getSizeMinusNumberDropped() {
+      int nPlanes = 0;
+      for (int i = 1; i <= getSize(); i++) {
+         if (!isDropped(i))
+            nPlanes++;
+      }
+      return nPlanes;
+   }
+
+    public int[] getPlaneNumbersFromBlockNumber(int blockNumber) {
+
+       if (!isCompressed) {
+          int[] planes = new int[1];
+          planes[0] = blockNumber;
+          return planes;
+       }
+
+       // Start and End 'display' planes of the blockNumber.
+       int blockStart = ((blockNumber-1)*blockSize)+1;
+       int blockEnd = (blockNumber*blockSize);
+       if (blockEnd > getSizeMinusNumberDropped())
+          blockEnd = getSizeMinusNumberDropped();
+
+       // Assemble the array.
+       ArrayList<Integer> planesArray = new ArrayList<Integer>();
+       for (int i = blockStart; i <= blockEnd; i++) {
+          int tplane = trueIndex(i);
+          if (tplane <= getSize())
+             planesArray.add(tplane);
+       }
+       // Convert to int[].
+       int[] planes = new int[planesArray.size()];
+       for (int i = 0; i < planesArray.size(); i++)
+          planes[i] = planesArray.get(i);
+
+       return planes;
+    }
+
+    // returns the X-shift for this plane.
+    // If compressed than returns the mean
+    // of the planes in the block.
+    public double getXShift(int plane) {
+       
+       int[] planes = new int[1];       
+       int tplane = trueIndex(plane);       
+       planes[0] = tplane;
+
+       if (isCompressed)
+          planes = getPlaneNumbersFromBlockNumber(plane);
+
+       double sumX = 0;
+       for (int i = 0; i < planes.length; i++) {
+          tplane = planes[i];          
+          sumX += xyTranslationList.get(tplane-1)[0];          
+       }       
+       double xval = sumX / planes.length;
+       return xval;
+    }
+
+    // returns the Y-shift for this plane.
+    // If compressed than returns the mean
+    // of the planes in the block.
     public double getYShift(int plane) {
-        int tplane = this.trueIndex(plane);
-        return (Double)(xyTranslationList.get(tplane-1)[1]);
+       int[] planes = new int[1];
+       int tplane = trueIndex(plane);
+       planes[0] = plane;
+
+       if (isCompressed)
+          planes = getPlaneNumbersFromBlockNumber(plane);
+
+       double sumY = 0;
+       for (int i = 0; i < planes.length; i++) {
+          tplane = planes[i];
+          sumY += xyTranslationList.get(tplane-1)[1];
+       }
+       double yval = sumY / planes.length;
+       return yval;
     }
 
     public int trueIndex(int dispIndex) {
@@ -148,6 +256,22 @@ public class MimsAction implements Cloneable {
        for (int i=0; i<imageListString.length; i++)
           imageListString[i] = imageList.get(i);
        return imageListString;
+    }
+
+    public boolean getIsCompressed() {
+       return isCompressed;
+    }
+
+    public void setIsCompressed(boolean compressed) {
+       isCompressed = compressed;
+    }
+
+    public int getBlockSize() {
+       return blockSize;
+    }
+
+    public void setBlockSize(int size) {
+       blockSize = size;
     }
     
     public int getOpenerIndex(int plane) {       
