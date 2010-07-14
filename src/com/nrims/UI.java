@@ -265,7 +265,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       //thread.start();
 
       //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/100221-c6-gk14e-1x999.nrrd"));
-      loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.nrrd"));
+      //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.nrrd"));
    }
 
     /**
