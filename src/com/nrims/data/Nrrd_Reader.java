@@ -37,6 +37,7 @@ public class Nrrd_Reader implements Opener {
     private int currentIndex = 0;
     private NrrdFileInfo fi = null;
     private boolean header = false;
+    private int bitSize = 0;
 
     public Nrrd_Reader(File imageFile) {
 
@@ -158,6 +159,7 @@ public class Nrrd_Reader implements Opener {
             //16 bit signed/unsigned checks were flipped?
             else if(uint16Types.indexOf(noteValuelc)>=0) {
 					fi.fileType=FileInfo.GRAY16_UNSIGNED;
+               bitSize = 2;
 				} else if(int16Types.indexOf(noteValuelc)>=0) {
 					fi.fileType=FileInfo.GRAY16_SIGNED;
 				} else if(uint32Types.indexOf(noteValuelc)>=0) {
@@ -166,6 +168,7 @@ public class Nrrd_Reader implements Opener {
 					fi.fileType=FileInfo.GRAY32_INT;
 				} else if(noteValuelc.equals("float")) {
 					fi.fileType=FileInfo.GRAY32_FLOAT;
+               bitSize = 4;
 				} else if(noteValuelc.equals("double")) {
 					fi.fileType=FileInfo.GRAY64_FLOAT;
 				} else {
@@ -316,16 +319,15 @@ public class Nrrd_Reader implements Opener {
 		}
 	}
 
-    @Override
-   public short[] getPixels(int index) throws IndexOutOfBoundsException, IOException {
-
+    public Object getPixels(int index) throws IndexOutOfBoundsException, IOException {
+       
       // Set up a temporary header to read the pixels from the file.
       NrrdFileInfo fi_clone = (NrrdFileInfo)fi.clone();
 
       // Calculate offset
       long offset = fi_clone.longOffset + // move down header
-              (2 * index * fi_clone.width * fi_clone.height * fi_clone.nImages) + // move down to correct channel
-              (2 * fi_clone.width * fi_clone.height * currentIndex); // move down to correct image within that channel
+              (bitSize * index * fi_clone.width * fi_clone.height * fi_clone.nImages) + // move down to correct channel
+              (bitSize * fi_clone.width * fi_clone.height * currentIndex); // move down to correct image within that channel
       fi_clone.longOffset = offset;
       fi_clone.nImages = 1; // only going to read 1 image.
       FileOpener fo = new FileOpener(fi_clone);
@@ -336,9 +338,16 @@ public class Nrrd_Reader implements Opener {
          return null;
       }
 
-      short[] pixels = (short[])imp.getProcessor().getPixels();
+      Object pixels;
+      if (fi.fileType == FileInfo.GRAY16_UNSIGNED)
+         pixels = (short[])imp.getProcessor().getPixels();
+      else if (fi.fileType == FileInfo.GRAY32_FLOAT)
+         pixels = (float[])imp.getProcessor().getPixels();
+      else
+         pixels = null;
+
       return pixels;
-   }
+    }
 
     public void setStackIndex(int index) throws IndexOutOfBoundsException {
         this.currentIndex = index;
@@ -418,5 +427,9 @@ public class Nrrd_Reader implements Opener {
 
     public void setNotes(String notes) {
         fi.notes = notes;
+    }
+
+    public int getFileType() {
+        return fi.fileType;
     }
 }

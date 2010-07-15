@@ -4,6 +4,7 @@ import com.nrims.data.Opener;
 import ij.*;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
+import ij.io.FileInfo;
 import ij.plugin.Converter;
 import ij.process.FloatProcessor;
 import ij.process.ImageConverter;
@@ -121,7 +122,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
        String openerName;
        Opener op;
 
-       short[][][] pixels = new short[numberMasses][planes.length][];
+       Object[][] pixels = new Object[numberMasses][planes.length];
 
        double Xmean = ui.mimsAction.getXShift(plane);
        double Ymean = ui.mimsAction.getYShift(plane);
@@ -134,31 +135,48 @@ public class MimsStackEditing extends javax.swing.JPanel {
              op.setStackIndex(openerIndex);
              try {pixels[k][i] = op.getPixels(k);}
              catch(IOException ioe){ioe.printStackTrace();}
-             ShortProcessor sp = new ShortProcessor(images[0].getWidth(), images[0].getHeight(), pixels[k][i], null);
-
+             ImageProcessor ip = null;
+             if (op.getFileType() == FileInfo.GRAY16_UNSIGNED)
+                ip = new ShortProcessor(images[0].getWidth(), images[0].getHeight());//, (short[])pixels[k][i], null);
+             else if (op.getFileType() == FileInfo.GRAY32_FLOAT)
+                ip = new FloatProcessor(images[0].getWidth(), images[0].getHeight());//, (float[])pixels[k][i], null);
              // Probably not a kosher thing to do.
+             ip.setPixels(pixels[k][i]);
              double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[0];
              double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[1];
 
              double xTrans = Xcurrent-Xmean;
              double yTrans = Ycurrent-Ymean;
-             sp.translate(xTrans, yTrans);
-             pixels[k][i] = (short[]) sp.getPixels();
+             ip.translate(xTrans, yTrans);
+             pixels[k][i] = ip.getPixels();
           }
        }
 
-       float[][] sumPixels = new float[numberMasses][pixels[0][0].length];
+       int pixelLength = ((Object[])pixels[0][0]).length;
+       Object sumPixels[][] = new Object[numberMasses][pixelLength];
 
        // Sum the pixels.
        for (int k = 0; k <= (numberMasses - 1); k++) {
           for (int i = 0; i < planes.length; i++) {
-             for (int j = 0; j < pixels[0][0].length; j++) {
-                sumPixels[k][j] += pixels[k][i][j];
+             for (int j = 0; j < pixelLength; j++) {
+                if (images[k].getProcessor() instanceof ShortProcessor) {
+                   short tempVal = ((Short) sumPixels[k][j]).shortValue();
+                   short[] temppixels = (short[])pixels[k][i];
+                   sumPixels[k][j] = tempVal + temppixels[j];
+                } else if (images[k].getProcessor() instanceof FloatProcessor) {
+                   float tempVal = ((Float) sumPixels[k][j]).floatValue();
+                   float[] temppixels = (float[])pixels[k][i];
+                   sumPixels[k][j] = tempVal + temppixels[j];
+                } else {
+                   sumPixels[k][j] = 0;
+                }
              }
           }
           images[k].setSlice(plane);
           images[k].getProcessor().setPixels(sumPixels[k]);
        }
+       
+
     }
 
     public double[] restoreBlock(int plane) {
@@ -168,7 +186,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
        String openerName;
        Opener op;
 
-       short[][][] pixels = new short[numberMasses][planes.length][];       
+       Object[][] pixels = new Object[numberMasses][planes.length];
 
        // Get the smallest translation
        double minXval = 0.0;
@@ -197,26 +215,53 @@ public class MimsStackEditing extends javax.swing.JPanel {
              op.setStackIndex(openerIndex);
              try {pixels[k][i] = op.getPixels(k);}
              catch(IOException ioe){ioe.printStackTrace();}
-             ShortProcessor sp = new ShortProcessor(images[0].getWidth(), images[0].getHeight(), pixels[k][i], null);
-
-             // Probably not a kosher thing to do.
+             ImageProcessor ip = null;
+             if (op.getFileType() == FileInfo.GRAY16_UNSIGNED)
+                ip = new ShortProcessor(images[0].getWidth(), images[0].getHeight());
+             else if (op.getFileType() == FileInfo.GRAY32_FLOAT)
+                ip = new FloatProcessor(images[0].getWidth(), images[0].getHeight());
+             ip.setPixels(pixels[k][i]);
              double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[0];
              double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i]-1)[1];
 
              double xTrans = Xcurrent-Xmean-minXval;
              double yTrans = Ycurrent-Ymean-minYval;
-             sp.translate(xTrans, yTrans);
-             pixels[k][i] = (short[]) sp.getPixels();
+             ip.translate(xTrans, yTrans);
+             pixels[k][i] = ip.getPixels();
           }
        }
 
-       float[][] sumPixels = new float[numberMasses][pixels[0][0].length];
+       int pixelLength = 0;
+       if (pixels[0][0] instanceof short[])
+          pixelLength = ((short[])pixels[0][0]).length;
+       else if (pixels[0][0] instanceof float[])
+          pixelLength = ((float[])pixels[0][0]).length;
+
+       Object sumPixels[][] = new Object[numberMasses][pixelLength];
 
        // Sum the pixels.
        for (int k = 0; k <= (numberMasses - 1); k++) {
           for (int i = 0; i < planes.length; i++) {
-             for (int j = 0; j < pixels[0][0].length; j++) {
-                sumPixels[k][j] += pixels[k][i][j];
+             for (int j = 0; j < pixelLength; j++) {
+                if (sumPixels[k][j] == null && images[k].getProcessor() instanceof ShortProcessor) {
+                   short zero = 0;
+                   sumPixels[k][j] = zero;
+                }
+                if (sumPixels[k][j] == null && images[k].getProcessor() instanceof FloatProcessor) {
+                   float zero = 0;
+                   sumPixels[k][j] = zero;
+                }
+                if (images[k].getProcessor() instanceof ShortProcessor) {
+                   short tempVal = ((Short) sumPixels[k][j]).shortValue();
+                   short[] temppixels = (short[])pixels[k][i];
+                   sumPixels[k][j] = tempVal + temppixels[j];
+                } else if (images[k].getProcessor() instanceof FloatProcessor) {
+                   float tempVal = ((Float) sumPixels[k][j]).floatValue();
+                   float[] temppixels = (float[])pixels[k][i];
+                   sumPixels[k][j] = tempVal + temppixels[j];
+                } else {
+                   sumPixels[k][j] = 0;
+                }
              }
           }
           images[k].setSlice(plane);
@@ -224,7 +269,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
        }
        
        double[] returnVal = {minXval, minYval};
-       return returnVal;
+       return returnVal;       
     }
 
     public double[] restoreSlice(int plane) {
@@ -244,11 +289,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
          op.setStackIndex(openerIndex);
          for (int k = 0; k <= (numberMasses - 1); k++) {
             images[k].setSlice(plane);
-            if (images[k].getProcessor() instanceof ShortProcessor) {
-               images[k].getProcessor().setPixels(op.getPixels(k));
-            } else {
-               images[k].getProcessor().setPixels(getFloatArrayFromShortArray(op.getPixels(k)));
-            }
+            images[k].getProcessor().setPixels(op.getPixels(k));
             images[k].updateAndDraw();
          }
       } catch (Exception e) {
@@ -280,13 +321,10 @@ public class MimsStackEditing extends javax.swing.JPanel {
                 op.setStackIndex(openerIndex);
                 for (int i = 0; i < op.getNMasses(); i++) {
                     images[i].setSlice(restoreIndex);
-                    images[i].getStack().addSlice("", images[i].getProcessor(), restoreIndex);
-                    if (images[i].getProcessor() instanceof ShortProcessor)
-                       images[i].getProcessor().setPixels(op.getPixels(i));
-                    else
-                       images[i].getProcessor().setPixels(getFloatArrayFromShortArray(op.getPixels(i)));                    
+                    images[i].getStack().addSlice("", images[i].getProcessor(), restoreIndex);                    
+                    images[i].getProcessor().setPixels(op.getPixels(i));                    
                     images[i].updateAndDraw();
-                }                
+                }
             }
             if (restoreIndex >= displaysize) {
                 this.holdupdate = true;                
@@ -297,12 +335,8 @@ public class MimsStackEditing extends javax.swing.JPanel {
                 for (int i = 0; i < op.getNMasses(); i++) {
                     images[i].setSlice(displaysize);
                     images[i].getStack().addSlice("", images[i].getProcessor());
-                    images[i].setSlice(restoreIndex);
-                    if (images[i].getProcessor() instanceof ShortProcessor)
-                       images[i].getProcessor().setPixels(op.getPixels(i));
-                    else
-                       images[i].getProcessor().setPixels(getFloatArrayFromShortArray(op.getPixels(i)));
-                    images[i].updateAndDraw();
+                    images[i].setSlice(restoreIndex);                    
+                    images[i].getProcessor().setPixels(op.getPixels(i));
                 }
             }
             images[0].setSlice(restoreIndex);
@@ -1062,6 +1096,9 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
 // This uncompresses the image.
 public void uncompressPlanes() {
 
+   if (!ui.getmimsAction().getIsCompressed())
+      return;
+
    ui.getmimsAction().setIsCompressed(false);
 
    MimsAction ma = ui.getmimsAction();
@@ -1069,7 +1106,7 @@ public void uncompressPlanes() {
 
    for (int i = 0; i < numberMasses; i++) {
       ImageStack is = new ImageStack(image.getWidth(), image.getHeight());
-      ShortProcessor sp = new ShortProcessor(image.getWidth(), image.getHeight());
+      ImageProcessor ip = null;
       for (int plane = 1; plane <= nPlanes; plane++) {
          int tplane = ma.trueIndex(plane);
          String openerName = ui.mimsAction.getOpenerName(tplane-1);
@@ -1077,11 +1114,15 @@ public void uncompressPlanes() {
          int imageIndex = ma.getOpenerIndex(tplane-1);
          op.setStackIndex(imageIndex);
          try{
-            sp.setPixels(op.getPixels(i));
+            if (ui.getOpener().getFileType() == FileInfo.GRAY16_UNSIGNED)
+               ip = new ShortProcessor(image.getWidth(), image.getHeight());
+            else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT)
+               ip = new FloatProcessor(image.getWidth(), image.getHeight());
+            ip.setPixels(op.getPixels(i));
             double x = ma.getXShift(plane);
             double y = ma.getYShift(plane);
-            sp.translate(x, y);
-            is.addSlice(openerName, sp);
+            ip.translate(x, y);
+            is.addSlice(openerName, ip);
          } catch (IOException ioe) {
             ioe.printStackTrace();
          }
@@ -1103,71 +1144,76 @@ public boolean compressPlanes(int blockSize) {
 
         // initializing stuff.
         int nmasses = image.getNMasses();
-        int currentplane = images[0].getSlice();
-        int templength = images[0].getProcessor().getPixelCount();
-        float[][] sumPixels = new float[nmasses][templength];
         boolean is16Bit = true;
+        int width = images[0].getWidth();
+        int height = images[0].getHeight();
 
         // Set up the stacks.
         int size = images[0].getNSlices();
         ImageStack[] is = new ImageStack[nmasses];
         for (int mindex = 0; mindex < nmasses; mindex++) {
-            ImageStack iss = new ImageStack(images[0].getWidth(), images[0].getHeight());
+            ImageStack iss = new ImageStack(width, height);
             is[mindex] = iss;
         }
 
-        // Begin looping over block size.
+        // Determine if we are going to exceed the 16bit limit.
+        int idx = 0;
+        int size_i = (size + blockSize - 1) / blockSize;
+        MimsPlus[][] cp = new MimsPlus[nmasses][size_i];        
         for (int i = 1; i <= size; i = i + blockSize) {
 
             // Create a sum list of individual images to be in the block.
             ArrayList sumlist = new ArrayList<Integer>();
             for (int j = i; j <= i + blockSize - 1; j++) {
-                if (j > 0 && j <= images[0].getNSlices()) {
+                if (j > 0 && j <= images[0].getNSlices())
                     sumlist.add(j);
-                }
             }
 
-            // Generate the sum image for the block.
-            MimsPlus cp;
+            // Generate the sum image for the block.            
+            for (int mindex = 0; mindex < nmasses; mindex++) {
+                SumProps sumProps = new SumProps(images[mindex].getMassIndex());
+                cp[mindex][idx] = new MimsPlus(ui, sumProps, sumlist);
+                cp[mindex][idx].setTitle(sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1));
+
+                // Check for bit size.
+                double m = cp[mindex][idx].getProcessor().getMax();
+                if (m > Short.MAX_VALUE-1)
+                   is16Bit = false;
+            }
+            idx++;
+        }
+
+        for (int i = 0; i < cp[0].length; i++) {
             for (int mindex = 0; mindex < nmasses; mindex++) {
 
-                SumProps sumProps = new SumProps(images[mindex].getMassIndex());
-                cp = new MimsPlus(ui, sumProps, sumlist);
-
-                // Check for bad data.
-                double m = cp.getProcessor().getMax();                
-                if (m > 65535 && is16Bit) {
-                    System.out.println(" max = " + m);
-                    System.out.println("Warning! Over 16-bit limit, converting to 32-bit");
-                    convertMassImagesto32bit();
-                    is16Bit = false;
-                }
-
-                // Build up the stacks
-                String label = sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1);
-                if (cp.getProcessor() instanceof ShortProcessor) {
-                   short[] t = new short[cp.getProcessor().getPixelCount()];
-                   for (int k = 0; k < sumPixels[mindex].length; k++) {
-                      t[k] = (short) sumPixels[mindex][k];
+                // Build up the stacks.
+                ImageProcessor ip = null;                
+                if (is16Bit) {
+                   float[] floatArray = (float[])cp[mindex][i].getProcessor().getPixels();
+                   int len = floatArray.length;
+                   short[] shortArray = new short[len];
+                   for (int j = 0; j < len; j++) {
+                      shortArray[j] = ((Float)floatArray[j]).shortValue();
                    }
-                   is[mindex].addSlice(label, t);
+                   ip = new ShortProcessor(width, height);
+                   ip.setPixels(shortArray);
                 } else {
-                   sumPixels[mindex] = (float[]) cp.getProcessor().getPixels();
-                   is[mindex].addSlice(label, sumPixels[mindex]);
+                   ip = new FloatProcessor(width, height);
+                   ip.setPixels(cp[mindex][i].getProcessor().getPixels());
                 }
+                is[mindex].addSlice(cp[mindex][i].getTitle(), ip);
             }
         }
         
         //a little cleanup
         //multiple calls to setSlice are to get image scroll bars triggered right
-        for (int mindex = 0; mindex < image.getNMasses(); mindex++) {
+        for (int mindex = 0; mindex < nmasses; mindex++) {
             images[mindex].setStack(null, is[mindex]);           
             if (images[mindex].getNSlices() > 1) {
                 images[mindex].setIsStack(true);
                 images[mindex].setSlice(1);
                 images[mindex].setSlice(images[mindex].getNSlices());
-                images[mindex].setSlice(currentplane);
-
+                images[mindex].setSlice(1);
             } else {
                 images[mindex].setIsStack(false);
             }

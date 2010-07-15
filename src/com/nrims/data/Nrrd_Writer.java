@@ -329,13 +329,13 @@ class NrrdFileInfo extends FileInfo {
 	public int[] sizes;
 	public String encoding="";
 	public String[] centers=null;
-    public String[] massNames;
-    public String duration, position,  sampleDate, sampleHour,
+   public String[] massNames;
+   public String duration, position,  sampleDate, sampleHour,
                   userName, dwellTime, countTime,  sampleName;
-    public String notes = "";
-    public int raster, dimension, nMasses;
-    public float pixel_width;
-    public float pixel_height;
+   public String notes = "";
+   public int raster, dimension, nMasses;
+   public float pixel_width;
+   public float pixel_height;
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;
@@ -347,6 +347,6 @@ class NrrdFileInfo extends FileInfo {
 	public static final int NRRD_TEXT = 1002;
 	public static final int NRRD_HEX = 1003;
 
-    //For notes field
-    public static final String newlineReplacement = "&/&/&";
+   //For notes field
+   public static final String newlineReplacement = "&/&/&";
 }

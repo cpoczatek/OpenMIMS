@@ -5,6 +5,7 @@ import com.nrims.data.Opener;
 import ij.IJ ;
 import ij.ImagePlus;
 import ij.gui.* ;
+import ij.io.FileInfo;
 import ij.measure.Calibration;
 import ij.plugin.filter.RankFilters;
 import ij.process.ColorProcessor;
@@ -105,17 +106,23 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         // Get a copy of the opener and setup image parameters.
         Opener op = ui.getOpener();
         int width = op.getWidth();
-        int height = op.getHeight();
-        short[] pixels = new short[width * height];
+        int height = op.getHeight();        
         op.setStackIndex(0);
 
         // Set processor.
-        ij.process.ImageProcessor ip = new ij.process.ShortProcessor(width, height, pixels, null);
+        ij.process.ImageProcessor ip = null;
+        if (ui.getOpener().getFileType() == FileInfo.GRAY16_UNSIGNED) {
+           short[] pixels = new short[width * height];
+           ip = new ij.process.ShortProcessor(width, height, pixels, null);
+        } else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT) {
+           float[] pixels = new float[width * height];
+           ip = new ij.process.FloatProcessor(width, height, pixels, null);
+        }
+
         //Don't do this, massNames should allready have the correctly formated string
         //Double massNumber = new Double(op.getMassNames()[index]);
         String title = "m" + op.getMassNames()[index] + " : " + ui.getImageFilePrefix();
         setProcessor(title, ip);
-        getProcessor().setMinAndMax(0, 65535);
         fStateListeners = new EventListenerList() ;
     }
 
@@ -597,10 +604,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
         ij.ImageStack stack = getStack();
         ui.getOpener().setStackIndex(nImage);
-        if (getProcessor() instanceof ShortProcessor)
-           stack.addSlice(null, ui.getOpener().getPixels(massIndex));
-        else
-           stack.addSlice(null, ui.getmimsStackEditing().getFloatArrayFromShortArray(ui.getOpener().getPixels(massIndex)));
+        stack.addSlice(null, ui.getOpener().getPixels(massIndex));
         setStack(null, stack);
         setSlice(nImage + 1);
         //setProperty("Info", srcImage.getInfo());

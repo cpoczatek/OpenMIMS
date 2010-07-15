@@ -35,7 +35,7 @@ public interface Opener {
 
     public int getHeight();   
 
-    public short[] getPixels(int index) throws IndexOutOfBoundsException, IOException;
+    public Object getPixels(int index) throws IndexOutOfBoundsException, IOException;
 
     public float getPixelWidth();
 
@@ -55,6 +55,7 @@ public interface Opener {
     public String getDuration();
     public int getRaster();
     public String getNotes();
+    public int getFileType();
 
     //Setable metadata
     public void setNotes(String notes);

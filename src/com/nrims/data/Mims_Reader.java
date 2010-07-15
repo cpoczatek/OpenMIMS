@@ -3,6 +3,7 @@ package com.nrims.data;
 import java.io.*;
 import java.text.DecimalFormat;
 import com.nrims.common.*;
+import ij.io.FileInfo;
 
 /**
  * Class responsible for opening MIMS files.
@@ -487,6 +488,13 @@ public class Mims_Reader implements Opener {
      */
     public int getHeight() {
         return this.height;
+    }
+
+    /**
+     * @return the file's data type (always 16-bit unsigned int for MIMS images);
+     */
+    public int getFileType() {
+        return FileInfo.GRAY16_UNSIGNED;
     }
 
     /**
