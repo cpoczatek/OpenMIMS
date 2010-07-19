@@ -52,7 +52,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
            drawLabel = false;
 
         //make color prefernce selectable
-        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
+        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
             g.setColor(Color.WHITE);
         } else {
             g.setColor(Color.RED);
@@ -98,7 +98,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             if(roiManager.isSelected(label)) {
                 g.setColor(Color.GREEN);
             } else {
-                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
+                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
                     g.setColor(Color.WHITE);
                 } else {
                     g.setColor(Color.RED);
