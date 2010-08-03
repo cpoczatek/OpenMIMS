@@ -21,6 +21,8 @@ import java.awt.Frame;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,9 +39,9 @@ import javax.swing.JLabel;
 
 /**
  *
- * @author  cpoczatek
+ * @author zkaufman
  */
-public class MimsStackEditing extends javax.swing.JPanel {
+public class MimsStackEditor extends javax.swing.JPanel {
 
     public static final long serialVersionUID = 1;
     public static final int OK = 2;
@@ -56,16 +58,22 @@ public class MimsStackEditing extends javax.swing.JPanel {
     public AutoTrackManager atManager;
     public ArrayList<Integer> includeList = new ArrayList<Integer>();
     public int startSlice = -1;
-    
-    public MimsStackEditing(UI ui, Opener im) {
+
+    public MimsStackEditor(UI ui, Opener im) {
 
         initComponents();
+        customInitComponents();
 
         this.ui = ui;
         this.image = im;
 
         this.images = ui.getMassImages();
         numberMasses = image.getNMasses();
+    }
+
+    public void customInitComponents(){
+       translateXSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
+       translateYSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
     }
 
     public String removeSliceList(ArrayList<Integer> remList) {
@@ -84,7 +92,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
         return liststr;
     }
 
-    public void removeSlice(int plane) {       
+    public void removeSlice(int plane) {
         int currentSlice = images[0].getCurrentSlice();
         for (int k = 0; k <= (numberMasses - 1); k++) {
             ImageStack is = new ImageStack();
@@ -103,7 +111,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
             this.images[k].killRoi();
             this.images[k].getProcessor().translate(xval, 0.0);
             images[k].updateAndDraw();
-        }        
+        }
     }
 
     public void YShiftSlice(double yval) {
@@ -175,7 +183,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
           images[k].setSlice(plane);
           images[k].getProcessor().setPixels(sumPixels[k]);
        }
-       
+
 
     }
 
@@ -267,9 +275,9 @@ public class MimsStackEditing extends javax.swing.JPanel {
           images[k].setSlice(plane);
           images[k].getProcessor().setPixels(sumPixels[k]);
        }
-       
+
        double[] returnVal = {minXval, minYval};
-       return returnVal;       
+       return returnVal;
     }
 
     public double[] restoreSlice(int plane) {
@@ -314,28 +322,28 @@ public class MimsStackEditing extends javax.swing.JPanel {
         int displaysize = images[0].getNSlices();
         System.out.println("try to add at: " + restoreIndex);
         try {
-            if (restoreIndex < displaysize) {               
+            if (restoreIndex < displaysize) {
                 int openerIndex = ui.mimsAction.getOpenerIndex(plane - 1);
                 String openerName = ui.mimsAction.getOpenerName(plane - 1);
-                Opener op = ui.getFromOpenerList(openerName);                                
+                Opener op = ui.getFromOpenerList(openerName);
                 op.setStackIndex(openerIndex);
                 for (int i = 0; i < op.getNMasses(); i++) {
                     images[i].setSlice(restoreIndex);
-                    images[i].getStack().addSlice("", images[i].getProcessor(), restoreIndex);                    
-                    images[i].getProcessor().setPixels(op.getPixels(i));                    
+                    images[i].getStack().addSlice("", images[i].getProcessor(), restoreIndex);
+                    images[i].getProcessor().setPixels(op.getPixels(i));
                     images[i].updateAndDraw();
                 }
             }
             if (restoreIndex >= displaysize) {
-                this.holdupdate = true;                
+                this.holdupdate = true;
                 int openerIndex = ui.mimsAction.getOpenerIndex(plane  - 1);
                 String openerName = ui.mimsAction.getOpenerName(plane - 1);
-                Opener op = ui.getFromOpenerList(openerName);                
+                Opener op = ui.getFromOpenerList(openerName);
                 op.setStackIndex(openerIndex);
                 for (int i = 0; i < op.getNMasses(); i++) {
                     images[i].setSlice(displaysize);
                     images[i].getStack().addSlice("", images[i].getProcessor());
-                    images[i].setSlice(restoreIndex);                    
+                    images[i].setSlice(restoreIndex);
                     images[i].getProcessor().setPixels(op.getPixels(i));
                 }
             }
@@ -417,7 +425,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
           int plane;
 
            for (int i = 0; i < translations.length; i++) {
-              
+
                if (STATE == CANCEL)
                   return;
 
@@ -450,7 +458,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
     public void concatImages(boolean pre, boolean labeloriginal, UI tempui) {
 
         ui.setUpdating(true);
-        
+
         Opener tempImage = tempui.getOpener();
         MimsPlus[] tempimage = tempui.getMassImages();
         ImageStack[] tempstacks = new ImageStack[numberMasses];
@@ -460,7 +468,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
                 images[i].setIsStack(true);
             }
         }
-        
+
         //increase action size
         ui.mimsAction.addPlanes(pre, tempimage[0].getNSlices(), tempImage);
 
@@ -473,23 +481,23 @@ public class MimsStackEditing extends javax.swing.JPanel {
         // (Pre)append slices, include labels.
         if (pre) {
             for (int mass = 0; mass < numberMasses; mass++) {
-                ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());                
+                ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());
                 for (int i = tempImage.getNImages(); i >= 1; i--) {
                    tempImage.setStackIndex(i-1);
                    try { sp.setPixels(tempImage.getPixels(mass));}
                    catch (IOException ioe) {ioe.printStackTrace();}
-                   tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp, 0);                   
+                   tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp, 0);
                 }
                 images[mass].setStack(null, tempstacks[mass]);
             }
         } else {
             for (int mass = 0; mass < numberMasses; mass++) {
-               ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());               
+               ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());
                for (int i = 1; i <= tempImage.getNImages(); i++) {
                   tempImage.setStackIndex(i-1);
                   try { sp.setPixels(tempImage.getPixels(mass));}
                   catch (IOException ioe) {ioe.printStackTrace();}
-                  tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp);                  
+                  tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp);
                 }
                images[mass].setStack(null, tempstacks[mass]);
             }
@@ -523,7 +531,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
     public boolean sameSpotSize(Opener im, Opener ij) {
         return ((im.getPixelWidth() == ij.getPixelWidth()) && (im.getPixelHeight() == ij.getPixelHeight()));
     }
-    
+
     public static ArrayList<Integer> parseList(String liststr, int lb, int ub) {
         ArrayList<Integer> deletelist = new ArrayList<Integer>();
         ArrayList<Integer> checklist = new ArrayList<Integer>();
@@ -598,16 +606,191 @@ public class MimsStackEditing extends javax.swing.JPanel {
         }
     }
 
+   public void untrack() {
+
+   double xval = 0.0;
+   double yval = 0.0;
+
+   for (int plane = 1; plane <= images[0].getNSlices(); plane++) {
+      if (ui.mimsAction.getIsCompressed())
+         setBlockTranslationToZero(plane);
+      else
+         restoreSlice(plane);
+      this.XShiftSlice(xval);
+      this.YShiftSlice(yval);
+      ui.mimsAction.setShiftX(plane, xval);
+      ui.mimsAction.setShiftY(plane, yval);
+   }
+   ui.getmimsLog().Log("Untracked.");
+}
+
+   // This uncompresses the image.
+public void uncompressPlanes() {
+
+   if (!ui.getmimsAction().getIsCompressed())
+      return;
+
+   ui.getmimsAction().setIsCompressed(false);
+
+   MimsAction ma = ui.getmimsAction();
+   int nPlanes = ma.getSizeMinusNumberDropped();
+
+   for (int i = 0; i < numberMasses; i++) {
+      ImageStack is = new ImageStack(image.getWidth(), image.getHeight());
+      ImageProcessor ip = null;
+      for (int plane = 1; plane <= nPlanes; plane++) {
+         int tplane = ma.trueIndex(plane);
+         String openerName = ui.mimsAction.getOpenerName(tplane-1);
+         Opener op = ui.getFromOpenerList(openerName);
+         int imageIndex = ma.getOpenerIndex(tplane-1);
+         op.setStackIndex(imageIndex);
+         try{
+            if (ui.getOpener().getFileType() == FileInfo.GRAY16_UNSIGNED)
+               ip = new ShortProcessor(image.getWidth(), image.getHeight());
+            else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT)
+               ip = new FloatProcessor(image.getWidth(), image.getHeight());
+            ip.setPixels(op.getPixels(i));
+            double x = ma.getXShift(plane);
+            double y = ma.getYShift(plane);
+            ip.translate(x, y);
+            is.addSlice(openerName, ip);
+         } catch (IOException ioe) {
+            ioe.printStackTrace();
+         }
+      }
+      images[i].setStack(null, is);
+   }
+
+   // Enable the deleting and reinserting of images.
+   deleteListButton.setEnabled(true);
+   deleteListTextField.setEnabled(true);
+   reinsertButton.setEnabled(true);
+   reinsertListTextField.setEnabled(true);
+
+   this.resetTrueIndexLabel();
+   this.resetSpinners();
+}
+
+public boolean compressPlanes(int blockSize) {
+
+        // initializing stuff.
+        int nmasses = image.getNMasses();
+        boolean is16Bit = true;
+        int width = images[0].getWidth();
+        int height = images[0].getHeight();
+
+        // Set up the stacks.
+        int size = images[0].getNSlices();
+        ImageStack[] is = new ImageStack[nmasses];
+        for (int mindex = 0; mindex < nmasses; mindex++) {
+            ImageStack iss = new ImageStack(width, height);
+            is[mindex] = iss;
+        }
+
+        // Determine if we are going to exceed the 16bit limit.
+        int idx = 0;
+        int size_i = (size + blockSize - 1) / blockSize;
+        MimsPlus[][] cp = new MimsPlus[nmasses][size_i];
+        for (int i = 1; i <= size; i = i + blockSize) {
+
+            // Create a sum list of individual images to be in the block.
+            ArrayList sumlist = new ArrayList<Integer>();
+            for (int j = i; j <= i + blockSize - 1; j++) {
+                if (j > 0 && j <= images[0].getNSlices())
+                    sumlist.add(j);
+            }
+
+            // Generate the sum image for the block.
+            for (int mindex = 0; mindex < nmasses; mindex++) {
+                SumProps sumProps = new SumProps(images[mindex].getMassIndex());
+                cp[mindex][idx] = new MimsPlus(ui, sumProps, sumlist);
+                cp[mindex][idx].setTitle(sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1));
+
+                // Check for bit size.
+                double m = cp[mindex][idx].getProcessor().getMax();
+                if (m > Short.MAX_VALUE-1)
+                   is16Bit = false;
+            }
+            idx++;
+        }
+
+        for (int i = 0; i < cp[0].length; i++) {
+            for (int mindex = 0; mindex < nmasses; mindex++) {
+
+                // Build up the stacks.
+                ImageProcessor ip = null;
+                if (is16Bit) {
+                   float[] floatArray = (float[])cp[mindex][i].getProcessor().getPixels();
+                   int len = floatArray.length;
+                   short[] shortArray = new short[len];
+                   for (int j = 0; j < len; j++) {
+                      shortArray[j] = ((Float)floatArray[j]).shortValue();
+                   }
+                   ip = new ShortProcessor(width, height);
+                   ip.setPixels(shortArray);
+                } else {
+                   ip = new FloatProcessor(width, height);
+                   ip.setPixels(cp[mindex][i].getProcessor().getPixels());
+                }
+                is[mindex].addSlice(cp[mindex][i].getTitle(), ip);
+            }
+        }
+
+        //a little cleanup
+        //multiple calls to setSlice are to get image scroll bars triggered right
+        for (int mindex = 0; mindex < nmasses; mindex++) {
+            images[mindex].setStack(null, is[mindex]);
+            if (images[mindex].getNSlices() > 1) {
+                images[mindex].setIsStack(true);
+                images[mindex].setSlice(1);
+                images[mindex].setSlice(images[mindex].getNSlices());
+                images[mindex].setSlice(1);
+            } else {
+                images[mindex].setIsStack(false);
+            }
+            images[mindex].updateAndDraw();
+        }
+        return true;
+    }
+
+    protected void resetSpinners() {
+        if (this.images != null && (!holdupdate) && (images[0] != null) && (!ui.isUpdating())) {
+            if (THREAD_STATE == this.WORKING)
+               return;
+            holdupdate = true;
+            int plane = images[0].getCurrentSlice();
+            double xval = ui.mimsAction.getXShift(plane);
+            double yval = ui.mimsAction.getYShift(plane);
+            this.translateXSpinner.setValue(xval);
+            this.translateYSpinner.setValue(yval);
+            holdupdate = false;
+        }
+    }
+
+    protected void resetTrueIndexLabel() {
+
+        if (this.images != null && (!holdupdate) && (images[0] != null)) {
+            String label = "True index: ";
+            int p = ui.mimsAction.trueIndex(this.images[0].getCurrentSlice());
+
+            label = label + java.lang.Integer.toString(p);
+            p = this.images[0].getCurrentSlice();
+            label = label + "   Display index: " + java.lang.Integer.toString(p);
+
+            this.trueIndexLabel.setText(label);
+        }
+    }
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-   // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    @SuppressWarnings("unchecked")
+   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
    private void initComponents() {
 
-      buttonGroup1 = new javax.swing.ButtonGroup();
-      jSeparator1 = new javax.swing.JSeparator();
+      jPanel1 = new javax.swing.JPanel();
       concatButton = new javax.swing.JButton();
       jLabel5 = new javax.swing.JLabel();
       deleteListTextField = new javax.swing.JTextField();
@@ -664,7 +847,6 @@ public class MimsStackEditing extends javax.swing.JPanel {
          }
       });
 
-      translateXSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
       translateXSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
          public void stateChanged(javax.swing.event.ChangeEvent evt) {
             translateXSpinnerStateChanged(evt);
@@ -675,7 +857,6 @@ public class MimsStackEditing extends javax.swing.JPanel {
 
       jLabel3.setText("Translate Y");
 
-      translateYSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
       translateYSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
          public void stateChanged(javax.swing.event.ChangeEvent evt) {
             translateYSpinnerStateChanged(evt);
@@ -717,57 +898,57 @@ public class MimsStackEditing extends javax.swing.JPanel {
          }
       });
 
-      javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-      this.setLayout(layout);
-      layout.setHorizontalGroup(
-         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGroup(layout.createSequentialGroup()
+      javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+      jPanel1.setLayout(jPanel1Layout);
+      jPanel1Layout.setHorizontalGroup(
+         jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(jPanel1Layout.createSequentialGroup()
             .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addGroup(layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel1Layout.createSequentialGroup()
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                           .addGroup(jPanel1Layout.createSequentialGroup()
                               .addComponent(reinsertListTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
                               .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
-                           .addGroup(layout.createSequentialGroup()
+                           .addGroup(jPanel1Layout.createSequentialGroup()
                               .addComponent(reinsertButton)
                               .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
-                           .addGroup(layout.createSequentialGroup()
+                           .addGroup(jPanel1Layout.createSequentialGroup()
                               .addComponent(jLabel1)
                               .addGap(87, 87, 87))
-                           .addGroup(layout.createSequentialGroup()
-                              .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                           .addGroup(jPanel1Layout.createSequentialGroup()
+                              .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                  .addComponent(deleteListTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
                                  .addComponent(jLabel5)
-                                 .addComponent(trueIndexLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 327, Short.MAX_VALUE)
+                                 .addComponent(trueIndexLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 321, Short.MAX_VALUE)
                                  .addComponent(deleteListButton, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))
                               .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                           .addGroup(layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                           .addGroup(jPanel1Layout.createSequentialGroup()
                               .addGap(12, 12, 12)
-                              .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                              .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                  .addComponent(translateXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                  .addComponent(jLabel2))
                               .addGap(8, 8, 8))
-                           .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                           .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
                               .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                              .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                 .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                 .addComponent(compressButton, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)))))
+                              .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                 .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                 .addComponent(compressButton, javax.swing.GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)))))
                      .addComponent(sumButton, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addGap(23, 23, 23))
                      .addComponent(translateYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                     .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
-                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                     .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE)
+                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(sumTextField, javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(compressTextField, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE))))
-               .addGroup(layout.createSequentialGroup()
+               .addGroup(jPanel1Layout.createSequentialGroup()
                   .addComponent(displayActionButton)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(concatButton)
@@ -777,20 +958,20 @@ public class MimsStackEditing extends javax.swing.JPanel {
                   .addComponent(untrackButton)))
             .addContainerGap())
       );
-      layout.setVerticalGroup(
-         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGroup(layout.createSequentialGroup()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
+      jPanel1Layout.setVerticalGroup(
+         jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel1Layout.createSequentialGroup()
                   .addGap(53, 53, 53)
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                      .addComponent(jLabel3)
                      .addComponent(jLabel2))
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                      .addComponent(translateXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                      .addComponent(translateYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)))
-               .addGroup(layout.createSequentialGroup()
+               .addGroup(jPanel1Layout.createSequentialGroup()
                   .addGap(25, 25, 25)
                   .addComponent(trueIndexLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -799,55 +980,60 @@ public class MimsStackEditing extends javax.swing.JPanel {
                   .addComponent(deleteListTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(deleteListButton))
-               .addGroup(layout.createSequentialGroup()
+               .addGroup(jPanel1Layout.createSequentialGroup()
                   .addGap(50, 50, 50)
                   .addComponent(jLabel4)))
             .addGap(50, 50, 50)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel1Layout.createSequentialGroup()
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                      .addComponent(compressTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                      .addComponent(compressButton))
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(jButton1))
-               .addGroup(layout.createSequentialGroup()
+               .addGroup(jPanel1Layout.createSequentialGroup()
                   .addComponent(jLabel1)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(reinsertListTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(reinsertButton)))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                .addComponent(sumTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                .addComponent(sumButton))
             .addGap(46, 46, 46)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                .addComponent(displayActionButton)
                .addComponent(concatButton)
                .addComponent(autoTrackButton)
                .addComponent(untrackButton))
             .addContainerGap())
       );
-   }// </editor-fold>                        
 
-    private void deleteListButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+      javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+      this.setLayout(layout);
+      layout.setHorizontalGroup(
+         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGap(0, 685, Short.MAX_VALUE)
+         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+               .addContainerGap()
+               .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+               .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+      );
+      layout.setVerticalGroup(
+         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGap(0, 367, Short.MAX_VALUE)
+         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+               .addContainerGap()
+               .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+               .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+      );
+   }// </editor-fold>//GEN-END:initComponents
 
-        String liststr = deleteListTextField.getText();
-        ArrayList<Integer> checklist = parseList(liststr, 1, images[0].getStackSize());
-
-        if (checklist.size() != 0) {
-            liststr = removeSliceList(checklist);
-            ui.getmimsLog().Log("Deleted list: " + liststr);
-            ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
-        }
-
-        this.resetTrueIndexLabel();
-        this.resetSpinners();
-        deleteListTextField.setText("");
-}                                                
-      
-    private void concatButtonActionPerformed(java.awt.event.ActionEvent evt) {                                             
-        UI tempUi = new UI(ui.getImageDir());
+    private void concatButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_concatButtonActionPerformed
+       UI tempUi = new UI(ui.getImageDir());
         tempUi.loadMIMSFile();
         Opener tempImage = tempUi.getOpener();
         if (tempImage == null) {
@@ -883,7 +1069,7 @@ public class MimsStackEditing extends javax.swing.JPanel {
             }
         }
         tempUi = null;
-        
+
         ui.getMimsData().setHasStack(true);
         ui.setSyncStack(true);
 
@@ -891,9 +1077,25 @@ public class MimsStackEditing extends javax.swing.JPanel {
         //wo.run("tile");
         ui.updateStatus("");
         ij.WindowManager.repaintImageWindows();
-}                                            
 
-    private void reinsertButtonActionPerformed(java.awt.event.ActionEvent evt) {                                               
+    }//GEN-LAST:event_concatButtonActionPerformed
+
+    private void deleteListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteListButtonActionPerformed
+       String liststr = deleteListTextField.getText();
+        ArrayList<Integer> checklist = parseList(liststr, 1, images[0].getStackSize());
+
+        if (checklist.size() != 0) {
+            liststr = removeSliceList(checklist);
+            ui.getmimsLog().Log("Deleted list: " + liststr);
+            ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
+        }
+
+        this.resetTrueIndexLabel();
+        this.resetSpinners();
+        deleteListTextField.setText("");
+    }//GEN-LAST:event_deleteListButtonActionPerformed
+
+    private void reinsertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reinsertButtonActionPerformed
         // TODO add your handling code here:
         int current = images[0].getCurrentSlice();
         String liststr = reinsertListTextField.getText();
@@ -913,9 +1115,10 @@ public class MimsStackEditing extends javax.swing.JPanel {
         this.resetTrueIndexLabel();
         this.resetSpinners();
         reinsertListTextField.setText("");
-}                                              
 
-    private void displayActionButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                    
+    }//GEN-LAST:event_reinsertButtonActionPerformed
+
+    private void displayActionButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayActionButtonActionPerformed
         // TODO add your handling code here:
         ij.text.TextWindow actionWindow = new ij.text.TextWindow("Current Action State", "plane\tx\ty\tdrop\timage index\timage", "", 300, 400);
 
@@ -925,9 +1128,9 @@ public class MimsStackEditing extends javax.swing.JPanel {
             tempstr = ui.mimsAction.getActionRow(i);
             actionWindow.append(tempstr);
         }
-    }                                                   
+    }//GEN-LAST:event_displayActionButtonActionPerformed
 
-    private void translateXSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {                                               
+    private void translateXSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_translateXSpinnerStateChanged
         // TODO add your handling code here:
         int plane = images[0].getCurrentSlice();
 
@@ -954,9 +1157,9 @@ public class MimsStackEditing extends javax.swing.JPanel {
             ui.mimsAction.setShiftX(plane, xval);
             ui.mimsAction.setShiftY(plane, yval);
         }
-    }                                              
+    }//GEN-LAST:event_translateXSpinnerStateChanged
 
-    private void translateYSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {                                               
+    private void translateYSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_translateYSpinnerStateChanged
         // TODO add your handling code here:
         int plane = images[0].getCurrentSlice();
 
@@ -983,41 +1186,19 @@ public class MimsStackEditing extends javax.swing.JPanel {
             ui.mimsAction.setShiftX(plane, xval);
             ui.mimsAction.setShiftY(plane, yval);
         }
-    }                                              
+    }//GEN-LAST:event_translateYSpinnerStateChanged
 
-
-
-    public void autoTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {
-
+    private void autoTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoTrackButtonActionPerformed
         atManager = new AutoTrackManager();
-        atManager.showFrame();              
-}                                               
-   
-    private void untrackButtonActionPerformed(java.awt.event.ActionEvent evt) {                                              
+        atManager.showFrame();
+    }//GEN-LAST:event_autoTrackButtonActionPerformed
+
+    private void untrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_untrackButtonActionPerformed
         untrack();
-}                                             
+    }//GEN-LAST:event_untrackButtonActionPerformed
 
-public void untrack() {
-
-   double xval = 0.0;
-   double yval = 0.0;
-
-   for (int plane = 1; plane <= images[0].getNSlices(); plane++) {
-      if (ui.mimsAction.getIsCompressed())
-         setBlockTranslationToZero(plane);
-      else
-         restoreSlice(plane);
-      this.XShiftSlice(xval);
-      this.YShiftSlice(yval);
-      ui.mimsAction.setShiftX(plane, xval);
-      ui.mimsAction.setShiftY(plane, yval);
-   }
-   ui.getmimsLog().Log("Untracked.");
-}
-
-private void sumButtonActionPerformed(java.awt.event.ActionEvent evt) {                                          
-
-    // Get the window title.
+    private void sumButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sumButtonActionPerformed
+// Get the window title.
     String name = WindowManager.getCurrentImage().getTitle();
     String sumTextFieldString = sumTextField.getText().trim();
 
@@ -1051,9 +1232,9 @@ private void sumButtonActionPerformed(java.awt.event.ActionEvent evt) {
 
     // Show sum image.
     sp.showWindow();
-}                                         
+    }//GEN-LAST:event_sumButtonActionPerformed
 
-private void compressButtonActionPerformed(java.awt.event.ActionEvent evt) {                                               
+    private void compressButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compressButtonActionPerformed
 
    // Get the block size from the text box.
    String comptext = compressTextField.getText();
@@ -1087,171 +1268,15 @@ private void compressButtonActionPerformed(java.awt.event.ActionEvent evt) {
 
     compressTextField.setText("");
     ui.getmimsLog().Log("Compressed with blocksize: " + blockSize);
-}                                              
+    }//GEN-LAST:event_compressButtonActionPerformed
 
-private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         uncompressPlanes();
-}                                        
+    }//GEN-LAST:event_jButton1ActionPerformed
 
-// This uncompresses the image.
-public void uncompressPlanes() {
 
-   if (!ui.getmimsAction().getIsCompressed())
-      return;
-
-   ui.getmimsAction().setIsCompressed(false);
-
-   MimsAction ma = ui.getmimsAction();
-   int nPlanes = ma.getSizeMinusNumberDropped();
-
-   for (int i = 0; i < numberMasses; i++) {
-      ImageStack is = new ImageStack(image.getWidth(), image.getHeight());
-      ImageProcessor ip = null;
-      for (int plane = 1; plane <= nPlanes; plane++) {
-         int tplane = ma.trueIndex(plane);
-         String openerName = ui.mimsAction.getOpenerName(tplane-1);
-         Opener op = ui.getFromOpenerList(openerName);
-         int imageIndex = ma.getOpenerIndex(tplane-1);
-         op.setStackIndex(imageIndex);
-         try{
-            if (ui.getOpener().getFileType() == FileInfo.GRAY16_UNSIGNED)
-               ip = new ShortProcessor(image.getWidth(), image.getHeight());
-            else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT)
-               ip = new FloatProcessor(image.getWidth(), image.getHeight());
-            ip.setPixels(op.getPixels(i));
-            double x = ma.getXShift(plane);
-            double y = ma.getYShift(plane);
-            ip.translate(x, y);
-            is.addSlice(openerName, ip);
-         } catch (IOException ioe) {
-            ioe.printStackTrace();
-         }
-      }
-      images[i].setStack(null, is);
-   }
-
-   // Enable the deleting and reinserting of images.
-   deleteListButton.setEnabled(true);
-   deleteListTextField.setEnabled(true);
-   reinsertButton.setEnabled(true);
-   reinsertListTextField.setEnabled(true);  
-
-   this.resetTrueIndexLabel();
-   this.resetSpinners();
-}
-
-public boolean compressPlanes(int blockSize) {
-
-        // initializing stuff.
-        int nmasses = image.getNMasses();
-        boolean is16Bit = true;
-        int width = images[0].getWidth();
-        int height = images[0].getHeight();
-
-        // Set up the stacks.
-        int size = images[0].getNSlices();
-        ImageStack[] is = new ImageStack[nmasses];
-        for (int mindex = 0; mindex < nmasses; mindex++) {
-            ImageStack iss = new ImageStack(width, height);
-            is[mindex] = iss;
-        }
-
-        // Determine if we are going to exceed the 16bit limit.
-        int idx = 0;
-        int size_i = (size + blockSize - 1) / blockSize;
-        MimsPlus[][] cp = new MimsPlus[nmasses][size_i];        
-        for (int i = 1; i <= size; i = i + blockSize) {
-
-            // Create a sum list of individual images to be in the block.
-            ArrayList sumlist = new ArrayList<Integer>();
-            for (int j = i; j <= i + blockSize - 1; j++) {
-                if (j > 0 && j <= images[0].getNSlices())
-                    sumlist.add(j);
-            }
-
-            // Generate the sum image for the block.            
-            for (int mindex = 0; mindex < nmasses; mindex++) {
-                SumProps sumProps = new SumProps(images[mindex].getMassIndex());
-                cp[mindex][idx] = new MimsPlus(ui, sumProps, sumlist);
-                cp[mindex][idx].setTitle(sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1));
-
-                // Check for bit size.
-                double m = cp[mindex][idx].getProcessor().getMax();
-                if (m > Short.MAX_VALUE-1)
-                   is16Bit = false;
-            }
-            idx++;
-        }
-
-        for (int i = 0; i < cp[0].length; i++) {
-            for (int mindex = 0; mindex < nmasses; mindex++) {
-
-                // Build up the stacks.
-                ImageProcessor ip = null;                
-                if (is16Bit) {
-                   float[] floatArray = (float[])cp[mindex][i].getProcessor().getPixels();
-                   int len = floatArray.length;
-                   short[] shortArray = new short[len];
-                   for (int j = 0; j < len; j++) {
-                      shortArray[j] = ((Float)floatArray[j]).shortValue();
-                   }
-                   ip = new ShortProcessor(width, height);
-                   ip.setPixels(shortArray);
-                } else {
-                   ip = new FloatProcessor(width, height);
-                   ip.setPixels(cp[mindex][i].getProcessor().getPixels());
-                }
-                is[mindex].addSlice(cp[mindex][i].getTitle(), ip);
-            }
-        }
-        
-        //a little cleanup
-        //multiple calls to setSlice are to get image scroll bars triggered right
-        for (int mindex = 0; mindex < nmasses; mindex++) {
-            images[mindex].setStack(null, is[mindex]);           
-            if (images[mindex].getNSlices() > 1) {
-                images[mindex].setIsStack(true);
-                images[mindex].setSlice(1);
-                images[mindex].setSlice(images[mindex].getNSlices());
-                images[mindex].setSlice(1);
-            } else {
-                images[mindex].setIsStack(false);
-            }
-            images[mindex].updateAndDraw();
-        }
-        return true;
-    }
-
-    protected void resetSpinners() {
-        if (this.images != null && (!holdupdate) && (images[0] != null) && (!ui.isUpdating())) {
-            if (THREAD_STATE == this.WORKING)
-               return;
-            holdupdate = true;
-            int plane = images[0].getCurrentSlice();            
-            double xval = ui.mimsAction.getXShift(plane);
-            double yval = ui.mimsAction.getYShift(plane);
-            this.translateXSpinner.setValue(xval);
-            this.translateYSpinner.setValue(yval);
-            holdupdate = false;
-        }
-    }
-
-    protected void resetTrueIndexLabel() {
-
-        if (this.images != null && (!holdupdate) && (images[0] != null)) {
-            String label = "True index: ";
-            int p = ui.mimsAction.trueIndex(this.images[0].getCurrentSlice());
-
-            label = label + java.lang.Integer.toString(p);
-            p = this.images[0].getCurrentSlice();
-            label = label + "   Display index: " + java.lang.Integer.toString(p);
-
-            this.trueIndexLabel.setText(label);
-        }
-    }
-   // Variables declaration - do not modify                     
+   // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JButton autoTrackButton;
-   private javax.swing.ButtonGroup buttonGroup1;
    private javax.swing.JButton compressButton;
    private javax.swing.JTextField compressTextField;
    private javax.swing.JButton concatButton;
@@ -1264,7 +1289,7 @@ public boolean compressPlanes(int blockSize) {
    private javax.swing.JLabel jLabel3;
    private javax.swing.JLabel jLabel4;
    private javax.swing.JLabel jLabel5;
-   private javax.swing.JSeparator jSeparator1;
+   private javax.swing.JPanel jPanel1;
    private javax.swing.JButton reinsertButton;
    private javax.swing.JTextField reinsertListTextField;
    private javax.swing.JButton sumButton;
@@ -1273,8 +1298,9 @@ public boolean compressPlanes(int blockSize) {
    private javax.swing.JSpinner translateYSpinner;
    private javax.swing.JLabel trueIndexLabel;
    private javax.swing.JButton untrackButton;
-   // End of variables declaration                   
-   
+   // End of variables declaration//GEN-END:variables
+
+
    // Crops the image to the Roi selected in RoiManager.
    // Otherwise calls crop (without actually cropping).
       public ImagePlus cropImage(ImagePlus img) {
@@ -1296,7 +1322,7 @@ public boolean compressPlanes(int blockSize) {
                img.killRoi();
 
                return img;
-      }      
+      }
 
       // Return a new image minus those planes specified in includeList.
       public ImagePlus getSubStack(ImagePlus img, ArrayList<Integer> includeList) {
@@ -1329,12 +1355,12 @@ public boolean compressPlanes(int blockSize) {
        if (startSlice > -1)
              images[0].setSlice(startSlice);
 
-       if (nullTrans == true && STATE == MimsStackEditing.OK)
+       if (nullTrans == true && STATE == MimsStackEditor.OK)
           throw new NullPointerException("translations is null: AutoTrack has failed.");
     }
-   
+
 public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionListener{
-   
+
    Frame instance;
    ButtonGroup buttonGroup = new ButtonGroup();
    JTextField txtField = new JTextField();
@@ -1344,17 +1370,17 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
    JRadioButton norm;
    JRadioButton eq;
    JButton cancelButton;
-   JButton okButton;            
-   
+   JButton okButton;
+
    public AutoTrackManager(){
       super("Auto Track Manager");
-      
+
       if (instance != null) {
          instance.toFront();
          return;
       }
       instance = this;
-      
+
       // Setup radiobutton panel.
       JPanel jPanel = new JPanel();
       jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.PAGE_AXIS));
@@ -1367,11 +1393,11 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
       // Radio buttons.
       all  = new JRadioButton("Autotrack all images.");
       all.setActionCommand("All");
-      all.addActionListener(this);            
+      all.addActionListener(this);
       all.setSelected(true);
-      
-      some = new JRadioButton("Autotrack subset of images. (eg: 2,4,8-25,45...)");            
-      some.setActionCommand("Subset");                                                   
+
+      some = new JRadioButton("Autotrack subset of images. (eg: 2,4,8-25,45...)");
+      some.setActionCommand("Subset");
       some.addActionListener(this);
       txtField.setEditable(false);
 
@@ -1384,13 +1410,13 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
       eq.setSelected(true);
 
       buttonGroup.add(all);
-      buttonGroup.add(some);      
-     
+      buttonGroup.add(some);
+
 
       // Add to container.
       jPanel.add(all);
       jPanel.add(Box.createRigidArea(new Dimension(0,10)));
-      jPanel.add(some);   
+      jPanel.add(some);
       jPanel.add(Box.createRigidArea(new Dimension(0,10)));
       jPanel.add(txtField);
       jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -1401,37 +1427,37 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
       jPanel.add(Box.createRigidArea(new Dimension(0,10)));
       jPanel.add(eq);
       jPanel.add(Box.createRigidArea(new Dimension(0,10)));
-      
-      // Set up "OK" and "Cancel" buttons.      
-      JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));            
-      cancelButton = new JButton("Cancel");   
+
+      // Set up "OK" and "Cancel" buttons.
+      JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+      cancelButton = new JButton("Cancel");
       cancelButton.setActionCommand("Cancel");
       cancelButton.addActionListener(this);
-      okButton = new JButton("OK");           
+      okButton = new JButton("OK");
       okButton.setActionCommand("OK");
       okButton.addActionListener(this);
       buttonPanel.add(cancelButton);
       buttonPanel.add(okButton);
-      
+
       // Add elements.
-      setLayout(new BorderLayout());            
+      setLayout(new BorderLayout());
       add(jPanel, BorderLayout.PAGE_START);
-      add(buttonPanel, BorderLayout.PAGE_END);            
+      add(buttonPanel, BorderLayout.PAGE_END);
       setSize(new Dimension(375, 300));
-  
+
    }
-   
+
    // Gray out textfield when "All" images radio button selected.
     public void actionPerformed(ActionEvent e) {
        if (e.getActionCommand().equals("Subset"))
-          txtField.setEditable(true);       
-       else if (e.getActionCommand().equals("All"))   
-          txtField.setEditable(false); 
+          txtField.setEditable(true);
+       else if (e.getActionCommand().equals("All"))
+          txtField.setEditable(false);
        else if (e.getActionCommand().equals("Cancel")) {
           STATE = CANCEL;
           THREAD_STATE = DONE;
           closeWindow();
-          if (startSlice > -1) 
+          if (startSlice > -1)
              images[0].setSlice(startSlice);
        } else if (e.getActionCommand().equals("OK")) {
             STATE = OK;
@@ -1478,31 +1504,31 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
         toFront();
         setExtendedState(NORMAL);
     }
-    
+
     public void closeWindow() {
       super.close();
       instance = null;
-      this.setVisible(false);       
+      this.setVisible(false);
    }
-    
+
     // Returns a reference to the MimsRatioManager
     // or null if it is not open.
     public AutoTrackManager getInstance() {
         return (AutoTrackManager)instance;
     }
-    
+
     // Returns all numbers between min and max NOT in listA.
     public ArrayList<Integer> getInverseList(ArrayList<Integer> listA, int min, int max){
        ArrayList<Integer> listB = new ArrayList<Integer>();
-       
+
        for (int i=min; i <= max; i++) {
           if (!listA.contains(i))
-             listB.add(i);          
+             listB.add(i);
        }
-       
+
        return listB;
     }
-        
+
     // This method returns the selected radio button in a button group
     public JRadioButton getSelection(ButtonGroup group) {
         for (Enumeration e=group.getElements(); e.hasMoreElements(); ) {
@@ -1615,5 +1641,3 @@ public class AutoTrackManager extends com.nrims.PlugInJFrame implements ActionLi
    }
 
 }
-
-

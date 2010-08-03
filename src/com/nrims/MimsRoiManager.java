@@ -32,6 +32,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -1249,7 +1250,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         if(rois.isEmpty()) {
             label += 1;
         } else {
-            String maxname = getMaxNumericRoi().getName();
+           String maxname = new String("0");
+           Roi maxroi = getMaxNumericRoi();
+           if (maxroi != null)
+                maxname = maxroi.getName();
             int m = Integer.parseInt(maxname);
             m = m +1;
             label += m;
@@ -1536,12 +1540,53 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
         return true;
     }
+    
+    
+    // Renames the selected Rois in an ordered sequence
+    // starting with 1. If a Roi already exists with that
+    // name, it will be adjusted until a unique name is found.
+    // (e.g. 1-1, 1-2, etc)
+    public void renameGroup(int[] indices){
+
+       String newName, oldName;
+       int idx = 1;
+       for (int i = 0; i < indices.length; i++) {
+          oldName = roiListModel.get(indices[i]).toString();          
+
+          // update rois hashtable
+          Roi roi = (Roi) rois.get(oldName);          
+          rois.remove(oldName);
+          newName = getUniqueName(Integer.toString(idx));
+          roi.setName(newName);
+          rois.put(newName, roi);
+
+          // update locations array.
+          locations.put(newName, locations.get(oldName));
+          locations.remove(oldName);
+
+          // update groups map.
+          String group = (String) groupsMap.remove(oldName);
+          if (group != null)
+             groupsMap.put(newName, group);
+
+          // update the list display.
+          roiListModel.set(indices[i], newName);
+
+          idx++;
+       }
+    }
 
     boolean rename(String name2) {
-        int index = roijlist.getSelectedIndex();
-        if (index < 0) {
-            return error("Exactly one item in the list must be selected.");
+        int[] indices = roijlist.getSelectedIndices();
+        if (indices.length < 0) {
+            return error("At least one item in the list must be selected.");
         }
+        if (indices.length > 1) {
+           renameGroup(indices);
+           return true;
+        }
+        
+        int index = indices[0];
         String name = roiListModel.get(index).toString();
         if (name2 == null) {
             name2 = promptForName(name);
@@ -1549,8 +1594,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
         if (name2 == null) {
             return false;
         }
-        Roi roi = (Roi) rois.get(name);
+        if (name2.trim().length() == 0) {
+           return false;
+        }
         
+        Roi roi = (Roi) rois.get(name);
+
         // update rois hashtable
         rois.remove(name);
         roi.setName(name2);
@@ -2895,7 +2944,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
          // Prepend label of Roi on the image into the name in the jlist.
          String label = (String) value;
          int idx = index + 1;
-         setText("(" + idx + ") " + label);
+         setText("<html><font color=gray>("+idx+")</font> <font color=black>"+" "+label+"</font></html>");
 
          if (isSelected) {
             setBackground(list.getSelectionBackground());
@@ -3308,7 +3357,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener,
 
     public Roi getMaxNumericRoi() {
         Roi[] tmprois = getNumericRoisSorted();
-        return tmprois[tmprois.length-1];
+        if (tmprois.length == 0)
+           return null;
+        else
+           return tmprois[tmprois.length-1];
     }
 
      public Roi[] getNumericRois() {

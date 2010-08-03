@@ -289,21 +289,25 @@ public class HSIProcessor implements Runnable {
 
                 if(showLabels > 1) 	// Add the labels..
                 {
-                    hsiImage.getProcessor().setColor(Color.white);
+                    hsiImage.getProcessor().setColor(Color.WHITE);
 
-                    hsiImage.getProcessor().moveTo( 0, hsiImage.getHeight() - 16) ;
-                    String label = IJ.d2s(minRatio) ;
-                    hsiImage.getProcessor().drawString( label ) ;
-                    hsiImage.getProcessor().moveTo( 
-                                                    hsiImage.getWidth()/2 - 12,
-                                                    hsiImage.getHeight() - 16 ) ;
-                    label = IJ.d2s(((maxRatio-minRatio)/2 + minRatio),2) ;
-                    hsiImage.getProcessor().drawString( label ) ;
+                    // Min label.
+                    hsiImage.getProcessor().moveTo( 0, hsiImage.getHeight()) ;
+                    String label = IJ.d2s(minRatio, 0) ;
+                    hsiImage.getProcessor().drawString( label ) ;                    
 
-                    hsiImage.getProcessor().moveTo( 
-                                                    hsiImage.getWidth() - 24,
-                                                    hsiImage.getHeight() - 16) ;
-                    label = IJ.d2s(maxRatio,2) ;
+                    // Mid label.
+                    //hsiImage.getProcessor().moveTo(hsiImage.getWidth()/2 - 12, hsiImage.getHeight()) ;
+                    //double midVal = (maxRatio-minRatio)/2 + minRatio;
+                    //int sigDigits = 1;
+                    //if (midVal == (int) midVal)
+                    //   sigDigits = 0;
+                    //label = IJ.d2s(((maxRatio-minRatio)/2 + minRatio), sigDigits) ;
+                    //hsiImage.getProcessor().drawString( label ) ;
+
+                    // Max label.
+                    hsiImage.getProcessor().moveTo(hsiImage.getWidth() - 24, hsiImage.getHeight()) ;
+                    label = IJ.d2s(maxRatio, 0) ;
                     hsiImage.getProcessor().drawString( label ) ;
 
                 }

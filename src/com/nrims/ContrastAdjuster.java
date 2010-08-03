@@ -44,7 +44,7 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 	int contrast, brightness;
 	boolean RGBImage;
 	JScrollBar minSlider, maxSlider, contrastSlider, brightnessSlider;
-	Label minLabel, maxLabel, windowLabel, levelLabel;
+	JLabel minLabel, maxLabel, windowLabel, levelLabel;
 	boolean done;
 	int autoThreshold;
 	GridBagLayout gridbag;
@@ -99,10 +99,10 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 			c.insets = new Insets(0, 10, 0, 10);
 			gridbag.setConstraints(panel, c);
 			panel.setLayout(new BorderLayout());
-			minLabel = new Label("      ", Label.LEFT);
+			minLabel = new JLabel("      ", Label.LEFT);
 			minLabel.setFont(monoFont);
 			panel.add("West", minLabel);
-			maxLabel = new Label("      " , Label.RIGHT);
+			maxLabel = new JLabel("      " , Label.RIGHT);
 			maxLabel.setFont(monoFont);
 			panel.add("East", maxLabel);
                         c.ipadx = 75;                        
@@ -150,7 +150,7 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 		brightnessSlider.setUnitIncrement(1);
 		brightnessSlider.setFocusable(false);
 		if (windowLevel)
-			addLabel("Level: ", levelLabel=new Label("        "));
+			addLabel("Level: ", levelLabel=new JLabel("        "));
 		else
 			addLabel("Brightness", null);
 			
@@ -167,7 +167,7 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 			contrastSlider.setUnitIncrement(1);
 			contrastSlider.setFocusable(false);
 			if (windowLevel)
-				addLabel("Window: ", windowLabel=new Label("        "));
+				addLabel("Window: ", windowLabel=new JLabel("        "));
 			else
 				addLabel("Contrast", null);
 		}
@@ -232,7 +232,7 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 		}
 	}
 
-	void addLabel(String text, Label label2) {
+	void addLabel(String text, JLabel label2) {
 		if (label2==null&&IJ.isMacOSX()) text += "    ";
 		panel = new JPanel();
 		c.gridy = y++;
@@ -245,7 +245,7 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 		panel.add(label);
 		if (label2!=null) {
 			//label2.setFont(monoFont);
-			label2.setAlignment(JLabel.LEFT);
+			label2.setAlignmentX(JLabel.LEFT_ALIGNMENT);
 			panel.add(label2);
 		}
 		add(panel);

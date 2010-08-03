@@ -28,14 +28,14 @@ import javax.swing.JSeparator;
 public class MimsRatioManager extends PlugInJFrame implements ActionListener {
 
    static Frame instance;
-   HSIView hsiview;
+   MimsHSIView hsiview;
    UI ui;
    
    ButtonGroup numeratorGroup;
    ButtonGroup denomatorGroup;
    
    
-   public MimsRatioManager(HSIView hsiview, UI ui){
+   public MimsRatioManager(MimsHSIView hsiview, UI ui){
       super("Ratio Manager");      
       this.ui = ui;
       this.hsiview = hsiview;

@@ -208,7 +208,7 @@ public class AutoTrack implements Runnable {
         trans[0][1] = 0;
         for (int s = targetSlice + 1; (s <= size); s++) {
 
-            if (ui.getmimsStackEditing().STATE == MimsStackEditing.CANCEL) {
+            if (ui.getmimsStackEditing().STATE == MimsStackEditor.CANCEL) {
                 return null;
             }
 
