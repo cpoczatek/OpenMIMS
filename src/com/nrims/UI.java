@@ -91,6 +91,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private boolean isSum = false;
     private boolean isWindow = false;
     private int     windowRange = -1;
+    private boolean isPercentTurnover = false;
+    private boolean isRatio = true;
     private boolean[] bOpenMass = new boolean[maxMasses];
             
     private String lastFolder = null;      
@@ -1755,6 +1757,22 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         massImages[0].setSlice(currentSlice);
     }
+    
+    public void setIsRatio(boolean selected) {
+       isRatio = selected;
+    }
+
+    public boolean getIsRatio(){
+       return isRatio;
+    }
+
+    public void setIsPercentTurnover(boolean selected) {
+       isPercentTurnover = selected;
+    }
+
+    public boolean getIsPercentTurnover(){
+       return isPercentTurnover;
+    }
 
     public void setIsSum(boolean set) {
         isSum = set;
@@ -1988,6 +2006,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 }                                                     
 
     public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props){
+
+       if (rto_props == null)
+          rto_props = new RatioProps[0];
+       
+       if (hsi_props == null)
+          hsi_props = new HSIProps[0];
+       
+       if (sum_props == null)
+          sum_props = new SumProps[0];
 
        MimsPlus mp;
        // Generate ratio images.

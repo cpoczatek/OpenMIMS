@@ -197,6 +197,16 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     * @param props
     */
    public MimsPlus(UI ui, RatioProps props) {
+      this(ui, props, false);
+   }
+
+   /**
+    * Constructor for ratio images.
+    * @param ui
+    * @param props
+    * @param forHSI
+    */
+   public MimsPlus(UI ui, RatioProps props, boolean forHSI) {
       super();
       this.ui = ui;
       this.ratioProps = props;
@@ -220,7 +230,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       addListener(ui);
 
       // Compute pixel values.
-      computeRatio();
+      computeRatio(forHSI);
     }
 
 
@@ -338,7 +348,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         rProps.setRatioScaleFactor(hsiProps.getRatioScaleFactor());
         rProps.setNumThreshold(hsiProps.getMinNum());
         rProps.setDenThreshold(hsiProps.getMinDen());
-        internalRatio = new MimsPlus(ui, rProps);
+        internalRatio = new MimsPlus(ui, rProps, true);
         internalNumerator = internalRatio.internalNumerator;
         internalDenominator = internalRatio.internalDenominator;
         setHSIProcessor(new HSIProcessor(this));
@@ -354,6 +364,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     * Computes ratios values
     */
     public synchronized void computeRatio()
+    {
+      computeRatio(false);
+    }
+
+   /**
+    * Computes ratios values
+    */
+    public synchronized void computeRatio(boolean forHSI)
     {
 
        // Get numerator and denominator mass indexes.
@@ -414,7 +432,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
              rMax = rPixels[i];
           } else if (rPixels[i] < rMin) {
              rMin = rPixels[i];
-          }
+       }
+       }
+
+       if (ui.getIsPercentTurnover() && forHSI) {
+          rPixels = HSIProcessor.turnoverTransform(rPixels, HSIProcessor.REFERENCE, HSIProcessor.BACKGROUND, (float)(ratioProps.getRatioScaleFactor()));
        }
 
        // Set processor.
