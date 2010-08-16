@@ -156,8 +156,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       // Set look and feel to native OS
       try {
-         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-         SwingUtilities.updateComponentTreeUI(this);
+         //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+         //SwingUtilities.updateComponentTreeUI(this);
       } catch (Exception e) {
          IJ.log("Error setting native Look and Feel:\n" + e.toString());
       }
@@ -1488,7 +1488,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       );
       jPanel1Layout.setVerticalGroup(
          jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-         .add(0, 412, Short.MAX_VALUE)
+         .add(0, 437, Short.MAX_VALUE)
       );
 
       jTabbedPane1.addTab("Images", jPanel1);
@@ -1716,16 +1716,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          .add(layout.createSequentialGroup()
             .addContainerGap()
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-               .add(org.jdesktop.layout.GroupLayout.TRAILING, jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+               .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
                .add(org.jdesktop.layout.GroupLayout.TRAILING, mainTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE))
             .addContainerGap())
       );
       layout.setVerticalGroup(
          layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
          .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-            .addContainerGap()
-            .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 438, Short.MAX_VALUE)
-            .add(18, 18, 18)
+            .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 463, Short.MAX_VALUE)
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
             .add(mainTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
             .addContainerGap())
       );

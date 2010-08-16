@@ -80,7 +80,7 @@ public class Nrrd_Writer implements PlugIn {
 			return null;
 		}
 
-        // Get FileInfo for each image although only the one is rfeally needed for the header.
+      // Get FileInfo for each image although only the one is rfeally needed for the header.
 		FileInfo[] fi = new FileInfo[ui.getOpener().getNMasses()];
         for (int i = 0; i < fi.length; i++) {
             fi[i] = imp[i].getFileInfo();
