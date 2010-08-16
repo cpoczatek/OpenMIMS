@@ -69,29 +69,31 @@ public class MimsHSIView extends javax.swing.JPanel {
       hsiSumRadioButton = new javax.swing.JRadioButton();
       hsiWindowRadioButton = new javax.swing.JRadioButton();
       hsiWindowjSpinner = new javax.swing.JSpinner();
-      jLabel6 = new javax.swing.JLabel();
-      jLabel3 = new javax.swing.JLabel();
-      jLabel7 = new javax.swing.JLabel();
-      numThresholdjSpinner = new javax.swing.JSpinner();
-      jLabel4 = new javax.swing.JLabel();
-      rartioMaxjSpinner = new javax.swing.JSpinner();
-      jLabel5 = new javax.swing.JLabel();
-      jLabel8 = new javax.swing.JLabel();
-      denThresholdjSpinner = new javax.swing.JSpinner();
-      ratioMinjSpinner = new javax.swing.JSpinner();
-      jButton2 = new javax.swing.JButton();
-      ratioSFjSpinner = new javax.swing.JSpinner();
-      jLabel12 = new javax.swing.JLabel();
-      transparencyjComboBox = new javax.swing.JComboBox();
-      jLabel13 = new javax.swing.JLabel();
-      scalebarjComboBox = new javax.swing.JComboBox();
-      imagejLabel = new javax.swing.JLabel();
-      rgbMaxjLabel = new javax.swing.JLabel();
-      rgbMinjLabel = new javax.swing.JLabel();
-      rgbMaxjSlider = new javax.swing.JSlider();
-      rgbMinjSlider = new javax.swing.JSlider();
-      percentTurnoverRadioButton = new javax.swing.JRadioButton();
+      jPanel3 = new javax.swing.JPanel();
       ratioRadioButton = new javax.swing.JRadioButton();
+      percentTurnoverRadioButton = new javax.swing.JRadioButton();
+      jLabel7 = new javax.swing.JLabel();
+      rartioMaxjSpinner = new javax.swing.JSpinner();
+      jLabel3 = new javax.swing.JLabel();
+      denThresholdjSpinner = new javax.swing.JSpinner();
+      imagejLabel = new javax.swing.JLabel();
+      jLabel6 = new javax.swing.JLabel();
+      jLabel4 = new javax.swing.JLabel();
+      jLabel5 = new javax.swing.JLabel();
+      ratioSFjSpinner = new javax.swing.JSpinner();
+      ratioMinjSpinner = new javax.swing.JSpinner();
+      jLabel8 = new javax.swing.JLabel();
+      numThresholdjSpinner = new javax.swing.JSpinner();
+      jButton2 = new javax.swing.JButton();
+      jPanel2 = new javax.swing.JPanel();
+      rgbMaxjLabel = new javax.swing.JLabel();
+      transparencyjComboBox = new javax.swing.JComboBox();
+      jLabel12 = new javax.swing.JLabel();
+      rgbMinjSlider = new javax.swing.JSlider();
+      jLabel13 = new javax.swing.JLabel();
+      rgbMinjLabel = new javax.swing.JLabel();
+      scalebarjComboBox = new javax.swing.JComboBox();
+      rgbMaxjSlider = new javax.swing.JSlider();
 
       setPreferredSize(new java.awt.Dimension(969, 431));
 
@@ -159,31 +161,186 @@ public class MimsHSIView extends javax.swing.JPanel {
          }
       });
 
+      ratioRadioButton.setSelected(true);
+      ratioRadioButton.setText("Ratio   (scale Factor)");
+      ratioRadioButton.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            ratioRadioButtonActionPerformed(evt);
+         }
+      });
+
+      percentTurnoverRadioButton.setText("Percent Turnover");
+      percentTurnoverRadioButton.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+      percentTurnoverRadioButton.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            percentTurnoverRadioButtonActionPerformed(evt);
+         }
+      });
+
+      jLabel7.setText("Num");
+
+      rartioMaxjSpinner.setToolTipText("Max Ratio in HSI");
+      rartioMaxjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+         public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            rartioMaxjSpinnerStateChanged(evt);
+         }
+      });
+
+      jLabel3.setText("Ratio Range:");
+
+      denThresholdjSpinner.setToolTipText("Min Denominator value");
+      denThresholdjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+         public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            denThresholdjSpinnerStateChanged(evt);
+         }
+      });
+
+      imagejLabel.setText("Image: ");
+
+      jLabel6.setText("Threshold:");
+
+      jLabel4.setText("Max");
+
+      jLabel5.setText("Min");
+
+      ratioSFjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+         public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            ratioSFjSpinnerStateChanged(evt);
+         }
+      });
+
+      ratioMinjSpinner.setToolTipText("Min Ratio in HSI");
+      ratioMinjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+         public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            ratioMinjSpinnerStateChanged(evt);
+         }
+      });
+
+      jLabel8.setText("Den");
+
+      numThresholdjSpinner.setToolTipText("Min Numerator value");
+      numThresholdjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+         public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            numThresholdjSpinnerStateChanged(evt);
+         }
+      });
+
+      jButton2.setText("Auto");
+      jButton2.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton2ActionPerformed(evt);
+         }
+      });
+
+      javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+      jPanel3.setLayout(jPanel3Layout);
+      jPanel3Layout.setHorizontalGroup(
+         jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(jPanel3Layout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel3Layout.createSequentialGroup()
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(percentTurnoverRadioButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                     .addComponent(ratioRadioButton))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                  .addComponent(ratioSFjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 17, Short.MAX_VALUE)
+                  .addComponent(imagejLabel)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 92, javax.swing.GroupLayout.PREFERRED_SIZE))
+               .addGroup(jPanel3Layout.createSequentialGroup()
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(jLabel6)
+                     .addComponent(jLabel3))
+                  .addGap(18, 18, 18)
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(jLabel4)
+                     .addComponent(jLabel7))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                     .addComponent(rartioMaxjSpinner)
+                     .addComponent(numThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(jLabel8))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                     .addComponent(ratioMinjSpinner)
+                     .addComponent(denThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                  .addComponent(jButton2)))
+            .addContainerGap())
+      );
+      jPanel3Layout.setVerticalGroup(
+         jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(jPanel3Layout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel3Layout.createSequentialGroup()
+                  .addGap(20, 20, 20)
+                  .addComponent(imagejLabel)
+                  .addGap(18, 18, 18))
+               .addGroup(jPanel3Layout.createSequentialGroup()
+                  .addComponent(percentTurnoverRadioButton)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(ratioRadioButton)
+                     .addComponent(ratioSFjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addGap(8, 8, 8)))
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                  .addComponent(jLabel6)
+                  .addComponent(jLabel7)
+                  .addComponent(numThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addComponent(jLabel8)
+                  .addComponent(denThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                  .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(jLabel3)
+                     .addComponent(jLabel4)
+                     .addComponent(rartioMaxjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(jLabel5)
+                     .addComponent(ratioMinjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addGap(26, 26, 26))
+               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                  .addComponent(jButton2)
+                  .addGap(13, 13, 13)))
+            .addContainerGap())
+      );
+
       javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
       jPanel1.setLayout(jPanel1Layout);
       jPanel1Layout.setHorizontalGroup(
          jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(jPanel1Layout.createSequentialGroup()
             .addContainerGap()
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-               .addComponent(removeRatiojButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-               .addComponent(addRatiojButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-               .addComponent(displayRatiojButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-               .addComponent(displayHSIjButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGap(18, 18, 18)
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                .addGroup(jPanel1Layout.createSequentialGroup()
-                  .addComponent(hsiWindowRadioButton)
-                  .addGap(18, 18, 18)
-                  .addComponent(hsiWindowjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
-               .addComponent(hsiSumRadioButton)
-               .addGroup(jPanel1Layout.createSequentialGroup()
-                  .addComponent(medianFilterjButton)
+                  .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(medianRadiusjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)))
-            .addGap(73, 73, 73))
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                     .addComponent(removeRatiojButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(addRatiojButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(displayRatiojButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(displayHSIjButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                  .addGap(18, 18, 18)
+                  .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(hsiWindowRadioButton)
+                        .addGap(18, 18, 18)
+                        .addComponent(hsiWindowjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
+                     .addComponent(hsiSumRadioButton)
+                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(medianFilterjButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(medianRadiusjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                  .addGap(73, 73, 73))
+               .addGroup(jPanel1Layout.createSequentialGroup()
+                  .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                  .addGap(261, 261, 261))))
       );
       jPanel1Layout.setVerticalGroup(
          jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -209,63 +366,15 @@ public class MimsHSIView extends javax.swing.JPanel {
                   .addComponent(addRatiojButton)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(removeRatiojButton)))
-            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addContainerGap())
       );
 
-      jLabel6.setText("Threshold:");
-
-      jLabel3.setText("Ratio Range:");
-
-      jLabel7.setText("Num");
-
-      numThresholdjSpinner.setToolTipText("Min Numerator value");
-      numThresholdjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            numThresholdjSpinnerStateChanged(evt);
-         }
-      });
-
-      jLabel4.setText("Max");
-
-      rartioMaxjSpinner.setToolTipText("Max Ratio in HSI");
-      rartioMaxjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            rartioMaxjSpinnerStateChanged(evt);
-         }
-      });
-
-      jLabel5.setText("Min");
-
-      jLabel8.setText("Den");
-
-      denThresholdjSpinner.setToolTipText("Min Denominator value");
-      denThresholdjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            denThresholdjSpinnerStateChanged(evt);
-         }
-      });
-
-      ratioMinjSpinner.setToolTipText("Min Ratio in HSI");
-      ratioMinjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            ratioMinjSpinnerStateChanged(evt);
-         }
-      });
-
-      jButton2.setText("Auto");
-      jButton2.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jButton2ActionPerformed(evt);
-         }
-      });
-
-      ratioSFjSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            ratioSFjSpinnerStateChanged(evt);
-         }
-      });
-
-      jLabel12.setText("Transparency");
+      rgbMaxjLabel.setText("RGB Max: 255");
+      rgbMaxjLabel.setMaximumSize(new java.awt.Dimension(100, 16));
+      rgbMaxjLabel.setMinimumSize(new java.awt.Dimension(100, 16));
+      rgbMaxjLabel.setPreferredSize(new java.awt.Dimension(100, 16));
 
       transparencyjComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Max Num,Den", "Numerator", "Denominator", "Min Num,Den", "Mean Num,Den", "Sum Num,Den", "RMS Num,Den" }));
       transparencyjComboBox.setToolTipText("Intensity component of HSI");
@@ -275,41 +384,7 @@ public class MimsHSIView extends javax.swing.JPanel {
          }
       });
 
-      jLabel13.setText("Label");
-
-      scalebarjComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Off", "Scale", "Scale+Labels" }));
-      scalebarjComboBox.setToolTipText("Show Scale and Labels");
-      scalebarjComboBox.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            scalebarjComboBoxActionPerformed(evt);
-         }
-      });
-
-      imagejLabel.setText("Image: ");
-
-      rgbMaxjLabel.setText("RGB Max: 255");
-      rgbMaxjLabel.setMaximumSize(new java.awt.Dimension(100, 16));
-      rgbMaxjLabel.setMinimumSize(new java.awt.Dimension(100, 16));
-      rgbMaxjLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-
-      rgbMinjLabel.setText("RGB Min: 0");
-      rgbMinjLabel.setMaximumSize(new java.awt.Dimension(100, 16));
-      rgbMinjLabel.setMinimumSize(new java.awt.Dimension(100, 16));
-      rgbMinjLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-
-      rgbMaxjSlider.setFont(new java.awt.Font("Dialog", 0, 10));
-      rgbMaxjSlider.setMajorTickSpacing(50);
-      rgbMaxjSlider.setMaximum(255);
-      rgbMaxjSlider.setPaintLabels(true);
-      rgbMaxjSlider.setPaintTicks(true);
-      rgbMaxjSlider.setValue(255);
-      rgbMaxjSlider.setMaximumSize(new java.awt.Dimension(200, 16));
-      rgbMaxjSlider.setMinimumSize(new java.awt.Dimension(200, 16));
-      rgbMaxjSlider.addChangeListener(new javax.swing.event.ChangeListener() {
-         public void stateChanged(javax.swing.event.ChangeEvent evt) {
-            rgbMaxjSliderStateChanged(evt);
-         }
-      });
+      jLabel12.setText("Transparency");
 
       rgbMinjSlider.setFont(new java.awt.Font("Dialog", 0, 10));
       rgbMinjSlider.setMajorTickSpacing(50);
@@ -325,145 +400,99 @@ public class MimsHSIView extends javax.swing.JPanel {
          }
       });
 
-      percentTurnoverRadioButton.setText("Percent Turnover");
-      percentTurnoverRadioButton.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-      percentTurnoverRadioButton.addActionListener(new java.awt.event.ActionListener() {
+      jLabel13.setText("Label");
+
+      rgbMinjLabel.setText("RGB Min: 0");
+      rgbMinjLabel.setMaximumSize(new java.awt.Dimension(100, 16));
+      rgbMinjLabel.setMinimumSize(new java.awt.Dimension(100, 16));
+      rgbMinjLabel.setPreferredSize(new java.awt.Dimension(100, 16));
+
+      scalebarjComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Off", "Scale", "Scale+Labels" }));
+      scalebarjComboBox.setToolTipText("Show Scale and Labels");
+      scalebarjComboBox.addActionListener(new java.awt.event.ActionListener() {
          public void actionPerformed(java.awt.event.ActionEvent evt) {
-            percentTurnoverRadioButtonActionPerformed(evt);
+            scalebarjComboBoxActionPerformed(evt);
          }
       });
 
-      ratioRadioButton.setSelected(true);
-      ratioRadioButton.setText("Ratio   (scale Factor)");
-      ratioRadioButton.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            ratioRadioButtonActionPerformed(evt);
+      rgbMaxjSlider.setFont(new java.awt.Font("Dialog", 0, 10));
+      rgbMaxjSlider.setMajorTickSpacing(50);
+      rgbMaxjSlider.setMaximum(255);
+      rgbMaxjSlider.setPaintLabels(true);
+      rgbMaxjSlider.setPaintTicks(true);
+      rgbMaxjSlider.setValue(255);
+      rgbMaxjSlider.setMaximumSize(new java.awt.Dimension(200, 16));
+      rgbMaxjSlider.setMinimumSize(new java.awt.Dimension(200, 16));
+      rgbMaxjSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+         public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            rgbMaxjSliderStateChanged(evt);
          }
       });
+
+      javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+      jPanel2.setLayout(jPanel2Layout);
+      jPanel2Layout.setHorizontalGroup(
+         jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                  .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(rgbMaxjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(rgbMinjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addGroup(jPanel2Layout.createSequentialGroup()
+                     .addComponent(jLabel12)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(transparencyjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(jLabel13)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(scalebarjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)))
+               .addGroup(jPanel2Layout.createSequentialGroup()
+                  .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(rgbMaxjLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(rgbMinjLabel, 0, 0, Short.MAX_VALUE))
+                  .addGap(304, 304, 304)))
+            .addContainerGap())
+      );
+      jPanel2Layout.setVerticalGroup(
+         jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(jPanel2Layout.createSequentialGroup()
+            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(jPanel2Layout.createSequentialGroup()
+                  .addComponent(rgbMaxjLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addGap(23, 23, 23)
+                  .addComponent(rgbMinjLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+               .addGroup(jPanel2Layout.createSequentialGroup()
+                  .addComponent(rgbMaxjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addComponent(rgbMinjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+            .addGap(11, 11, 11)
+            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+               .addComponent(jLabel12)
+               .addComponent(transparencyjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+               .addComponent(jLabel13)
+               .addComponent(scalebarjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addContainerGap(24, Short.MAX_VALUE))
+      );
 
       javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
       this.setLayout(layout);
       layout.setHorizontalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(layout.createSequentialGroup()
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addContainerGap(293, Short.MAX_VALUE))
+         .addGroup(layout.createSequentialGroup()
             .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addComponent(rgbMaxjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                           .addComponent(rgbMinjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(layout.createSequentialGroup()
-                           .addComponent(jLabel12)
-                           .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                           .addComponent(transparencyjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
-                           .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                           .addComponent(jLabel13)
-                           .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                           .addComponent(scalebarjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addComponent(jLabel6)
-                           .addComponent(jLabel3))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addComponent(jLabel4)
-                           .addComponent(jLabel7))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                           .addComponent(rartioMaxjSpinner)
-                           .addComponent(numThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                           .addComponent(jLabel8))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                           .addComponent(ratioMinjSpinner)
-                           .addComponent(denThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2))
-                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addComponent(rgbMaxjLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                           .addComponent(rgbMinjLabel, 0, 0, Short.MAX_VALUE))
-                        .addGap(307, 307, 307)))
-                  .addGap(550, 550, 550))
-               .addGroup(layout.createSequentialGroup()
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(percentTurnoverRadioButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
-                     .addComponent(ratioRadioButton))
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(ratioSFjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                  .addComponent(imagejLabel)
-                  .addContainerGap(654, Short.MAX_VALUE))))
-         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-               .addContainerGap()
-               .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 685, javax.swing.GroupLayout.PREFERRED_SIZE)
-               .addContainerGap(272, Short.MAX_VALUE)))
+            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGap(550, 550, 550))
       );
       layout.setVerticalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(layout.createSequentialGroup()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
-                  .addGap(188, 188, 188)
-                  .addComponent(imagejLabel)
-                  .addGap(18, 18, 18))
-               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                  .addContainerGap(176, Short.MAX_VALUE)
-                  .addComponent(percentTurnoverRadioButton)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                     .addComponent(ratioRadioButton)
-                     .addComponent(ratioSFjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                  .addGap(8, 8, 8)))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel6)
-                        .addComponent(jLabel7)
-                        .addComponent(numThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel8)
-                        .addComponent(denThresholdjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                           .addComponent(jLabel3)
-                           .addComponent(jLabel4)
-                           .addComponent(rartioMaxjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                           .addComponent(jLabel5)
-                           .addComponent(ratioMinjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(26, 26, 26)))
-                  .addGap(18, 18, 18))
-               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                  .addComponent(jButton2)
-                  .addGap(31, 31, 31)))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(layout.createSequentialGroup()
-                  .addComponent(rgbMaxjLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addGap(23, 23, 23)
-                  .addComponent(rgbMinjLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-               .addGroup(layout.createSequentialGroup()
-                  .addComponent(rgbMaxjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addComponent(rgbMinjSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-            .addGap(11, 11, 11)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-               .addComponent(jLabel12)
-               .addComponent(transparencyjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-               .addComponent(jLabel13)
-               .addComponent(scalebarjComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addContainerGap(29, Short.MAX_VALUE))
-         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-               .addContainerGap()
-               .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-               .addContainerGap(264, Short.MAX_VALUE)))
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
       );
    }// </editor-fold>//GEN-END:initComponents
 
@@ -1058,6 +1087,8 @@ public synchronized void update() {
    private javax.swing.JLabel jLabel8;
    private javax.swing.JList jList1;
    private javax.swing.JPanel jPanel1;
+   private javax.swing.JPanel jPanel2;
+   private javax.swing.JPanel jPanel3;
    private javax.swing.JScrollPane jScrollPane1;
    private javax.swing.JRadioButton medianFilterjButton;
    private javax.swing.JSpinner medianRadiusjSpinner;
