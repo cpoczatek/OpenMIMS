@@ -3439,7 +3439,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             int j = getHSIImageIndex(mp.getHSIProps());
             if (j > -1 && j < maxMasses && hsiImages[j].getHSIProps() != null) {
                 hsiControl.setProps(hsiImages[j].getHSIProcessor().getHSIProps());
-                hsiControl.setImageLabel(hsiImages[j].title);
                 hsiControl.setCurrentImage(mp);
             }
         } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
@@ -3449,7 +3448,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             if (j > -1 && j < maxMasses && ratioImages[j].getRatioProps() != null) {
                hsiControl.setCurrentImage(mp);
                hsiControl.setProps(ratioImages[j].getRatioProps());
-               hsiControl.setImageLabel(ratioImages[j].title);
             }
         }
     }    

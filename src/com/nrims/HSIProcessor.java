@@ -309,8 +309,14 @@ public class HSIProcessor implements Runnable {
                     //hsiImage.getProcessor().drawString( label ) ;
 
                     // Max label.
-                    hsiImage.getProcessor().moveTo(hsiImage.getWidth() - 24, hsiImage.getHeight()) ;
-                    label = IJ.d2s(maxRatio, 0) ;
+                    label = IJ.d2s(maxRatio, 0);
+                    int offset = 0;
+                    switch(label.length()){
+                       case 1: offset = 8; break;
+                       case 2: offset = 16; break;
+                       default: offset = 24; break;
+                    }
+                    hsiImage.getProcessor().moveTo(hsiImage.getWidth() - offset, hsiImage.getHeight()) ;
                     hsiImage.getProcessor().drawString( label ) ;
 
                 }

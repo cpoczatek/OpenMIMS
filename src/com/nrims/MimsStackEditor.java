@@ -1189,13 +1189,17 @@ public boolean compressPlanes(int blockSize) {
     }//GEN-LAST:event_translateYSpinnerStateChanged
 
     private void autoTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoTrackButtonActionPerformed
-        atManager = new AutoTrackManager();
-        atManager.showFrame();
+        showTrackManager();
     }//GEN-LAST:event_autoTrackButtonActionPerformed
 
     private void untrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_untrackButtonActionPerformed
         untrack();
     }//GEN-LAST:event_untrackButtonActionPerformed
+
+    public void showTrackManager() {
+        atManager = new AutoTrackManager();
+        atManager.showFrame();
+    }
 
     private void sumButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sumButtonActionPerformed
 // Get the window title.
