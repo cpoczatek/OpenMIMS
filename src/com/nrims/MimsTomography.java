@@ -7,7 +7,12 @@ package com.nrims;
  */
 
 import com.nrims.data.Opener;
+import com.nrims.plot.MimsChartFactory;
+import com.nrims.plot.MimsChartPanel;
+import com.nrims.plot.MimsXYPlot;
+
 import ij.gui.Roi;
+
 import java.awt.Component;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -17,11 +22,9 @@ import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
+
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.statistics.HistogramDataset;
@@ -36,7 +39,7 @@ public class MimsTomography extends javax.swing.JPanel {
     MimsJFreeChart tomoChart = null;
     MimsJTable table = null;
     private JFreeChart chart;
-    private ChartPanel chartPanel;
+    private MimsChartPanel chartPanel;
     
     /** Creates new form mimsTomography */
     public MimsTomography(UI ui) {
@@ -216,10 +219,10 @@ public class MimsTomography extends javax.swing.JPanel {
         HistogramDataset dataset = new HistogramDataset();
 
         // Create chart using the ChartFactory
-        chart = ChartFactory.createHistogram("", "Pixel Value", "", dataset, PlotOrientation.VERTICAL, true, true, false);
+        chart = MimsChartFactory.createMimsHistogram("", "Pixel Value", "", dataset, PlotOrientation.VERTICAL, true, true, false);
         chart.setBackgroundPaint(this.getBackground());
 
-        XYPlot plot = (XYPlot) chart.getPlot();
+        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
         XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
         renderer.setDrawBarOutline(false);
         renderer.setShadowVisible(false);
@@ -239,7 +242,7 @@ public class MimsTomography extends javax.swing.JPanel {
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
 
-        chartPanel = new ChartPanel(chart);
+        chartPanel = new MimsChartPanel(chart);
         chartPanel.setSize(350, 250);
         histogramjPanel.add(chartPanel);
     }
@@ -255,7 +258,7 @@ public class MimsTomography extends javax.swing.JPanel {
 
           dataset.addSeries(label, pixelvalues, 100);
 
-          org.jfree.chart.plot.XYPlot plot = (XYPlot) chart.getPlot();
+          MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
           plot.setDataset(dataset);
 
           chart.fireChartChanged();

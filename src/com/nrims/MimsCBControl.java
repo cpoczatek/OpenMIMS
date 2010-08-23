@@ -6,6 +6,9 @@
 
 package com.nrims;
 
+import com.nrims.plot.MimsChartFactory;
+import com.nrims.plot.MimsChartPanel;
+import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
@@ -23,10 +26,10 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYPolygonAnnotation;
 import org.jfree.chart.plot.PlotOrientation;
+
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
@@ -38,7 +41,7 @@ public class MimsCBControl extends javax.swing.JPanel {
    Hashtable windows = new Hashtable();
    UI ui;   
    private JFreeChart chart;
-   private ChartPanel chartPanel;
+   private MimsChartPanel chartPanel;
    boolean holdUpdate = false;
    private File lutDir;
    private String[] ijLutNames = new String[] { "Grays", "Fire", "Ice", "Spectrum", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Red/Green", "Invert LUT" };
@@ -96,14 +99,14 @@ public class MimsCBControl extends javax.swing.JPanel {
     private void setupHistogram() {
 
         // Create chart using the ChartFactory.
-        chart = ChartFactory.createHistogram("", "Pixel Value", "", null, PlotOrientation.VERTICAL, true, true, false);
+        chart = MimsChartFactory.createMimsHistogram("", "Pixel Value", "", null, PlotOrientation.VERTICAL, true, true, false);
         chart.setBackgroundPaint(this.getBackground());
         chart.removeLegend();
 
         //empty comment
 
         // Set the renderer.
-        XYPlot plot = (XYPlot) chart.getPlot();                                       
+        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
         XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
         renderer.setDrawBarOutline(false);
         renderer.setShadowVisible(false);
@@ -123,7 +126,7 @@ public class MimsCBControl extends javax.swing.JPanel {
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         
-        chartPanel = new ChartPanel(chart);
+        chartPanel = new MimsChartPanel(chart);
         chartPanel.setSize(350, 225); 
         jPanel1.add(chartPanel);
     }
@@ -181,7 +184,7 @@ public class MimsCBControl extends javax.swing.JPanel {
       // Setup and plot histogram.
       HistogramDataset dataset = new HistogramDataset();
       dataset.addSeries("", pixels, nbins);
-      org.jfree.chart.plot.XYPlot plot = (XYPlot) chart.getPlot();
+      MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
       plot.setDataset(dataset);                 
       
       // Show contrast window.
@@ -196,7 +199,7 @@ public class MimsCBControl extends javax.swing.JPanel {
    // Update the contrast window range displayed.
    public void updateContrastWindow(){
       
-      org.jfree.chart.plot.XYPlot plot = (XYPlot) chart.getPlot();
+      MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
       
       // Polygon bounds.      
       double x1 = contrastAdjuster1.min;

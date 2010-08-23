@@ -567,7 +567,7 @@ public class MimsHSIView extends javax.swing.JPanel {
            return;
 
         if (currentImage.getMimsType() == MimsPlus.HSI_IMAGE) {
-           currentImage.getHSIProps().setMinNum(new Integer(denThresholdjSpinner.getValue().toString()));
+           currentImage.getHSIProps().setMinDen(new Integer(denThresholdjSpinner.getValue().toString()));
            update();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int denThreshold = ((Integer)denThresholdjSpinner.getValue()).intValue();
@@ -1011,11 +1011,22 @@ public synchronized void update() {
            rgbMinjSlider.setEnabled(true);
            transparencyjComboBox.setEnabled(true);
            scalebarjComboBox.setEnabled(true);
+           numThresholdjSpinner.setEnabled(true);
+           denThresholdjSpinner.setEnabled(true);
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            rgbMaxjSlider.setEnabled(false);
            rgbMinjSlider.setEnabled(false);
            transparencyjComboBox.setEnabled(false);
            scalebarjComboBox.setEnabled(false);
+           numThresholdjSpinner.setEnabled(true);
+           denThresholdjSpinner.setEnabled(true);
+        } else {
+           rgbMaxjSlider.setEnabled(false);
+           rgbMinjSlider.setEnabled(false);
+           transparencyjComboBox.setEnabled(false);
+           scalebarjComboBox.setEnabled(false);
+           numThresholdjSpinner.setEnabled(false);
+           denThresholdjSpinner.setEnabled(false);
         }
         imagejLabel.setText("Image: " + mp.title);
     }

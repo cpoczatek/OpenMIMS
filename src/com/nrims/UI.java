@@ -7,6 +7,8 @@ package com.nrims;
 
 import com.nrims.data.*;
 
+import com.nrims.plot.MimsChartPanel;
+import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -40,8 +42,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.JOptionPane;
 
 import java.util.ArrayList;
@@ -53,9 +53,8 @@ import java.util.zip.ZipFile;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.Plot;
-import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.xy.XYDataset;
 
 /**
  * The main user interface of the NRIMS ImageJ plugin.
@@ -321,13 +320,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * @param chartpanel GUI element to be affected
     */
    //can these 2 methods be moved to MimsJFreeChart????
-   void showHideCrossHairs(ChartPanel chartpanel) {
+   void showHideCrossHairs(MimsChartPanel chartpanel) {
       Plot plot = chartpanel.getChart().getPlot();
-      if (!(plot instanceof XYPlot))
+      if (!(plot instanceof MimsXYPlot))
          return;
       
       // Show/Hide XHairs
-      XYPlot xyplot = (XYPlot) plot;
+      MimsXYPlot xyplot = (MimsXYPlot) plot;
       xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
       xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
       xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
@@ -338,14 +337,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * @param chartpanel GUI element to be affected
     */
    
-   void logLinScale(ChartPanel chartpanel) {
+   void logLinScale(MimsChartPanel chartpanel) {
       Plot plot = chartpanel.getChart().getPlot();
 
-      if (!(plot instanceof XYPlot))
+      if (!(plot instanceof MimsXYPlot))
          return;
 
 
-      XYPlot xyplot = (XYPlot) plot;
+      MimsXYPlot xyplot = (MimsXYPlot) plot;
       org.jfree.chart.axis.ValueAxis axis = xyplot.getRangeAxis();
       String label = axis.getLabel();
 
@@ -369,9 +368,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     */
 
    //Todo, clean up
-      public void displayProfileData(ChartPanel chartpanel) {
-        org.jfree.chart.plot.XYPlot plot = (XYPlot) chartpanel.getChart().getPlot();
-        org.jfree.data.xy.XYDataset data = plot.getDataset();
+      public void displayProfileData(MimsChartPanel chartpanel) {
+        MimsXYPlot plot = (MimsXYPlot) chartpanel.getChart().getPlot();
+        XYDataset data = plot.getDataset();
 
         ij.measure.ResultsTable table = new ij.measure.ResultsTable();
         table.setHeading(1, "Plane");
@@ -1818,7 +1817,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         for (int i = 0; i < rp.length; i++) {
            if (rp[i].getAutoContrastAdjust())
               autoContrastImage(rp[i]);
-        }                
+        }
+
+        // All ratio images
+        MimsPlus sp[] = getOpenSumImages();
+        for (int i = 0; i < sp.length; i++) {
+           if (sp[i].getAutoContrastAdjust())
+              autoContrastImage(sp[i]);
+        }
     }      
 
    public void autoContrastImages(MimsPlus[] imgs) {
@@ -3433,23 +3439,17 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        openers.put(fileName, opener);
     }
 
-    public void setActiveMimsPlus(MimsPlus mp) {
-        if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
-            int j = getHSIImageIndex(mp.getHSIProps());
-            if (j > -1 && j < maxMasses && hsiImages[j].getHSIProps() != null) {
-                hsiControl.setProps(hsiImages[j].getHSIProcessor().getHSIProps());
-                hsiControl.setCurrentImage(mp);
-            }
-        } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
-            int ni = mp.getRatioProps().getNumMassIdx();
-            int di = mp.getRatioProps().getDenMassIdx();
-            int j = getRatioImageIndex(ni,di);
-            if (j > -1 && j < maxMasses && ratioImages[j].getRatioProps() != null) {
-               hsiControl.setCurrentImage(mp);
-               hsiControl.setProps(ratioImages[j].getRatioProps());
-            }
-        }
-    }    
+   public void setActiveMimsPlus(MimsPlus mp) {
+      if (mp == null)
+         return;
+
+      hsiControl.setCurrentImage(mp);
+      if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+         hsiControl.setProps(mp.getHSIProcessor().getHSIProps());
+      } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
+         hsiControl.setProps(mp.getRatioProps());
+      }
+   }
 
     public synchronized void updateStatus(String msg) {
         if (bUpdating) {

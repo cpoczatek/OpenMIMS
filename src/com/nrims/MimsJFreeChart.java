@@ -1,5 +1,8 @@
 package com.nrims;
 
+import com.nrims.plot.MimsChartFactory;
+import com.nrims.plot.MimsChartPanel;
+import com.nrims.plot.MimsXYPlot;
 import ij.gui.*;
 import ij.process.*;
 
@@ -14,16 +17,15 @@ import java.util.ArrayList;
 
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import org.jfree.chart.plot.XYPlot;
 
 public class MimsJFreeChart extends JFrame {
 
@@ -32,7 +34,7 @@ public class MimsJFreeChart extends JFrame {
    private Roi[] rois;
    private ArrayList planes;
    private com.nrims.UI ui;
-   private ChartPanel chartpanel;
+   private MimsChartPanel chartpanel;
 
    public MimsJFreeChart(UI ui) {
       super("Plot");
@@ -49,16 +51,16 @@ public class MimsJFreeChart extends JFrame {
          
          // Create an chart empty.
          JFreeChart chart = createChart();
-         
+
          // Get the data.
          XYDataset xydata = getDataset();
 
          // Apply data to the plot
-         XYPlot xyplot = (XYPlot)chart.getPlot();
+         MimsXYPlot xyplot = (MimsXYPlot)chart.getPlot();
          xyplot.setDataset(xydata);
 
          // Generate the layout.
-         chartpanel = new ChartPanel(chart);
+         chartpanel = new MimsChartPanel(chart);
          chartpanel.setPreferredSize(new java.awt.Dimension(600, 400));
          String lastFolder = ui.getLastFolder();
          if (lastFolder != null) {
@@ -116,11 +118,11 @@ public class MimsJFreeChart extends JFrame {
 
    // Contruct the Frame.
    private static JFreeChart createChart() {
-      JFreeChart chart = ChartFactory.createXYLineChart("", "Plane", "", null, PlotOrientation.VERTICAL, true, true, false);
+      JFreeChart chart = MimsChartFactory.createMimsXYLineChart("", "Plane", "", null, PlotOrientation.VERTICAL, true, true, false);
       chart.setBackgroundPaint(Color.white);
 
       // Get a reference to the plot.
-      XYPlot plot = (XYPlot) chart.getPlot();
+      MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
 
       // Create integer x-axis.
       plot.getDomainAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());

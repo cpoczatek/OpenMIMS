@@ -5,33 +5,27 @@
 
 package com.nrims;
 
+import com.nrims.plot.MimsChartFactory;
+import com.nrims.plot.MimsChartPanel;
 
+import com.nrims.plot.MimsXYPlot;
+import java.awt.event.*;
 import java.awt.Color;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import javax.swing.JFrame;
+import javax.swing.JPopupMenu;
+import javax.swing.JMenuItem;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYBarRenderer;
-import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 
-import javax.swing.JPopupMenu;
-import javax.swing.JMenuItem;
-import java.awt.event.*;
 /**
  *
  * @author cpoczatek
@@ -39,7 +33,7 @@ import java.awt.event.*;
 public class MimsLineProfile extends JFrame implements ActionListener{
 
     private JFreeChart chart;
-    private ChartPanel chartPanel;
+    private MimsChartPanel chartPanel;
     private int linewidth = 1;
     private UI ui;
     
@@ -51,7 +45,7 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         XYDataset dataset = createDataset();
         chart = createChart(dataset);
 
-        chartPanel = new ChartPanel(chart);
+        chartPanel = new MimsChartPanel(chart);
         chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
         JPopupMenu menu = chartPanel.getPopupMenu();
         JMenuItem menuItem = new javax.swing.JMenuItem("Display text");
@@ -124,7 +118,7 @@ public class MimsLineProfile extends JFrame implements ActionListener{
     private JFreeChart createChart(final XYDataset dataset) {
         
         // create the chart...
-        final JFreeChart chart = ChartFactory.createXYLineChart(
+        final JFreeChart chart = MimsChartFactory.createMimsXYLineChart(
             "",      // chart title
             "L",                      // x axis label
             "P",                      // y axis label
@@ -136,7 +130,7 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         );
 
       // get a reference to the plot for further customisation...
-      XYPlot plot = chart.getXYPlot();
+      MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
 
       // Set colors.
       plot.setBackgroundPaint(Color.lightGray);
@@ -172,14 +166,14 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(series);
-        org.jfree.chart.plot.XYPlot plot = (XYPlot) chart.getPlot();
+        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
         plot.setDataset(dataset);
 
         chart.fireChartChanged();
     }
 
     public void displayProfileData() {
-        org.jfree.chart.plot.XYPlot plot = (XYPlot) chart.getPlot();
+        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
         XYDataset data = plot.getDataset();
 
         ij.measure.ResultsTable table = new ij.measure.ResultsTable();

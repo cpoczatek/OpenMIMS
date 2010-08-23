@@ -1200,7 +1200,7 @@ public boolean compressPlanes(int blockSize) {
     }
 
     private void sumButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sumButtonActionPerformed
-// Get the window title.
+    // Get the window title.
     String name = WindowManager.getCurrentImage().getTitle();
     String sumTextFieldString = sumTextField.getText().trim();
 
@@ -1214,13 +1214,14 @@ public boolean compressPlanes(int blockSize) {
     if (mp.getMimsType() == MimsPlus.MASS_IMAGE) {
        int parentIdx = mp.getMassIndex();
        if (parentIdx > -1) sumProps = new SumProps(parentIdx);
-    }
-    if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
+    } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
        RatioProps rp = mp.getRatioProps();
        int numIdx = rp.getNumMassIdx();
        int denIdx = rp.getDenMassIdx();
        if (numIdx > -1 && denIdx > -1) sumProps = new SumProps(numIdx, denIdx);
        sumProps.setRatioScaleFactor(mp.getRatioProps().getRatioScaleFactor());
+    } else {
+       return;
     }
 
     // Get list from field box.

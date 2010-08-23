@@ -10,8 +10,8 @@ import javax.swing.*;
 
 public class StartupScript extends Thread {
 
-   private static String FILE_DIRECTORY = "/nrims/home3/zkaufman/DOCS/TrackingDocuments/Girguis_Exp3";
-   private static String LIST_FILE_NAME = "filelist.txt";
+   private static String FILE_DIRECTORY = "/nrims/home3/zkaufman/DOCS/TrackingDocuments/LEE/EXP15";
+   private static String LIST_FILE_NAME = "/nrims/home3/mwang/duansun_corey_exp5/EXP5_MOUSE_PUPS/filelist1.txt";
 
    UI ui;
    BufferedReader br;
@@ -29,7 +29,8 @@ public class StartupScript extends Thread {
       this.ui = ui;
 
       // Get the object of DataInputStream
-      trackingFile = new File(FILE_DIRECTORY, LIST_FILE_NAME);
+      //trackingFile = new File(FILE_DIRECTORY, LIST_FILE_NAME);
+      trackingFile = new File(LIST_FILE_NAME);
       if (trackingFile.exists()) {
          try {
             FileInputStream fstream = new FileInputStream(trackingFile);
@@ -76,12 +77,12 @@ public class StartupScript extends Thread {
    public void next() {
 
       String imfileName = "tempName";
-      //while (imfileName != null) {
+      while (imfileName != null) {
 
       // Save nrrd.
       if (imFile != null) {
-         File nrrdFile = new File(directory, ui.getImageFilePrefix() + ui.NRRD_EXTENSION);
-         System.out.println("Writing nrrd: " + nrrdFile.getName());
+         File nrrdFile = new File(imFile.getParent(), ui.getImageFilePrefix() + UI.NRRD_EXTENSION);
+         System.out.println("Writing nrrd: " + nrrdFile.getAbsolutePath());
          ui.saveSession(nrrdFile.getAbsolutePath(), true);
          if (!nrrdFile.exists())
             IJ.error(nrrdFile.getAbsolutePath() + " does not exit.");
@@ -95,7 +96,7 @@ public class StartupScript extends Thread {
             System.out.println("Possibly EOF.");
             System.exit(0);
          }
-         imFile = new File(directory, imfileName);
+         imFile = new File(imfileName);
          label.setText(imfileName);
 
          // If file does not exist, print and continue.
@@ -113,19 +114,23 @@ public class StartupScript extends Thread {
          ui.loadMIMSFile(imFile);               
          
          // Track.
+         boolean track = true;
+         if (track) {
+         int indexToTrack = 2;
          if (ui.getOpener().getNImages() > 1) {
-            ui.getOpenMassImages()[0].getWindow().toFront();
-            WindowManager.setCurrentWindow(ui.getOpenMassImages()[0].getWindow());
-            WindowManager.setTempCurrentImage(ui.getOpenMassImages()[0]);
+            ui.getOpenMassImages()[indexToTrack].getWindow().toFront();
+            WindowManager.setCurrentWindow(ui.getOpenMassImages()[indexToTrack].getWindow());
+            WindowManager.setTempCurrentImage(ui.getOpenMassImages()[indexToTrack]);
             ui.getmimsStackEditing().showTrackManager();
             ActionEvent ae = new ActionEvent(ui.getmimsStackEditing().atManager.okButton, -1, "OK");
             ui.getmimsStackEditing().atManager.actionPerformed(ae);
             while (ui.getmimsStackEditing().THREAD_STATE == ui.getmimsStackEditing().WORKING) {
               try {
-                  System.out.println("tracking...");
-                  Thread.sleep(250);
+                 System.out.println("tracking...");
+                 Thread.sleep(1000);
               } catch (Exception e) {}
             }
+         }
          }
          
          // Generate all images that were previously open.
@@ -218,11 +223,13 @@ public class StartupScript extends Thread {
          //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
          //wo.run("tile");
 
-         ui.autocontrastAllImages();
+         MimsPlus[] sp = ui.getOpenSumImages();
+         for (int i = 0; i < sp.length; i++)
+            ui.autoContrastImage(sp[i]);
 
       } catch (Exception e) {
          e.printStackTrace();
       }
-      //}
+      }
    }
 }
