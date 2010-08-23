@@ -212,6 +212,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       this.mimsDrop = new FileDrop(null, jTabbedPane1, new FileDrop.Listener() {
          public void filesDropped(File[] files) {
+
+            if (files.length > 1) {
+               IJ.error("Please drag no more than one file.");
+               return;
+            }
+
+            File file = files[0];
+
             // Get HSIProps for all open ratio images.
             RatioProps[] rto_props = getOpenRatioProps();
 
@@ -221,28 +229,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             // Get SumProps for all open sum images.
             SumProps[] sum_props = getOpenSumProps();
 
-            openFiles(files);
-
-            /*
-            getOpenMassImages()[2].getWindow().toFront();
-            WindowManager.setCurrentWindow(getOpenMassImages()[2].getWindow());
-            WindowManager.setTempCurrentImage(getOpenMassImages()[2]);
-
-            if (getOpenMassImages()[2].getNSlices()>1) {
-              ActionEvent ae = new ActionEvent(mimsStackEditing.atManager.okButton, -1, "OK");
-              mimsStackEditing.atManager.actionPerformed(ae);
-            }
-
-            while(mimsStackEditing.THREAD_STATE == mimsStackEditing.WORKING){
-               try {
-                  System.out.println("tracking...");
-                  Thread.sleep(250);
-               } catch (Exception e){}
-            }
-            
-            File file = new File("/nrims/home3/zkaufman/DOCS/TrackingDocuments/TAJBAKHSH", getImageFilePrefix()+NRRD_EXTENSION);
-            saveSession(file.getAbsolutePath(), true);
-            */
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            boolean opened = openFile(file);
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            if (opened == false)
+               return;
+           
 
             // Generate all images that were previously open.
             // TODO: a better check than just looking at the first file?
@@ -456,9 +448,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * Brings up the graphical pane for selecting files to be opened.
      */
-    public synchronized void loadMIMSFile() {
+    public synchronized boolean loadMIMSFile() {
         javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
-        fc.setMultiSelectionEnabled(true);        
+        fc.setMultiSelectionEnabled(false);
         fc.setPreferredSize(new java.awt.Dimension(650, 500));
 
         if (lastFolder != null) {
@@ -471,131 +463,118 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION) {
             lastFolder = fc.getCurrentDirectory().getAbsolutePath();
-            return;
+            return false;
         }
         lastFolder = fc.getSelectedFile().getParent();
         setIJDefaultDir(lastFolder);
 
-        File[] files = fc.getSelectedFiles();
-        openFiles(files);
+        File file = fc.getSelectedFile();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        boolean opened = openFile(file);
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+
+        return opened;
     }
 
     /**
      * Open the file(s) for futher processing.
      * @param files list of files to open
      */
-    public void openFiles(File[] files) {
+    public boolean openFile(File file) {
+      
+      boolean onlyShowDraggedFile = true;
 
-            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            boolean onlyShowDraggedFile = true;
+      String fileName = file.getName();
+      if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION) ||
+              fileName.endsWith(RATIO_EXTENSION) || fileName.endsWith(HSI_EXTENSION) ||
+              fileName.endsWith(SUM_EXTENSION) || fileName.endsWith(ROIS_EXTENSION) ||
+              fileName.endsWith(ROI_EXTENSION)) {
+      } else {
+         String fileType;
+         int lastIndexOf = fileName.lastIndexOf(".");
+         if (lastIndexOf >= 0)
+            fileType = fileName.substring(fileName.lastIndexOf("."));
+          else
+            fileType = fileName;
+         IJ.error("Unable to open files of type: " + fileType);
+         return false;
+      }
 
-            for (int i = 0; i < files.length; i++) {
-                File file = files[i];
-                if (i == 0) {
-                   lastFolder = file.getParent();
-                   setIJDefaultDir(lastFolder);
-                }
-                if (file.getAbsolutePath().endsWith(NRRD_EXTENSION) ||
-                    file.getAbsolutePath().endsWith(MIMS_EXTENSION)) {
-                    onlyShowDraggedFile = false;
-                    loadMIMSFile(file);
-                    break;
-                }
+
+      lastFolder = file.getParent();
+      setIJDefaultDir(lastFolder);
+
+      try {
+         if (file.getAbsolutePath().endsWith(NRRD_EXTENSION) ||
+                 file.getAbsolutePath().endsWith(MIMS_EXTENSION)) {
+            onlyShowDraggedFile = false;
+            loadMIMSFile(file);
+         } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
+            FileInputStream f_in = new FileInputStream(file);
+            ObjectInputStream obj_in = new ObjectInputStream(f_in);
+            Object obj = obj_in.readObject();
+            if (obj instanceof RatioProps) {
+               RatioProps ratioprops = (RatioProps) obj;
+               String dataFileString = ratioprops.getDataFileName();
+               File dataFile = new File(file.getParent(), dataFileString);
+               loadMIMSFile(dataFile);
+               MimsPlus mp = new MimsPlus(this, ratioprops);
+               mp.showWindow();
             }
-
-            try {
-            // Loop thru files.
-            for (int i = 0; i < files.length; i++) {
-                File file = files[i];
-                if (!file.exists()) continue;
-
-                // Load ratio image.
-                if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
-                    FileInputStream f_in = new FileInputStream(file);
-                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                    Object obj = obj_in.readObject();
-                    if (obj instanceof RatioProps) {
-                        RatioProps ratioprops = (RatioProps)obj;
-                        String dataFileString = ratioprops.getDataFileName();
-                        File dataFile = new File(file.getParent(), dataFileString);
-                        if (image == null)
-                            loadMIMSFile(dataFile);
-                        else if (image != null && !dataFileString.matches(image.getImageFile().getName()))
-                            loadMIMSFile(dataFile);
-                        MimsPlus mp = new MimsPlus(this, ratioprops);
-                        mp.showWindow();
-                    }
-                }
-
-                // Load hsi image.
-                if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
-                    FileInputStream f_in = new FileInputStream(file);
-                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                    Object obj = obj_in.readObject();
-                    if (obj instanceof HSIProps) {
-                        HSIProps hsiprops = (HSIProps)obj;
-                        String dataFileString = hsiprops.getDatFileName();
-                        File dataFile = new File(file.getParent(), dataFileString);
-                        if (image == null)
-                            loadMIMSFile(dataFile);
-                        else if (image != null && !dataFileString.matches(image.getImageFile().getName()))
-                            loadMIMSFile(dataFile);
-                        MimsPlus mp = new MimsPlus(this, hsiprops);
-                        mp.showWindow();
-                    }
-                }
-
-                // Load sum image.
-                if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
-                    FileInputStream f_in = new FileInputStream(file);
-                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                    Object obj = obj_in.readObject();
-                    if (obj instanceof SumProps) {
-                        SumProps sumprops = (SumProps)obj;
-                        String dataFileString = sumprops.getDataFileName();
-                        File dataFile = new File(file.getParent(), dataFileString);
-                        if (image == null)
-                            loadMIMSFile(dataFile);
-                        else if (image != null && !dataFileString.matches(image.getImageFile().getName()))
-                            loadMIMSFile(dataFile);
-                        MimsPlus sp = new MimsPlus(this, sumprops, null);
-                        sp.showWindow();
-                    }
-                }
-
-                // Load Rois.
-                if (file.getAbsolutePath().endsWith(ROIS_EXTENSION) ||
-                    file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
-                   onlyShowDraggedFile = false;
-                   getRoiManager().open(file.getAbsolutePath(), true);
-                   updateAllImages();
-                   getRoiManager().showFrame();
-                   onlyShowDraggedFile = false;
-
-                }
-
+         } else if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
+            FileInputStream f_in = new FileInputStream(file);
+            ObjectInputStream obj_in = new ObjectInputStream(f_in);
+            Object obj = obj_in.readObject();
+            if (obj instanceof HSIProps) {
+               HSIProps hsiprops = (HSIProps) obj;
+               String dataFileString = hsiprops.getDatFileName();
+               File dataFile = new File(file.getParent(), dataFileString);
+               loadMIMSFile(dataFile);
+               MimsPlus mp = new MimsPlus(this, hsiprops);
+               mp.showWindow();
             }
-
-            //Todo: if a bs file this still gets called and throws?
-            
-            // This 3 lines solves some strange updating issues.
-            // Has to do with syncing images by changing the slice.
-            int startslice = massImages[0].getCurrentSlice();
-            massImages[0].setSlice(getOpener().getNImages());
-            massImages[0].setSlice(startslice);
-
-            if (onlyShowDraggedFile){
-               MimsPlus[] mps = getOpenMassImages();
-               for (int i = 0; i < mps.length; i++)
-                  mps[i].hide();
+         } else if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
+            FileInputStream f_in = new FileInputStream(file);
+            ObjectInputStream obj_in = new ObjectInputStream(f_in);
+            Object obj = obj_in.readObject();
+            if (obj instanceof SumProps) {
+               SumProps sumprops = (SumProps) obj;
+               String dataFileString = sumprops.getDataFileName();
+               File dataFile = new File(file.getParent(), dataFileString);
+               loadMIMSFile(dataFile);
+               MimsPlus sp = new MimsPlus(this, sumprops, null);
+               sp.showWindow();
             }
+         } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION) ||
+                 file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
+            onlyShowDraggedFile = false;
+            getRoiManager().open(file.getAbsolutePath(), true);
+            updateAllImages();
+            getRoiManager().showFrame();
+         }
 
-            } catch (Exception e) {
-               e.printStackTrace();
-            } finally {
-                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+
+         //Todo: if a bs file this still gets called and throws?
+
+         // This 3 lines solves some strange updating issues.
+         // Has to do with syncing images by changing the slice.
+         int startslice = massImages[0].getCurrentSlice();
+         massImages[0].setSlice(getOpener().getNImages());
+         massImages[0].setSlice(startslice);
+
+         if (onlyShowDraggedFile) {
+            MimsPlus[] mps = getOpenMassImages();
+            for (int i = 0; i < mps.length; i++) {
+               mps[i].hide();
             }
-    }
+         }
+
+      } catch (Exception e) {
+         e.printStackTrace();
+         return false;
+      }
+      return true;
+   }
 
     public synchronized void loadMIMSFile(File file) throws NullPointerException {
         if (!file.exists()) {
@@ -1976,7 +1955,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        SumProps[] sum_props = getOpenSumProps();
              
        // Load the new file.
-       loadMIMSFile();
+       boolean loaded = loadMIMSFile();
+       if (loaded == false)
+          return;
        
        //Autocontrast mass images.
        //Should add option to apply settings from previous image?
@@ -3442,11 +3423,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    public void setActiveMimsPlus(MimsPlus mp) {
       if (mp == null)
          return;
-
-      hsiControl.setCurrentImage(mp);
+      
       if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+         hsiControl.setCurrentImage(mp);
          hsiControl.setProps(mp.getHSIProcessor().getHSIProps());
       } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
+         hsiControl.setCurrentImage(mp);
          hsiControl.setProps(mp.getRatioProps());
       }
    }
@@ -3541,7 +3523,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     UI ui_to_run = new UI(null);
                     ui_to_run.setVisible(true);
                     files_arr[0] = new File(temp_path);
-                    ui_to_run.openFiles(files_arr);
+                    File file_to_open = files_arr[0];
+                    ui_to_run.openFile(file_to_open);
+                    
                 }
             });
         } else {

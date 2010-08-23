@@ -110,11 +110,12 @@ public class LoadImageList {
             }
         }
 
-        File[] files = new File[1];
+        File imFile;
         for (int i = 1; i < imageList.size(); i++) {
-            files[0] = new File(workingDirectory, imageList.get(i));
+            imFile = new File(workingDirectory, imageList.get(i));
             UI tempUi = new UI(null);
-            tempUi.openFiles(files);
+            boolean opened = tempUi.openFile(imFile);
+            if (opened) {
             this.ui.getmimsStackEditing().concatImages(false, false, tempUi);            
             for (MimsPlus image : tempUi.getMassImages()) {
                 if (image != null) {
@@ -122,16 +123,9 @@ public class LoadImageList {
                     image.close();
                 }
             }
-
             tempUi = null;
-
-        }
-        
-        for (int i = 0; i < nMasses; i++) {
-            if(massImages[i]!=null) {
-               // massImages[i].setTitle(names[i]);
             }
-        }
+        }       
         
         this.ui.setSyncROIs(true);
         this.ui.setSyncStack(true);
