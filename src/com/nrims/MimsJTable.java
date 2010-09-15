@@ -28,6 +28,10 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 /**
+ * MimsJTable class creates a frame containing a <code>JTable</code>.
+ * This class is used to generate frame that contain data, usually
+ * statistical data associated with images.
+ *
  * @author zkaufman
  */
 public class MimsJTable {
@@ -56,7 +60,14 @@ public class MimsJTable {
       this.ui = ui;
    }
 
-   // This method is used by the RoiManager "measure" button.
+  /**
+   * Used by the RoiManager "measure" button to generate a table.
+   * When used in this way, only statistics for the currently
+   * selected image will be shown.
+   *
+   * @param appendData <code>true</code> if appending a plot
+   * to an existing frame, otherwise <code>false</code>.
+   */
    public void createRoiTable(boolean appendData){
 
       // Get the data and column headers.
@@ -70,7 +81,14 @@ public class MimsJTable {
          displayTable(data, columnNames);
    }
 
-   // For sum images.
+  /**
+   * Generates a table for Sum images. Because sum images only have
+   * one plane, a sum table will differ from the default table in
+   * that each row corresponds to an ROI (rather than to a plane).
+   *
+   * @param appendData <code>true</code> if appending a plot
+   * to an existing frame, otherwise <code>false</code>.
+   */
    public void createSumTable(boolean appendData){
 
       // Get the data and column headers.
@@ -84,7 +102,13 @@ public class MimsJTable {
          displayTable(data, columnNames);
    }
 
-   // Tomography tab "table". One row per plane.
+  /**
+   * Generates a table for images. Each row corresponds to
+   * a plane and each column to a statisitical field (or meta data String).
+   *
+   * @param appendData <code>true</code> if appending a plot
+   * to an existing frame, otherwise <code>false</code>.
+   */
    public void createTable(boolean appendData) {
 
       // Get data.
@@ -98,8 +122,10 @@ public class MimsJTable {
          displayTable(data, columnNames);
    }
 
-   // Displays a table given data and column headers.
-   public void displayTable(Object[][] data, String[] columnNames){
+  /**
+   * Does the actual displaying of the table and frame.
+   */
+   private void displayTable(Object[][] data, String[] columnNames){
 
          // Create table and set column width.
          DefaultTableModel tm = new DefaultTableModel(data, columnNames);
@@ -134,6 +160,9 @@ public class MimsJTable {
          frame.pack();
    }
 
+  /**
+   * Determines the best way to go about appending data.
+   */
    private void appendDataToTable(Object[][] data, String[] columnNames) {
       TableModel tm = table.getModel();
       DefaultTableModel model = (DefaultTableModel) tm;
@@ -151,6 +180,9 @@ public class MimsJTable {
       frame.setTitle(title);
    }
 
+  /**
+   * Determines if it is possible to append data.
+   */
    private boolean ableToAppendData(String[] columnNames) {
 
       // Cant append if any of the following conditions are satisfied.
@@ -166,9 +198,11 @@ public class MimsJTable {
       return true;
    }
 
-   // Use this method when getting data for single planes.
-   // Produces a differently formated table than getDataSet().
-   public Object[][] getRoiDataSet(){
+  /**
+   * Use this method when getting data for single planes.
+   * Produces a differently formated table than getDataSet().
+   */
+   private Object[][] getRoiDataSet(){
 
       // Image check.
       if (images.length != 1)
@@ -249,9 +283,11 @@ public class MimsJTable {
      return data;
    }
 
-   // Use this method when getting data for single planes.
-   // Produces a differently formated table than getDataSet().
-   public Object[][] getSumImageDataSet(){
+  /**
+   * Use this method when getting data for single planes.
+   * Produces a differently formated table than getDataSet().
+   */
+   private Object[][] getSumImageDataSet(){
 
       // Roi check.
       if (rois.length == 0)
@@ -331,9 +367,10 @@ public class MimsJTable {
       return data;
    }
 
-
-   // Use this method when getting data for multiple planes.
-   public Object[][] getDataSet() {
+  /**
+   * Use this method when getting data for multiple planes.
+   */
+   private Object[][] getDataSet() {
 
       // initialize variables.
       ImageStatistics tempstats = null;
@@ -391,7 +428,10 @@ public class MimsJTable {
       return data;
    }
 
-   public String[] getColumnNames(){
+  /**
+   * Returns the column names.
+   */
+   private String[] getColumnNames(){
 
       // initialze variables.
       ArrayList<String> columnNamesArray = new ArrayList<String>();
@@ -431,7 +471,9 @@ public class MimsJTable {
       return columnNames;
    }
 
-   // Setup column headers for sum image table.
+  /**
+   * Setup column headers for sum image table.
+   */
    private String[] getSumImageColumnNames() {
 
       // initialze variables.
@@ -478,7 +520,9 @@ public class MimsJTable {
       return columnNames;
    }
 
-   // Setup column headers for sum image table.
+  /**
+   * Setup column headers for sum image table.
+   */
    private String[] getRoiManagerColumnNames(){
 
       // Fill in preliminary mandatory columns headers.
@@ -507,6 +551,9 @@ public class MimsJTable {
       return columnNames;
    }
 
+  /**
+   * Determines the behavior of the "Save" action.
+   */
    private void saveActionPerformed(ActionEvent evt) {
       javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
       fc.setPreferredSize(new java.awt.Dimension(650, 500));
@@ -532,7 +579,10 @@ public class MimsJTable {
       }
    }
 
-   public void writeData(File file) {
+  /**
+   * Writes the actual data.
+   */
+   private void writeData(File file) {
       try {
               PrintWriter out = new PrintWriter(new FileWriter(file));
               DefaultTableModel dtm = (DefaultTableModel)table.getModel();
@@ -569,7 +619,10 @@ public class MimsJTable {
           }
    }
 
-   public boolean tableColumnsMatch(String[] columnNames) {
+  /**
+   * Determines if the number of columns is the same.
+   */
+   private boolean tableColumnsMatch(String[] columnNames) {
 
       int numCol1 = columnNames.length;
       int numCol2 = ((DefaultTableModel)table.getModel()).getColumnCount();
@@ -580,18 +633,36 @@ public class MimsJTable {
       return true;
    }
 
+   /**
+    * Sets the images to be included in the table.
+    *
+    * @param images a set of MimsPlus images.
+    */
    public void setImages(MimsPlus[] images){
       this.images = images;
    }
 
+   /**
+    * Sets the statistics to be included in the table.
+    *
+    * @param stats a set of statistics.
+    */
    public void setStats(String[] stats) {
       this.stats = stats;
    }
 
+   /**
+    * Sets the ROIs to be included in the table.
+    *
+    * @param rois a set of ROIs.
+    */
    public void setRois(Roi[] rois) {
       this.rois = rois;
    }
 
+   /**
+    * Displays the frame (with table).
+    */
    public void showFrame() {
       if (frame != null) {
          frame.setVisible(true);
@@ -599,17 +670,31 @@ public class MimsJTable {
       }
    }
 
+   /**
+    * Nulls the table and sets the frame to not visible.
+    */
    public void close() {
     	table = null;
       if (frame != null)
          frame.setVisible(false);
    }
 
+   /**
+    * Sets the planes to be included in the table.
+    *
+    * @param planes an arraylist of planes.
+    */
    void setPlanes(ArrayList planes) {
       this.planes = planes;
    }
 
-   public JTable autoResizeColWidth(JTable table, DefaultTableModel model) {
+   /**
+    * Adjust the size of the columns correctly.
+    *
+    * @param table the JTable.
+    * @param model the table model.
+    */
+   private JTable autoResizeColWidth(JTable table, DefaultTableModel model) {
 
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -654,9 +739,6 @@ public class MimsJTable {
 
         ((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(
             SwingConstants.CENTER);
-
-        // table.setAutoCreateRowSorter(true);
-        // table.getTableHeader().setReorderingAllowed(false);
 
         return table;
     }

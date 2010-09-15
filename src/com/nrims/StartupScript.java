@@ -10,8 +10,7 @@ import javax.swing.*;
 
 public class StartupScript extends Thread {
 
-   private static String FILE_DIRECTORY = "/nrims/home3/zkaufman/DOCS/TrackingDocuments/LEE/EXP15";
-   private static String LIST_FILE_NAME = "/nrims/home3/mwang/duansun_corey_exp5/EXP5_MOUSE_PUPS/filelist1.txt";
+   private static String LIST_FILE_NAME = "/nrims/home3/zkaufman/TrackingDocuments/LEE/EXP16/filelist.txt";
 
    UI ui;
    BufferedReader br;
@@ -20,7 +19,6 @@ public class StartupScript extends Thread {
    final javax.swing.JDialog dialog;
    JLabel label = new JLabel("");
    File imFile = null;
-   File directory = new File(FILE_DIRECTORY);
    RatioProps[] rto_props;
    HSIProps[] hsi_props;
    SumProps[] sum_props;

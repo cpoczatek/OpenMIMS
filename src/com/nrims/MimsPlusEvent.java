@@ -1,15 +1,8 @@
-/*
- * mimsPlusEvent.java
- *
- * Created on May 3, 2006, 12:47 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
-
 package com.nrims;
 
 /**
+ * A class for triggering events based on certain actions
+ * performed on a MimsPlus window.
  *
  * @author Douglas Benson
  */
@@ -19,9 +12,6 @@ public class MimsPlusEvent extends java.util.EventObject {
     static final int ATTR_SET_ROI = 3 ;
     static final int ATTR_MOUSE_RELEASE = 4 ;
     static final int ATTR_ROI_MOVED = 5;
-    //static final int ATTR_ROI_MOVED_ALL = 6;
-    //left in as example, was fired from mimsplus if ctrl key down
-    //then handled in ui, useful for other things maybe...
 
     /** Creates a new instance of mimsPlusEvent */
     public MimsPlusEvent( MimsPlus mimsImage, int slice, int attribute ) {

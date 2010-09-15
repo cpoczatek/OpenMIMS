@@ -1,13 +1,19 @@
 package com.nrims;
 
 import com.nrims.data.Opener;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+/**
+ * MimsAction.java
+ *
+ *
+ * The MimsAction class stores information regarding the
+ * 'state' of the image. State changes can be in the form
+ * of x and y translations, dropped planes, compressed
+ * planes, block size if compressed, etc.
+ *
+ */
 public class MimsAction implements Cloneable {
     
     public ArrayList<double[]> xyTranslationList;
@@ -18,14 +24,18 @@ public class MimsAction implements Cloneable {
     private boolean isCompressed = false;
     private int blockSize =1;
 
-    public MimsAction(UI ui, Opener im) {
-        resetAction(ui, im);
+    public MimsAction(Opener im) {
+        resetAction(im);
     }
 
-    public void resetAction(UI ui, Opener im) {                    
+   /**
+    * Initializes all the member variables to the correct size.
+    *
+    * @param im the opener object.
+    */
+    private void resetAction(Opener im) {
                                      
         // Size of the stack.
-        //int size = ui.getMassImage(0).getNSlices();
         int size = im.getNImages();
 
         // Set size of member variables.
@@ -43,6 +53,14 @@ public class MimsAction implements Cloneable {
         }
     }
 
+   /**
+    * Increases the size of member variables. To be used when 
+    * planes are appended (or prepended) to the existing image.
+    *
+    * @param pre boolean <code>true</code> if prepended, <code>false</code> if appending.
+    * @param n number of planes being added.
+    * @param op a link to the Opener object of the image.
+    */
     public void addPlanes(boolean pre, int n, Opener op) {
         int origSize = imageList.size();
         int startIndex;
@@ -64,6 +82,19 @@ public class MimsAction implements Cloneable {
        
     }
 
+   /**
+    * Returns a String of tab delimited data for a given plane.
+    * Used for display purposes only.
+    *
+    * @param plane the true plane index.
+    *
+    * @return A string of tab delimited data. Example:
+    * <p>
+    * "p:1	15.0	20.0	0	0	test_file.im"
+    * <p>
+    * 1=plane, 15=x-translation, 20=y-translation, 0=dropped value (1 if dropped, 0 otherwise),
+    * 0=index of plane in the Opener object, "test_file.im"=name of image
+    */
     public String getActionRow(int plane) {
         int idx = plane-1;
         return "p:" + plane +
@@ -74,30 +105,52 @@ public class MimsAction implements Cloneable {
                "\t" + imageList.get(idx);
     }
 
+   /**
+    * Gets the total size of the currently open image (dropped images included).
+    *
+    * @return size of the current image.
+    */
     public int getSize() {
         return this.imageList.size();
     }
 
+   /**
+    * Marks a plane as being dropped (assigns
+    * a dropped value of 1 to the current plane).
+    *
+    * @param displayIndex the planes display index.
+    */
     public void dropPlane(int displayIndex) {
         int index = trueIndex(displayIndex);
         droppedList.set(index - 1, 1);
     }
 
+   /**
+    * Marks a plane as being included (assigns
+    * a value of 0 to the current plane).
+    *
+    * @param trueIndex the true index of the plane.
+    */
     public void undropPlane(int trueIndex) {
         droppedList.set(trueIndex - 1, 0);
     }
 
-    // Apply the given offset (in the x-direction)
-    // to the given plane. If image is compressed,
-    // apply offset to all planes within that block.
-    public void setShiftX(int plane, double offset) {        
+   /**
+    * Apply the given offset (in the x-direction)
+    * to the given plane. If image is compressed,
+    * apply offset to all planes within that block.
+    *
+    * @param displayPlane the planes display index.
+    * @param offset the offset value.
+    */
+    public void setShiftX(int displayPlane, double offset) {
         int[] planes = new int[1];
-        int tplane = trueIndex(plane);
+        int tplane = trueIndex(displayPlane);
         planes[0] = tplane;
-        double meanTranslation = getXShift(plane);
+        double meanTranslation = getXShift(displayPlane);
 
         if (isCompressed)
-           planes = getPlaneNumbersFromBlockNumber(plane);
+           planes = getPlaneNumbersFromBlockNumber(displayPlane);
 
         for (int i = 0; i < planes.length; i++) {
            tplane = planes[i];
@@ -112,17 +165,22 @@ public class MimsAction implements Cloneable {
         }
     }
 
-    // Apply the given offset (in the y-direction)
-    // to the given plane. If image is compressed,
-    // apply offset to all planes within that block.
-    public void setShiftY(int plane, double offset) {
+   /**
+    * Apply the given offset (in the y-direction)
+    * to the given plane. If image is compressed,
+    * apply offset to all planes within that block.
+    *
+    * @param displayPlane the planes display index.
+    * @param offset the offset value.
+    */
+    public void setShiftY(int displayPlane, double offset) {
         int[] planes = new int[1];
-        int tplane = trueIndex(plane);
+        int tplane = trueIndex(displayPlane);
         planes[0] = tplane;
-        double meanTranslation = getYShift(plane);
+        double meanTranslation = getYShift(displayPlane);
 
        if (isCompressed)
-           planes = getPlaneNumbersFromBlockNumber(plane);
+           planes = getPlaneNumbersFromBlockNumber(displayPlane);
 
         for (int i = 0; i < planes.length; i++) {
            tplane = planes[i];
@@ -137,6 +195,15 @@ public class MimsAction implements Cloneable {
         }
     }
 
+   /**
+    * Gets the size of the currently open image. This is
+    * the total size, as return by {@link #getSize() getSize}
+    * minus the number of dropped planes. This method could
+    * possibly be replaced by a call to MimsPlus getNPlanes
+    * method.
+    *
+    * @return size of the current image (accounts for dropped planes).
+    */
     public int getSizeMinusNumberDropped() {
       int nPlanes = 0;
       for (int i = 1; i <= getSize(); i++) {
@@ -146,6 +213,14 @@ public class MimsAction implements Cloneable {
       return nPlanes;
    }
 
+   /**
+    * Returns the sequence of plane numbers that make up a
+    * given block. Only needs to be used when the current image
+    * has been compressed into blocks.
+    *
+    * @param blockNumber the blockNumber (plane number).
+    * @return a series of ints (plane numbers) that make up a block.
+    */
     public int[] getPlaneNumbersFromBlockNumber(int blockNumber) {
 
        if (!isCompressed) {
@@ -167,6 +242,7 @@ public class MimsAction implements Cloneable {
           if (tplane <= getSize())
              planesArray.add(tplane);
        }
+       
        // Convert to int[].
        int[] planes = new int[planesArray.size()];
        for (int i = 0; i < planesArray.size(); i++)
@@ -175,17 +251,22 @@ public class MimsAction implements Cloneable {
        return planes;
     }
 
-    // returns the X-shift for this plane.
-    // If compressed than returns the mean
-    // of the planes in the block.
-    public double getXShift(int plane) {
+   /**
+    * Returns the x-translation for this plane.
+    * If compressed than returns the mean
+    * of the planes in the block.
+    *
+    * @param displayPlane the planes display index.
+    * @return x-translation value.
+    */
+    public double getXShift(int displayPlane) {
        
        int[] planes = new int[1];       
-       int tplane = trueIndex(plane);       
+       int tplane = trueIndex(displayPlane);
        planes[0] = tplane;
 
        if (isCompressed)
-          planes = getPlaneNumbersFromBlockNumber(plane);
+          planes = getPlaneNumbersFromBlockNumber(displayPlane);
 
        double sumX = 0;
        for (int i = 0; i < planes.length; i++) {
@@ -196,16 +277,21 @@ public class MimsAction implements Cloneable {
        return xval;
     }
 
-    // returns the Y-shift for this plane.
-    // If compressed than returns the mean
-    // of the planes in the block.
-    public double getYShift(int plane) {
+   /**
+    * Returns the y-translation for this plane.
+    * If compressed than returns the mean
+    * of the planes in the block.
+    *
+    * @param displayPlane the planes display index.
+    * @return y-translation value.
+    */
+    public double getYShift(int displayPlane) {
        int[] planes = new int[1];
-       int tplane = trueIndex(plane);
-       planes[0] = plane;
+       int tplane = trueIndex(displayPlane);
+       planes[0] = displayPlane;
 
        if (isCompressed)
-          planes = getPlaneNumbersFromBlockNumber(plane);
+          planes = getPlaneNumbersFromBlockNumber(displayPlane);
 
        double sumY = 0;
        for (int i = 0; i < planes.length; i++) {
@@ -216,6 +302,15 @@ public class MimsAction implements Cloneable {
        return yval;
     }
 
+   /**
+    * Returns the true index for a plane. If an image
+    * has a total of 2 planes, but plane 1 has been
+    * dropped, than only 1 plane is visible. In this case,
+    * the true index for the first plane is 2.
+    *
+    * @param dispIndex the true index of the plane.
+    * @return true plane index
+    */
     public int trueIndex(int dispIndex) {
         int index = 0;
         int zeros = 0;
@@ -228,6 +323,15 @@ public class MimsAction implements Cloneable {
         return index;
     }
 
+   /**
+    * Returns the display index for a plane. If an image
+    * has a total of 2 planes, but plane 1 has been
+    * dropped, than only one plane is visible. In this case,
+    * the display index for the first plane is 1.
+    *
+    * @param tIndex the planes display index.
+    * @return display plane index
+    */
     public int displayIndex(int tIndex) {
         int zeros = 0;
         int i = 0;
@@ -244,6 +348,13 @@ public class MimsAction implements Cloneable {
         }
     }
 
+   /**
+    * Returns <code>true</code> if dropped, returns <code>false</code>
+    * if not dropped.
+    *
+    * @param tIndex the true index of the plane.
+    * @return boolean
+    */
     public boolean isDropped(int tIndex) {
         if (droppedList.get(tIndex-1) == 1)
             return true;
@@ -251,84 +362,89 @@ public class MimsAction implements Cloneable {
             return false;
     }
 
-    public String[] getImageList(){
-       String imageListString[] = new String[imageList.size()];
-       for (int i=0; i<imageListString.length; i++)
-          imageListString[i] = imageList.get(i);
-       return imageListString;
+
+   /**
+    * Returns the imageList member variable. The imageList
+    * member variable stores the name of the image file
+    * from which the plane was read. If only 1 image file
+    * was used (no concatenation of files) than all entries
+    * will be the same.
+    *
+    * @return an ArrayList of image file names.
+    */
+    public ArrayList<String> getImageList(){
+       return imageList;
     }
 
+   /**
+    * Returns <code>true</code> if image is compressed
+    * into blocks, otherwise <code>false</code>.
+    *
+    * @return boolean
+    */
     public boolean getIsCompressed() {
        return isCompressed;
     }
 
+   /**
+    * Set to <code>true</code> if compressing the image
+    * into blocks.
+    *
+    * @param compressed <code>true</code> if compressing the image
+    * into blocks, otherwise <code>false</code>.
+    */
     public void setIsCompressed(boolean compressed) {
        isCompressed = compressed;
     }
 
+   /**
+    * Returns the number of images that makes up a block.
+    *
+    * @return int
+    */
     public int getBlockSize() {
        return blockSize;
     }
 
+   /**
+    * Sets the number of images that makes up a block.
+    *
+    * @param size the size of a block
+    */
     public void setBlockSize(int size) {
        blockSize = size;
     }
-    
+
+   /**
+    * Returns the index within the Opener that the <code>plane</code>
+    * comes from.
+    *
+    * @param plane the true index of the plane.
+    */  
     public int getOpenerIndex(int plane) {       
        return imageIndex.get(plane);       
     }
-    
+
+   /**
+    * Returns the name of the Opener object that the <code>plane</code>
+    * comes from. If single image file, values for all planes will
+    * be the same. If concatenated, than not all planes will be equal.
+    *
+    * @param plane the true index of the plane.
+    * @return the name of the Opener, as a String.
+    */
     public String getOpenerName(int plane) {
        return imageList.get(plane);
     }
-    
-    @Override
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
-    }
 
-    public File writeAction(File file) {
-       
-        // initialize variable.
-        BufferedWriter bw = null;             
-        
-        try {
-            bw = new BufferedWriter(new FileWriter(file));
-
-            // write image state
-            for (int i = 1; i <= imageList.size(); i++) {
-                bw.append(getActionRow(i));
-                bw.newLine();
-            }
-            bw.close();
-            return file.getAbsoluteFile();
-        } catch (IOException e) {
-            System.out.println(e.getStackTrace().toString());
-            return null;
-        } finally {
-            if (bw != null) {
-                try {
-                    bw.close();
-                } catch (IOException e) {
-                    return null;
-                }
-            }
-        }
-    }
-
-   void setSliceImage(int plane, String file) {
-        int tplane = trueIndex(plane);
-        if (!imageList.get(tplane - 1).equals(file)) {
-            imageList.set(tplane - 1, file);
-        }   
-   }
-   
+   /**
+    * Returns a <code>double</code> formatted to have 2 decimal places.
+    *
+    * @param d double value.
+    * @return <code>double</code> rounded to 2 decimal places.
+    */
    double roundTwoDecimals(double d) {
-        	DecimalFormat twoDForm = new DecimalFormat("#.##");
+      DecimalFormat twoDForm = new DecimalFormat("#.##");
 		return Double.valueOf(twoDForm.format(d));
    }
 }

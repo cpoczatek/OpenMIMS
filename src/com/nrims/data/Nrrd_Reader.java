@@ -39,7 +39,7 @@ public class Nrrd_Reader implements Opener {
     private boolean header = false;
     private int bitSize = 0;
 
-    public Nrrd_Reader(File imageFile) {
+    public Nrrd_Reader(File imageFile) throws IOException {
 
         // Make sure file exists.
         this.file = imageFile;
@@ -64,7 +64,9 @@ public class Nrrd_Reader implements Opener {
 
         try {
            getPixels(0);
-        } catch (Exception e) {System.out.println("Error reading file "+file.getAbsolutePath());}
+        } catch (Exception e) {
+           throw new IOException();
+        }
     }
 
     // Reads header and gets metadata.
@@ -335,7 +337,7 @@ public class Nrrd_Reader implements Opener {
       // Get image from file.
       ImagePlus imp = fo.open(false);
       if (imp == null) {
-         return null;
+         throw new IOException();
       }
 
       Object pixels;

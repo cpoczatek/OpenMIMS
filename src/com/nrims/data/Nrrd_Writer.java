@@ -302,14 +302,7 @@ public class Nrrd_Writer implements PlugIn {
 		// The default!
 		return "raw";
 	}
-			
-	private static String dimmedQuotedLine(String tag,int dimension,String x1,String x2,String x3) {
-		x1="\""+x1+"\"";
-		x2="\""+x2+"\"";
-		x3="\""+x3+"\"";
-		return dimmedLine(tag, dimension,x1, x2, x3);
-	}
-	
+				
 	private static String dimmedLine(String tag,int dimension,String x1,String x2,String x3) {
 		String rval=null;
 		if(dimension==2) rval=tag+": "+x1+" "+x2+"\n";

@@ -16,17 +16,23 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.chart.plot.Plot;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
-import org.jfree.chart.plot.XYPlot;
 
+/**
+ * MimsJFreeChart class creates a frame containing a <code>MimsXYPlot</code>.
+ * This class is used to create frames that contain plots, usually
+ * for statistical data associated with images.
+ *
+ * @author zkaufman
+ */
 public class MimsJFreeChart extends JFrame {
 
    private String[] stats;
@@ -42,6 +48,13 @@ public class MimsJFreeChart extends JFrame {
       setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
    }
 
+  /**
+   * Plots the data and shows the frame. Only call this method
+   * if all relevant member variables are set.
+   *
+   * @param appendingData <code>true</code> if appending a plot
+   * to an existing frame, otherwise <code>false</code>.
+   */
    public void plotData(boolean appendingData) {
 
       // Add data to existing plaot if appending.
@@ -74,7 +87,7 @@ public class MimsJFreeChart extends JFrame {
          JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
          xhairs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               ui.showHideCrossHairs(chartpanel);
+               MimsJFreeChart.showHideCrossHairs(chartpanel);
             }
          });
          chartpanel.getPopupMenu().addSeparator();
@@ -83,7 +96,7 @@ public class MimsJFreeChart extends JFrame {
          JMenuItem logscale = new JMenuItem("Log/Linear scale");
          logscale.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               ui.logLinScale(chartpanel);
+               MimsJFreeChart.logLinScale(chartpanel);
             }
          });
          chartpanel.getPopupMenu().addSeparator();
@@ -94,7 +107,7 @@ public class MimsJFreeChart extends JFrame {
           asTextMenuItem.addActionListener(new ActionListener() {
 
               public void actionPerformed(ActionEvent e) {
-                  ui.displayProfileData(chartpanel);
+                  MimsJFreeChart.displayProfileData(chartpanel);
               }
           });
           chartpanel.getPopupMenu().add(asTextMenuItem, 2);
@@ -116,7 +129,9 @@ public class MimsJFreeChart extends JFrame {
       }
    }
 
-   // Contruct the Frame.
+/**
+ * Contructs the frame and sets the specifics regarding visual parameters.
+ */
    private static JFreeChart createChart() {
       JFreeChart chart = MimsChartFactory.createMimsXYLineChart("", "Plane", "", null, PlotOrientation.VERTICAL, true, true, false);
       chart.setBackgroundPaint(Color.white);
@@ -143,7 +158,9 @@ public class MimsJFreeChart extends JFrame {
       return chart;
    }
 
-   // Append data to existing plot.
+  /**
+   * Append data to existing plot.
+   */
    private void appendData() {
          XYDataset tempdata = getDataset();
 
@@ -161,8 +178,10 @@ public class MimsJFreeChart extends JFrame {
          nullMissingPoints((XYSeriesCollection) chartpanel.getChart().getXYPlot().getDataset());
    }
 
-   // Add any series with a new key in newdata to olddata.
-   public boolean addToDataSet(XYSeriesCollection newdata, XYSeriesCollection olddata) {
+  /**
+   * Add any series with a new key in newdata to olddata.
+   */
+   private boolean addToDataSet(XYSeriesCollection newdata, XYSeriesCollection olddata) {
 
       boolean hasnewseries = false;
       // Loop over newdata.
@@ -193,8 +212,10 @@ public class MimsJFreeChart extends JFrame {
       return hasnewseries;
    }
 
-   // Return any series from newdata with a key missing from olddata.
-   public XYSeriesCollection missingSeries(XYSeriesCollection newdata, XYSeriesCollection olddata) {
+  /**
+   * Return any series from newdata with a key missing from olddata.
+   */
+   private XYSeriesCollection missingSeries(XYSeriesCollection newdata, XYSeriesCollection olddata) {
       XYSeriesCollection returncollection = new XYSeriesCollection();
 
       // Loop over newdata.
@@ -214,14 +235,15 @@ public class MimsJFreeChart extends JFrame {
       return returncollection;
    }
 
-   // Adds the pair {x, null} to any series in data that is missing {x, y}.
-   // Changes contents of data.
-   public void nullMissingPoints(XYSeriesCollection data) {
+  /**
+   * Adds the pair {x, null} to any series in data that is missing {x, y}.
+   * Changes contents of data.
+   */
+      private void nullMissingPoints(XYSeriesCollection data) {
       for (int nindex = 0; nindex < data.getSeriesCount(); nindex++) {
          XYSeries series = data.getSeries(nindex);
          double min = series.getMinX();
          double max = series.getMaxX();
-         double span = (max - min) + 1;
          for (int xindex = (int) min; xindex <= (int) max; xindex++) {
             double xval = (double) xindex;
             int pos = series.indexOf(xval);
@@ -232,7 +254,11 @@ public class MimsJFreeChart extends JFrame {
       }
    }
 
-   // This method will generate a set of plots for a given set of: rois, stats, images.
+  /**
+   * This method will generate a set of plots for a given set of: rois, stats, images.
+   *
+   * @return XYDataset
+   */
    public XYDataset getDataset() {
 
       // Initialize some variables
@@ -298,24 +324,126 @@ public class MimsJFreeChart extends JFrame {
       return dataset;
    }
 
+   /**
+    * Sets the images to be plotted.
+    *
+    * @param images a set of MimsPlus images.
+    */
    public void setImages(MimsPlus[] images) {
       this.images = images;
    }
 
+   /**
+    * Sets the statistics to be plotted.
+    *
+    * @param stats a set of statistics.
+    */
    public void setStats(String[] stats) {
       this.stats = stats;
    }
 
+   /**
+    * Sets the ROIs to be plotted.
+    *
+    * @param rois a set of ROIs.
+    */
    public void setRois(Roi[] rois) {
       this.rois = rois;
    }
 
+   /**
+    * Sets the planes to be plotted.
+    *
+    * @param planes an arraylist of planes.
+    */
    public void setPlanes(ArrayList planes) {
       this.planes = planes;
    }
 
+   /**
+    * Swap crosshairs from hidden to shown or vice versa
+    * @param chartpanel GUI element to be affected
+    */
+   public static void showHideCrossHairs(MimsChartPanel chartpanel) {
+      Plot plot = chartpanel.getChart().getPlot();
+      if (!(plot instanceof MimsXYPlot))
+         return;
+
+      // Show/Hide XHairs
+      MimsXYPlot xyplot = (MimsXYPlot) plot;
+      xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
+      xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
+      xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
+   }
+
+    /**
+    * Change y axis from linear to log scale or vice versa
+    * @param chartpanel GUI element to be affected
+    */
+    public static void logLinScale(MimsChartPanel chartpanel) {
+      Plot plot = chartpanel.getChart().getPlot();
+
+      if (!(plot instanceof MimsXYPlot))
+         return;
+
+
+      MimsXYPlot xyplot = (MimsXYPlot) plot;
+      org.jfree.chart.axis.ValueAxis axis = xyplot.getRangeAxis();
+      String label = axis.getLabel();
+
+       if (!(axis instanceof org.jfree.chart.axis.LogarithmicAxis)) {
+           org.jfree.chart.axis.LogarithmicAxis logaxis = new org.jfree.chart.axis.LogarithmicAxis(label);
+           logaxis.setRange(axis.getLowerBound(), axis.getUpperBound());
+           logaxis.setAutoRange(true);
+           logaxis.setStrictValuesFlag(false);
+           xyplot.setRangeAxis(logaxis);
+       } else {
+           org.jfree.chart.axis.NumberAxis linaxis = new org.jfree.chart.axis.NumberAxis(label);
+           linaxis.setAutoRange(true);
+           xyplot.setRangeAxis(linaxis);
+       }
+   }
+
+   /**
+    * Extract and show table of plot's underlying data.
+    * @param chartpanel GUI element to be affected.
+    */
+    public static void displayProfileData(MimsChartPanel chartpanel) {
+        MimsXYPlot plot = (MimsXYPlot) chartpanel.getChart().getPlot();
+        XYDataset data = plot.getDataset();
+
+        ij.measure.ResultsTable table = new ij.measure.ResultsTable();
+        table.setHeading(1, "Plane");
+        for(int i = 0; i<plot.getLegendItems().getItemCount(); i++) {
+            table.setHeading(i+2, plot.getLegendItems().get(i).getLabel() );
+        }
+
+        //table.incrementCounter();
+
+        //end of table bug?
+        for (int i = 0; i < data.getItemCount(0); i++) {
+            table.incrementCounter();
+            table.addValue(1, data.getXValue(0, i));
+
+            for(int j = 0; j < plot.getLegendItems().getItemCount(); j++) {
+                table.addValue(j+1, data.getYValue(j, i));
+            }
+        }
+
+        table.show("");
+    }
+
+   /**
+    * A static class that returns a double value for a specific
+    * statistic. The <code> stats </code> parameter must be defined
+    * and associated with an image, usually by calling <code>
+    * image.getStatistics() </code>.
+    *
+    * @param stats image statistics object.
+    * @param statname a string naming the desired statistic.
+    * @return the statistic value (default value = -999).
+    */
    public static double getSingleStat(ImageStatistics stats, String statname) {
-        double st;
 
         if(statname.equals("area"))
             return stats.area;

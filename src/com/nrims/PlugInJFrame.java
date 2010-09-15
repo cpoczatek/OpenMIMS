@@ -1,11 +1,3 @@
-/*
- * PlugInJFrame.java
- *
- * Created on May 1, 2006, 12:40 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
 package com.nrims;
 
 import javax.swing.JFrame;
@@ -15,6 +7,11 @@ import ij.*;
 import ij.plugin.*;
 
 /**
+ * A parent class for implementing classes that require a frame.
+ * Not strictly required but prevents redundant frame-handling
+ * code from appearing in classes like, MimsRatioManage, AutoTrackManager,
+ * PrefFrame, etc.
+ *
  *
  * @author Douglas Benson
  */

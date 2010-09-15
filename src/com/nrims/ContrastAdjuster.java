@@ -5,17 +5,22 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import ij.*;
-import ij.plugin.*;
 import ij.process.*;
 import ij.gui.*;
 import ij.measure.*;
-import java.util.Calendar;
 
-/** This plugin implements the Brightness/Contrast, Window/level and
-	Color Balance commands, all in the Image/Adjust sub-menu. It 
-	allows the user to interactively adjust the brightness  and
-	contrast of the active image. It is multi-threaded to 
-	provide a more  responsive user interface. */
+/**
+ * The <code>ContrastAdjuster</code> class is a modified version of
+ * the <code>ContrastAdjuster</code> class contained within the ImageJ
+ * source code. It allows the user to interactively adjust the brightness
+ * and contrast of the active image.
+ * It has been modified to use a mostly Swing layout and other
+ * adjustments relating to the interface. Most, if not all, the of the
+ * functionality is the same. Please the ImageJ's <code>ContrastAdjuster</code>
+ * documentation for specifics regarding code functionality.
+ *
+ * @author zkaufman
+ */
 public class ContrastAdjuster extends JPanel implements Runnable,
 	ActionListener, AdjustmentListener, ItemListener {
 
@@ -61,21 +66,23 @@ public class ContrastAdjuster extends JPanel implements Runnable,
         boolean hold = false;
         MimsPlus imp;
         boolean updatehist = true;
-        
-        // If you do not want JPanel and Histogram,
-        // but do want contrasting functionality.
+
+        /**
+         * Use this constructor if you do NOT want JPanel
+         * and histogram, but do want contrasting functionality.
+         * @param imp the image to be adjusted.
+         */
         public ContrastAdjuster(MimsPlus imp){
            this.imp = imp;
            this.updatehist = false;           
         }        
-        
-        public ContrastAdjuster(MimsPlus imp, UI ui) {
-           this(ui);
-           this.imp = imp;
-           this.updatehist = false;           
-	}
-        
-        public ContrastAdjuster(UI ui) {          
+
+        /**
+         * Use this panel to get sliders, histogram and all
+         * contrasting functionality.
+         * @param ui a link to the main interface.
+         */
+   public ContrastAdjuster(UI ui) {          
 	   this.ui = ui;	
            ij = IJ.getInstance();
 		gridbag = new GridBagLayout();

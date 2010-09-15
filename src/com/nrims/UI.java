@@ -7,15 +7,12 @@ package com.nrims;
 
 import com.nrims.data.*;
 
-import com.nrims.plot.MimsChartPanel;
-import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
-import ij.process.ColorProcessor;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -26,38 +23,27 @@ import java.awt.Image;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.awt.event.WindowListener;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.util.HashMap;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.jfree.chart.plot.Plot;
-import org.jfree.data.xy.XYDataset;
 
 /**
  * The main user interface of the NRIMS ImageJ plugin.
+ * A multitabbed window with a file menu, the UI class
+ * serves as the central hub for all classes involved
+ * with the user interface.
  */
 public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListener {
 
@@ -78,11 +64,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private int ratioScaleFactor = 10000;
     private double medianFilterRadius = 1;
     
-    private boolean bDebug = false;
     private boolean bSyncStack = true;
-    private boolean bSyncROIs = true;
-    private boolean bSyncROIsAcrossPlanes = true;
-    private boolean bAddROIs = true;
     private boolean bUpdating = false;    
     private boolean currentlyOpeningImages = false;
     private boolean bCloseOldWindows = true;
@@ -95,17 +77,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private boolean[] bOpenMass = new boolean[maxMasses];
             
     private String lastFolder = null;      
-    public  File   tempActionFile;        
-    
-            
+    public  File   tempActionFile;                        
     private HashMap openers = new HashMap();
-    
+
     private MimsPlus[] massImages = new MimsPlus[maxMasses];
     private MimsPlus[] ratioImages = new MimsPlus[maxMasses];
-    public MimsPlus[] hsiImages = new MimsPlus[maxMasses];
+    private MimsPlus[] hsiImages = new MimsPlus[maxMasses];
     private MimsPlus[] segImages = new MimsPlus[maxMasses];
     private MimsPlus[] sumImages = new MimsPlus[2 * maxMasses];
-
     private MimsPlus[] compImages = new MimsPlus[2 * maxMasses];
 
     private MimsData mimsData = null;
@@ -115,37 +94,28 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsRoiManager roiManager = null;
     private MimsTomography mimsTomography = null;        
     private MimsHSIView hsiControl = null;
-    private SegmentationForm segmentation = null;    
+    private SegmentationForm segmentation = null;
+
     private javax.swing.JRadioButtonMenuItem[] viewMassMenuItems = null;
     private Opener image = null;
     private ij.ImageJ ijapp = null;
-    private FileDrop mimsDrop;    
-    
+    private FileDrop mimsDrop;        
     private Point[] windowPositions = null;
     private int[] hiddenWindows = null;
     private double[] windowZooms = null;
-
     protected MimsLineProfile lineProfile;
     protected MimsAction mimsAction = null; 
-
     private imageNotes imgNotes;
-
     private PrefFrame prefs;
-
     private String revisionNumber = "";
-
     private static String im_file_path = null;
     /*
      * Private stings for option parsing
      */
     private static final String IMFILE_OPTION = "-imfile";
 
-    /**
-     * Constructor
-     * Creates a new instance of the OpenMIMS analysis interface.
-     * @param fileName path to the OpenMIMS file to analyze
-     */
-    public UI(String fileName) {
+    /** Creates a new instance of the OpenMIMS analysis interface.*/
+    public UI() {
         super("NRIMS Analysis Module");
       
       System.out.println("Ui constructor");
@@ -153,19 +123,24 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       revisionNumber = extractRevisionNumber();
 
-      // Set look and feel to native OS
+      /*
+      // Set look and feel to native OS - this has been giving us issues
+      // as getting the "SystemLookAndFeel" sometimes results is very
+      // different layouts for the HSIView tab. Leave commentoutr out for now.
       try {
-         //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-         //SwingUtilities.updateComponentTreeUI(this);
+         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+         SwingUtilities.updateComponentTreeUI(this);
       } catch (Exception e) {
          IJ.log("Error setting native Look and Feel:\n" + e.toString());
       }
+      */
 
       initComponents();
       initComponentsCustom();
+      
       //read in preferences so values are gettable
       //by various tabs (ie mimsTomography, HSIView, etc.
-      //when constructed further down
+      //when constructed further down.
       prefs = new PrefFrame();
 
       ijapp = IJ.getInstance();
@@ -204,10 +179,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       this.setLocation(xloc, yloc);
       ij.WindowManager.addWindow(this);
-
-      if (bDebug) {
-         IJ.log("open UI ok...");
-      }
       IJ.showProgress(1.0);
 
       this.mimsDrop = new FileDrop(null, jTabbedPane1, new FileDrop.Listener() {
@@ -235,7 +206,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (opened == false)
                return;
            
-
             // Generate all images that were previously open.
             // TODO: a better check than just looking at the first file?
             if( files[0].getAbsolutePath().endsWith(NRRD_EXTENSION) ||
@@ -263,8 +233,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /**
      * Insertion status of the current MimsPlus object
-     * @param mp object to be inserted
-     * @return success/failure of insertion
+     * @param mp object to be inserted.
+     * @return success/failure of insertion.
      */
    public boolean addToImagesList(MimsPlus mp) {
       int i = 0; int ii = 0; boolean inserted=false;
@@ -273,6 +243,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             inserted = true;
             ratioImages[i] = mp;
             getCBControl().addWindowtoList(mp);
+            getmimsTomography().resetImageNamesList();
             return true;
          }
          if (mp.getMimsType() == MimsPlus.HSI_IMAGE && hsiImages[i] == null) {
@@ -294,6 +265,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             inserted = true;
             sumImages[ii] = mp;
             getCBControl().addWindowtoList(mp);
+            this.mimsTomography.resetImageNamesList();
             return true;
          }
          if (mp.getMimsType() == MimsPlus.COMPOSITE_IMAGE && compImages[ii] == null) {
@@ -307,86 +279,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       return inserted;
    }
 
-   /**
-    * Swap crosshairs from hidden to shown or vice versa
-    * @param chartpanel GUI element to be affected
-    */
-   //can these 2 methods be moved to MimsJFreeChart????
-   void showHideCrossHairs(MimsChartPanel chartpanel) {
-      Plot plot = chartpanel.getChart().getPlot();
-      if (!(plot instanceof MimsXYPlot))
-         return;
-      
-      // Show/Hide XHairs
-      MimsXYPlot xyplot = (MimsXYPlot) plot;
-      xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
-      xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
-      xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
-   }
-
     /**
-    * Change y axis from linear to log scale or vice versa
-    * @param chartpanel GUI element to be affected
-    */
-   
-   void logLinScale(MimsChartPanel chartpanel) {
-      Plot plot = chartpanel.getChart().getPlot();
-
-      if (!(plot instanceof MimsXYPlot))
-         return;
-
-
-      MimsXYPlot xyplot = (MimsXYPlot) plot;
-      org.jfree.chart.axis.ValueAxis axis = xyplot.getRangeAxis();
-      String label = axis.getLabel();
-
-       if (!(axis instanceof org.jfree.chart.axis.LogarithmicAxis)) {
-           org.jfree.chart.axis.LogarithmicAxis logaxis = new org.jfree.chart.axis.LogarithmicAxis(label);
-           logaxis.setRange(axis.getLowerBound(), axis.getUpperBound());
-           logaxis.setAutoRange(true);
-           logaxis.setStrictValuesFlag(false);
-           xyplot.setRangeAxis(logaxis);
-       } else {
-           org.jfree.chart.axis.NumberAxis linaxis = new org.jfree.chart.axis.NumberAxis(label);
-           linaxis.setAutoRange(true);
-           xyplot.setRangeAxis(linaxis);
-       }
-
-   }
-
-   /**
-    * Extract and show table of plot's underlying data
-    * @param chartpanel GUI element to be affected
-    */
-
-   //Todo, clean up
-      public void displayProfileData(MimsChartPanel chartpanel) {
-        MimsXYPlot plot = (MimsXYPlot) chartpanel.getChart().getPlot();
-        XYDataset data = plot.getDataset();
-
-        ij.measure.ResultsTable table = new ij.measure.ResultsTable();
-        table.setHeading(1, "Plane");
-        for(int i = 0; i<plot.getLegendItems().getItemCount(); i++) {
-            table.setHeading(i+2, plot.getLegendItems().get(i).getLabel() );
-        }
-        
-        //table.incrementCounter();
-
-        //end of table bug?
-        for (int i = 0; i < data.getItemCount(0); i++) {
-            table.incrementCounter();
-            table.addValue(1, data.getXValue(0, i));
-
-            for(int j = 0; j < plot.getLegendItems().getItemCount(); j++) {
-                table.addValue(j+1, data.getYValue(j, i));
-            }
-        }
-
-        table.show("");
-    }
-
-    /**
-     * Closes the current image and its associated set of windows if the mode is set to close open windows.
+     * Closes the current image and its associated set of
+     * windows if the mode is set to close open windows.
      */
     private synchronized void closeCurrentImage() {
         this.windowPositions = gatherWindowPosistions();
@@ -477,8 +372,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     }
 
     /**
-     * Open the file(s) for futher processing.
-     * @param files list of files to open
+     * Relegates behavior for opening any of the various MimsPlus file types.
+     * @param file to be opened.
      */
     public boolean openFile(File file) {
       
@@ -527,7 +422,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             Object obj = obj_in.readObject();
             if (obj instanceof HSIProps) {
                HSIProps hsiprops = (HSIProps) obj;
-               String dataFileString = hsiprops.getDatFileName();
+               String dataFileString = hsiprops.getDataFileName();
                File dataFile = new File(file.getParent(), dataFileString);
                loadMIMSFile(dataFile);
                MimsPlus mp = new MimsPlus(this, hsiprops);
@@ -552,30 +447,32 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             updateAllImages();
             getRoiManager().showFrame();
          }
-
-
-         //Todo: if a bs file this still gets called and throws?
-
-         // This 3 lines solves some strange updating issues.
-         // Has to do with syncing images by changing the slice.
-         int startslice = massImages[0].getCurrentSlice();
-         massImages[0].setSlice(getOpener().getNImages());
-         massImages[0].setSlice(startslice);
-
-         if (onlyShowDraggedFile) {
-            MimsPlus[] mps = getOpenMassImages();
-            for (int i = 0; i < mps.length; i++) {
-               mps[i].hide();
-            }
-         }
-
       } catch (Exception e) {
          e.printStackTrace();
          return false;
       }
-      return true;
+
+       // This 3 lines solves some strange updating issues.
+       // Has to do with syncing images by changing the slice.
+       int startslice = massImages[0].getCurrentSlice();
+       massImages[0].setSlice(getOpener().getNImages());
+       massImages[0].setSlice(startslice);
+
+       if (onlyShowDraggedFile) {
+          MimsPlus[] mps = getOpenMassImages();
+          for (int i = 0; i < mps.length; i++) {
+             mps[i].hide();
+          }
+       }
+
+       return true;
    }
 
+    /**
+     * Opens an image file in the .im or .nrrd file format.
+     * @param file absolute file path.
+     * @throws java.lang.NullPointerException
+     */
     public synchronized void loadMIMSFile(File file) throws NullPointerException {
         if (!file.exists()) {
             throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
@@ -591,7 +488,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             getRoiManager().roijlist.clearSelection();
 
             try {
-
                 //need to add checks
                 if (file.getName().endsWith(MIMS_EXTENSION)) {
                    image = new Mims_Reader(file);
@@ -599,11 +495,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                    image = new Nrrd_Reader(file);
                 } else {
                    return;
-                }
-               
-            } catch (IOException e) {
-                IJ.log("Failed to open " + file + "......  :\n\n");
-                logException(e);
+                }               
+            } catch (Exception e) {
+                IJ.error("Failed to open " + file + "\n");
                 return;
             }
 
@@ -654,10 +548,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 memRequired = nMasses * image.getWidth() * image.getHeight() * 2 * nImages;
             }
 
-
-
-            updateStatus("Opening " + file + " ....... " + nMasses + " masses " + nImages + " sections");
-
             try {
                 int n = 0;
                 int t = image.getNMasses() * nImages;
@@ -707,7 +597,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 }
 
             } catch (Exception x) {
-                updateStatus(x.toString());
                 x.printStackTrace();
             }
 
@@ -723,10 +612,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 initializeViewMenu();
                 mimsData = new com.nrims.MimsData(this, image);
                 hsiControl = new MimsHSIView(this);
-                mimsLog = new MimsLog(this, image);
+                mimsLog = new MimsLog();
                 mimsStackEditing = new MimsStackEditor(this, image);
                 mimsTomography = new MimsTomography(this);
-                mimsAction = new MimsAction(this, image);
+                mimsAction = new MimsAction(image);
                 //TODO: throws an exception when opening an image with 2 masses
                 segmentation = new SegmentationForm(this);
 
@@ -745,7 +634,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 cbControl = new MimsCBControl(this);
                 mimsStackEditing = new MimsStackEditor(this, image);
                 mimsTomography = new MimsTomography(this);
-                mimsAction = new MimsAction(this, image);
+                mimsAction = new MimsAction(image);
                 //TODO: throws an exception when opening an image with 2 masses
                 segmentation = new SegmentationForm(this);
                 jTabbedPane1.setComponentAt(0, mimsData);
@@ -773,7 +662,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             this.mimsTomography.resetImageNamesList();
             this.mimsStackEditing.resetSpinners();
 
-            //????????????????
             openers.clear();
             String fName = file.getName();
             openers.put(fName, image);            
@@ -794,6 +682,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }        
     }
 
+    /**
+     * Returns the mass images window positions as an array of Points.
+     *
+     * @return the mass images window positions.
+     */
     public Point[] gatherWindowPosistions() {
         Point[] positions = new Point[maxMasses];
 
@@ -810,6 +703,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return positions;
     }
 
+    /**
+     * Returns an array of int describing if certain mass
+     * images are visible or hidden.
+     *
+     * @return an array describing if mass images are visible (1) or hidden (0).
+     */
      public int[] gatherHiddenWindows() {
         int[] hidden = new int[maxMasses];
 
@@ -826,6 +725,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return hidden;
     }
 
+    /**
+     * Returns the mass images window magnifications.
+     *
+     * @return the mass images window magnifications.
+     */
      public double[] gatherWindowZooms() {
         double[] zooms = new double[maxMasses];
 
@@ -845,7 +749,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return zooms;
     }
 
-
+    /**
+     * Opens the mass image windows at the positions
+     * specified in the <code>positions</code> array.
+     *
+     * @param positions an array of points.
+     */
     public void applyWindowPositions(Point[] positions) {
         for(int i = 0; i < positions.length; i++) {
            if ( positions[i] != null && massImages[i] != null)
@@ -855,6 +764,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /**
+     * Keeps visible or hides the mass images based
+     * on the contents of the <code>hidden</code> array.
+     *
+     * @param hidden an array of ints: (1) equals visible, (0) equals hidden.
+     */
     public void applyHiddenWindows(int[] hidden) {
         for(int i = 0; i < hidden.length; i++) {
            if ( massImages[i] != null)
@@ -863,6 +778,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /**
+     * Applies the magnification factor stored in
+     * the <code>zoom</code> array to the mass images.
+     *
+     * @param zooms an array of zoom values.
+     */
     public void applyWindowZooms(double[] zooms) {
         for (int i = 0; i < zooms.length; i++) {
             if (massImages[i] != null) {
@@ -885,12 +806,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /**
+     * Resets the "view" menu item to reflect the
+     * mass images in the current data file.
+     */
     private void resetViewMenu() {
         int c=0;
         for(int i = 0; i< windowPositions.length; i++) {
             if(windowPositions[i]!=null) c++;
         }
-        //System.out.println("count: "+c);
 
         for (int i = 0; i < viewMassMenuItems.length; i++) {
             if (i < image.getNMasses()) {
@@ -914,6 +838,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /** Initializes the view menu.*/
     private void initializeViewMenu() {
         this.viewMassMenuItems = new javax.swing.JRadioButtonMenuItem[this.maxMasses];
 
@@ -931,7 +856,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
 
             massRButton.addActionListener(new java.awt.event.ActionListener() {
-
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     viewMassChanged(evt);
                 }
@@ -943,6 +867,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     }
 
+    /** Action method for the "view" menu items. */
     private void viewMassChanged(java.awt.event.ActionEvent evt) {
         if(windowPositions==null) windowPositions = gatherWindowPosistions();
         int index = 0;
@@ -953,13 +878,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
         if (massImages[index] != null) {
             if (viewMassMenuItems[index].isSelected() && !massImages[index].isVisible()) {
-                //int plane = getVisableMassImages()[0].getSlice();
                 massImages[index].show();
                 if(windowPositions[index] != null && (windowPositions[index].x > 0 && windowPositions[index].y > 0))
                     massImages[index].getWindow().setLocation(windowPositions[index]);
                 massImages[index].setbIgnoreClose(true);
-                //massImages[index].setSlice(plane);
-                //massImages[index].updateAndDraw();
             } else if( !viewMassMenuItems[index].isSelected() && massImages[index].isVisible()) {
                 windowPositions[index] = massImages[index].getWindow().getLocation();
                 massImages[index].hide();
@@ -971,6 +893,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         System.out.print(" visable: " + massImages[index].isVisible() + "\n");
     }
 
+    /** The behavior for "closing" mass images, when closing is not allowed.*/
     public void massImageClosed(MimsPlus im) {
         if(windowPositions==null) windowPositions = gatherWindowPosistions();
         for (int i = 0; i < massImages.length; i++) {
@@ -978,13 +901,19 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (massImages[i].equals(im)) {
                     windowPositions[i] = im.getXYLoc();
                     viewMassMenuItems[i].setSelected(false);
-                    //windowZooms[i] = im.getCanvas().getMagnification();
-
                 }
             }
         }
     }
 
+    /**
+     * Returns the index of the ratio image with numerator
+     * <code>numIndex</code> and denominator <code>denIndex</code>.
+     *
+     * @param numIndex numerator mass index.
+     * @param denIndex denominator mass index.
+     * @return index of ratio image, -1 of none exists.
+     */
     public int getRatioImageIndex(int numIndex, int denIndex) {        
         for (int i = 0; i < ratioImages.length; i++) {
            if (ratioImages[i] != null) {
@@ -997,6 +926,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return -1;
     }
 
+    /**
+     * Returns the index of the HSI image with numerator
+     * <code>numIndex</code> and denominator <code>denIndex</code>.
+     *
+     * @param numIndex numerator mass index.
+     * @param denIndex denominator mass index.
+     * @return index of ratio image, -1 of none exists.
+     */
     public int getHsiImageIndex(int numIndex, int denIndex) {
         for (int i = 0; i < hsiImages.length; i++) {
            if (hsiImages[i] != null) {
@@ -1009,6 +946,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return -1;
     }
 
+    /**
+     * Extracts the revision number from the file <code>buildnum.txt</code>
+     *
+     * @return a string containing the build number.
+     */
     private String extractRevisionNumber() {
         try {
             InputStream build = getClass().getResourceAsStream("/buildnum.txt");
@@ -1032,6 +974,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
 
     // TODO: Fix Me
+    /**
+     * Opens a segmented image.
+     *
+     * @param segImage the data array (width x height x numPlanes).
+     * @param description a simple description to be used as a title.
+     * @param segImageHeight the height of the image in pixels.
+     * @param segImageWidth the width of the image in pixels.
+     */
     public void openSeg(int[] segImage, String description, int segImageHeight, int segImageWidth) {
 
         int npixels = segImageWidth * segImageHeight;
@@ -1083,9 +1033,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /**
+     * Gets the information stored in the header of the image file
+     * and returns it as a string. Currently used as debug data
+     * output only.
+     *
+     * @param im a pointer to the <code>Opener</code>.
+     * @return a String containing the metadata.
+     */
     public static String getImageHeader(Opener im) {
-        //String str = "\nHeader: \n";
-        //str += "Path: " + im.getImageFile().getAbsolutePath() + "/" + im.getName() + "\n";
 
         // WE HAVE TO DECIDE WHAT WE WANT.
         String[] names = im.getMassNames();
@@ -1111,7 +1067,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         str += "End header.\n\n";
         return str;
     }
-    
+
+    /**
+     * Updates all images and kills any active
+     * ROIs that might be on those images.
+     */
     public void updateAllImages() {
         for (int i = 0; i < maxMasses; i++) {
             if (segImages[i] != null) {
@@ -1140,6 +1100,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    /**
+     * Recomputes all ratio images. This needs to be done
+     * whenever an action is performed that changes the
+     * underlying data of the ratio image. For example,
+     * using a median filter.
+     */
     public void recomputeAllRatio() {
         MimsPlus[] openRatio = this.getOpenRatioImages();
         for (int i = 0; i < openRatio.length; i++) {
@@ -1149,6 +1115,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         cbControl.updateHistogram();
     }
 
+    /**
+     * Recomputes all HSI images. This needs to be done
+     * whenever an action is performed that changes the
+     * underlying data of the HSI image. For example,
+     * using a median filter.
+     */
     public void recomputeAllHSI() {
         MimsPlus[] openHSI = this.getOpenHSIImages();
         for (int i = 0; i < openHSI.length; i++) {
@@ -1157,16 +1129,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }        
     }                  
 
-
-    public void recomputeAllComposite() {
-        MimsPlus[] openComp = this.getOpenCompositeImages();
-        for (int i = 0; i < openComp.length; i++) {
-            openComp[i].computeComposite();
-            openComp[i].updateAndDraw();
-        }
-    }
-
-
+    /**
+     * Recomputes a composite image.
+     * @param img the parent image.
+     */
     public void recomputeComposite(MimsPlus img) {
         MimsPlus[] openComp = this.getOpenCompositeImages();
         for (int i = 0; i < openComp.length; i++) {
@@ -1183,25 +1149,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
-    public int getHSIImageIndex(HSIProps props) {
-        if (props == null) {
-            return -1;
-        }
-        int numIndex = props.getNumMassIdx();
-        int denIndex = props.getDenMassIdx();
-        for (int i = 0; i < maxMasses; i++) {
-            if (hsiImages[i] != null) {
-                if (hsiImages[i].getHSIProps().getNumMassIdx() == numIndex && hsiImages[i].getHSIProps().getDenMassIdx() == denIndex) {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
-
     /**
      * Catch events such as changing the slice number of a stack
-     * or drawing ROIs and if enabled,  update or synchronize all images
+     * or drawing ROIs and if enabled,  update or synchronize all images.
+     *
      * @param evt
      */
     @Override
@@ -1270,7 +1221,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                    evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
             // Update all images with a selected ROI 
             // MOUSE_RELEASE catches drawing new ROIs             
-            if (bSyncROIs) {
                 int i;
                 if(evt.getRoi()!= null) evt.getRoi().setStrokeColor(Color.yellow);  // needed to highlight current ROI on all images
                                                                                     // previous code did not highlight ShapeRoi objects
@@ -1300,10 +1250,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         sumImages[i].setRoi(evt.getRoi());
                     }
                 }
-            }
             // Automatically appends a drawn ROI to the RoiManager
             // to improve work flow without extra mouse actions.             
-            if (bAddROIs && evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
+            if (evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
                 ij.gui.Roi roi = evt.getRoi();
                 if (roi != null && roi.getState() != Roi.CONSTRUCTING) {
                     MimsRoiManager rm = getRoiManager();
@@ -1325,6 +1274,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         this.mimsStackEditing.resetSpinners();
     }
 
+    /**
+     * Determines the bahavior when an image is closed. Essentially
+     * a bookkeepping method that sets certain member variable to
+     * null when corresponding window is closed.
+     *
+     * @param mp the image being closed.
+     */
    public void imageClosed(MimsPlus mp) {
             int i;
             // TODO: add switch case statement
@@ -1352,50 +1308,33 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }            
    }
 
-   // This method returns the name of the main image file without the extension.
+   /**
+    * Returns the prefix of the current data files name.
+    * For example: test_file. im = test_file
+    *
+    * @return prefix file name.
+    */
    public String getImageFilePrefix() {
       String filename = image.getImageFile().getName().toString();
       String prefix = filename.substring(0, filename.lastIndexOf("."));
       return prefix;
    }
 
+   /**
+    * Returns the prefix of any file name.
+    * For example: /tmp/test_file.im = /tmp/test_file
+    *
+    * @return prefix file name.
+    */
    public String getFilePrefix(String fileName) {
       String prefix = fileName.substring(0, fileName.lastIndexOf("."));
       return prefix;
    }
-    
+
+   /** Custom actions to be called AFTER initComponent. */
    private void initComponentsCustom() {
-       //For non netbeans gui initialization....
        this.imgNotes = new imageNotes();
        this.imgNotes.setVisible(false);
-
-       //hide testing
-      //TestMenuItem.setVisible(false);
-      
-       //what is this?
-/*
-      // Open action.
-      jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            try {
-               openActionEvent(evt);
-            } finally {
-               setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            }
-         }
-      });
-      
-      // save action.
-      saveMIMSjMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            try {
-               saveAction(evt);
-            } finally {
-               setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            }
-         }
-      });
- */
    }
    
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -1440,7 +1379,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       genStackMenuItem = new javax.swing.JMenuItem();
       compositeMenuItem = new javax.swing.JMenuItem();
       jSeparator5 = new javax.swing.JSeparator();
-      debugCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
       TestMenuItem = new javax.swing.JMenuItem();
 
       jMenuItem9.setText("Export all images");
@@ -1667,14 +1605,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       utilitiesMenu.add(compositeMenuItem);
       utilitiesMenu.add(jSeparator5);
 
-      debugCheckBoxMenuItem.setText("Debug");
-      debugCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            debugCheckBoxMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(debugCheckBoxMenuItem);
-
       TestMenuItem.setText("Test");
       TestMenuItem.addActionListener(new java.awt.event.ActionListener() {
          public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1713,7 +1643,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
    }// </editor-fold>//GEN-END:initComponents
 
     /**
-     * restores any closed or modified massImages
+     * Restores the image to its unmodified state. Undoes
+     * and compression, reinserts all deleted planes, and
+     * sets all translations back to zero.
      */
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {                                           
         
@@ -1722,7 +1654,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         mimsStackEditing.uncompressPlanes();
 
         // concatenate the remaining files.
-        int x = mimsAction.getSize();
         for (int i = 1; i <= mimsAction.getSize(); i++) {
            massImages[0].setSlice(i);
            if (mimsAction.isDropped(i)) mimsStackEditing.insertSlice(i);
@@ -1734,55 +1665,143 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         massImages[0].setSlice(currentSlice);
     }
-    
+
+    /**
+     * Sets isRatio to true, meaning data shown in ratio
+     * images are ratio values and NOT percent turnover.
+     *
+     * @param selected <code>true</code> if generating
+     * ratio images with ratio values, otherwise <code>false</code>.
+     */
     public void setIsRatio(boolean selected) {
        isRatio = selected;
     }
 
+    /**
+     * Returns <code>true</code> if generating ratio images
+     * with ratio values and NOT percent turnover.
+     *
+     * @return boolean.
+     */
     public boolean getIsRatio(){
        return isRatio;
     }
 
+    /**
+     * Sets isPercentTurnover to true, meaning data shown
+     * in ratio images are percent turnover values and NOT
+     * ratio values.
+     *
+     * @param selected <code>true</code> if generating
+     * ratio images with percent turnover values, otherwise
+     * <code>false</code>.
+     */
     public void setIsPercentTurnover(boolean selected) {
        isPercentTurnover = selected;
     }
 
+    /**
+     * Returns <code>true</code> if generating ratio images
+     * with percent turnover values and NOT ratio values.
+     *
+     * @return boolean.
+     */
     public boolean getIsPercentTurnover(){
        return isPercentTurnover;
     }
 
+    /**
+     * Sets the isSum member variable to <code>set</code> telling
+     * the application if ratio and HSI images should be generated
+     * as sum images, instead of plane by plane.
+     *
+     * @param set <code>true</code> if generating ratio image
+     * and HSI images as sum images, otherwise false.
+     */
     public void setIsSum(boolean set) {
         isSum = set;
     }
 
+    /**
+     * Returns <code>true</code> if the application is generating ratio and
+     * HSI images as sum images.
+     *
+     * @return <code>true</code> if generating ratio images and
+     * HSI images as sum images, otherwise <code>false</code>.
+     */
     public boolean getIsSum() {
         return isSum;
     }
 
+    /**
+     * Sets the isWindow member vairable to <code>set</code> telling
+     * the application if ratio and HSI images should be generated
+     * with a window of n planes.
+     *
+     * @param set <code>true</code> if generating ratio and HSI
+     * images with a window of <code>n</code> planes.
+     */
     public void setIsWindow(boolean set) {
         isWindow = set;
     }
 
+    /**
+     * Returns <code>true</code> if the application is generating
+     * ratio and HSI images with a window of <code>n</code> planes.
+     *
+     * @return <code>true</code> if generating ratio and HSi images
+     * with a window of <code>n</code> planes, otherwise <code>false</code>.
+     */
     public boolean getIsWindow() {
         return isWindow;
     }
 
+    /**
+     * Used to set the number of planes to when generating ratio
+     * and HSI images with a sliding window. Actual window size
+     * will be 2 times window range plus 1 (The current window is
+     * currentplane - windowSize up to currentplane + windowSize).
+     *
+     * @param range the "radius" of the sliding window.
+     */
     public void setWindowRange(int range) {
         windowRange = range;
     }
 
+    /**
+     * Returns the size of the sliding window.
+     *
+     * @return size of sliding window.
+     */
     public int getWindowRange() {
         return windowRange;
     }
-    
+
+    /**
+     * Tells the application to use the median filter
+     * when generating ratio and HSI images. All open
+     * ratio and HSI images will be regenerated.
+     *
+     * @param set <code>true</code> if computing ratio
+     * and HSI images with a median filter, othewise <code>false</code>.
+     */
     public void setMedianFilterRatios(boolean set) {
         medianFilterRatios = set;
     }
 
+    /**
+     * Returns <code>true</code> if the application is using
+     * a median filter when generating ratio and HSI images.
+     *
+     * @return <code>true</code> if using a median filter, otherwise <code>false</code>.
+     */
     public boolean getMedianFilterRatios() {
         return medianFilterRatios;
     }
 
+    /**
+     * Will perform and autocontrast on all open mass, ratio and sum images.
+     */
     public void autocontrastAllImages() {       
        // All mass images             
        MimsPlus mp[] = getOpenMassImages();
@@ -1798,7 +1817,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
               autoContrastImage(rp[i]);
         }
 
-        // All ratio images
+        // All sum images
         MimsPlus sp[] = getOpenSumImages();
         for (int i = 0; i < sp.length; i++) {
            if (sp[i].getAutoContrastAdjust())
@@ -1806,6 +1825,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }      
 
+    /**
+     * Autocontrasts an images according to ImageJ's autocontrasting algorithm.
+     *
+     * @param imgs an array of images to autocontrast.
+     */
    public void autoContrastImages(MimsPlus[] imgs) {
        for(int i=0; i<imgs.length; i++) {
            if(imgs[i]!=null) {
@@ -1813,7 +1837,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            }
        }
    }
-   
+
+   /**
+    * Autocontrast an image according to ImageJ's autocontrasting algorithm.
+    *
+    * @param img an image to autocontrast.
+    */
    public void autoContrastImage(MimsPlus img) {                 
       ContrastAdjuster ca = new ContrastAdjuster(img);
       ca.doAutoAdjust = true;
@@ -1829,7 +1858,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
-
+    /** An action method for the Edit>Preferences... menu item.*/
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
       
        if(this.prefs==null) { prefs = new PrefFrame(); }
@@ -1837,12 +1866,26 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
+    /** Action method for the View>Tile Windows menu item.*/
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {                                           
         ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
         wo.run("tile");
     }
 
-   // Saves a session.
+    /**
+     * Saves the current analysis session. If <code>saveImageOnly</code> is
+     * set to <code>true</code> than only the mass image data will be save
+     * to a file with name <code>fileName</code> (always ending with .nrrd).
+     * If <code>saveImageOnly</code> is set to <code>false</code> than
+     * mass image data will be save ALONG with a roi zip file containing
+     * all ROIs, all ratio, HSI and sum images. All files will have the same
+     * prefix name, but will slightly differ in their endings as well as
+     * their extensions.
+     *
+     * @param fileName the name of the file to be saved.
+     * @param saveImageOnly <code>true</code> if saving only the mass
+     * image data, <code>false</code> if saving Rois and derived images.
+     */
     public void saveSession(String fileName, boolean saveImageOnly) {
 
       // Initialize variables.
@@ -1943,6 +1986,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       }
    }
 
+    /**
+     * Action method for File>Open Mims Image menu item. If opening
+     */
     private void openMIMSImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                      
        
        // Get HSIProps for all open ratio images.
@@ -1991,6 +2037,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
 }                                                     
 
+    /**
+     * Regenerates the ratio images, hsi images and sum images with
+     * the properties specified in the arrays. Used when opening
+     * a new data file and the user wishes to generate all the same
+     * derived images that were open with the previous data file.
+     *
+     * @param rto_props array of <code>RatioProps</code> objects.
+     * @param hsi_props array of <code>HSIProps</code> objects.
+     * @param sum_props array of <code>SumProps</code> objects.
+     */
     public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props){
 
        if (rto_props == null)
@@ -2046,6 +2102,25 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        
     }
 
+    /**
+     * Determines the default name to assign ratio, HSi and sum images
+     * when being saved. Generally they will all have the same prefix name
+     * followed by some detail about the image along with an extension that
+     * corresponds to the type of image.
+     * <p>
+     * For example, if the current open file is called test_file.nrrd and
+     * the user wished to save all derived images, the following are possible
+     * names of the saved images depending on its type:
+     * <ul>
+     * <li>test_file_m13.sum
+     * <li>test_file_m13_m12.sum
+     * <li>test_file_m13_m12.ratio
+     * <li>test_file_m13_m12.hsi
+     * </ul>
+     *
+     * @param img the image to be saved.
+     * @return the default name of the file.
+     */
     String getExportName(MimsPlus img) {
         String name = "";
         name += this.getImageFilePrefix();
@@ -2109,11 +2184,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return name;
     }
 
-
-    
+    /**
+     * Action method for changing tabs. Im not sure but I dont think
+     * this should be needed. Possible future delete.
+     */
     private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
-        //tab focus changed
-        //reset tomography info
+
         if (this.mimsTomography != null) {
             this.mimsTomography.resetImageNamesList();
         }
@@ -2125,13 +2201,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     }//GEN-LAST:event_jTabbedPane1StateChanged
 
+    /** Action method File>Exit menu item. Closes the application. */
 private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-    //System.exit(0);
-    //TODO doesn't actually close...
-    //deleteTempActionFile();
     this.close();
 }//GEN-LAST:event_exitMenuItemActionPerformed
 
+   /** Action method for Utilities>Sum all Open menu item. Generates sum images
+    for all open mass and ration images.*/
 private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sumAllMenuItemActionPerformed
 
     SumProps sumProps;
@@ -2162,9 +2238,10 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
     }
 }//GEN-LAST:event_sumAllMenuItemActionPerformed
 
+/** Action method for File>About menu item. Displays basic information about the Open Mims plugins. */
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
-    String message = "OpenMIMS v0.8 Revision: " + this.revisionNumber + "\n\n";
+    String message = "OpenMIMS v1.0 Revision: " + this.revisionNumber + "\n\n";
     message += "OpenMIMS was developed at NRIMS, the National Resource \n";
     message += "for Imaging Mass Spectrometry. \n";
     message += "http://www.nrims.hms.harvard.edu/ \n";
@@ -2201,8 +2278,11 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
 
 }//GEN-LAST:event_aboutMenuItemActionPerformed
 
+/**
+ * Action method for Utilities>Capture Current Image menu item. Generates
+ * a .png screen capture for the most recently clicked image.
+ */
 private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_captureImageMenuItemActionPerformed
-    //testing trying to grab screen pixels from image for rois and annotations
 
     // Captures the active image window and returns it as an ImagePlus.
     ImagePlus imp = ij.WindowManager.getCurrentImage();
@@ -2273,6 +2353,10 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
 
 }//GEN-LAST:event_captureImageMenuItemActionPerformed
 
+/**
+ * Action method for the Utilities>Import .im  List menu item. Loads
+ * a list of images caontained in a text file and concatenates them.
+ */
 private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importIMListMenuItemActionPerformed
     com.nrims.data.LoadImageList testLoad = new com.nrims.data.LoadImageList(this);
     boolean read;
@@ -2283,10 +2367,12 @@ private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt)
 
     testLoad.printList();
     testLoad.simpleIMImport();
-    //this.mimsStackEditing.setConcatGUI(true);
 }//GEN-LAST:event_importIMListMenuItemActionPerformed
                                                                               
-
+/**
+ * Action method for the Utilities>Generate Stack menu item. Turns
+ * a ratio or HSI image into a stack.
+ */
 private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genStackMenuItemActionPerformed
 
     MimsPlus img;
@@ -2302,201 +2388,67 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
 }//GEN-LAST:event_genStackMenuItemActionPerformed
                                                                                          
-
+/** Action method Utilities>Test menu item. Reserved for testing code. */
 private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
-
-/*
-    MimsRoiManager rm = this.getRoiManager();
-    Roi[] rois = rm.getAllROIs();
-    ij.gui.ShapeRoi[] shaperois = new ij.gui.ShapeRoi[rois.length];
-
-    for(int i=0; i< rois.length; i++) {
-        shaperois[i] = new ij.gui.ShapeRoi(rois[i]);
-    }
-
-    for(int i=0; i< shaperois.length; i++) {
-        for(int j=0; j< shaperois.length; j++) {
-            if(i!=j) {
-                ij.gui.ShapeRoi intersection = (ij.gui.ShapeRoi)shaperois[i].clone();
-                intersection.not(shaperois[j]);
-                rm.add(intersection);
-            }
-        }
-    }
-*/
-
-  /*
-    MimsRoiManager rm = this.getRoiManager();
-    HashMap h = rm.getRoiLocations();
-
-    for (Object key : h.keySet()) {
-        ArrayList<Integer[]> xylist = (ArrayList<Integer[]>) h.get(key);
-        System.out.println("roi: "+key+" -> ");
-        for(int i = 0; i<xylist.size(); i++) {
-            System.out.println(xylist.get(i)[0]+","+xylist.get(i)[1]);
-        }
-    }
-*/
-     
-    //Poking around for roi locations exception
-
-    MimsRoiManager rm = getRoiManager();
-    String name = rm.getSelectedROIs()[0].getName();
-    HashMap locations = rm.getRoiLocations();
-    ArrayList pos = (ArrayList)locations.get(name);
-
-    System.out.println("Roi: " + name);
-    System.out.println("locations size : " + locations.size());
-    System.out.println("pos size: " + pos.size());
-    
-
-     //Random exception testing
-    /*
-    try{
-    int a=0;
-    int b =1;
-    System.out.println("a: " + a + " b: " + b + " a/b: " + (a/b) + " b/a: " + (b/a) );
-    }catch(Exception e) {
-        System.out.println(e.getLocalizedMessage());
-        System.out.println(e.toString());
-
-        StackTraceElement[] foo = e.getStackTrace();
-        for(int i=0; i<foo.length; i++) {
-            System.out.println("foo["+i+"]");
-            System.out.println(foo[i].toString());
-        }
-    }
-    */
-/*     try {
-        MimsRoiManager rm = getRoiManager();
-        if (rm != null) {
-            Roi[] rois = rm.getSelectedROIs();
-            boolean foo = rm.roiOverlap(rois[0], rois[1]);
-            System.out.println("overlap = " + foo);
-        }
-    } catch (Exception e) {
-    }
-*/
-    /*String n = this.getOpener().getNotes();
-    n = n + " !Notes! ";
-    this.getOpener().setNotes(n);*/
-
-     /*
-     this.imgNotes.setVisible(true);
-     String s = imgNotes.getNoteText();
-     
-     System.out.println("original\n: "+s);
-     System.out.println("--------------------------");
-
-     String s2 = s.replaceAll("\n", "&/&/&");
-     System.out.println("encoded\n: "+s2);
-     System.out.println("--------------------------");
-
-     String s3 = s2.replaceAll("&/&/&", "\n");
-     System.out.println("decoded :\n" + s3);
-     System.out.println("--------------------------");
-     
-     c = c+1;
-     
-
-     this.imgNotes.setVisible(true);
-     String s = imgNotes.getNoteText() + "blah\r\f\r\fblah";
-     String s2 = s.replaceAll("(\r)|(\f)", "\n");
-     System.out.println(s2);
-     */
-     /*
-     String s = "mailto:foo@bar.com";
-     s +="?subject=Test Subject";
-     s += "?body=I am on the meryygoround.... ";
-     try{
-     ij.plugin.BrowserLauncher.openURL(s);
-     } catch(Exception e) {}
-     */
-
-    //batch convert to nrrd test
-    /*
-    try {
-        // User sets file prefix name
-        JFileChooser fc = new JFileChooser();
-        fc.setMultiSelectionEnabled(true);
-        if (lastFolder != null) {
-            fc.setCurrentDirectory(new java.io.File(lastFolder));
-        }
-
-        int returnVal = fc.showSaveDialog(jTabbedPane1);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File[] files = fc.getSelectedFiles();
-            System.out.println("Num files: "+files.length);
-
-            for(int i = 0; i < files.length; i++) {
-                loadMIMSFile(files[i]);
-                //for(int j = 0; j<1000000; j++) {}
-
-                System.out.println("File: "+files[i].getAbsolutePath());
-
-                int planes = this.getOpener().getNImages();
-                this.getmimsStackEditing().compressPlanes(planes);
-                String newfile = files[i].getParent()+File.separator+this.getImageFilePrefix()+NRRD_EXTENSION;
-                System.out.println("New File: "+newfile);
-                saveSession(newfile,true);
-            }
-
-        }
-
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    */
 
 }//GEN-LAST:event_TestMenuItemActionPerformed
 
+/**
+ * Action method for File>Save Image and File>Save Session menu items.
+ * Brings up a JFileChooser for saving the current image (or session).
+ */
 private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveMIMSjMenuItemActionPerformed
 
-     String fileName;
-             try {
-                 // User sets file prefix name
-                 JFileChooser fc = new JFileChooser();
-                 if (lastFolder != null) {
-                     fc.setCurrentDirectory(new java.io.File(lastFolder));
-                 }
-                 if( this.getImageFilePrefix() != null ) {
-                    fc.setSelectedFile(new java.io.File(this.getImageFilePrefix()+NRRD_EXTENSION));
-                 }
-                 int returnVal = fc.showSaveDialog(jTabbedPane1);
-                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                     fileName = fc.getSelectedFile().getAbsolutePath();
-                     File file  = new File(fileName);
-                     if (file.exists()){
-                        int n = JOptionPane.showConfirmDialog(
-                                this,
-                                "File already exists.\n" + file.getAbsolutePath() + "\n" + "Overwrite?\n",
-                                "Warning",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.WARNING_MESSAGE);
-                        if (n == JOptionPane.NO_OPTION)
-                           return;
-                     }
-                     lastFolder = file.getParent();
-                     setIJDefaultDir(lastFolder);
-                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                     
-                     // Determine if we save just the mass images or the entire session.
-                     // (e.g. Mass images, Rois, HSIs, ratio image)
-                     boolean saveImageOnly = true;
-                     if (evt.getActionCommand().equals(SAVE_SESSION))
-                        saveImageOnly = false;
-                          saveSession(fileName, saveImageOnly);
-                 } else {
-                     return;
-                 }
-             } catch(Exception e) {
-                 ij.IJ.error("Save Error", "Error saving file.");
-             } finally {
-                 setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-             }
+   String fileName;
+   try {
+      // User sets file prefix name
+      JFileChooser fc = new JFileChooser();
+      if (lastFolder != null) {
+         fc.setCurrentDirectory(new java.io.File(lastFolder));
+      }
+      if (this.getImageFilePrefix() != null) {
+         fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
+      }
+      int returnVal = fc.showSaveDialog(jTabbedPane1);
+      if (returnVal == JFileChooser.APPROVE_OPTION) {
+         fileName = fc.getSelectedFile().getAbsolutePath();
+         File file = new File(fileName);
+         if (file.exists()) {
+            int n = JOptionPane.showConfirmDialog(
+                    this,
+                    "File already exists.\n" + file.getAbsolutePath() + "\n" + "Overwrite?\n",
+                    "Warning",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            if (n == JOptionPane.NO_OPTION) {
+               return;
+            }
+         }
+         lastFolder = file.getParent();
+         setIJDefaultDir(lastFolder);
+         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
+         // Determine if we save just the mass images or the entire session.
+         // (e.g. Mass images, Rois, HSIs, ratio image)
+         boolean saveImageOnly = true;
+         if (evt.getActionCommand().equals(SAVE_SESSION)) {
+            saveImageOnly = false;
+         }
+         saveSession(fileName, saveImageOnly);
+      } else {
+         return;
+      }
+   } catch (Exception e) {
+      ij.IJ.error("Save Error", "Error saving file.");
+   } finally {
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+   }
 }//GEN-LAST:event_saveMIMSjMenuItemActionPerformed
 
+/**
+ * Action method for the Utilities>Close>Close All Ratio Images.
+ * Closes all ratio images.
+ */
 private void closeAllRatioMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeAllRatioMenuItemActionPerformed
 
     for (int i = 0; i < ratioImages.length; i++) {
@@ -2506,6 +2458,10 @@ private void closeAllRatioMenuItemActionPerformed(java.awt.event.ActionEvent evt
     }
 }//GEN-LAST:event_closeAllRatioMenuItemActionPerformed
 
+/**
+ * Action method for the Utilities>Close>Close All HSI Images.
+ * Closes all HSI images.
+ */
 private void closeAllHSIMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeAllHSIMenuItemActionPerformed
 
     for (int i = 0; i < hsiImages.length; i++) {
@@ -2515,6 +2471,10 @@ private void closeAllHSIMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
     }
 }//GEN-LAST:event_closeAllHSIMenuItemActionPerformed
 
+/**
+ * Action method for the Utilities>Close>Close All Sum Images.
+ * Closes all sum images.
+ */
 private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeAllSumMenuItemActionPerformed
 
     for (int i = 0; i < sumImages.length; i++) {
@@ -2524,6 +2484,9 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
     }
 }//GEN-LAST:event_closeAllSumMenuItemActionPerformed
 
+/**
+ * Exports all open sum images, HSI images, ratio images and composite images as .png files.
+ */
 public void exportPNGs(){
    File file = image.getImageFile();
     System.out.println(file.getParent()+File.separator);
@@ -2600,389 +2563,39 @@ public void exportPNGs(){
 
 }
 
+/** Action method for Utilities>Export>Export All Derived. Exports all derived images and .png's. */
 private void exportPNGjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportPNGjMenuItemActionPerformed
    exportPNGs();
 }//GEN-LAST:event_exportPNGjMenuItemActionPerformed
 
+/** Action method for Utilities>Image Notes. Opens a text area for adding notes. */
 private void imageNotesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageNotesMenuItemActionPerformed
     this.imgNotes.setVisible(true);
 }//GEN-LAST:event_imageNotesMenuItemActionPerformed
 
+/** Action method for Utilities>Composite menu item. Shows the compisite manager interface. */
 private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compositeMenuItemActionPerformed
-
     cbControl.showCompositeManager();
-   /*
-    MimsPlus[] foo = getOpenMassImages();
-    MimsPlus[] imgs = {foo[0],foo[1],foo[2]};
-    //?
-    CompositeProps props = new CompositeProps(imgs);
-    MimsPlus comp = new MimsPlus(this, props);
-    this.compImages[0] = comp;
-    comp.show();
-    */
 }//GEN-LAST:event_compositeMenuItemActionPerformed
 
-private void debugCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_debugCheckBoxMenuItemActionPerformed
-    this.bDebug = debugCheckBoxMenuItem.isSelected();
-    //System.out.println(this.bDebug);
-}//GEN-LAST:event_debugCheckBoxMenuItemActionPerformed
-
+/** Action method for Utilities>Debug menu item. */
+/** Not used. Unable to delete. Stupid netbeans. */
 private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportHSI_RGBAActionPerformed
-    // Testing, to be moved to a manager class
-
-    MimsPlus img;
-    
-    try {
-        img = (MimsPlus) ij.WindowManager.getCurrentImage();
-    } catch (Exception e) {
-        return;
-    }
-
-    if (img.getMimsType() != MimsPlus.HSI_IMAGE) {
-        return;
-    }
-
-    HSIProps props = img.getHSIProps();
-    MimsPlus denimg = this.getMassImage(props.getDenMassIdx());
-    float[][] hsitables = HSIProcessor.getHsiTables();
-    int r, g, b;
-    double rScale = 65535.0 / (props.getMaxRatio() - props.getMinRatio());
-
-    float[] pix = (float[]) img.internalRatio.getProcessor().getPixels();
-    float[] denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
-    //for testing, to delete
-    int[] foo = new int[pix.length];
-
-    byte[][] plane_rgba = new byte[pix.length][4];
-
-    int numIndex = props.getNumMassIdx();
-    int denIndex = props.getDenMassIdx();
-    int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-    int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-
-    java.io.FileOutputStream out = null;
-    String dir = this.getImageDir();
-    String fileprefix = this.getImageFilePrefix();
-    fileprefix += "_m"+numMass+"m"+denMass+"_rgba";
-
-    //stupid rgb max min crap
-    //needs to change to not be unitless
-    int rgbMax = props.getMaxRGB();
-    int rgbMin = props.getMinRGB();
-    if (rgbMax == rgbMin) {
-        rgbMax++;
-    }
-    double rgbGain = 255.0 / (double) (rgbMax - rgbMin);
-
-
-    try {
-        //write rgba data
-        out = new java.io.FileOutputStream(dir+fileprefix+".raw");
-    } catch (Exception e) {
-        e.printStackTrace();
-        return;
-    }
-
-    for (int j = 1; j < denimg.getStackSize(); j++) {
-
-        img.setSlice(j, img);
-        //don't call on internal images?
-        //denimg.setSlice(j, true);
-        pix = (float[]) img.internalRatio.getProcessor().getPixels();
-        denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
-
-        //stupid rgb
-        double denMax = img.internalRatio.getProcessor().getMax();
-        double denMin = img.internalRatio.getProcessor().getMin();
-        //double denSpan = (denMax-denMin);
-        //double denGain = denSpan > 0 ? 255.0 / ( denSpan ) : 1.0 ;
-        double denSpan = (props.getMaxRatio() - props.getMinRatio());
-        double denGain = denMax > denMin ? 255.0 / (denSpan) : 1.0;
-
-
-        for (int i = 0; i < pix.length; i++) {
-            float ratioval = pix[i];
-
-            int iratio = 0;
-            if (ratioval > props.getMinRatio()) {
-                if (ratioval < props.getMaxRatio()) {
-                    iratio = (int) ((ratioval - props.getMinRatio()) * rScale);
-                    if (iratio < 0) {
-                        iratio = 0;
-                    } else if (iratio > 65535) {
-                        iratio = 65535;
-                    }
-                } else {
-                    iratio = 65535;
-                }
-            } else {
-                iratio = 0;
-            }
-
-            r = (int) (hsitables[0][iratio] * 255) << 16;
-            g = (int) (hsitables[1][iratio] * 255) << 8;
-            b = (int) (hsitables[2][iratio] * 255);
-
-            foo[i] = r + g + b;
-
-            plane_rgba[i][0] = (byte) (hsitables[0][iratio] * 255);
-            plane_rgba[i][1] = (byte) (hsitables[1][iratio] * 255);
-            plane_rgba[i][2] = (byte) (hsitables[2][iratio] * 255);
-
-            //alpha should be better...
-            //testing hard coded min=800 max=8000;
-            /*
-            double alpha = java.lang.Math.max(denpix[i], 800);
-            alpha = java.lang.Math.min(alpha, 8000);
-            alpha = alpha / (8000 - 800);
-            plane_rgba[i][3] = (byte) (255 * alpha);
-             */
-
-
-            //double scaled = (denpix[i] - denMin)/denSpan;
-            //System.out.println(denOut+ " ");
-            //int outValue = (int) ((double) scaled* rgbGain);
-
-            double a = (ratioval - props.getMinRatio()) / (props.getMaxRatio() - props.getMinRatio());
-            a = 255 * a;
-            int outValue = (int) java.lang.Math.round(a);
-
-            //System.out.println("rgbgain: "+rgbGain);
-            //System.out.println(outValue+ " ");
-            if (outValue < 0) {
-                outValue = 0;
-            } else if (outValue > 255) {
-                outValue = 255;
-            }
-
-            plane_rgba[i][3] = (byte) (outValue);
-        }
-
-        try {
-            for (int i = 0; i < plane_rgba.length; i++) {
-                out.write(plane_rgba[i]);
-            }
-            out.flush();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-
-    }
-    try {
-        out.close();
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-
-    java.io.BufferedWriter bw = null;
-    try {
-        //write training data
-        bw = new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(dir + fileprefix + ".dat")));
-        /*
-        ObjectFileName: 090826-3-4_PT-4x999_concat_rgba.raw
-        TaggedFileName: ---
-        Resolution: 256 256 449
-        SliceThickness: 1 1 1
-        Format: UCHAR4
-        NbrTags: 0
-        ObjectType: TEXTURE_VOLUME_OBJECT
-        ObjectModel: RGBA
-        GridType: EQUIDISTANT
-         */
-        int x = denimg.getWidth();
-        int y = denimg.getHeight();
-        int z = denimg.getStackSize();
-        String name = fileprefix + ".raw";
-
-        bw.write("ObjectFileName: " + name + "\n");
-        bw.write("TaggedFileName: ---" + "\n");
-        bw.write("Resolution: " + x + " " + y + " "+ z + "\n");
-        bw.write("SliceThickness: 1 1 1" + "\n");
-        bw.write("Format: UCHAR4\n");
-        bw.write("NbrTags: 0\n");
-        bw.write("ObjectType: TEXTURE_VOLUME_OBJECT\n");
-        bw.write("ObjectModel: RGBA\n");
-        bw.write("GridType: EQUIDISTANT\n");
-
-        bw.close();
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-
-
-    ImagePlus iplus = new ImagePlus("test", new ColorProcessor(256, 256, foo));
-    iplus.show();
-    
+    // Empty
 }//GEN-LAST:event_exportHSI_RGBAActionPerformed
 
+/** Action method for View>Roi Manager menu item. Display the Roi Manager. */
 private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
    getRoiManager().showFrame();
 }//GEN-LAST:event_jMenuItem5ActionPerformed
 
-   // Method for saving action file and writing backup action files.
-   public void saveAction(java.awt.event.ActionEvent evt) {
-
-      // Initialize variables.
-      File selectedFile = null;
-
-      // Query user where to save action file.
-      JFileChooser fc = new JFileChooser(lastFolder);
-      String fname = this.getImageFilePrefix();
-      fname = fname + ACT_EXTIONSION;
-      fc.setSelectedFile(new File(fname));      
-
-      while (true) {
-         if (fc.showSaveDialog(this) == JFileChooser.CANCEL_OPTION) {
-            return;
-         }
-         selectedFile = fc.getSelectedFile();
-
-         // Update ImageJs the 'lastFolder' variable.
-         lastFolder = selectedFile.getParent();
-         setIJDefaultDir(lastFolder);
-
-         // Check for overwriting any existing file.
-         String actionFile = selectedFile.getName();
-         if (selectedFile.exists()) {
-            String[] options = {"Overwrite", "Cancel"};
-            int value = JOptionPane.showOptionDialog(this, "File \"" + actionFile + "\" already exists!", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
-            if (value == JOptionPane.NO_OPTION) {
-               return;
-            }
-
-         }
-         getmimsAction().writeAction(selectedFile);
-         break;
-      }
-   }
-
-   // Open action file.
-   private void openActionEvent(java.awt.event.ActionEvent evt) {
-      
-      // Open JFileChooser and allow user to select action file.
-      JFileChooser fc = new JFileChooser();
-      if (lastFolder != null) {
-         fc.setCurrentDirectory(new java.io.File(lastFolder));
-      }
-      fc.setPreferredSize(new java.awt.Dimension(650, 500));
-      if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION) {
-         return;
-      }            
-      File actionFile = fc.getSelectedFile();
-      lastFolder = fc.getSelectedFile().getParent();
-      setIJDefaultDir(lastFolder);
-      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      
-      openAction(actionFile);
-   }
-      
-   public void openAction(File actionFile) {   
-            
-      // initialize variables
-      int trueIndex = 1;
-      ArrayList<Integer> deleteList = new ArrayList<Integer>();                             
-
-      // more variable assignment and initialization.
-      currentlyOpeningImages = true;
-      bUpdating = true;      
-
-      try {
-
-         BufferedReader br = new BufferedReader(new FileReader(actionFile));
-
-         // Read action file, and perform actions              
-         String line;
-         LinkedList actionRowList = new LinkedList();
-         LinkedList fileList = new LinkedList();
-         while ((line = br.readLine()) != null) {
-
-            // Parse line.
-            if (line.equals("")) {
-               break;
-            }
-            String[] row = line.split("\t");
-
-            // Add the actions to the actionList                 
-            actionRowList.add(row);
-
-            // Add files to the fileList (only if not already contained).
-            if (!fileList.contains(row[5])) {
-               fileList.add(row[5]);
-            }
-         }
-
-         // Now extract all relevant .im files from zip.
-         boolean firstImage = true;
-         for (int i = 0; i < fileList.size(); i++) {
-
-            // Make sure its exists in the current directory.
-            String fileName = ((String) fileList.get(i));
-            File imageFile = new File(actionFile.getParent(), fileName);
-            if (!imageFile.exists()) {
-               System.out.println("can not find image file " + fileName + " in current directory");
-               return;
-            }
-
-            // Read main image file.
-            if (firstImage) {
-               loadMIMSFile(imageFile);
-            } else {
-               UI tempui = new UI(imageFile.getAbsolutePath());
-               mimsStackEditing.concatImages(false, false, tempui);
-               openers.put(imageFile.getName(), tempui.getOpener());
-               for (MimsPlus img : tempui.getMassImages()) {
-                  if (img != null) {
-                     img.setAllowClose(true);
-                     img.close();
-                  }
-               }
-            }
-
-            firstImage = false;
-         }
-
-         // Loop over the action row list and perform actions.
-         for (int i = 0; i < actionRowList.size(); i++) {
-
-            // Get the action row.
-            String[] actionRowString = (String[]) actionRowList.get(i);
-
-            // Get the display index that corresponds to the true index.
-            int displayIndex = mimsAction.displayIndex(trueIndex);
-            for (int j = 0; j < image.getNMasses(); j++) {
-               massImages[j].setSlice(displayIndex);
-            }
-
-            // Set the XShift, YShift, dropped val, and image name for this slice.
-            mimsStackEditing.XShiftSlice(Double.parseDouble(actionRowString[1]));
-            mimsStackEditing.YShiftSlice(Double.parseDouble(actionRowString[2]));
-            mimsAction.setShiftX(displayIndex, Double.parseDouble(actionRowString[1]));
-            mimsAction.setShiftY(displayIndex, Double.parseDouble(actionRowString[2]));
-            if (Integer.parseInt(actionRowString[3]) == 1) {
-               deleteList.add(trueIndex);
-            }
-            mimsAction.setSliceImage(displayIndex, new String(actionRowString[5]));
-
-            trueIndex++;
-         }
-         mimsStackEditing.removeSliceList(deleteList);
-
-      // TODO we need more refined Exception checking here
-      } catch (Exception e) {}
-
-      // Set all images to the first slice.
-      for (int j = 0; j < image.getNMasses(); j++) {
-         massImages[j].setSlice(1);
-      }
-
-      bUpdating = false;
-      currentlyOpeningImages = false;
-   }
-
-//generates a new ImagePlus that's a stack from a ratio or hsi
+/**
+ * Generates a new MimsPlus image that is a stack. Whereas ratio
+ * image ans HSI images are single plane images by design, this method
+ * will turn it into a scrollable stack.
+ *
+ * @param img the image (ratio or HSI images only)/
+ */
 public void generateStack(MimsPlus img) {
     //do a few checks
     if(img==null)
@@ -3026,7 +2639,13 @@ public void generateStack(MimsPlus img) {
 
 }
 
-
+/**
+ * Updates the line profile to reflect the data stored in <code>newdata</code>.
+ *
+ * @param newdata the new data.
+ * @param name the name to be on the legend.
+ * @param width width of the line roi.
+ */
 public void updateLineProfile(double[] newdata, String name, int width) {
     if(this.lineProfile==null) {
         return;
@@ -3035,36 +2654,62 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 }
 
-    // Returns an instance of the RoiManager.
+   /**
+    * Returns an instance of the RoiManager.
+    *
+    * @return an instance of the RoiManager.
+    */
     public MimsRoiManager getRoiManager() {
         roiManager = MimsRoiManager.getInstance();
         if (roiManager == null) {
-            roiManager = new MimsRoiManager(this, image);
+            roiManager = new MimsRoiManager(this);
         }
         return roiManager;
     }
-            
+
+    /**
+     * Returns the directory of the image currently opened.
+     *
+     * @return the directory of the current image file.
+     */
     String getImageDir() {
-        //won't work on windows?
-        String path = image.getImageFile().getAbsolutePath();
-        path = path.substring(0, path.lastIndexOf("/")+1);
+        String path = image.getImageFile().getParent();
         return path;
     }
     
-    
+    /**
+     * Returns all the mass images, regardless if they are open or not.
+     *
+     * @return MimsPlus array of mass images.
+     */
     public MimsPlus[] getMassImages() {
         return massImages;
     }
 
+    /**
+     * Returns the mass image with index <code>i</code>.
+     *
+     * @param i the index.
+     * @return the mass image.
+     */
     public MimsPlus getMassImage(int i) {
         if (i >= 0 && i < maxMasses) {
             return massImages[i];
         }
         return null;
     }
-    
-    // Determine if mass value for a given index (i)
-    // is nearly the same as (d).
+
+    /**
+     * Determines if the mass value for a given index <code>i</code>
+     * is close enough to the mass value <code>d</code> to be considered
+     * equal. The current range is hard coded as being .9 to 1.1 of the
+     * same value to be considered equal, these parameters should be
+     * made as preferences.
+     *
+     * @param i the index for a current mass value.
+     * @param d the original mass value.
+     * @return <code>true</code> if the mass falls within the specified range, otherwise <code>false</code>.
+     */
     public boolean closeEnough(int i, double d) {
        double mass = getMassValue(i);
        double q = d/mass;
@@ -3074,6 +2719,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           return false;
     }
 
+    /**
+     * Gets the mass value for mass image with index <code>i</code>.
+     *
+     * @param i the index.
+     * @return the mass value.
+     */
     public double getMassValue(int i) {
        double mass = -1.0;
        try {
@@ -3082,17 +2733,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        return mass;
     }
 
-    public MimsPlus[] getHSIImages() {
-        return hsiImages;
-    }
-
-    public MimsPlus getHSIImage(int i) {
-        if (i >= 0 && i < maxMasses) {
-            return hsiImages[i];
-        }
-        return null;
-    }
-
+    /**
+     * Gets the ratio image with index <code>i</code>.
+     *
+     * @param i the index
+     * @return the image.
+     */
     public MimsPlus getRatioImage(int i) {
         if (i >= 0 && i < maxMasses) {
             return ratioImages[i];
@@ -3100,18 +2746,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return null;
     }
 
-    public MimsPlus[] getSumImages() {
-        return sumImages;
-    }
-
-    public MimsPlus getSumImage(int i) {
-        if (i >= 0 && i < maxMasses) {
-            return sumImages[i];
-        }
-        return null;
-    }
-
-    // Returns only the open mass images as an array.
+    /**
+     * Returns the open mass images as an array.
+     *
+     * @return array of images.
+     */
     public MimsPlus[] getOpenMassImages() {
         int i, nOpen = 0;
         for (i = 0; i < massImages.length; i++) {
@@ -3131,6 +2770,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mp;
     }
 
+    /**
+     * Returns the open ratio images as an array.
+     *
+     * @return array of images.
+     */
     public MimsPlus[] getOpenRatioImages() {
         int i, nOpen = 0;
         for (i = 0; i < maxMasses; i++) {
@@ -3150,7 +2794,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mp;
     }
 
-
+    /**
+     * Returns the open composite images as an array.
+     *
+     * @return array of images.
+     */
     public MimsPlus[] getOpenCompositeImages() {
         int i, nOpen = 0;
         for (i = 0; i < maxMasses; i++) {
@@ -3170,7 +2818,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mp;
     }
 
-
+    /**
+     * Returns the open HSI images as an array.
+     *
+     * @return array of images.
+     */
     public MimsPlus[] getOpenHSIImages() {
         int i, nOpen = 0;
         for (i = 0; i < maxMasses; i++) {
@@ -3190,6 +2842,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mp;
     }
 
+    /**
+     * Returns the open segmented images as an array.
+     *
+     * @return array of images.
+     */
     public MimsPlus[] getOpenSegImages() {
         int i, nOpen = 0;
         for (i = 0; i < maxMasses; i++) {
@@ -3208,7 +2865,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
         return mp;
     }
-    
+
+    /**
+     * Returns the open sum images as an array.
+     *
+     * @return array of images.
+     */
     public MimsPlus[] getOpenSumImages() {
         int i, nOpen = 0;
         for (i = 0; i < 2*maxMasses; i++) {
@@ -3228,7 +2890,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mp;
     }
 
-    // Get HSIProps for all open HSI images.
+    /**
+     * Returns the <code>HSIProps</code> object for all open HSI images.
+     *
+     * @return array of <code>HSIProps</code> objects.
+     */
     public HSIProps[] getOpenHSIProps() {
        MimsPlus[] hsi = getOpenHSIImages();
        HSIProps[] hsi_props = new HSIProps[hsi.length];
@@ -3246,7 +2912,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        return hsi_props;
     }
 
-    // Get RatioProps for all open Ratio images.
+    /**
+     * Returns the <code>RatioProps</code> object for all open ratio images.
+     *
+     * @return array of <code>RatioProps</code> objects.
+     */
     public RatioProps[] getOpenRatioProps() {
        MimsPlus[] rto = getOpenRatioImages();
        RatioProps[] rto_props = new RatioProps[rto.length];
@@ -3267,7 +2937,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        return rto_props;
     }
 
-    // Get SumProps for all open Sum images.
+    /**
+     * Returns the <code>SumProps</code> object for all open sum images.
+     *
+     * @return array of <code>SumProps</code> objects.
+     */
     public SumProps[] getOpenSumProps(){
        MimsPlus[] sum = getOpenSumImages();
        SumProps[] sum_props = new SumProps[sum.length];
@@ -3292,6 +2966,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        return sum_props;
     }
 
+    /**
+     * Returns the mass, ratio, HSI or sum image with the name <code>name</code>.
+     *
+     * @param name the name
+     * @return an image.
+     */
     public MimsPlus getImageByName(String name) {
         MimsPlus mp = null;
         MimsPlus[] tempimages;
@@ -3330,96 +3010,165 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
         return mp;
     }
-   
+
+    /**
+     * Sets if all mass images should croll through
+     * the stack in unison (synched).
+     *
+     * @param bSync Set to <code>true</code> if mass
+     * images should scroll in sych, otherwise <code>false</code>.
+     */
     public void setSyncStack(boolean bSync) {
         bSyncStack = bSync;
     }
 
-    public boolean getSyncStack() {
-        return bSyncStack;
-    }
-
-    public void setSyncROIs(boolean bSync) {
-        bSyncROIs = bSync;
-    }
-
-    public boolean getSyncROIs() {
-        return bSyncROIs;
-    }
-    
-    public void setSyncROIsAcrossPlanes(boolean bSync) {
-        bSyncROIsAcrossPlanes = bSync;
-    }
-
-    public boolean getSyncROIsAcrossPlanes() {
-        return bSyncROIsAcrossPlanes;
-    }
-
-    public void setAddROIs(boolean bOnOff) {
-        bAddROIs = bOnOff;
-    }
-
-    public boolean getAddROIs() {
-        return bAddROIs;
-    }
-
-    public MimsHSIView getHSIView() {
-        return hsiControl;
-    }
-
+    /**
+     * Returns a pointer to the <code>MimsData</code> object
+     * which controls the "Data" tab.
+     *
+     * @return the <code>MimsData</code> object.
+     */
     public MimsData getMimsData() {
         return mimsData;
     }
 
+    /**
+     * Returns a pointer to the <code>MimsHSIView</code> object
+     * which controls the "Process" tab.
+     * 
+     * @return the <code>MimsHSIView</code> object.
+     */
+    public MimsHSIView getHSIView() {
+        return hsiControl;
+    }
+
+    /**
+     * Returns a pointer to the <code>MimsLog</code> object
+     * which controls the "MIMS Log" tab.
+     *
+     * @return the <code>MimsLog</code> object.
+     */
     public MimsLog getmimsLog() {
         return mimsLog;
     }
-    
+
+    /**
+     * Returns a pointer to the <code>MimsCBControl</code> object
+     * which controls the "Contrast" tab.
+     *
+     * @return the <code>MimsCBControl</code> object.
+     */
     public MimsCBControl getCBControl(){
        return cbControl;
     }
 
+    /**
+     * Returns a pointer to the <code>MimsStackEditor</code> object
+     * which controls the "Stack Editing" tab.
+     *
+     * @return the <code>MimsStackEditor</code> object.
+     */
     public MimsStackEditor getmimsStackEditing() {
         return mimsStackEditing;
     }
 
+    /**
+     * Returns a pointer to the <code>MimsTomography</code> object
+     * which controls the "Tomography" tab.
+     *
+     * @return the <code>MimsTomography</code> object.
+     */
     public MimsTomography getmimsTomography() {
         return mimsTomography;
     }
 
+    /**
+     * Returns a pointer to the <code>MimsAction</code> object.
+     * The <code>MimsAction</code> object stores all the modifications
+     * made to the current image (translations, plane deletions, etc).
+     *
+     * @return the <code>MimsAction</code> object.
+     */
     public MimsAction getmimsAction() {
         return mimsAction;
     }
 
+    /**
+     * Sets the flag indicating the plugin is in the process of updating.
+     *
+     * @param bool <code>true</code> if updating, otherwise false.
+     */
+    public void setUpdating(boolean bool) {
+        bUpdating = bool;
+    }
+
+    /**
+     * Return <code>true</code> if the plugin is in the process of opening
+     * an image.
+     *
+     * @return <code>true</code> if the plugin is in the process of opening
+     * an image, otherwise <code>false</code>.
+     */
     public boolean isOpening() {
         return currentlyOpeningImages;
     }
 
-    public void setUpdating(boolean bool) {
-        bUpdating = bool;
-    }
-    
+    /**
+     * Gets the flag indicating if the plugin is in the process of updating.
+     *
+     * @return <code>true</code> if updating, otherwise false.
+     */
     public boolean isUpdating() {
         return bUpdating;
     }
 
+    /**
+     * Returns a link the <code>PrefFrame</code> object for referencing user preferences.
+     *
+     * @return the <code>PrefFrame</code> object.
+     */
     public PrefFrame getPreferences() {
         return prefs;
     }
 
+    /**
+     * Returns a link the <code>Opener</code> object for getting image data and metadata.
+     * The UI class stores a list of opener objects in the case that the image was
+     * concatenated or derived from multiple files. This method returns the member variable
+     * <code>image</code> which will correspond to the FIRST image opened.
+     *
+     * @return the <code>Opener</code> object.
+     */
     public Opener getOpener() {
         return image;
     }   
-    
+
+    /**
+     * Gets <code>Opener</code> with name <code>name</code> from the list of opener objects.
+     *
+     * @param name the name of the opener object.
+     * @return the <code>Opener</code>.
+     */
     public Opener getFromOpenerList(String name){
-        Object op = openers.get(name);
         return (Opener)openers.get(name);
     }
-    
+
+    /**
+     * Adds the <code>Opener</code> object with name <code>name</code>
+     * to the list of openers.
+     *
+     * @param fileName name of file.
+     * @param opener opener object.
+     */
     public void addToOpenerList(String fileName, Opener opener) {
        openers.put(fileName, opener);
     }
 
+   /**
+    * Determines the bahavior when an image window is made active.
+    *
+    * @param mp the image.
+    */
    public void setActiveMimsPlus(MimsPlus mp) {
       if (mp == null)
          return;
@@ -3433,42 +3182,48 @@ public void updateLineProfile(double[] newdata, String name, int width) {
       }
    }
 
+    /**
+     * Displays the String <code>msg</code> in the status bar.
+     *
+     * @param msg the message to display.
+     */
     public synchronized void updateStatus(String msg) {
         if (bUpdating) {
-            return; // Don't run from other threads...
-        } // Don't run from other threads...
+            return;
+        }
         if (!currentlyOpeningImages) {
             mainTextField.setText(msg);
         } else {
             IJ.showStatus(msg);
         }
-        if (bDebug) {
-            IJ.log(msg);
-        }
-    }
-    
-    public int getRatioScaleFactor() {
-        return this.ratioScaleFactor;
-    }
-    
-    public int setRatioScaleFactor(int s) {
-        this.ratioScaleFactor = s;
-        return this.ratioScaleFactor;
     }
 
-    public double getMedianFilterRadius() {
-        return this.medianFilterRadius;
+    /**
+     * Sets the radius of the radius of the median filter.
+     *
+     * @param r the radius.
+     */
+    public void setMedianFilterRadius(double r) {
+        this.medianFilterRadius = r;        
     }
 
-    public double setMedianFilterRadius(double r) {
-        this.medianFilterRadius = r;
-        return this.medianFilterRadius;
-    }
-
+    /**
+     * Returns the directory of the last location used by
+     * the user for loading or saving image data.
+     *
+     * @return the last folder.
+     */
     public String getLastFolder() {
         return lastFolder;
     }
 
+    /**
+     * Sets the ImageJ default directory so that when imageJ
+     * file choosers are opened, they are pointing to the
+     * directory <code>dir</code>.
+     *
+     * @param dir the directory.
+     */
     public void setIJDefaultDir(String dir) {
         ij.io.OpenDialog temp = new ij.io.OpenDialog("", "fubar");
         temp.setDefaultDirectory(dir);
@@ -3520,7 +3275,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     System.out.println("Ui.run called");
                     String temp_path = im_file_path;
                     File[] files_arr = new File[1];
-                    UI ui_to_run = new UI(null);
+                    UI ui_to_run = new UI();
                     ui_to_run.setVisible(true);
                     files_arr[0] = new File(temp_path);
                     File file_to_open = files_arr[0];
@@ -3534,17 +3289,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 @Override
                 public void run() {
                     System.out.println("Ui.run called");
-                    UI ui_to_run = new UI(null);
+                    UI ui_to_run = new UI();
                     ui_to_run.setVisible(true);
                 }
             });
         }
-
-        
-    }
-
-    public boolean getDebug() {
-        return bDebug;
     }
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -3556,7 +3305,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JMenuItem closeAllSumMenuItem;
    private javax.swing.JMenu closeMenu;
    private javax.swing.JMenuItem compositeMenuItem;
-   private javax.swing.JCheckBoxMenuItem debugCheckBoxMenuItem;
    private javax.swing.JMenu editMenu;
    private javax.swing.JMenuItem exitMenuItem;
    private javax.swing.JMenuItem exportPNGjMenuItem;
@@ -3590,38 +3338,4 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JMenu utilitiesMenu;
    private javax.swing.JMenu viewMenu;
    // End of variables declaration//GEN-END:variables
-
-   private File extractFromZipfile(ZipFile zipFile, ZipEntry zipEntry, File destinationFile) {
-                  
-      // If no destination specified, use temp directory.
-      if (destinationFile == null) {
-         File destinationDir = new File(System.getProperty("java.io.tmpdir"));
-         if (!destinationDir.canRead() || !destinationDir.canWrite())
-            return null;
-         destinationFile = new File(destinationDir, zipEntry.getName());
-      }
-                                             
-      try {
-         // Create input and output streams.
-         byte[] buf = new byte[2048]; int n;
-         BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(zipEntry));
-         FileOutputStream fos = new FileOutputStream(destinationFile);
-         BufferedOutputStream bos = new BufferedOutputStream(fos, buf.length);
-         
-         // Write the file.         
-         while ((n = bis.read(buf, 0, buf.length)) != -1) {
-            bos.write(buf, 0, n);
-         }
-         
-         // Close all streams.
-         bos.flush();
-         bos.close();
-         fos.close();
-         bis.close();
-                  
-      } catch (Exception e) {e.printStackTrace();}      
-      
-      destinationFile.deleteOnExit();
-      return destinationFile;
-   }
 }

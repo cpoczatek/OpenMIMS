@@ -1,15 +1,7 @@
-/*
- * mimsUpdateListener.java
- *
- * Created on May 3, 2006, 12:45 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
-
 package com.nrims;
 
-/**
+/** 
+ * An extension of the EventListenener class, implemented by the UI class.
  *
  * @author Douglas Benson
  */

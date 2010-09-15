@@ -1,14 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package com.nrims;
 
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
-
 import com.nrims.plot.MimsXYPlot;
+
 import java.awt.event.*;
 import java.awt.Color;
 import java.awt.KeyEventDispatcher;
@@ -19,24 +14,26 @@ import javax.swing.JMenuItem;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.plot.PlotOrientation;
 
 /**
+ * The MimsLineProfile class creates a line plot 
+ * for line ROIs. The y-axis represents pixel value
+ * (of the current image) and x-axis represents 
+ * length along the line.
  *
  * @author cpoczatek
  */
-public class MimsLineProfile extends JFrame implements ActionListener{
+public class MimsLineProfile extends JFrame {
 
     private JFreeChart chart;
     private MimsChartPanel chartPanel;
     private int linewidth = 1;
     private UI ui;
-    
+
     public MimsLineProfile(final UI ui) {
         super("Dynamic Line Profile");
         this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
@@ -49,7 +46,11 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
         JPopupMenu menu = chartPanel.getPopupMenu();
         JMenuItem menuItem = new javax.swing.JMenuItem("Display text");
-        menuItem.addActionListener(this);
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               displayProfileData();
+            }
+         });
 
         menu.add(menuItem, 2);
         setContentPane(chartPanel);
@@ -58,7 +59,7 @@ public class MimsLineProfile extends JFrame implements ActionListener{
          JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
          xhairs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               ui.showHideCrossHairs(chartPanel);
+               MimsJFreeChart.showHideCrossHairs(chartPanel);
             }
          });
          chartPanel.getPopupMenu().addSeparator();
@@ -76,12 +77,6 @@ public class MimsLineProfile extends JFrame implements ActionListener{
 
         this.pack();
         this.setVisible(true);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if(e.getActionCommand()=="Display text")
-            this.displayProfileData();
     }
    
      /**
@@ -152,7 +147,14 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         return chart;
         
     }
-    
+
+    /**
+     * Updates the data displayed in the chart.
+     *
+     * @param newdata the data for the chart.
+     * @param name name of ROI.
+     * @param width the line width.
+     */
     public void updateData(double[] newdata, String name, int width) {
         if (newdata == null) {
             return;
@@ -172,7 +174,10 @@ public class MimsLineProfile extends JFrame implements ActionListener{
         chart.fireChartChanged();
     }
 
-    public void displayProfileData() {
+    /**
+     * Creates a table displaying the data contained in the plot.
+     */
+    private void displayProfileData() {
         MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
         XYDataset data = plot.getDataset();
 

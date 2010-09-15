@@ -1,8 +1,3 @@
-/*
- * MimsCBControl.java
- *
- * Created on February 10, 2009, 5:19 PM
- */
 
 package com.nrims;
 
@@ -25,17 +20,25 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYPolygonAnnotation;
 import org.jfree.chart.plot.PlotOrientation;
 
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.ui.Layer;
 
+/**
+ * The MimsCBControl class creates the "Contrast" tabbed panel.
+ * It is a GUI element used for controlling parameters
+ * related to the Brighness and Contrast settings of displayed
+ * images. It also displays a histogram of pixel values for
+ * specific images and also contains elements for
+ * controling which LUT is being used by the plugin.
+ *
+ * @author zkaufman
+ */
 public class MimsCBControl extends javax.swing.JPanel {
    
    Hashtable windows = new Hashtable();
@@ -48,6 +51,11 @@ public class MimsCBControl extends javax.swing.JPanel {
    private ArrayList<String> ijLutNameArray = new ArrayList<String>();
    public com.nrims.managers.compositeManager compManager;
 
+   /**
+    * Constructor for MimsCBControl. A pointer to UI is required.
+    *
+    * @param ui a pointer to the UI object.
+    */
     public MimsCBControl(UI ui) {
        this.ui = ui;       
        initComponents();
@@ -59,13 +67,23 @@ public class MimsCBControl extends javax.swing.JPanel {
        setupHistogram();
     }
 
+   /**
+    * Sets the LUT to a specific string value. Must match
+    * one of the entries in the jComboBox oj LUT names.
+    *
+    * @param lut name of lut.
+    */
    void setLUT(String lut) {
       holdUpdate = true;
       jComboBox2.setSelectedItem(lut);
       holdUpdate = false;
    }
 
-   void setupLutComboBox(){
+   /**
+    * Sets up the list of entries in the jComboBox
+    * based on default LUTs and those in the imagej lut directory.
+    */
+   private void setupLutComboBox(){
 
       // Get all the lut files.
       lutDir = new File(Prefs.getHomeDir(), "luts");
@@ -95,15 +113,16 @@ public class MimsCBControl extends javax.swing.JPanel {
       });
 
    }
-    
+
+   /**
+    * Sets up the histogram that displays image pixel data.
+    */
     private void setupHistogram() {
 
         // Create chart using the ChartFactory.
         chart = MimsChartFactory.createMimsHistogram("", "Pixel Value", "", null, PlotOrientation.VERTICAL, true, true, false);
         chart.setBackgroundPaint(this.getBackground());
         chart.removeLegend();
-
-        //empty comment
 
         // Set the renderer.
         MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
@@ -130,12 +149,16 @@ public class MimsCBControl extends javax.swing.JPanel {
         chartPanel.setSize(350, 225); 
         jPanel1.add(chartPanel);
     }
-    
-   // Call this method whenever you want to update the histogram.
-   // Histogram updates to reflect title selected in combobox.
+
+    /**
+     * Call this method whenever you want to update the histogram.
+     * For example, changing planes, applying offsets, etc.
+     * Histogram updates to reflect the image whose title
+     * is selected in combobox.
+     */
    public void updateHistogram(){ 
       
-      // Dont bother updating histogram if tab not even visible.
+      // Dont bother updating histogram if tab not even visible, save resources.
       if (!this.isVisible())
          return;       
       
@@ -195,8 +218,11 @@ public class MimsCBControl extends javax.swing.JPanel {
       plot.setDomainGridlinesVisible(false);                 
       chart.fireChartChanged();   
    }
-   
-   // Update the contrast window range displayed.
+
+    /**
+     * Updates the window range displayed in the
+     * histogram representing the max and min brightness.
+     */
    public void updateContrastWindow(){
       
       MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
@@ -211,15 +237,6 @@ public class MimsCBControl extends javax.swing.JPanel {
       double y2 = 99999999;
       double y3 = 99999999;
       double y4 = -99999999;
-      /*
-       * Does not work under Sun jre, but does under openjdk
-       * larger finite numbers like 9^25 also don't work
-       * possibly because java.awt.polygon uses ints?
-      double y1 = Double.NEGATIVE_INFINITY;
-      double y2 = Double.POSITIVE_INFINITY;
-      double y3 = Double.POSITIVE_INFINITY;
-      double y4 = Double.NEGATIVE_INFINITY;
-      */
       
       // Displays polygon.
       XYPolygonAnnotation a = new XYPolygonAnnotation(new double[] {x1, y1, x2, y2, x3, y3, x4, y4},
@@ -228,15 +245,28 @@ public class MimsCBControl extends javax.swing.JPanel {
       renderer.removeAnnotations();
       renderer.addAnnotation(a, Layer.BACKGROUND);
    }
-                 
-   // set the windowlist jComboBox
+
+    /**
+     * Sets the title selected in the combobox. This method
+     * is used to set the combobox to be the most recently
+     * activated window.
+     *
+     * @param title the title of the window.
+     */
    public void setWindowlistCombobox(String title){
       if (windows.containsKey(title)) {
          jComboBox1.setSelectedItem(title);
       }      
    }   
    
-   // Adds the window's title to the combobox list.
+    /**
+     * Adds a window name to the list of entries in the
+     * combobox. Newly created ratio images (and possibly sum
+     * images) should be added to the list, and removed from
+     * the list when destroyed.
+     *
+     * @param imp the image object.
+     */
    public void addWindowtoList(MimsPlus imp){
       String title = imp.getTitle();
       if (!windows.containsKey(title)) {
@@ -247,8 +277,14 @@ public class MimsCBControl extends javax.swing.JPanel {
          jComboBox1.setSelectedItem(title);         
       } 
    }   
-   
-   // Removes the window's title from combobox list.
+
+    /**
+     * Removes an image windows title from combobox list.
+     * Should be used whenever a window is closed (or
+     * no longer selectable).
+     *
+     * @param imp the image object to remove.
+     */
    public void removeWindowfromList(MimsPlus imp){
       String title = imp.getTitle();
       if (windows.containsKey(title)) {
@@ -256,12 +292,10 @@ public class MimsCBControl extends javax.swing.JPanel {
          windows.remove(title);
       }
    }
-   
-   // Is auto-contrast radiobutton selected.
-   public boolean autoContrastRadioButtonIsSelected(){   
-      return jRadioButton1.isSelected();
-   }
-   
+
+    /**
+     * Determines the layout of the user interface.
+     */
    private void initComponents() {
 
       contrastAdjuster1 = new com.nrims.ContrastAdjuster(ui);
@@ -353,6 +387,10 @@ public class MimsCBControl extends javax.swing.JPanel {
             .addContainerGap())
       );
    }
+
+    /**
+     * Controls the behavior when an item in jComboBox1 (the list of images) is selected.
+     */
 private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {
    MimsPlus imp = null;   
       
@@ -369,6 +407,9 @@ private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {
    }
 }
 
+    /**
+     * Controls the behavior when jRadioButton1 (the autocontrast button) is selected.
+     */
 private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {
    MimsPlus imp = null;   
       
@@ -386,6 +427,9 @@ private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {
    updateHistogram();
 }
 
+    /**
+     * Controls the behavior when jComboBox2 (the list of LUTs) is selected.
+     */
 private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
 
    if (holdUpdate)
@@ -410,6 +454,9 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
    applyLutToAllWindows(label, ijlut);
 }
 
+    /**
+     * Applies the selected LUT to all possible windows.
+     */
    private void applyLutToAllWindows(String lutlabel, boolean ijlut) {
 
       LutLoader ll = new LutLoader();
@@ -452,6 +499,9 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
       WindowManager.setTempCurrentImage(current_imp);
    }
 
+    /**
+     * Shows the composite manager user interface.
+     */
    public void showCompositeManager() {
        if(this.compManager==null) {
            compManager = new com.nrims.managers.compositeManager(ui);

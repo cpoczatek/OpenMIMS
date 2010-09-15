@@ -11,8 +11,8 @@ import ij.plugin.filter.RankFilters;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-
 import ij.process.ShortProcessor;
+
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent ;
 import java.awt.event.WindowListener ;
@@ -27,10 +27,10 @@ import javax.swing.DefaultListModel;
 import javax.swing.event.EventListenerList;
 
 /**
- * extends ImagePlus with methods to synchronize display of multiple stacks
+ * Extends ImagePlus with methods to synchronize display of multiple stacks
  * and drawing ROIs in each windows
  */
-public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListener, MouseMotionListener, MouseWheelListener {
+public class MimsPlus extends ImagePlus implements WindowListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
     /* Public constants */
     static final public int MASS_IMAGE = 0 ;
@@ -38,9 +38,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     static final public int HSI_IMAGE  =  2 ;
     static final public int SEG_IMAGE = 3 ;
     static final public int SUM_IMAGE = 4 ;
-
     static final public int COMPOSITE_IMAGE = 5 ;
-
 
     // Internal images for test data display.
     public MimsPlus internalRatio;
@@ -55,14 +53,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     public SumProps sumProps = null;
     public RatioProps ratioProps = null;
     public HSIProps hsiProps = null;
-
-
     public CompositeProps compProps = null;
 
     // Lut
     public String lut = "Grays";
 
-    // Other stuff
+    // Other member variables.
     public String title = "";
     private boolean allowClose =true;
     private boolean bIgnoreClose = false ;
@@ -74,13 +70,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     private int x1, x2, y1, y2, w1, w2, h1, h2;
     private boolean bIsStack = false ;
     private HSIProcessor hsiProcessor = null ;
-
     private CompositeProcessor compProcessor = null ;
-
     private com.nrims.UI ui = null;
     private EventListenerList fStateListeners = null ;
-
-    /* Constructors */
 
     /**
      * Generic constructor
@@ -346,8 +338,8 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       // Set up internal images for data display.
         RatioProps rProps = new RatioProps(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx());
         rProps.setRatioScaleFactor(hsiProps.getRatioScaleFactor());
-        rProps.setNumThreshold(hsiProps.getMinNum());
-        rProps.setDenThreshold(hsiProps.getMinDen());
+        rProps.setNumThreshold(hsiProps.getNumThreshold());
+        rProps.setDenThreshold(hsiProps.getDenThreshold());
         internalRatio = new MimsPlus(ui, rProps, true);
         internalNumerator = internalRatio.internalNumerator;
         internalDenominator = internalRatio.internalDenominator;
@@ -361,18 +353,17 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
    }
 
    /**
-    * Computes ratios values
+    * Computes ratios values.
     */
-    public synchronized void computeRatio()
-    {
+    public synchronized void computeRatio() {
       computeRatio(false);
     }
 
    /**
-    * Computes ratios values
+    * Computes ratios values.
+    * @param forHSI
     */
-    public synchronized void computeRatio(boolean forHSI)
-    {
+    private synchronized void computeRatio(boolean forHSI) {
 
        // Get numerator and denominator mass indexes.
        int numIndex = ratioProps.getNumMassIdx();
@@ -415,7 +406,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         float[] rPixels = new float[getWidth() * getHeight()];
         float rMax = 0.0f;
         float rMin = 1000000.0f;
-        float rSF = ui.getRatioScaleFactor();
+        float rSF = ui.getHSIView().getRatioScaleFactor();
         int numThreshold = ratioProps.getNumThreshold();
         int denThreshold = ratioProps.getDenThreshold();
 
@@ -450,7 +441,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
           Roi temproi = getRoi();
           killRoi();
           RankFilters rfilter = new RankFilters();
-          double r = ui.getMedianFilterRadius();
+          double r = ui.getHSIView().getMedianRadius();
           rfilter.rank(getProcessor(), r, RankFilters.MEDIAN);
           rfilter = null;
           setRoi(temproi);
@@ -461,7 +452,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     * Computes sum values.
     * @param sumlist
     */
-    public synchronized void computeSum(ArrayList<Integer> sumlist) {
+    private synchronized void computeSum(ArrayList<Integer> sumlist) {
 
        // initialize variables.
        double[] sumPixels = null;
@@ -519,7 +510,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
           sumPixels = new double[numImage.getProcessor().getPixelCount()];
 
 
-          float rSF = ui.getRatioScaleFactor();
+          float rSF = ui.getHSIView().getRatioScaleFactor();
             if( this.sumProps.getRatioScaleFactor()>0 ) {
                 rSF = ((Double)this.sumProps.getRatioScaleFactor()).floatValue();
             }
@@ -541,8 +532,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     /**
      * Shows the current window.
      */
-    public void showWindow()
-    {
+    public void showWindow() {
         show();
 
         // Set window location.
@@ -594,7 +584,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         
     }
 
-   @Override
+    /**
+     * Returns the width of the image in pixels.
+     * @return the width in pixels.
+     */
+    @Override
     public int getWidth() {
       if (getProcessor() != null)
          return getProcessor().getWidth();
@@ -602,6 +596,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
          return ui.getOpener().getWidth();
     }
 
+   /**
+    * Returns the height of the image in pixels.
+    * @return the height in pixels.
+    */
    @Override
     public int getHeight() {
       if (getProcessor() != null)
@@ -610,10 +608,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
          return ui.getOpener().getHeight();
     }
 
-    //not hit from MimsStackEditing.concatImages()
-    //only used when opening a multiplane image
     /**
-     * Appends image to stack.
+     * Appends image to stack. Not hit from MimsStackEditing.concatImages().
+     * Only used when opening a multiplane image file.
      * @param nImage
      * @throws Exception
      */
@@ -634,21 +631,34 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         bIsStack = true;
     }
 
+    /**
+     * Returns a short title in the form "m13.01" or "m26.05".
+     * @return The title (e.g. "m13.01").
+     */
     @Override
     public String getShortTitle() {
         String tempstring = this.getTitle();
         int colonindex = tempstring.indexOf(":");
         if (getMimsType() == SUM_IMAGE)
            colonindex = tempstring.indexOf(":", colonindex+1);
-        if(colonindex>0) return tempstring.substring(0, colonindex-1);
-        else return "";
+        if(colonindex>0)
+           return tempstring.substring(0, colonindex-1);
+        else
+           return "";
     }
 
 
 
     /**
-     * String representing the rounded mass value (like "26" for "26.13").
-     * @return text string containing the rounded value
+     * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded mass and excludes the "m".
+     *
+     * @return Text string containing the rounded mass value. For example:
+     * <ul>
+     * <li>"13" for Mass images.
+     * <li>"13/12" for Ratio images.
+     * <li>"sum 13" for Sum images.
+     * <li>"0" by default.
+     * </ul>
      */
     public String getRoundedTitle() {
         if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
@@ -711,7 +721,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     }
 
     /**
-     * Set the "ignore close" flag to the value of b
+     * Sets the "ignore close" flag to the value of b
      * @param b "ignore close" value
      */
     public void setbIgnoreClose(boolean b) {
@@ -719,13 +729,16 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     }
 
     /**
-     * Get current location
+     * Gets current location
      * @return the Point object containing the current location
      */
     public java.awt.Point getXYLoc() {
         return new java.awt.Point(this.xloc, this.yloc);
     }
 
+    /**
+     * Shows the window and add various mouse mouse listeners.
+     */
     @Override
     public void show() {
         //this is a little weird...
@@ -743,9 +756,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             getWindow().getCanvas().addMouseListener(this);
             getWindow().getCanvas().addMouseMotionListener(this);
             getWindow().getCanvas().addMouseWheelListener(this);
-            if(ui.getDebug()) {
-                ui.updateStatus("mimsPlus::show() addWindowListener " + getWindow().toString());
-            }
         }
     }
 
@@ -785,6 +795,12 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         return false;
     }
 
+    /**
+     * This method sets the image to actually be the image
+     * enclosed by the Roi.
+     *
+     * @param roi
+     */
     @Override
     public void setRoi(ij.gui.Roi roi) {
         if(roi == null)  {
@@ -797,8 +813,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     @Override
     public void windowClosing(WindowEvent e) {
-        //String name = this.getTitle();
-        //System.out.println("windowClosing: "+name);
         java.awt.Point p = this.getWindow().getLocation();
         this.xloc = p.x;
         this.yloc = p.y;
@@ -809,30 +823,14 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         // When opening a stack, we get a close event
         // from the original ImageWindow, and ignore this event
         if(bIgnoreClose) {
-            if(ui.getDebug()) {
-                ui.updateStatus("Ignoring close..");
-            }
             bIgnoreClose = false ;
-            if(ui.getDebug()) {
-                ui.updateStatus("Event window = " + e.getWindow().toString() + " mimsPlus = " + getWindow().toString());
-            }
             return ;
-        }
-        //String name = this.getTitle();
-        //System.out.println("windowClosed: "+name);
-        if(ui.getDebug()) {
-            ui.updateStatus("mimsPlus listener window closed");
         }
         //ui.imageClosed(this);
         //ui.getCBControl().removeWindowfromList(this);
     }
 
-    /**
-     * Stub method
-     * @param e window event to respond to
-     */
-    public void windowStateChanged(WindowEvent e) {
-    }
+    public void windowStateChanged(WindowEvent e) {}
 
     @Override
     public void windowDeactivated(WindowEvent e) {}
@@ -851,7 +849,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
         if(pm!=null) pm.resetImage(this);
         if(sm!=null) sm.resetImage(this);
-
     }
 
     @Override
@@ -862,10 +859,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     @Override
     public void windowOpened(WindowEvent e) {
-        if(ui.getDebug()) {
-            ui.updateStatus("mimsPlus window opened");
-        }
-
         java.awt.Window w = getWindow();
         if(w==null) return;
         WindowListener [] wl = w.getWindowListeners();
@@ -889,9 +882,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         if(!bFound) {
             getWindow().getCanvas().addMouseListener(this);
             getWindow().getCanvas().addMouseMotionListener(this);
-        }
-        if(ui.getDebug()) {
-            ui.updateStatus("mimsPlus::windowOpened listener installed");
         }
     }
 
@@ -944,13 +934,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     @Override
     public void mouseClicked(MouseEvent e) {
 
-       //ArrayList<String> strings = new ArrayList<String>();
-       //strings.add(0, "Hello");
-       //strings.add(1, "World");
-       //System.out.println(strings.size());
-       ArrayList<double[]> xyTranslationList = ui.getmimsAction().xyTranslationList;
-
         if(bStateChanging) return;
+
+        //Roi[] rois1 = ui.getRoiManager().getAllListedROIs();
+        //Roi[] rois2 = ui.getRoiManager().getAllROIs();
+        //int y = 0;
 
          float[] pix;
          if (this.nType == HSI_IMAGE ) {
@@ -1050,10 +1038,13 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
       }
    }
 
-    //rollover pixel value code
-
     /**
-     * Handling mouse move
+     * Handles a mouse move event. A fairly in depth method
+     * that displays data in the status bar of the application.
+     * The data that is displayed is dependant on the type of image
+     * (Mass, HSI, Sum, etc.) This methos also controls various
+     * aspects of ROI behavior regarding mouse events.
+     *
      * @param e mouse move event
      */
     public void mouseMoved(MouseEvent e) {
@@ -1126,18 +1117,7 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
             Roi loopRoi = (Roi)rois.get(key);
 
             if (!((DefaultListModel)ui.getRoiManager().getList().getModel()).contains(loopRoi.getName()))
-               continue;
-            int slice=1;
-            if(this.getMimsType()==MimsPlus.RATIO_IMAGE) {
-                int neum = getRatioProps().getNumMassIdx();
-                slice = ui.getMassImage(neum).getCurrentSlice();
-            }
-            if(this.getMimsType()==MimsPlus.HSI_IMAGE ) {
-                int neum = getHSIProps().getNumMassIdx();
-                slice = ui.getMassImage(neum).getCurrentSlice();
-            } else {
-                slice = getCurrentSlice();
-            }
+               continue;            
 
             boolean linecheck = false;
             int c = -1;
@@ -1149,7 +1129,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
             if(loopRoi.contains(mX, mY) || linecheck) {
 
-               if (ui.getSyncROIsAcrossPlanes() || ui.getRoiManager().getSliceNumber(key.toString()) == slice) {
                   if (this.getMimsType()==HSI_IMAGE && internalRatio!=null) {
                       internalRatio.setRoi(loopRoi);
                       stats = internalRatio.getStatistics();
@@ -1185,7 +1164,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
                         smallestRoiStats = stats;
                      }
                   }
-               }
             }
         }
 
@@ -1383,10 +1361,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
     }
 
     /**
-     * Updates historgram values
+     * Updates historgram values.
      * @param force force update (true or false)
      */
-    public void updateHistogram(boolean force) {
+    private void updateHistogram(boolean force) {
         if (roi == null) {
             return;
         }
@@ -1410,12 +1388,11 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
 
     }
 
-    // Line profiles for ratio images and HSI images should be identical.
-
     /**
-     * Update image line profile.
+     * Update image line profile. Line profiles for ratio images and
+     * HSI images should be identical.
      */
-    public void updateLineProfile() {
+    private void updateLineProfile() {
         if (roi == null) {
             return;
         }
@@ -1433,8 +1410,6 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
 
    }
-
-    // TODO - needs to more easily handle HSI images
 
    /**
     * Obtain ROI pixel values.
@@ -1567,6 +1542,10 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         }
     }
 
+    /**
+     * Sets the slice.
+     * @param index the plane number (starts with 1).
+     */
     @Override
     public synchronized void setSlice(int index) {
         if(getCurrentSlice() == index) {
@@ -1619,6 +1598,9 @@ public class MimsPlus extends ij.ImagePlus implements WindowListener, MouseListe
         this.allowClose = allowClose;
     }
 
+    /**
+     *
+     */
     @Override
     public void close() {
         if (allowClose) {

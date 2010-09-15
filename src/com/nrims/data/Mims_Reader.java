@@ -7,7 +7,7 @@ import ij.io.FileInfo;
 
 /**
  * Class responsible for opening MIMS files.
-**/
+ */
 public class Mims_Reader implements Opener {
 
     /**
@@ -436,8 +436,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * Opens and reads a SIMS image from an image file.
-     * @param ui MIMS UI into which the MIMS file will be loaded.
-     * @param imageFileName filename of the image to be loaded.
+     * @param imageFile file of the image to be loaded.
      * @throws IOException if there is a problem reading the image file
      * @throws NullPointerException if the imagename is null or empty.
      */

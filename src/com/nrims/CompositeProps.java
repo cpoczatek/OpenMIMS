@@ -1,11 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package com.nrims;
 
 /**
+ * A container class for storing properties needed to generate a Composite image.
  *
  * @author cpoczatek
  */
@@ -21,23 +17,28 @@ public class CompositeProps {
     //End of v2
 
 
-   // Create an empty ratio props object.
+   /** Default constructor. */
    public CompositeProps(){}
 
-   // Create a ratio props object with given numerator and denominator mass indexes.
+   /**
+    * Instantiates a CompositeProps object with images <code>imgs</code>.
+    * @param imgs set of images used to create the composite image.
+    */
    public CompositeProps(MimsPlus[] imgs) {
        this.images = imgs;
 
    }
 
-   // Two props objects are equal if numerator and denominator are the same.
-   public boolean equals(CompositeProps cp) {
-      return true;
-   }
-
-   // Getters and Setters.
-   //
+   /**
+    * Sets the images to be used for generating the composite image.
+    * @param imgs set of images used to create the composite image.
+    */
    public void setImages(MimsPlus[] imgs) { this.images = imgs ; }
+
+   /**
+    * Gets the images used to generate the composite image.
+    * @return the array of images used to create the composite image.
+    */
    public MimsPlus[] getImages() { return this.images ; }
 
 }

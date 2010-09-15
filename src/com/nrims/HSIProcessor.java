@@ -1,17 +1,24 @@
-/*
- * HSIProcessor.java
- *
- * Created on May 4, 2006, 10:28 AM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
-
 package com.nrims;
 
 import ij.* ;
 import java.awt.* ;
 
+/**
+ * A worker class that generates the actual values for how the pixels
+ * are calculated and how the image displayed. Although the pixels
+ * are generated using standard techniques for calculating HSI values,
+ * the HSI images in the MimsPlus plugin also store ratio (or
+ * percent turnover) values on a pixel by pixel basis. The user
+ * decides if the background data (displayed in the status bar
+ * when the mouse is moved) is calculated in terms of a ratio
+ * value or percent turnover. Regardless of the background data,
+ * the rgb values per pixel will be the same. For more information
+ * on HSI images, see:
+ *
+ * http://en.wikipedia.org/wiki/HSI_color_space
+ * 
+ * @author cpoczatek
+ */
 public class HSIProcessor implements Runnable {
     
     /**
@@ -49,32 +56,30 @@ public class HSIProcessor implements Runnable {
     private static final int MEANNUMDEN	=  4 ; 
     private static final int SUMNUMDEN	=  5 ; 
     private static final int RMSNUMDEN	=  6 ; 
-    
-    private int numSlice = 1 ;
-    private int denSlice = 1 ;
 
+    /**
+     * Sets the <code>HSIProps</code> object for this propcessor.
+     * @param props and <code>HSIProps</code> object.
+     */
     public void setProps(HSIProps props) {
         if(hsiImage == null) return ;
         
         MimsPlus numerator = hsiImage.getUI().getMassImage(props.getNumMassIdx());
         MimsPlus denominator = hsiImage.getUI().getMassImage(props.getDenMassIdx());
-        if(numerator == null || denominator == null) return ;        
-
-        // Need to catch cases where the props are the same but the slice changed
-        int nSlice = numerator.getCurrentSlice() ;
-        int dSlice = denominator.getCurrentSlice() ;
-        numSlice = nSlice ;
-        denSlice = dSlice ;
+        if(numerator == null || denominator == null) return ;
         hsiProps = props;
         start();
     }
-    
+
+    /**
+     * Gets the <code>HSIProps</code> object for this propcessor.
+     * @return the <code>HSIProps</code> object.
+     */
     public HSIProps getHSIProps() { return hsiProps ; }
-    
+
+    /** Kicks off the thread. */
     private synchronized void start() {
         if(fThread != null) {
-            if(hsiImage.getUI().getDebug())
-                hsiImage.getUI().updateStatus("HSIProcessor: stop and restart");
             stop();
         }
         try {
@@ -82,13 +87,12 @@ public class HSIProcessor implements Runnable {
         fThread.setPriority(fThread.NORM_PRIORITY);
         fThread.setContextClassLoader(
                 Thread.currentThread().getContextClassLoader());
-        if(hsiImage.getUI().getDebug())
-                hsiImage.getUI().updateStatus("HSIProcessor: start");
         try { fThread.start();}
         catch( IllegalThreadStateException x){ IJ.log(x.toString()); }
         } catch (NullPointerException xn) {}
     }
-    
+
+    /** Stops the thread. */
     private void stop() {
         if(fThread != null) {
             fThread.interrupt();
@@ -96,11 +100,18 @@ public class HSIProcessor implements Runnable {
         }
     }
 
+    /**
+     * Returns <code>true</code> if the thread is still running.
+     * @return <code>true</code> if the thread is still running, otherwise <code>false</code>.
+     */
     public boolean isRunning() {
         if(fThread == null) return false ;
         return fThread.isAlive() ;
     }
-    
+
+    /**
+     * The worker method that determines the actual HSI values for the image.
+     */
     public void run( ) {
         
        // initialize stuff.
@@ -176,15 +187,12 @@ public class HSIProcessor implements Runnable {
             
             if(maxRatio <= 0.0) maxRatio = 1.0 ;
             double rScale = 65535.0 / (maxRatio -minRatio);
-            int numThreshold = hsiProps.getMinNum() ;
-            int denThreshold = hsiProps.getMinDen() ;
+            int numThreshold = hsiProps.getNumThreshold() ;
+            int denThreshold = hsiProps.getDenThreshold() ;
             int transparency = hsiProps.getTransparency() ;
 
             //Place holder for transformed pixels...
             float[] transformedPixels = ratioPixels;
-            if (false) {
-                transformedPixels = turnoverTransform(ratioPixels, REFERENCE, BACKGROUND, (float)(hsiProps.getRatioScaleFactor()));
-            }
 
             for(int offset = 0 ; offset < numPixels.length && fThread != null ; offset++ ) {
 
@@ -340,6 +348,7 @@ public class HSIProcessor implements Runnable {
               
     }
 
+    /** Converts a ratio value to an rgb array. */
     private static float[] ratio_to_rgb( int ratio ){
         float [] rgb = new float[3] ;
         double i0, i1, i2, o0, o1, o2 ;
@@ -376,7 +385,8 @@ public class HSIProcessor implements Runnable {
             bTable = tables[2];
         }
     }
-    
+
+
     public static float[][] getHsiTables(){
         float[] rTable = new float[65536] ;
         float[] gTable = new float[65536] ;
@@ -390,6 +400,23 @@ public class HSIProcessor implements Runnable {
         return new float[][]{rTable,gTable,bTable};
     }
 
+    /**
+     * Converts an array of ratio values to an array of "percent turnover"
+     * values. Percent turnover is a function of the ratio value, two reference points
+     * and the scale factor.
+     * <ul>
+     * <li>The first reference point is the ratio value at 100% turnover.
+     * <li>The second reference point is the ratio value of the background.
+     * </ul>
+     * Currently, the values for the two reference points is hard-coded.
+     * In the near future they will be changed to be user preferences.
+     *
+     * @param ratiopixels the array of ratio values.
+     * @param ref the reference ratio value for 100% turnover.
+     * @param bg the ratio value for the background.
+     * @param sf the scale factor used when calculating the ratio values.
+     * @return an array of "percent turnover".
+     */
     public static float[] turnoverTransform(float[] ratiopixels, float ref, float bg, float sf) {
         float[] tpixels = new float[ratiopixels.length];
         for(int i =0; i< tpixels.length; i++) {
@@ -398,6 +425,23 @@ public class HSIProcessor implements Runnable {
         return tpixels;
     }
 
+    /**
+     * Converts a ratio value to a "percent turnover"
+     * value. Percent turnover is a function of the ratio value, two reference points
+     * and the scale factor.
+     * <ul>
+     * <li>The first reference point is the ratio value at 100% turnover.
+     * <li>The second reference point is the ratio value of the background.
+     * </ul>
+     * Currently, the values for the two reference points is hard-coded.
+     * In the near future they will be changed to be user preferences.
+     *
+     * @param ratio the ratio value.
+     * @param ref the reference ratio value for 100% turnover.
+     * @param bg the ratio value for the background.
+     * @param sf the scale factor used when calculating the ratio value.
+     * @return the "percent turnover".
+     */
     public static float turnoverTransform(float ratio, float ref, float bg, float sf) {
         float output=0;
         if(bg==ref) return output;
@@ -408,6 +452,23 @@ public class HSIProcessor implements Runnable {
         return output;
     }
 
+    /**
+     * Converts a percent turnover value to a ratio
+     * value. Ratio value is a function of the percent turnover value,
+     * two reference points and the scale factor.
+     * <ul>
+     * <li>The first reference point is the ratio value at 100% turnover.
+     * <li>The second reference point is the ratio value of the background.
+     * </ul>
+     * Currently, the values for the two reference points is hard-coded.
+     * In the near future they will be changed to be user preferences.
+     *
+     * @param turnover the percent turnover value.
+     * @param ref the reference ratio value for 100% turnover.
+     * @param bg the ratio value for the background.
+     * @param sf the scale factor used to calculate the ratio values.
+     * @return the ratio value.
+     */
     public static float ratioTransform(float turnover, float ref, float bg, float sf) {
         float ratio=0;
         float negOne = (float)-1.0000;

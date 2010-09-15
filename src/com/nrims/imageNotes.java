@@ -1,23 +1,18 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package com.nrims;
-import com.nrims.*;
-import java.awt.event.ActionEvent;
-
 
 /**
+ * The imageNotes class provides the user with an interface
+ * for writing and storing notes.
  *
  * @author cpoczatek
  */
-public class imageNotes extends com.nrims.PlugInJFrame implements java.awt.event.ActionListener {
+public class imageNotes extends com.nrims.PlugInJFrame {
 
     java.awt.Frame instance;
     private javax.swing.JTextArea textArea;
     private javax.swing.JScrollPane scrollPane;
 
+    /** Constructor. Instatiates class.*/
     public imageNotes() {
         super("Image Notes:");
         super.setDefaultCloseOperation(PlugInJFrame.HIDE_ON_CLOSE);
@@ -34,25 +29,24 @@ public class imageNotes extends com.nrims.PlugInJFrame implements java.awt.event
 
     }
 
-    public String getNoteText() {
-        return textArea.getText();
-    }
-
-    public void setNoteText(String note) {
-        textArea.setText(note);
-    }
-
+    /**
+     * Gets the text entered into the text area.
+     * Returns a formatted String.
+     *
+     * @return
+     */
     public String getOutputFormatedText() {
         String text = textArea.getText();
         text = text.replaceAll("(\r)|(\f)", "\n");
         return text.replaceAll("\n", "&/&/&");
     }
 
+    /**
+     * Sets the test in the text area. Must be
+     * formatted by the <code>getOutputFormatedText</code> method.
+     * @param text
+     */
     public void setOutputFormatedText(String text) {
         textArea.setText(text.replaceAll("&/&/&","\n"));
     }
-
-    public void actionPerformed(ActionEvent e) {
-
-    }
-    }
+}

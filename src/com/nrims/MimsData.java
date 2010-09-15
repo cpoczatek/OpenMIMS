@@ -1,12 +1,12 @@
-/*
- * MimsData.java
- *
- * Created on May 1, 2006, 2:51 PM
- */
-
 package com.nrims;
-import com.nrims.data.Mims_Reader;
+
 /**
+ * The MimsData class creates the "Mims Data" tabbed panel.
+ * It sole purpose is displaying meta-data associated with
+ * the current image. If additional images are opened in the
+ * same session (e.g via concatenate) this data will not change.
+ * It will continue to reflect metadata associated with the
+ * first image opened in the current session.
  *
  * @author  Douglas Benson
  */
@@ -214,9 +214,20 @@ public class MimsData extends javax.swing.JPanel {
         ui.setSyncStack(syncjCheckBox.isSelected());
 }//GEN-LAST:event_syncjCheckBoxItemStateChanged
 
+    /**
+     * Enables the sync checkbox. Only needs to be
+     * enabled when more than 1 plane.
+     * @param bOn more than 1 plane.
+     */
     public void setHasStack(boolean bOn) {
         syncjCheckBox.setEnabled(bOn);
     }
+
+    /**
+     * Set the meta -data fields based on the contents
+     * of the <code>Opener</code> object.
+     * @param image the <code>Opener</code> object. 
+     */
     public void setMimsImage( com.nrims.data.Opener image ) {
         if(image == null) {
             jLabel9.setText("");
@@ -231,8 +242,7 @@ public class MimsData extends javax.swing.JPanel {
             jLabel18.setText("0");
             jLabel22.setText("0");
             syncjCheckBox.setEnabled(false);        
-        }
-        else {
+        } else {
             String tempstring = "";
             tempstring = image.getImageFile().getName();
             jLabel9.setText(tempstring);

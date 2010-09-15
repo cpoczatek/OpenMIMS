@@ -8,12 +8,8 @@ import ij.gui.*;
 import ij.io.RoiEncoder;
 import ij.io.RoiDecoder;
 import java.awt.Color;
-import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 
 /**
  * Extends ij.gui.ImageCanvas with utility to display all ROIs.
@@ -106,36 +102,13 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             }
 
             String name = "";
-            if (ui.getSyncROIsAcrossPlanes()) {
-                //name = "" + (id + 1);
-                name += label;
-                java.awt.Rectangle r = roi.getBounds();
-                int x = screenX(r.x + r.width / 2);
-                int y = screenY(r.y + r.height / 2);
-                if (!(roi instanceof Line) && drawLabel)
-                   g.drawString(name, x, y);
-                bDraw = true;
-            } else if (!(ui.getSyncROIsAcrossPlanes()) && (roiManager.getSliceNumber(label) == mImp.getCurrentSlice()) && !isRatio) {
-                name = "" + (nSyncid + 1);
-                java.awt.Rectangle r = roi.getBounds();
-                int x = screenX(r.x + r.width / 2);
-                int y = screenY(r.y + r.height / 2);
-                if (!(roi instanceof Line) && drawLabel)
-                   g.drawString(name, x, y);
-                bDraw = true;
-                nSyncid = nSyncid + 1;
-            } else if (!(ui.getSyncROIsAcrossPlanes()) && (roiManager.getSliceNumber(label) == parentplane) && isRatio) {
-                name = "" + (nSyncid + 1);
-                java.awt.Rectangle r = roi.getBounds();
-                int x = screenX(r.x + r.width / 2);
-                int y = screenY(r.y + r.height / 2);
-                if (!(roi instanceof Line) && drawLabel)
-                   g.drawString(name, x, y);
-                bDraw = true;
-                nSyncid = nSyncid + 1;
-            } else {
-                bDraw = false;
-            }
+            name += label;
+            java.awt.Rectangle r = roi.getBounds();
+            int x = screenX(r.x + r.width / 2);
+            int y = screenY(r.y + r.height / 2);
+            if (!(roi instanceof Line) && drawLabel)
+               g.drawString(name, x, y);
+            bDraw = true;
 
             // We dont want to show the boundry if the mouse is within the roi.
             if (cRoi != null && cRoi.toString().equals(roi.toString())) {
@@ -209,9 +182,9 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                         break;
                     }
                     case Roi.POINT: {
-                            java.awt.Rectangle r = roi.getBounds();
-                            int x1 = screenX(r.x);
-                            int y1 = screenY(r.y);
+                            java.awt.Rectangle r1 = roi.getBounds();
+                            int x1 = screenX(r1.x);
+                            int y1 = screenY(r1.y);
                             g.drawLine(x1, y1 - 5, x1, y1 + 5);
                             g.drawLine(x1 - 5, y1, x1 + 5, y1);
                             break;

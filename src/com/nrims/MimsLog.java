@@ -1,29 +1,35 @@
-/*
- * mimsLog.java
- *
- * Created on January 10, 2008, 1:07 PM
- */
-
 package com.nrims;
 
 /**
+ * The MimsLog class provides a text area for appending notes
+ * or debug data, or any kind of data the programmer wishes to
+ * include. This text area is provded in the "Log" tab of the
+ * user interface.
  *
  * @author  cpoczatek
  */
 public class MimsLog extends javax.swing.JPanel {
     
-    /** Creates new form mimsLog */
-    public MimsLog(com.nrims.UI ui, com.nrims.data.Opener im) {
+    /** 
+     * Creates new form mimsLog
+     */
+    public MimsLog() {
         initComponents();
-        this.ui = ui ;
-        this.image = im;
     }
-    
+
+    /**
+     * Appends data to the log.
+     *
+     * @param entry the entry to be appended.
+     */
     public void Log(String entry) {
         jTextArea1.append(entry);
         jTextArea1.append("\n");
     }
-    
+
+    /**
+     * Clears the log.
+     */
     public void Clear() {
         jTextArea1.setText("");
     }
@@ -73,19 +79,16 @@ public class MimsLog extends javax.swing.JPanel {
       );
    }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * Action to be performed when "clear" button pressed.
+     */
 private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
-// TODO add your handling code here:
     this.Clear();
 }//GEN-LAST:event_clearButtonActionPerformed
-
-    private com.nrims.UI ui;
-    private com.nrims.data.Opener image;
-    
     
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JButton clearButton;
    private javax.swing.JScrollPane jScrollPane1;
    private javax.swing.JTextArea jTextArea1;
    // End of variables declaration//GEN-END:variables
-    
 }

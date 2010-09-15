@@ -1,11 +1,5 @@
 package com.nrims;
 
-/*
- * mimsTomography.java
- *
- * Created on December 20, 2007, 3:00 PM
- */
-
 import com.nrims.data.Opener;
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
@@ -30,30 +24,42 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.statistics.HistogramDataset;
 
 /**
+ * The MimsTomography class creates the "Tomography" tab
+ * on the main UI window. It contains all the functionality
+ * needed for generating statistics for ROIs and images.
+ * Statistics can be displayed either as a plot or as
+ * a table for export. The "Tomography" tab also contains
+ * a histogram of pixel values for the "active" (most recently
+ * clicked) image.
+ *
  * @author  cpoczatek
  */
 public class MimsTomography extends javax.swing.JPanel {
 
-    private UI ui;
-    private Opener image;
-    MimsJFreeChart tomoChart = null;
-    MimsJTable table = null;
-    private JFreeChart chart;
-    private MimsChartPanel chartPanel;
-    
-    /** Creates new form mimsTomography */
-    public MimsTomography(UI ui) {
-        initComponents();
-        setupHistogram();
-        
-        this.ui = ui;
-        this.image = ui.getOpener();
-        tomoChart = null;
+   private UI ui;
+   private Opener image;
+   MimsJFreeChart tomoChart = null;
+   MimsJTable table = null;
+   private JFreeChart chart;
+   private MimsChartPanel chartPanel;
 
-        imageJList.setModel(new DefaultListModel());
-        imageJList.setCellRenderer(new ImageListRenderer());
-    }
-    
+   /**
+    * The MimsTomography constructor. Assembles the "Tomogrpahy" tab.
+    *
+    * @param ui a pointer to the main UI class.
+    */
+   public MimsTomography(UI ui) {
+      initComponents();
+      setupHistogram();
+
+      this.ui = ui;
+      this.image = ui.getOpener();
+      tomoChart = null;
+
+      imageJList.setModel(new DefaultListModel());
+      imageJList.setCellRenderer(new ImageListRenderer());
+   }
+
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
    private void initComponents() {
 
@@ -214,57 +220,70 @@ public class MimsTomography extends javax.swing.JPanel {
       );
    }// </editor-fold>//GEN-END:initComponents
 
-       private void setupHistogram() {
-        // Create arbitrary dataset
-        HistogramDataset dataset = new HistogramDataset();
+   /** Sets up the histogram that charts pixel values for images.*/
+   private void setupHistogram() {
+      // Create arbitrary dataset
+      HistogramDataset dataset = new HistogramDataset();
 
-        // Create chart using the ChartFactory
-        chart = MimsChartFactory.createMimsHistogram("", "Pixel Value", "", dataset, PlotOrientation.VERTICAL, true, true, false);
-        chart.setBackgroundPaint(this.getBackground());
+      // Create chart using the ChartFactory
+      chart = MimsChartFactory.createMimsHistogram("", "Pixel Value", "", dataset, PlotOrientation.VERTICAL, true, true, false);
+      chart.setBackgroundPaint(this.getBackground());
 
-        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
-        XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
-        renderer.setDrawBarOutline(false);
-        renderer.setShadowVisible(false);
-        renderer.setBarPainter(new StandardXYBarPainter());
+      MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+      XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
+      renderer.setDrawBarOutline(false);
+      renderer.setShadowVisible(false);
+      renderer.setBarPainter(new StandardXYBarPainter());
 
-        // Listen for key pressed events.
-       KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
-          public boolean dispatchKeyEvent(KeyEvent e) {
-             if (e.getID() == KeyEvent.KEY_PRESSED) {
-                chartPanel.keyPressed(e);
-             }
-             return false;
-          }
-       });
+      // Listen for key pressed events.
+      KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
 
-        // Movable range and domain.
-        plot.setDomainPannable(true);
-        plot.setRangePannable(true);
+         public boolean dispatchKeyEvent(KeyEvent e) {
+            if (e.getID() == KeyEvent.KEY_PRESSED) {
+               chartPanel.keyPressed(e);
+            }
+            return false;
+         }
+      });
 
-        chartPanel = new MimsChartPanel(chart);
-        chartPanel.setSize(350, 250);
-        histogramjPanel.add(chartPanel);
-    }
+      // Movable range and domain.
+      plot.setDomainPannable(true);
+      plot.setRangePannable(true);
 
-    public void updateHistogram(double[] pixelvalues, String label, boolean forceupdate) {
-       if(pixelvalues == null) {
-          return;
-       } else if (pixelvalues.length == 0) {
-          return;
-       }
-       if (forceupdate || histogramUpdatejCheckBox.isSelected()) {
-          HistogramDataset dataset = new HistogramDataset();
+      chartPanel = new MimsChartPanel(chart);
+      chartPanel.setSize(350, 250);
+      histogramjPanel.add(chartPanel);
+   }
 
-          dataset.addSeries(label, pixelvalues, 100);
+   /**
+    * Updates the histogram to reflect the data contained within <code>pixelvalues</code>.
+    *
+    * @param pixelvalues the pixel values to be histogramed.
+    * @param label the histogram title, usually the name of the image.
+    * @param forceupdate forces the update to occur.
+    */
+   public void updateHistogram(double[] pixelvalues, String label, boolean forceupdate) {
+      if (pixelvalues == null) {
+         return;
+      } else if (pixelvalues.length == 0) {
+         return;
+      }
+      if (forceupdate || histogramUpdatejCheckBox.isSelected()) {
+         HistogramDataset dataset = new HistogramDataset();
 
-          MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
-          plot.setDataset(dataset);
+         dataset.addSeries(label, pixelvalues, 100);
 
-          chart.fireChartChanged();
-       }
-    }
+         MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+         plot.setDataset(dataset);
 
+         chart.fireChartChanged();
+      }
+   }
+
+    /**
+     * The action method for the "Plot" button. Generates a plot
+     * containing ROI statistical information.
+     */
     private void plotButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_plotButtonActionPerformed
 
        // Initialize chart.
@@ -293,8 +312,9 @@ public class MimsTomography extends javax.swing.JPanel {
        // Get selected rois.
        MimsRoiManager rm = ui.getRoiManager();
        Roi[] rois = rm.getSelectedROIs();
-       if (rois.length == 0)
-          rois = rm.getAllListedROIs();
+       if (rois.length == 0) {
+          rois = rm.getAllROIs();
+       }
        if (rois.length >= 1) {
           tomoChart.setRois(rois);
        } else {
@@ -313,13 +333,21 @@ public class MimsTomography extends javax.swing.JPanel {
 
        int currentPlane = ui.getMassImage(0).getSlice();
        tomoChart.plotData(appendCheckBox.isSelected());
-       
+
        // Fast forward stack by one slice if we are appending current plane.
-       if((currentPlaneCheckBox.isSelected()) && ((currentPlane+1) <= ui.getMassImage(0).getStackSize())) {
-           ui.getMassImage(0).setSlice(currentPlane + 1);
+       if ((currentPlaneCheckBox.isSelected()) && ((currentPlane + 1) <= ui.getMassImage(0).getStackSize())) {
+          ui.getMassImage(0).setSlice(currentPlane + 1);
        }
     }//GEN-LAST:event_plotButtonActionPerformed
 
+    /**
+     * Action method for the "Table" button. Generates a table
+     * containing statistical information. The format of the table
+     * depends on the type of image being generated... Sum images
+     * will contain 1 row per ROI whereas most other types of images
+     * will contain 1 row per plane. If it is a single plane image
+     * than the output will be similar to that of a Sum image.
+     */
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 
        // initialize variables.
@@ -349,8 +377,9 @@ public class MimsTomography extends javax.swing.JPanel {
 
        // Get selected rois.
        Roi[] rois = rm.getSelectedROIs();
-       if (rois.length == 0)
-          rois = rm.getAllListedROIs();
+       if (rois.length == 0) {
+          rois = rm.getAllROIs();
+       }
        if (rois.length >= 1) {
           table.setRois(rois);
        } else {
@@ -369,22 +398,27 @@ public class MimsTomography extends javax.swing.JPanel {
 
        // Is at least 1 mass or ratio image present.
        boolean isOneMassOrRatioImagePresent = false;
-       for (int i = 0; i < images.length; i++)
-          if (images[i].getMimsType() == MimsPlus.MASS_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE)
+       for (int i = 0; i < images.length; i++) {
+          if (images[i].getMimsType() == MimsPlus.MASS_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE) {
              isOneMassOrRatioImagePresent = true;
-       
+          }
+       }
+
        // Show Roi formatted table if only dealing with one plane
-       if (isOneMassOrRatioImagePresent && planes.size() != 1)
-         table.createTable(appendCheckBox.isSelected());
-       else
-         table.createSumTable(appendCheckBox.isSelected());
+       if (isOneMassOrRatioImagePresent && planes.size() != 1) {
+          table.createTable(appendCheckBox.isSelected());
+       } else {
+          table.createSumTable(appendCheckBox.isSelected());
+       }
 
        // Show table
        table.showFrame();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    // When the button is pressed a new window is opened
-    // which contains a line plot, if a Line Roi is drawn.
+    /**
+     * Action method for the "Line Profile" button. generates a line plot
+     * representing pixel values along a line ROI.
+     */
     private void profilejButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_profilejButtonActionPerformed
        if (ui.lineProfile == null) {
           ui.lineProfile = new MimsLineProfile(ui);
@@ -397,99 +431,129 @@ public class MimsTomography extends javax.swing.JPanel {
           ui.lineProfile.setVisible(true);
        }
     }//GEN-LAST:event_profilejButtonActionPerformed
-    
-    public void resetImageNamesList() {
 
-        // Get all the open images we want in the list.
-        MimsPlus[] rp = ui.getOpenRatioImages();
-        MimsPlus[] mp = ui.getOpenMassImages();
-        MimsPlus[] sp = ui.getOpenSumImages();
+   /**
+    * Updates the list of images to include all
+    * open mass images, ratio images, and sum images.
+    */
+   public void resetImageNamesList() {
 
-        // Build array of image names.
-        java.util.ArrayList<MimsPlus> images = new java.util.ArrayList<MimsPlus>();
-        for(int j=0; j<mp.length; j++) 
-            images.add(mp[j]);
-        for(int j=0; j<rp.length; j++)
-            images.add(rp[j]);
-        for(int j=0; j<sp.length; j++)
-            images.add(sp[j]);
+      // Get all the open images we want in the list.
+      MimsPlus[] rp = ui.getOpenRatioImages();
+      MimsPlus[] mp = ui.getOpenMassImages();
+      MimsPlus[] sp = ui.getOpenSumImages();
 
-        // Insert into list.
-        final MimsPlus[] img = new MimsPlus[images.size()];
-        for(int k=0; k<images.size(); k++)
-            img[k]=images.get(k);
-        
-        imageJList.setModel(new javax.swing.AbstractListModel() {
-            public int getSize() { return img.length; }
-            public Object getElementAt(int i) { return img[i]; }
-        });
-    }
-    
-    private MimsPlus[] getImages(){
-       
-       // Get selected images.
-       int[] num = imageJList.getSelectedIndices();
+      // Build array of image names.
+      java.util.ArrayList<MimsPlus> images = new java.util.ArrayList<MimsPlus>();
+      for (int j = 0; j < mp.length; j++) {
+         images.add(mp[j]);
+      }
+      for (int j = 0; j < rp.length; j++) {
+         images.add(rp[j]);
+      }
+      for (int j = 0; j < sp.length; j++) {
+         images.add(sp[j]);
+      }
 
-       // Get all open mass and ratio images.
-       MimsPlus[] mp = ui.getOpenMassImages();
-       MimsPlus[] rp = ui.getOpenRatioImages();
-       
-       // Build list of images.
-       MimsPlus[] images = new MimsPlus[num.length];
-       for (int i = 0; i < num.length; i++) {
-          images[i] = (MimsPlus)imageJList.getModel().getElementAt(num[i]);
-       }
-       
-       return images;
-    }
+      // Insert into list.
+      final MimsPlus[] img = new MimsPlus[images.size()];
+      for (int k = 0; k < images.size(); k++) {
+         img[k] = images.get(k);
+      }
 
-    // Get the selected statistics.
-    public String[] getStatNames(){
+      imageJList.setModel(new javax.swing.AbstractListModel() {
 
-       // initialize array and get selected statistics.
-       Object[] objs = new Object[statJList.getSelectedValues().length];
-       objs = statJList.getSelectedValues();
-       
-       // If no statistics selected, use Area, Mean, and StdDev by default.
-       String[] statnames;
-       if (objs.length == 0) {
-          statnames = new String[3];
-          statnames[0] = "area";
-          statnames[1] = "mean";
-          statnames[2] = "stddev";
-       } else {
+         public int getSize() {
+            return img.length;
+         }
+
+         public Object getElementAt(int i) {
+            return img[i];
+         }
+      });
+   }
+
+   /**
+    * Gets the images selected by the user in the jlist.
+    *
+    * @return an array of MimsPlus images.
+    */
+   private MimsPlus[] getImages() {
+
+      // Get selected images.
+      int[] num = imageJList.getSelectedIndices();
+
+      // Build list of images.
+      MimsPlus[] images = new MimsPlus[num.length];
+      for (int i = 0; i < num.length; i++) {
+         images[i] = (MimsPlus) imageJList.getModel().getElementAt(num[i]);
+      }
+
+      return images;
+   }
+
+   /**
+    * Gets the statistics selected by the user in the jlist.
+    *
+    * @return an array of statistic names.
+    */
+   public String[] getStatNames() {
+
+      // initialize array and get selected statistics.
+      Object[] objs = new Object[statJList.getSelectedValues().length];
+      objs = statJList.getSelectedValues();
+
+      // If no statistics selected, use Area, Mean, and StdDev by default.
+      String[] statnames;
+      if (objs.length == 0) {
+         statnames = new String[3];
+         statnames[0] = "area";
+         statnames[1] = "mean";
+         statnames[2] = "stddev";
+      } else {
          statnames = new String[objs.length];
          for (int i = 0; i < objs.length; i++) {
             statnames[i] = (String) objs[i];
          }
-       }
+      }
 
-       return statnames;
-    }
+      return statnames;
+   }
 
-    private ArrayList<Integer> getPlanes(){
+   /**
+    * Gets the planes entered by the user in the textfield.
+    *
+    * @return an array list of plane numbers (all by default).
+    */
+   private ArrayList<Integer> getPlanes() {
 
-       // initialize
-       ArrayList planes = new ArrayList<Integer>();
+      // initialize
+      ArrayList planes = new ArrayList<Integer>();
 
-       // Get text.
-       String list = jTextField1.getText().trim();
+      // Get text.
+      String list = jTextField1.getText().trim();
 
-       // Parse text, generat list.
-       if (currentPlaneCheckBox.isSelected()) {
-          planes.add(ui.getOpenMassImages()[0].getCurrentSlice());
-       } else if (list.matches("") || list.length() == 0) {
-          for(int i = 1; i <= ui.getOpenMassImages()[0].getNSlices(); i++) {
-             planes.add(i);
-          }
-       } else {
-          planes = MimsStackEditor.parseList(jTextField1.getText(), 1, ui.getOpenMassImages()[0].getNSlices());
-       }
+      // Parse text, generat list.
+      if (currentPlaneCheckBox.isSelected()) {
+         planes.add(ui.getOpenMassImages()[0].getCurrentSlice());
+      } else if (list.matches("") || list.length() == 0) {
+         for (int i = 1; i <= ui.getOpenMassImages()[0].getNSlices(); i++) {
+            planes.add(i);
+         }
+      } else {
+         planes = MimsStackEditor.parseList(jTextField1.getText(), 1, ui.getOpenMassImages()[0].getNSlices());
+      }
 
-       return planes;
-    }
+      return planes;
+   }
 
-    class ImageListRenderer extends JLabel implements ListCellRenderer {
+   /**
+    * The imageListRenderer class is controls how entries in the
+    * "images" jlist are rendered. A Mimsplus object occupies
+    * the field but this class gets its very mass number
+    * and displays that string.
+    */
+   class ImageListRenderer extends JLabel implements ListCellRenderer {
 
       public ImageListRenderer() {
          setOpaque(true);

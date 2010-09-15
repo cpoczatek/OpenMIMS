@@ -113,10 +113,10 @@ public class LoadImageList {
         File imFile;
         for (int i = 1; i < imageList.size(); i++) {
             imFile = new File(workingDirectory, imageList.get(i));
-            UI tempUi = new UI(null);
+            UI tempUi = new UI();
             boolean opened = tempUi.openFile(imFile);
             if (opened) {
-            this.ui.getmimsStackEditing().concatImages(false, false, tempUi);            
+            this.ui.getmimsStackEditing().concatImages(false, tempUi);            
             for (MimsPlus image : tempUi.getMassImages()) {
                 if (image != null) {
                     image.setAllowClose(true);
@@ -127,8 +127,6 @@ public class LoadImageList {
             }
         }       
         
-        this.ui.setSyncROIs(true);
-        this.ui.setSyncStack(true);
         } catch(Exception e) { e.printStackTrace(); }
     }
     

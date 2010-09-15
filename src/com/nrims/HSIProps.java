@@ -1,14 +1,16 @@
-/*
- * HSIProps.java
- *
- * Created on May 4, 2006, 11:19 AM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
-
 package com.nrims;
 
+/**
+ * The HSIProps class is required to generate an HSI
+ * image. It also serves to store values related to
+ * how the image calculated and displayed. This class
+ * can be written to disk as an object and later loaded
+ * by the OpenMIMS plugin to automatically regenerate
+ * the image as it was displayed at the time of saving.
+ *
+ * @author zkaufman
+ *
+ */
 public class HSIProps implements java.io.Serializable {
     //-----------------------------
     static final long serialVersionUID = 2L;
@@ -38,8 +40,14 @@ public class HSIProps implements java.io.Serializable {
     private double mag = 1.0;
 
     /** Creates a new instance of HSIProps */
-    public HSIProps() {}
+    private HSIProps() {}
 
+    /**
+     * Create an HSIProps object with given numerator and denominator mass indexes.
+     *
+     * @param numerator index of numerator
+     * @param denominator index of denominator
+     */
     public HSIProps(int numerator, int denominator) {
 
         numMassIdx = numerator;
@@ -67,63 +75,260 @@ public class HSIProps implements java.io.Serializable {
 
 
     }
-    public void setNumMassIdx(int n) { numMassIdx = n ; }
-    public int getNumMassIdx() { return numMassIdx ; }
-    public void setDenMassIdx(int n) { denMassIdx = n ; }
-    public int getDenMassIdx() { return denMassIdx ; }
-    public void setNumMassValue(double d) { this.numMassValue = d; }
-    public double getNumMassValue() { return this.numMassValue; }
-    public void setDenMassValue(double d) { this.denMassValue = d; }
-    public double getDenMassValue() { return this.denMassValue; }
-    public void setMinNum(int n) { minNum = n ; }
-    public int getMinNum() { return minNum ; }
-    public void setMinDen(int n) { minDen = n ; }
-    public int getMinDen() { return minDen ; }
-    public void setMaxRatio(double d) { maxRatio = d ; }
-    public double getMaxRatio() { return maxRatio ; }
-    public void setMinRatio(double d) { minRatio = d ; }
-    public double getMinRatio() { return minRatio ; }
-    public void setMaxRGB(int n) { maxRGB = n ; }
-    public int getMaxRGB() { return maxRGB ; }
-    public void setMinRGB(int n) { minRGB = n ; }
-    public int getMinRGB() { return minRGB ; }
-    public void setTransparency(int n) { transparency = n ; }
-    public int getTransparency() { return transparency ; }
-    public void setLabelMethod(int n) { label = n ; }
-    public int getLabelMethod() { return label ; }
-    public void setRatioScaleFactor(double s) { this.ratioScaleFactor = s; }
-    public double getRatioScaleFactor() { return this.ratioScaleFactor; }
-    public void setXWindowLocation(int x) { this.xloc = x; }
-    public int getXWindowLocation() { return this.xloc; }
-    public void setYWindowLocation(int y) { this.yloc = y; }
-    public int getYWindowLocation() { return this.yloc; }     
-    public void setTransform(boolean trans) { this.transform = trans; }
-    public boolean getTransform() { return this.transform; }
-    public void setReferenceRatio(float ref) { this.referenceRatio = ref; }
-    public float getReferenceRatio() { return this.referenceRatio; }
-    public void setBackgroundRatio(float bg) { this.backgroundRatio = bg; }
-    public float getBackgroundRatio() { return this.backgroundRatio; }
-    public void setDataFileName(String fileName) { dataFileName = fileName;}
-    public String getDatFileName() { return dataFileName; }
-    public void setMag(double m) { mag = m;}
-    public double getMag() { return mag; }
+
+    private void setDenMassIdx(int n) { denMassIdx = n ; }
+    private void setNumMassIdx(int n) { numMassIdx = n ; }
+
     /**
-     * Set this class' properties from another class
+     * Gets the index of the mass image of the numerator
+     *
+     * @return numerator mass index.
+     */
+    public int getNumMassIdx() { return numMassIdx ; }
+    
+    /**
+     * Gets the index of the mass image of the denominator.
+     *
+     * @return denominator mass index.
+     */
+    public int getDenMassIdx() { return denMassIdx ; }
+
+    /**
+     * Sets the numerator mass value.
+     *
+     * @param d mass value (e.g. 13.01)
+     */
+    public void setNumMassValue(double d) { this.numMassValue = d; }
+
+    /**
+     * Gets the numerator mass value.
+     *
+     * @return numerator mass value (e.g. 13.01)
+     */
+    public double getNumMassValue() { return this.numMassValue; }
+
+    /**
+     * Sets the denominator mass value.
+     *
+     * @param d mass value (e.g. 13.01)
+     */
+    public void setDenMassValue(double d) { this.denMassValue = d; }
+
+    /**
+     * Gets the denominator mass value.
+     *
+     * @return mass value (e.g. 13.01)
+     */
+    public double getDenMassValue() { return this.denMassValue; }
+
+   /**
+    * Sets the threshold of the number of counts required for
+    * a valid measurement (numerator).
+    *
+    * @param numThresh int counts required.
+    */
+   public void setNumThreshold(int numThresh) {this.minNum = numThresh; }
+
+   /**
+    * Gets the numerator threshold setting.
+    *
+    * @return int
+    */
+   public int getNumThreshold() { return this.minNum; }
+
+   /**
+    * Sets the threshold of the number of counts required for
+    * a valid measurement (denominator).
+    *
+    * @param denThresh int counts required
+    */
+   public void setDenThreshold(int denThresh) {this.minDen = denThresh; }
+
+   /**
+    * Gets the denominator threshold setting.
+    *
+    * @return int
+    */
+   public int getDenThreshold() { return this.minDen; }
+
+    /**
+     * Sets the maximum value of the colorbar.
+     *
+     * @param d max colorbar value.
+     */
+    public void setMaxRatio(double d) { maxRatio = d ; }
+
+    /**
+     * Gets the maximum value of the colorbar.
+     *
+     * @return max colorbar value.
+     */
+    public double getMaxRatio() { return maxRatio ; }
+
+    /**
+     * Sets the mimimum value of the colorbar.
+     *
+     * @param d minimum colorbar value.
+     */
+    public void setMinRatio(double d) { minRatio = d ; }
+
+    /**
+     * Gets the minimum value of the colorbar.
+     *
+     * @return minimum colorbar value.
+     */
+    public double getMinRatio() { return minRatio ; }
+
+    /**
+     * Sets the maximum RGB value.
+     *
+     * @param n maximum RGB value (0-255)
+     */
+    public void setMaxRGB(int n) { maxRGB = n ; }
+
+    /**
+     * Gets the maximum RGB value.
+     *
+     * @return the maximum RGB value (0-255)
+     */
+    public int getMaxRGB() { return maxRGB ; }
+
+
+    /**
+     * Sets the minimum RGB value.
+     *
+     * @param n minimum RGB value.
+     */
+    public void setMinRGB(int n) { minRGB = n ; }
+
+    /**
+     * Gets the minimum RGB value.
+     *
+     * @return minimum RGB value.
+     */
+    public int getMinRGB() { return minRGB ; }
+
+    /**
+     * Sets the transparency setting. Actual transparency
+     * (numerator, denominator, min max numerator denominator)
+     * is determined by the index in the jcombobox in the HSIView class.
+     *
+     * @param n transparency index.
+     */
+    public void setTransparency(int n) { transparency = n ; }
+
+    /**
+     * Gets the transparency setting.
+     * 
+     * @return transparency index.
+     */
+    public int getTransparency() { return transparency ; }
+
+    /**
+     * Sets the labeling method (none, colorbar, labels and colorbar).
+     * Actual labeling method is derived from the index passed and the
+     * jcombobox in the HSIView class.
+     *
+     * @param n the label method index.
+     */
+    public void setLabelMethod(int n) { label = n ; }
+
+    /**
+     * Gets the labeling method index
+     *
+     * @return the label method index.
+     */
+    public int getLabelMethod() { return label ; }
+
+    /**
+     * Sets the scale factor of the underlying ratio image.
+     *
+     * @param s scale factor
+     */
+    public void setRatioScaleFactor(double s) { this.ratioScaleFactor = s; }
+
+    /**
+     * Gets the scale factor of the underlying ratio image.
+     *
+     * @return the scale factor
+     */
+    public double getRatioScaleFactor() { return this.ratioScaleFactor; }
+
+   /**
+    * Sets the x-value for the window location.
+    * @param x
+    */
+   public void setXWindowLocation(int x) { this.xloc = x; }
+
+   /**
+    * Gets the x-value for the window location.
+    * @return int
+    */
+   public int getXWindowLocation() { return this.xloc; }
+
+   /**
+    * Sets the y-value for the window location.
+    * @param y
+    */
+   public void setYWindowLocation(int y) { this.yloc = y; }
+
+   /**
+    * Gets the y-value for the window location.
+    * @return int
+    */
+   public int getYWindowLocation() { return this.yloc; }
+
+   /**
+    * Sets the data file associated with <code>this</code> class.
+    * To be used so that when <code>RatioProps</code> objects are
+    * saved and then reopend, a pointer exists to the data file
+    * used to create the image. It is assumed that the data file
+    * exists in the same directory as the <code>RatioProps</code>
+    * object being opened, therfore only the name is required.
+    *
+    * @param fileName file name (no directory)
+    */
+   public void setDataFileName(String fileName) { dataFileName = fileName;}
+
+   /**
+    * Gets the name of the data file so that images can be regenerated.
+    * It is assumed that the data file
+    * exists in the same directory as the <code>RatioProps</code>
+    * object being opened, therfore only the name is required.
+    *
+    * @return String file name (no directory)
+    */
+   public String getDataFileName() { return dataFileName; }
+
+   /**
+    * Sets the magnification level.
+    *
+    * @param m magnification level.
+    */
+   public void setMag(double m) { this.mag = m; }
+
+   /**
+    * Gets the magnification level
+    *
+    * @return the magnification level.
+    */
+   public double getMag() { return this.mag; }
+
+    /**
+     * Sets this class' properties from another class
+     * @param props
      */
     public void setProps(HSIProps props) {
         numMassIdx = props.getNumMassIdx();
         denMassIdx = props.getDenMassIdx();
-        minNum = props.getMinNum();
-        minDen = props.getMinDen();
+        minNum = props.getNumThreshold();
+        minDen = props.getDenThreshold();
         maxRatio = props.getMaxRatio();
         minRatio = props.getMinRatio();
         maxRGB = props.getMaxRGB();
         minRGB = props.getMinRGB();
         transparency = props.getTransparency();
         label = props.getLabelMethod();
-        transform = props.getTransform();
-        referenceRatio = props.getReferenceRatio();
-        backgroundRatio = props.getBackgroundRatio();
         xloc = props.getXWindowLocation();
         yloc = props.getYWindowLocation();
         mag = props.getMag();
@@ -131,36 +336,45 @@ public class HSIProps implements java.io.Serializable {
    
     /**
      * Sets the HSI props passed as an argument to this class properties 
+     * @param props
      */
-    //Why is this getter setting?
-    public void getProps(HSIProps props) {
+    private void getProps(HSIProps props) {
         props.setNumMassIdx(numMassIdx);
         props.setDenMassIdx(denMassIdx);
-        props.setMinNum(minNum);
-        props.setMinDen(minDen);
+        props.setNumThreshold(minNum);
+        props.setDenThreshold(minDen);
         props.setMaxRatio(maxRatio);
         props.setMinRatio(minRatio);
         props.setMaxRGB(maxRGB);
         props.setMinRGB(minRGB);
         props.setTransparency(transparency);
         props.setLabelMethod(label);
-        props.setTransform(transform);
-        props.setReferenceRatio(referenceRatio);
-        props.setBackgroundRatio(backgroundRatio);
         props.setXWindowLocation(xloc);
         props.setYWindowLocation(yloc);
         props.setRatioScaleFactor(ratioScaleFactor);
         props.setMag(mag);
     }
-    
+
+    /**
+     * Returns an HSIProps object with all the same properties
+     * as this class.
+     *
+     * @return an HSIProps object
+     */
     public HSIProps clone() {
         HSIProps props = new HSIProps();
         getProps(props);
         return props ;
     }
     
-   // Two props objects are equal if numerator and denominator are the same.
-   public boolean equals(HSIProps rp) {
+    /**
+     * Tests if this object is equal to the passed parameter.
+     * Two HSIProps objects are equal if numerator and denominator are the same.
+     *
+     * @param rp
+     * @return <code>true</code> if num and den are the same, otherwise <code>false</code>.
+     */
+    public boolean equals(HSIProps rp) {
       if (rp.getNumMassIdx() == numMassIdx && rp.getDenMassIdx() == denMassIdx)
          return true;
       else

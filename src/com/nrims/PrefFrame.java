@@ -2,6 +2,18 @@ package com.nrims;
 
 import ij.Prefs;
 
+/**
+ * This class creates a user preferences interface. It
+ * opens as a frame and allows user to enter parameters
+ * and settings that control the applications behavior.
+ * It is built upon the ImageJ Preferences class.
+ * These settings are stored in the ImageJ preferences
+ * file unually located in ~HOME_DIR/.imagej/IJ_Prefs.txt.
+ * All Open_Mims settings are preceded with the "openmims."
+ * string.
+ *
+ * @author  cpoczatek
+ */
 public class PrefFrame extends PlugInJFrame {
 
     //WARNING!!!!
@@ -19,6 +31,7 @@ public class PrefFrame extends PlugInJFrame {
     
     final String PREFS_KEY = "openmims.";
 
+    /** Instantiates the class and creates the frame.*/
     public PrefFrame() {
         super("Preferences");
         readPreferences();
@@ -140,10 +153,12 @@ public class PrefFrame extends PlugInJFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+/** Action method for the "save" button.*/
 private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
     savePreferences();
 }//GEN-LAST:event_jButton2ActionPerformed
 
+/** Action method for the "cancel" button.*/
 private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
     close();
 }//GEN-LAST:event_jButton1ActionPerformed
@@ -161,7 +176,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     }
 
-    void readPreferences() {
+    /** Reads the preferences and sets member variables accordingly.*/
+    private void readPreferences() {
         includeHSI = (boolean) Prefs.get(PREFS_KEY + "includeHSI", includeHSI);
         includeSum = (boolean) Prefs.get(PREFS_KEY + "includeSum", includeSum);
         includeMass = (boolean) Prefs.get(PREFS_KEY + "includeMass", includeMass);
@@ -171,7 +187,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         ratioReciprocals = (boolean) Prefs.get(PREFS_KEY + "ratioReciprocals", ratioReciprocals);
     }
 
-    void savePreferences() {
+    /** Saves the preferences file.*/
+    private void savePreferences() {
         includeHSI = HSIcheckbox.isSelected();
         includeSum = sumCheckbox.isSelected();
         includeMass = massCheckbox.isSelected();
@@ -195,6 +212,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         close();
     }
 
+    /** Shows the frame.*/
     public void showFrame() {
         setVisible(true);
         toFront();
@@ -206,31 +224,59 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         setVisible(false);
     }
 
-    //get values read in from pref file
+    /**
+     * Include HSI images when exporting images?
+     * @return boolean.
+     */
     boolean getincludeHSI() {
         return includeHSI;
     }
 
+    /**
+     * Include Sum images when exporting images?
+     * @return boolean.
+     */
     boolean getincludeSum() {
         return includeSum;
     }
 
+    /**
+     * Include Mass images when exporting images?
+     * @return boolean.
+     */
     boolean getincludeMass() {
         return includeMass;
     }
 
+    /**
+     * Include Ratio images when exporting images?
+     * @return boolean.
+     */
     boolean getincludeRatio() {
         return includeRatio;
     }
 
+    /**
+     * Gets the scale factor.
+     * @return the scale factor.
+     */
     int getscaleFactor() {
         return scaleFactor;
     }
 
+    /**
+     * Gets the difference allowed between atomic numbers
+     * in order to show ratio images in the list.
+     * @return double
+     */
     double getRatioSpan() {
         return ratioSpan;
     }
 
+    /**
+     * Include reciprocals in the ratio image list (13/12 and 12/13).
+     * @return boolean
+     */
     boolean getRatioReciprocals() {
         return ratioReciprocals;
     }
