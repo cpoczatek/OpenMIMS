@@ -22,6 +22,8 @@ import java.awt.Point;
 import java.awt.Image;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.File;
@@ -141,7 +143,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       //read in preferences so values are gettable
       //by various tabs (ie mimsTomography, HSIView, etc.
       //when constructed further down.
-      prefs = new PrefFrame();
+      prefs = new PrefFrame(this);
 
       ijapp = IJ.getInstance();
       if (ijapp == null || (ijapp != null && !ijapp.isShowing())) {
@@ -226,9 +228,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       // Create and start the thread
       //Thread thread = new StartupScript(this);
       //thread.start();
-
-      //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/100221-c6-gk14e-1x999.nrrd"));
       //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.nrrd"));
+
+      // I added this listener because for some reason,
+      // neither the windowClosing() method in this class, nor the
+      // windowClosing method in PlugInJFrame is registering.
+      addWindowListener(new WindowAdapter() {
+         @Override
+         public void windowClosing(WindowEvent winEvt) {
+            closeCurrentImage();
+            close();
+         }
+      });
    }
 
     /**
@@ -343,7 +354,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * Brings up the graphical pane for selecting files to be opened.
      */
-    public synchronized boolean loadMIMSFile() {
+    public synchronized File loadMIMSFile() {
         javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
         fc.setMultiSelectionEnabled(false);
         fc.setPreferredSize(new java.awt.Dimension(650, 500));
@@ -358,7 +369,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION) {
             lastFolder = fc.getCurrentDirectory().getAbsolutePath();
-            return false;
+            return null;
         }
         lastFolder = fc.getSelectedFile().getParent();
         setIJDefaultDir(lastFolder);
@@ -368,7 +379,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         boolean opened = openFile(file);
         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
-        return opened;
+        if (opened)
+           return file;
+        else
+           return null;
     }
 
     /**
@@ -1378,8 +1392,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       jSeparator4 = new javax.swing.JSeparator();
       genStackMenuItem = new javax.swing.JMenuItem();
       compositeMenuItem = new javax.swing.JMenuItem();
-      jSeparator5 = new javax.swing.JSeparator();
-      TestMenuItem = new javax.swing.JMenuItem();
 
       jMenuItem9.setText("Export all images");
 
@@ -1603,15 +1615,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          }
       });
       utilitiesMenu.add(compositeMenuItem);
-      utilitiesMenu.add(jSeparator5);
-
-      TestMenuItem.setText("Test");
-      TestMenuItem.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            TestMenuItemActionPerformed(evt);
-         }
-      });
-      utilitiesMenu.add(TestMenuItem);
 
       jMenuBar1.add(utilitiesMenu);
 
@@ -1861,7 +1864,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /** An action method for the Edit>Preferences... menu item.*/
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
       
-       if(this.prefs==null) { prefs = new PrefFrame(); }
+       if(this.prefs==null) { prefs = new PrefFrame(this); }
        prefs.showFrame();
         
     }//GEN-LAST:event_jMenuItem3ActionPerformed
@@ -2001,16 +2004,19 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        SumProps[] sum_props = getOpenSumProps();
              
        // Load the new file.
-       boolean loaded = loadMIMSFile();
-       if (loaded == false)
+       File file = loadMIMSFile();
+       if (file == null)
           return;
+
+       // Restores state if image file.
+       if( file.getAbsolutePath().endsWith(NRRD_EXTENSION) ||
+           file.getAbsolutePath().endsWith(MIMS_EXTENSION) ) {
+                  restoreState(rto_props, hsi_props, sum_props);
+       }
        
        //Autocontrast mass images.
        //Should add option to apply settings from previous image?
        autoContrastImages(getOpenMassImages());
-
-       // Generate all images that were previously open.
-       restoreState(rto_props, hsi_props, sum_props);
 
         MimsRoiManager rm = getRoiManager();
         if( rm!=null ) {
@@ -2203,7 +2209,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Action method File>Exit menu item. Closes the application. */
 private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-    this.close();
+   closeCurrentImage();
+   this.close();
 }//GEN-LAST:event_exitMenuItemActionPerformed
 
    /** Action method for Utilities>Sum all Open menu item. Generates sum images
@@ -2389,10 +2396,6 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 }//GEN-LAST:event_genStackMenuItemActionPerformed
                                                                                          
 /** Action method Utilities>Test menu item. Reserved for testing code. */
-private void TestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TestMenuItemActionPerformed
-
-}//GEN-LAST:event_TestMenuItemActionPerformed
-
 /**
  * Action method for File>Save Image and File>Save Session menu items.
  * Brings up a JFileChooser for saving the current image (or session).
@@ -3297,7 +3300,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
-   private javax.swing.JMenuItem TestMenuItem;
    private javax.swing.JMenuItem aboutMenuItem;
    private javax.swing.JMenuItem captureImageMenuItem;
    private javax.swing.JMenuItem closeAllHSIMenuItem;
@@ -3326,7 +3328,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JSeparator jSeparator2;
    private javax.swing.JSeparator jSeparator3;
    private javax.swing.JSeparator jSeparator4;
-   private javax.swing.JSeparator jSeparator5;
    private javax.swing.JSeparator jSeparator6;
    private javax.swing.JSeparator jSeparator7;
    private javax.swing.JSeparator jSeparator8;

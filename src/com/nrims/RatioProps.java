@@ -47,8 +47,8 @@ public class RatioProps implements java.io.Serializable {
        ratioScaleFactor = -1.0;       
        minLUT = 0.0;
        maxLUT = 1.0;
-       numThreshold = 3;
-       denThreshold = 3;
+       numThreshold = 0;
+       denThreshold = 0;
    }
 
     /**

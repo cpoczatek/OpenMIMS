@@ -88,7 +88,6 @@ public class MimsHSIView extends javax.swing.JPanel {
       ratioMinjSpinner = new javax.swing.JSpinner();
       jLabel8 = new javax.swing.JLabel();
       numThresholdjSpinner = new javax.swing.JSpinner();
-      jButton2 = new javax.swing.JButton();
       jPanel2 = new javax.swing.JPanel();
       rgbMaxjLabel = new javax.swing.JLabel();
       transparencyjComboBox = new javax.swing.JComboBox();
@@ -229,13 +228,6 @@ public class MimsHSIView extends javax.swing.JPanel {
          }
       });
 
-      jButton2.setText("Auto");
-      jButton2.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jButton2ActionPerformed(evt);
-         }
-      });
-
       javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
       jPanel3.setLayout(jPanel3Layout);
       jPanel3Layout.setHorizontalGroup(
@@ -251,7 +243,7 @@ public class MimsHSIView extends javax.swing.JPanel {
                   .addComponent(ratioSFjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
                   .addComponent(imagejLabel)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 86, javax.swing.GroupLayout.PREFERRED_SIZE))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, javax.swing.GroupLayout.PREFERRED_SIZE))
                .addGroup(jPanel3Layout.createSequentialGroup()
                   .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                      .addComponent(jLabel6)
@@ -271,9 +263,7 @@ public class MimsHSIView extends javax.swing.JPanel {
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                      .addComponent(denThresholdjSpinner)
-                     .addComponent(ratioMinjSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 69, Short.MAX_VALUE))
-                  .addGap(12, 12, 12)
-                  .addComponent(jButton2)))
+                     .addComponent(ratioMinjSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 69, Short.MAX_VALUE))))
             .addContainerGap())
       );
       jPanel3Layout.setVerticalGroup(
@@ -305,10 +295,7 @@ public class MimsHSIView extends javax.swing.JPanel {
                      .addComponent(rartioMaxjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                      .addComponent(jLabel5)
                      .addComponent(ratioMinjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                  .addGap(26, 26, 26))
-               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                  .addComponent(jButton2)
-                  .addGap(13, 13, 13)))
+                  .addGap(26, 26, 26)))
             .addContainerGap())
       );
 
@@ -480,14 +467,14 @@ public class MimsHSIView extends javax.swing.JPanel {
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(layout.createSequentialGroup()
             .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addContainerGap(38, Short.MAX_VALUE))
       );
       layout.setVerticalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(layout.createSequentialGroup()
             .addContainerGap()
             .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 397, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addContainerGap(22, Short.MAX_VALUE))
       );
    }// </editor-fold>//GEN-END:initComponents
 
@@ -525,22 +512,6 @@ public class MimsHSIView extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_ratioMinjSpinnerStateChanged
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-
-        if (bUpdating)
-           return;
-
-        if (currentImage == null)
-           return;
-
-        if (currentImage.getMimsType()!=MimsPlus.HSI_IMAGE)
-           return;
-
-        MimsPlus mp = currentImage;
-
-        ui.autoContrastImage(mp);
-    }//GEN-LAST:event_jButton2ActionPerformed
-
     private void numThresholdjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_numThresholdjSpinnerStateChanged
 
         if (bUpdating)
@@ -551,6 +522,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         if (currentImage.getMimsType() == MimsPlus.HSI_IMAGE){           
            currentImage.getHSIProps().setNumThreshold(new Integer(numThresholdjSpinner.getValue().toString()));
+           currentImage.computeHSI();
            update();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int numThreshold = ((Integer)numThresholdjSpinner.getValue()).intValue();
@@ -570,6 +542,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         if (currentImage.getMimsType() == MimsPlus.HSI_IMAGE) {
            currentImage.getHSIProps().setDenThreshold(new Integer(denThresholdjSpinner.getValue().toString()));
+           currentImage.computeHSI();
            update();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int denThreshold = ((Integer)denThresholdjSpinner.getValue()).intValue();
@@ -652,19 +625,20 @@ public class MimsHSIView extends javax.swing.JPanel {
 
     private void ratioSFjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ratioSFjSpinnerStateChanged
        if (bUpdating)
-        return;
+          return;
+          
+       MimsPlus mp = currentImage;
+       if (mp == null)
+          return;
 
-    MimsPlus mp = currentImage;
-    if(mp==null) { return; }
-
-    if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
-        mp.getHSIProcessor().getHSIProps().setRatioScaleFactor((Double) ratioSFjSpinner.getValue());
-        mp.computeHSI();
-    } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
-        mp.getRatioProps().setRatioScaleFactor((Double) ratioSFjSpinner.getValue());
-        mp.computeRatio();
-        mp.updateAndDraw();
-    }
+       if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+          mp.getHSIProcessor().getHSIProps().setRatioScaleFactor((Double) ratioSFjSpinner.getValue());
+          mp.computeHSI();
+       } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
+          mp.getRatioProps().setRatioScaleFactor((Double) ratioSFjSpinner.getValue());
+          mp.computeRatio();
+          mp.updateAndDraw();
+       }
     }//GEN-LAST:event_ratioSFjSpinnerStateChanged
 
     private void percentTurnoverRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_percentTurnoverRadioButtonActionPerformed
@@ -900,12 +874,22 @@ public class MimsHSIView extends javax.swing.JPanel {
    }
 
    /**
-    * Gets the ratio scale factor to be used when generating ratio images
+    * Gets the ratio scale factor to be used when generating ratio images.
     * @return the scale factor.
     */
    public float getRatioScaleFactor() {
       Double d = (Double) ratioSFjSpinner.getValue();
       return d.floatValue();
+   }
+
+   /**
+    * Sets the ratio scale factor spinner.
+    * @return the scale factor.
+    */
+   public void setRatioScaleFactor(Integer i) {
+      bUpdating = true ;
+      ratioSFjSpinner.setValue(i);
+      bUpdating = false ;
    }
 
    /**
@@ -1148,7 +1132,6 @@ public class MimsHSIView extends javax.swing.JPanel {
    private javax.swing.JRadioButton hsiWindowRadioButton;
    private javax.swing.JSpinner hsiWindowjSpinner;
    private javax.swing.JLabel imagejLabel;
-   private javax.swing.JButton jButton2;
    private javax.swing.JLabel jLabel12;
    private javax.swing.JLabel jLabel13;
    private javax.swing.JLabel jLabel3;

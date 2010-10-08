@@ -221,7 +221,7 @@
                               <Component id="ratioSFjSpinner" min="-2" pref="69" max="-2" attributes="0"/>
                               <EmptySpace pref="25" max="32767" attributes="0"/>
                               <Component id="imagejLabel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="86" max="-2" attributes="0"/>
+                              <EmptySpace pref="7" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
@@ -248,8 +248,6 @@
                                   <Component id="denThresholdjSpinner" max="32767" attributes="1"/>
                                   <Component id="ratioMinjSpinner" alignment="0" pref="69" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
-                              <Component id="jButton2" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -292,10 +290,6 @@
                                   <Component id="ratioMinjSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="1" attributes="0">
-                              <Component id="jButton2" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="13" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -392,14 +386,6 @@
               </Properties>
               <Events>
                 <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="numThresholdjSpinnerStateChanged"/>
-              </Events>
-            </Component>
-            <Component class="javax.swing.JButton" name="jButton2">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Auto"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton2ActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>

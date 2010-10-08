@@ -52,7 +52,7 @@ public class PlugInJFrame extends JFrame implements PlugIn, WindowListener, Focu
     }
 
     /** Closes this window. */
-    public void close() {
+    public void close() {      
         setVisible(false);
         dispose();
         WindowManager.removeWindow(this);

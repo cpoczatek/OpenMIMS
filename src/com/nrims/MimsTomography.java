@@ -50,6 +50,7 @@ public class MimsTomography extends javax.swing.JPanel {
     */
    public MimsTomography(UI ui) {
       initComponents();
+      initComponentsCustom();
       setupHistogram();
 
       this.ui = ui;
@@ -219,6 +220,10 @@ public class MimsTomography extends javax.swing.JPanel {
             .addContainerGap())
       );
    }// </editor-fold>//GEN-END:initComponents
+
+   private void initComponentsCustom() {
+      jLabel3.setText("Statistics");
+   }
 
    /** Sets up the histogram that charts pixel values for images.*/
    private void setupHistogram() {

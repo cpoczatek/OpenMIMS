@@ -54,8 +54,8 @@ public class HSIProps implements java.io.Serializable {
         denMassIdx = denominator;
         maxRatio = 100;
         minRatio = 37;
-        minNum = 3 ;
-        minDen = 3 ;
+        minNum = 0 ;
+        minDen = 0 ;
         maxRGB = 255 ;
         minRGB = 0 ;
         transparency = 2 ;

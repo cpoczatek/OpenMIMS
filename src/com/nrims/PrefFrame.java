@@ -28,12 +28,14 @@ public class PrefFrame extends PlugInJFrame {
     int scaleFactor = 10000;
     double ratioSpan = 1.5;
     boolean ratioReciprocals = false;
+    UI ui;
     
     final String PREFS_KEY = "openmims.";
 
     /** Instantiates the class and creates the frame.*/
-    public PrefFrame() {
+    public PrefFrame(UI ui) {
         super("Preferences");
+        this.ui = ui;
         readPreferences();
         initComponents();
         initComponentsCustom();
@@ -195,6 +197,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         includeRatio = ratioCheckbox.isSelected();
         try {
             scaleFactor = new Integer(scaleFactorTextbox.getText());
+            ui.getHSIView().setRatioScaleFactor(scaleFactor);
             ratioSpan = new Double(ratioSpanTextbox.getText());
         } catch (Exception e) {
         }
