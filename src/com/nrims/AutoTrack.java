@@ -14,6 +14,7 @@ import ij.process.ShortProcessor;
 import java.awt.image.IndexColorModel;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 /**
  * OpenMIMS auto tracking code adapted from below.<br>
@@ -62,6 +63,7 @@ public class AutoTrack implements Runnable {
     private static final double TINY = (double) Float.intBitsToFloat((int) 0x33FFFFFF);
     private com.nrims.UI ui;
     private ImagePlus imp;
+    private ArrayList<Integer> includeList = null;
 
     /**
      * Constructor
@@ -71,6 +73,18 @@ public class AutoTrack implements Runnable {
     public AutoTrack(com.nrims.UI uiarg, ImagePlus imp) {
         this.ui = uiarg;
         this.imp = imp;
+    }
+
+    /**
+     * Sets the array of plane numbers from which the
+     * image to be tracked is derived. It is NOT NECESSARY
+     * to set this member variable, it is only used for
+     * display purposes only.
+     *
+     * @param list the list of plane numbers.
+     */
+    public void setIncludeList(ArrayList<Integer> list) {
+       this.includeList = list;
     }
 
     /**
@@ -232,14 +246,14 @@ public class AutoTrack implements Runnable {
             //imp.updateAndDraw();
 
             planesDone = planesDone + 1;
-            //percent = (planesDone/planesTotal);
 
-            //System.out.println("calling ui.showprog");
-            //System.out.println(planesDone + " of " + planesTotal);
-            //ui.updateStatus(planesDone+" planes of "+planesTotal+" total...");
-            if (ui.getMassImage(0) != null) {
+            // Display purposes only.
+            if (ui.getMassImage(0) == null) {
+                //do nothing
+            } else if (includeList.size() >= s && includeList.get(s-1) != null) {
+                ui.getMassImage(0).setSlice(includeList.get(s-1));
+            } else {
                 ui.getMassImage(0).setSlice(s);
-                //ui.getMassImage(0).updateAndDraw();
             }
         }
         imp.setSlice(targetSlice);

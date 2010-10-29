@@ -1,5 +1,6 @@
 package com.nrims;
 
+import ij.IJ;
 import ij.Prefs;
 
 /**
@@ -25,10 +26,12 @@ public class PrefFrame extends PlugInJFrame {
     boolean includeSum = true;
     boolean includeMass = false;
     boolean includeRatio = false;
-    int scaleFactor = 10000;
+    double scaleFactor = 10000;
     double ratioSpan = 1.5;
     boolean ratioReciprocals = false;
     UI ui;
+    float reference = (float) 0.0130;
+    float background = (float) 0.0037;
     
     final String PREFS_KEY = "openmims.";
 
@@ -41,119 +44,150 @@ public class PrefFrame extends PlugInJFrame {
         initComponentsCustom();
     }
 
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+   private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
-        HSIcheckbox = new javax.swing.JCheckBox();
-        sumCheckbox = new javax.swing.JCheckBox();
-        massCheckbox = new javax.swing.JCheckBox();
-        ratioCheckbox = new javax.swing.JCheckBox();
-        jLabel2 = new javax.swing.JLabel();
-        scaleFactorTextbox = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        ratioSpanTextbox = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        ratioReciprocalsCheckBox = new javax.swing.JCheckBox();
+      jLabel5 = new javax.swing.JLabel();
+      jLabel6 = new javax.swing.JLabel();
+      jLabel1 = new javax.swing.JLabel();
+      HSIcheckbox = new javax.swing.JCheckBox();
+      sumCheckbox = new javax.swing.JCheckBox();
+      massCheckbox = new javax.swing.JCheckBox();
+      ratioCheckbox = new javax.swing.JCheckBox();
+      jLabel2 = new javax.swing.JLabel();
+      scaleFactorTextbox = new javax.swing.JTextField();
+      jButton1 = new javax.swing.JButton();
+      jButton2 = new javax.swing.JButton();
+      ratioSpanTextbox = new javax.swing.JTextField();
+      jLabel3 = new javax.swing.JLabel();
+      ratioReciprocalsCheckBox = new javax.swing.JCheckBox();
+      jLabel4 = new javax.swing.JLabel();
+      backgroundTextField = new javax.swing.JTextField();
+      jLabel7 = new javax.swing.JLabel();
+      referenceTextField = new javax.swing.JTextField();
 
-        jLabel1.setText("When exporting images:");
+      jLabel5.setText("Percent turnover, background:");
 
-        HSIcheckbox.setText("include HSI images");
+      jLabel6.setText("Percent turnover, background:");
 
-        sumCheckbox.setText("include sum images");
+      jLabel1.setText("When exporting images:");
 
-        massCheckbox.setText("include mass images");
+      HSIcheckbox.setText("include HSI images");
 
-        ratioCheckbox.setText("include ratio images");
+      sumCheckbox.setText("include sum images");
 
-        jLabel2.setText("Ratio scale factor:");
+      massCheckbox.setText("include mass images");
 
-        jButton1.setText("Cancel");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
+      ratioCheckbox.setText("include ratio images");
 
-        jButton2.setText("Save");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
-            }
-        });
+      jLabel2.setText("Ratio scale factor:");
 
-        jLabel3.setText("Ratio span:");
+      jButton1.setText("Cancel");
+      jButton1.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton1ActionPerformed(evt);
+         }
+      });
 
-        ratioReciprocalsCheckBox.setText("include reciprocals");
+      jButton2.setText("Save");
+      jButton2.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton2ActionPerformed(evt);
+         }
+      });
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(181, 181, 181)
-                        .addComponent(jButton1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
+      jLabel3.setText("Ratio span:");
+
+      ratioReciprocalsCheckBox.setText("include reciprocals");
+
+      jLabel4.setText("Percent turnover, background:");
+
+      jLabel7.setText("Percent turnover, maximum:");
+
+      javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+      getContentPane().setLayout(layout);
+      layout.setHorizontalGroup(
+         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(layout.createSequentialGroup()
+                  .addGap(181, 181, 181)
+                  .addComponent(jButton1)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                  .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE))
+               .addGroup(layout.createSequentialGroup()
+                  .addContainerGap()
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(jLabel1)
+                     .addGroup(layout.createSequentialGroup()
+                        .addGap(12, 12, 12)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(sumCheckbox)
-                                    .addComponent(massCheckbox)
-                                    .addComponent(HSIcheckbox)
-                                    .addComponent(ratioCheckbox)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel2)
-                                    .addComponent(jLabel3))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(ratioSpanTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(scaleFactorTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addComponent(ratioReciprocalsCheckBox)))))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addGap(8, 8, 8)
-                .addComponent(HSIcheckbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(sumCheckbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(massCheckbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(ratioCheckbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(scaleFactorTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(ratioSpanTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(ratioReciprocalsCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 96, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton2)
-                    .addComponent(jButton1))
-                .addContainerGap())
-        );
+                           .addComponent(sumCheckbox)
+                           .addComponent(massCheckbox)
+                           .addComponent(HSIcheckbox)
+                           .addComponent(ratioCheckbox)))
+                     .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                           .addComponent(jLabel2)
+                           .addComponent(jLabel3))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                           .addComponent(ratioSpanTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                           .addComponent(scaleFactorTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                     .addGroup(layout.createSequentialGroup()
+                        .addGap(12, 12, 12)
+                        .addComponent(ratioReciprocalsCheckBox))))
+               .addGroup(layout.createSequentialGroup()
+                  .addContainerGap()
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(jLabel4)
+                     .addComponent(jLabel7))
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                     .addComponent(referenceTextField)
+                     .addComponent(backgroundTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE))))
+            .addContainerGap())
+      );
+      layout.setVerticalGroup(
+         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGroup(layout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(jLabel1)
+            .addGap(8, 8, 8)
+            .addComponent(HSIcheckbox)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(sumCheckbox)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(massCheckbox)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(ratioCheckbox)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+               .addComponent(jLabel2)
+               .addComponent(scaleFactorTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+               .addComponent(jLabel3)
+               .addComponent(ratioSpanTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(ratioReciprocalsCheckBox)
+            .addGap(18, 18, 18)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+               .addComponent(jLabel4)
+               .addComponent(backgroundTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+               .addComponent(jLabel7)
+               .addComponent(referenceTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+               .addComponent(jButton2)
+               .addComponent(jButton1))
+            .addContainerGap())
+      );
 
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
+      pack();
+   }// </editor-fold>//GEN-END:initComponents
 
 /** Action method for the "save" button.*/
 private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -172,10 +206,11 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         this.massCheckbox.setSelected(includeMass);
         this.sumCheckbox.setSelected(includeSum);
 
-        this.scaleFactorTextbox.setText(new Integer(scaleFactor).toString());
+        this.scaleFactorTextbox.setText(new Double(scaleFactor).toString());
         this.ratioSpanTextbox.setText(new Double(ratioSpan).toString());
         this.ratioReciprocalsCheckBox.setSelected(ratioReciprocals);
-
+        this.backgroundTextField.setText(new Float(background).toString());
+        this.referenceTextField.setText(new Float(reference).toString());
     }
 
     /** Reads the preferences and sets member variables accordingly.*/
@@ -184,9 +219,11 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         includeSum = (boolean) Prefs.get(PREFS_KEY + "includeSum", includeSum);
         includeMass = (boolean) Prefs.get(PREFS_KEY + "includeMass", includeMass);
         includeRatio = (boolean) Prefs.get(PREFS_KEY + "includeRatio", includeRatio);
-        scaleFactor = (int) Prefs.get(PREFS_KEY + "ratioScaleFactor", scaleFactor);
+        scaleFactor = (double) Prefs.get(PREFS_KEY + "ratioScaleFactor", scaleFactor);
         ratioSpan = (double) Prefs.get(PREFS_KEY + "ratioSpan", ratioSpan);
         ratioReciprocals = (boolean) Prefs.get(PREFS_KEY + "ratioReciprocals", ratioReciprocals);
+        reference = (float) Prefs.get(PREFS_KEY + "reference", reference);
+        background = (float) Prefs.get(PREFS_KEY + "background", background);
     }
 
     /** Saves the preferences file.*/
@@ -195,15 +232,39 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         includeSum = sumCheckbox.isSelected();
         includeMass = massCheckbox.isSelected();
         includeRatio = ratioCheckbox.isSelected();
-        try {
-            scaleFactor = new Integer(scaleFactorTextbox.getText());
-            ui.getHSIView().setRatioScaleFactor(scaleFactor);
-            ratioSpan = new Double(ratioSpanTextbox.getText());
-        } catch (Exception e) {
-        }
-
         ratioReciprocals = ratioReciprocalsCheckBox.isSelected();
 
+        try {
+            scaleFactor = new Double(scaleFactorTextbox.getText());
+        } catch (Exception e) {
+           IJ.error("Malformed \"scale factor\" value.");
+           return;
+        }
+
+        if (ui.getHSIView() != null)
+           ui.getHSIView().setRatioScaleFactor(scaleFactor);
+
+        try {
+           ratioSpan = new Double(ratioSpanTextbox.getText());
+        } catch (Exception e) {
+           IJ.error("Malformed \"ratio span\" value.");
+           return;
+        }
+
+        try {
+           background = new Float(backgroundTextField.getText());
+        } catch (Exception e) {
+           IJ.error("Malformed \"background\" value.");
+           return;
+        }
+
+        try {
+           reference = new Float(referenceTextField.getText());
+        } catch (Exception e) {
+           IJ.error("Malformed \"reference\" value.");
+           return;
+        }
+        
         Prefs.set(PREFS_KEY + "includeHSI", includeHSI);
         Prefs.set(PREFS_KEY + "includeSum", includeSum);
         Prefs.set(PREFS_KEY + "includeMass", includeMass);
@@ -211,12 +272,15 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         Prefs.set(PREFS_KEY + "ratioScaleFactor", scaleFactor);
         Prefs.set(PREFS_KEY + "ratioSpan", ratioSpan);
         Prefs.set(PREFS_KEY + "ratioReciprocals", ratioReciprocals);
+        Prefs.set(PREFS_KEY + "background", background);
+        Prefs.set(PREFS_KEY + "reference", reference);
         Prefs.savePreferences();
         close();
     }
 
     /** Shows the frame.*/
     public void showFrame() {
+        initComponentsCustom();
         setVisible(true);
         toFront();
         setExtendedState(NORMAL);
@@ -263,7 +327,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
      * Gets the scale factor.
      * @return the scale factor.
      */
-    int getscaleFactor() {
+    double getscaleFactor() {
         return scaleFactor;
     }
 
@@ -284,19 +348,40 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         return ratioReciprocals;
     }
 
-    
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox HSIcheckbox;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JCheckBox massCheckbox;
-    private javax.swing.JCheckBox ratioCheckbox;
-    private javax.swing.JCheckBox ratioReciprocalsCheckBox;
-    private javax.swing.JTextField ratioSpanTextbox;
-    private javax.swing.JTextField scaleFactorTextbox;
-    private javax.swing.JCheckBox sumCheckbox;
-    // End of variables declaration//GEN-END:variables
+    /**
+     * Get the background ratio reference.
+     * @return the background ratio
+     */
+    float getBackgroundRatio(){
+       return background;
+    }
+
+    /**
+     * Get the source ratio reference.
+     * @return the background ratio
+     */
+    float getReferenceRatio(){
+       return reference;
+    }
+
+   // Variables declaration - do not modify//GEN-BEGIN:variables
+   private javax.swing.JCheckBox HSIcheckbox;
+   private javax.swing.JTextField backgroundTextField;
+   private javax.swing.JButton jButton1;
+   private javax.swing.JButton jButton2;
+   private javax.swing.JLabel jLabel1;
+   private javax.swing.JLabel jLabel2;
+   private javax.swing.JLabel jLabel3;
+   private javax.swing.JLabel jLabel4;
+   private javax.swing.JLabel jLabel5;
+   private javax.swing.JLabel jLabel6;
+   private javax.swing.JLabel jLabel7;
+   private javax.swing.JCheckBox massCheckbox;
+   private javax.swing.JCheckBox ratioCheckbox;
+   private javax.swing.JCheckBox ratioReciprocalsCheckBox;
+   private javax.swing.JTextField ratioSpanTextbox;
+   private javax.swing.JTextField referenceTextField;
+   private javax.swing.JTextField scaleFactorTextbox;
+   private javax.swing.JCheckBox sumCheckbox;
+   // End of variables declaration//GEN-END:variables
 }

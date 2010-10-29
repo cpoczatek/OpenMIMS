@@ -42,9 +42,6 @@ public class HSIProcessor implements Runnable {
     private static float[] gTable = null ;
     private static float[] bTable = null ;
 
-    public static final float REFERENCE = (float) 0.0130;
-    public static final float BACKGROUND = (float) 0.0037;
-
     private static final double S6_6 = Math.sqrt(6.0) / 6.0 ;
     private static final double S6_3 = Math.sqrt(6.0) / 3.0 ;
     private static final double S6_2 = Math.sqrt(6.0) / 2.0 ;

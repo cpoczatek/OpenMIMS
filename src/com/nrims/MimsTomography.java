@@ -49,16 +49,13 @@ public class MimsTomography extends javax.swing.JPanel {
     * @param ui a pointer to the main UI class.
     */
    public MimsTomography(UI ui) {
+      this.ui = ui;
+      this.image = ui.getOpener();
+
+
       initComponents();
       initComponentsCustom();
       setupHistogram();
-
-      this.ui = ui;
-      this.image = ui.getOpener();
-      tomoChart = null;
-
-      imageJList.setModel(new DefaultListModel());
-      imageJList.setCellRenderer(new ImageListRenderer());
    }
 
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -223,6 +220,16 @@ public class MimsTomography extends javax.swing.JPanel {
 
    private void initComponentsCustom() {
       jLabel3.setText("Statistics");
+      imageJList.setModel(new DefaultListModel());
+      imageJList.setCellRenderer(new ImageListRenderer());
+      tomoChart = null;
+
+      // Remove components (jspinners) from the area
+      // in which a user can drag and drop a file.
+      Component[] comps = {jTextField1};
+      for (Component comp : comps) {
+         ui.removeComponentFromMimsDrop(comp);
+      }
    }
 
    /** Sets up the histogram that charts pixel values for images.*/

@@ -32,18 +32,8 @@ public class MimsHSIView extends javax.swing.JPanel {
     */
     public MimsHSIView(UI ui) {
         this.ui = ui;
-        initComponents();                                                
-        medianRadiusjSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.5d), null, Double.valueOf(0.5d)));
-        hsiWindowjSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1)));
-        ratioSFjSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, 99999.0d, 1.0d));        
-        ratioSFjSpinner.setValue((double)ui.getPreferences().getscaleFactor());
-        rartioMaxjSpinner.setModel(new SpinnerNumberModel(1.0, -65535, 65535.0, 1));
-        ratioMinjSpinner.setModel(new SpinnerNumberModel(1.0, -65535, 65535.0, 1));
-        numThresholdjSpinner.setModel(new SpinnerNumberModel(3, 0, 65535, 1));
-        denThresholdjSpinner.setModel(new SpinnerNumberModel(3, 0, 65535, 1));
-        jList1.setModel(listModel);
-        jList1.setCellRenderer(new MyCellRenderer(this.ui));
-        ratioRadioButton.setSelected(ui.getIsRatio());
+        initComponents();
+        initComponentsCustom();
         updateImage();    
     }
 
@@ -478,6 +468,29 @@ public class MimsHSIView extends javax.swing.JPanel {
       );
    }// </editor-fold>//GEN-END:initComponents
 
+    private void initComponentsCustom(){
+        medianRadiusjSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.5d), null, Double.valueOf(0.5d)));
+        hsiWindowjSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1)));
+        ratioSFjSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, 99999.0d, 1.0d));
+        ratioSFjSpinner.setValue((double)ui.getPreferences().getscaleFactor());
+        rartioMaxjSpinner.setModel(new SpinnerNumberModel(1.0, -65535, 65535.0, 1));
+        ratioMinjSpinner.setModel(new SpinnerNumberModel(1.0, -65535, 65535.0, 1));
+        numThresholdjSpinner.setModel(new SpinnerNumberModel(3, 0, 65535, 1));
+        denThresholdjSpinner.setModel(new SpinnerNumberModel(3, 0, 65535, 1));
+        jList1.setModel(listModel);
+        jList1.setCellRenderer(new MyCellRenderer(this.ui));
+        ratioRadioButton.setSelected(ui.getIsRatio());
+
+        // Remove components (jspinners) from the area
+        // in which a user can drag and drop a file.
+        Component[] comps = {numThresholdjSpinner, denThresholdjSpinner, rartioMaxjSpinner,
+                             ratioMinjSpinner, ratioSFjSpinner, medianRadiusjSpinner,
+                             hsiWindowjSpinner};
+        for (Component comp : comps) {
+           ui.removeComponentFromMimsDrop(comp);
+        }
+    }
+
     private void rartioMaxjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rartioMaxjSpinnerStateChanged
 
         if (bUpdating)
@@ -656,14 +669,19 @@ public class MimsHSIView extends javax.swing.JPanel {
        ui.setIsPercentTurnover(percentTurnoverRadioButton.isSelected());
        ui.setIsRatio(false);
 
+       if (currentImage == null)
+          return;
+
        // Recompute all hsi images.
        MimsPlus[] mps = ui.getOpenHSIImages();
        for (int i = 0; i < mps.length; i++) {
           float maxRatioVal = (float)mps[i].getHSIProps().getMaxRatio();
           float minRatioVal = (float)mps[i].getHSIProps().getMinRatio();
           float sf = (float)mps[i].getHSIProps().getRatioScaleFactor();
-          float maxPercentVal = HSIProcessor.turnoverTransform(maxRatioVal, HSIProcessor.REFERENCE, HSIProcessor.BACKGROUND, sf);
-          float minPercentVal = HSIProcessor.turnoverTransform(minRatioVal, HSIProcessor.REFERENCE, HSIProcessor.BACKGROUND, sf);
+          float reference = ui.getPreferences().getReferenceRatio();
+          float background = ui.getPreferences().getBackgroundRatio();
+          float maxPercentVal = HSIProcessor.turnoverTransform(maxRatioVal, reference, background, sf);
+          float minPercentVal = HSIProcessor.turnoverTransform(minRatioVal, reference, background, sf);
           HSIProps hsiprops = mps[i].getHSIProps();
           hsiprops.setMaxRatio(maxPercentVal);
           hsiprops.setMinRatio(minPercentVal);
@@ -688,14 +706,19 @@ public class MimsHSIView extends javax.swing.JPanel {
        ui.setIsPercentTurnover(percentTurnoverRadioButton.isSelected());
        ui.setIsRatio(true);
 
+       if (currentImage == null)
+          return;
+
        // Recompute all hsi images.
        MimsPlus[] mps = ui.getOpenHSIImages();
        for (int i = 0; i < mps.length; i++) {
           float maxPercentVal = (float)mps[i].getHSIProps().getMaxRatio();
           float minPercentVal = (float)mps[i].getHSIProps().getMinRatio();
           float sf = (float)mps[i].getHSIProps().getRatioScaleFactor();
-          float maxRatioVal = HSIProcessor.ratioTransform(maxPercentVal, HSIProcessor.REFERENCE, HSIProcessor.BACKGROUND, sf);
-          float minRatioVal = HSIProcessor.ratioTransform(minPercentVal, HSIProcessor.REFERENCE, HSIProcessor.BACKGROUND, sf);
+          float reference = ui.getPreferences().getReferenceRatio();
+          float background = ui.getPreferences().getBackgroundRatio();
+          float maxRatioVal = HSIProcessor.ratioTransform(maxPercentVal, reference, background, sf);
+          float minRatioVal = HSIProcessor.ratioTransform(minPercentVal, reference, background, sf);
           HSIProps hsiprops = mps[i].getHSIProps();
           hsiprops.setMaxRatio(maxRatioVal);
           hsiprops.setMinRatio(minRatioVal);
@@ -752,6 +775,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all ratio images.
        ui.recomputeAllRatio();
+       ui.autoContrastImages(ui.getOpenRatioImages());
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
@@ -794,7 +818,7 @@ public class MimsHSIView extends javax.swing.JPanel {
              mp.getWindow().toFront();
           } else {
              RatioProps ratioProps = new RatioProps(numerator, denomator);
-             ratioProps.setRatioScaleFactor((Double)ratioSFjSpinner.getValue());
+             ratioProps.setRatioScaleFactor(ui.getPreferences().getscaleFactor());
              mp = new MimsPlus(ui, ratioProps);
              mp.showWindow();
           }
@@ -858,6 +882,7 @@ public class MimsHSIView extends javax.swing.JPanel {
              mp.getWindow().toFront();
           } else {
              HSIProps hsiProps = new HSIProps(numerator, denomator);
+             hsiProps.setRatioScaleFactor(ui.getPreferences().getscaleFactor());
              hsiProps.setRatioScaleFactor((Double)ratioSFjSpinner.getValue());
              mp = new MimsPlus(ui, hsiProps);
              mp.showWindow();
@@ -886,9 +911,9 @@ public class MimsHSIView extends javax.swing.JPanel {
     * Sets the ratio scale factor spinner.
     * @return the scale factor.
     */
-   public void setRatioScaleFactor(Integer i) {
+   public void setRatioScaleFactor(Double d) {
       bUpdating = true ;
-      ratioSFjSpinner.setValue(i);
+      ratioSFjSpinner.setValue(d);
       bUpdating = false ;
    }
 

@@ -288,7 +288,7 @@ public class MimsAction implements Cloneable {
     public double getYShift(int displayPlane) {
        int[] planes = new int[1];
        int tplane = trueIndex(displayPlane);
-       planes[0] = displayPlane;
+       planes[0] = tplane;
 
        if (isCompressed)
           planes = getPlaneNumbersFromBlockNumber(displayPlane);

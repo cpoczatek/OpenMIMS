@@ -12,6 +12,7 @@ import ij.process.ShortProcessor;
 import ij.process.StackConverter;
 import ij.process.StackProcessor;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -67,21 +68,28 @@ public class MimsStackEditor extends javax.swing.JPanel {
     * @param im a pointer to the Opener object.
     */
    public MimsStackEditor(UI ui, Opener im) {
-
-      initComponents();
-      customInitComponents();
-
       this.ui = ui;
       this.image = im;
 
-      this.images = ui.getMassImages();
+      initComponents();
+      initComponentsCustom();
+
+      images = ui.getMassImages();
       numberMasses = image.getNMasses();
    }
 
    /** Some basic setup of interface componenets. */
-   private void customInitComponents() {
+   private void initComponentsCustom() {
       translateXSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
       translateYSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
+
+      // Remove components (jspinners) from the area
+      // in which a user can drag and drop a file.
+      Component[] comps = {deleteListTextField, reinsertListTextField, translateXSpinner,
+         translateYSpinner, compressTextField, sumTextField};
+      for (Component comp : comps) {
+         ui.removeComponentFromMimsDrop(comp);
+      }
    }
 
    /**
@@ -380,7 +388,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
       // Get some properties about the image we are trying to restore.
       int restoreIndex = ui.mimsAction.displayIndex(plane);
       int displaysize = images[0].getNSlices();
-      System.out.println("try to add at: " + restoreIndex);
+      System.out.println("added image: " + restoreIndex);
       try {
          if (restoreIndex < displaysize) {
             int openerIndex = ui.mimsAction.getOpenerIndex(plane - 1);
@@ -402,9 +410,11 @@ public class MimsStackEditor extends javax.swing.JPanel {
             op.setStackIndex(openerIndex);
             for (int i = 0; i < op.getNMasses(); i++) {
                images[i].setSlice(displaysize);
-               images[i].getStack().addSlice("", images[i].getProcessor());
-               images[i].setSlice(restoreIndex);
-               images[i].getProcessor().setPixels(op.getPixels(i));
+               ImageStack is = new ImageStack();
+               is = images[i].getImageStack();
+               is.addSlice("", op.getPixels(i));
+               images[i].setStack(null, is);
+               images[i].updateAndRepaintWindow();
             }
          }
          images[0].setSlice(restoreIndex);
@@ -552,7 +562,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
       ImageStack[] tempstacks = new ImageStack[numberMasses];
 
       for (int i = 0; i < image.getNMasses(); i++) {
-         if (images[i] != null) {
+        if (images[i] != null) {
             images[i].setIsStack(true);
          }
       }
@@ -1252,11 +1262,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
        ArrayList<Integer> checklist = parseList(liststr, 1, trueSize);
        int length = checklist.size();
 
-       System.out.println("insert button...");
-       System.out.println("length = " + length);
-
        for (int i = 0; i < length; i++) {
-          System.out.println("i = " + i);
           this.insertSlice(checklist.get(i));
        }
 
@@ -1716,6 +1722,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
             // Call Autotrack algorithm.
             THREAD_STATE = WORKING;
             AutoTrack temptrack = new AutoTrack(ui, tempImage);
+            temptrack.setIncludeList(includeList);
             Thread thread = new Thread(temptrack);
             thread.start();
 

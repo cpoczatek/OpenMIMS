@@ -14,7 +14,9 @@ import ij.gui.Roi;
 import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
 
+import ij.io.FileSaver;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -222,6 +224,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             //Autocontrast mass images.
             //Should add option to apply settings from previous image?
             autoContrastImages(getOpenMassImages());
+            autoContrastImages(getOpenSumImages());
        }
       });
 
@@ -819,6 +822,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         }
     }
+
+   public void removeComponentFromMimsDrop(Component comp) {
+      if (comp != null)
+         mimsDrop.remove(comp);
+   }
 
     /**
      * Resets the "view" menu item to reflect the
@@ -2291,73 +2299,72 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
  */
 private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_captureImageMenuItemActionPerformed
 
-    // Captures the active image window and returns it as an ImagePlus.
-    ImagePlus imp = ij.WindowManager.getCurrentImage();
-    if (imp == null) {
-        IJ.noImage();
-        return;
-    }
-
-    int p = 0;
-    try {
-        MimsPlus mp = (MimsPlus) imp;
-        if(mp.getMimsType()==MimsPlus.MASS_IMAGE) {
-            p = mp.getCurrentSlice();
-        }
-    } catch (Exception e) {
-    }
-
-
-    ImagePlus imp2 = null;
-    try {
-        ImageWindow win = imp.getWindow();
-        if (win == null) {
+   // Captures the active image window and returns it as an ImagePlus.
+   MimsPlus imp = (MimsPlus)ij.WindowManager.getCurrentImage();
+   if (imp == null) {
+       IJ.noImage();
+       return;
+   }
+   
+   // Bring up JFileChooser and get file name.
+   File file;
+   JFileChooser fc = new JFileChooser();
+   if (lastFolder != null)
+      fc.setCurrentDirectory(new java.io.File(lastFolder));
+   if (this.getImageFilePrefix() != null)
+      fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + "_m"+imp.getRoundedTitle() + ".png"));
+   int returnVal = fc.showSaveDialog(jTabbedPane1);
+   if (returnVal == JFileChooser.APPROVE_OPTION) {
+      String fileName = fc.getSelectedFile().getAbsolutePath();
+      file = new File(fileName);
+      if (file.exists()) {
+         int n = JOptionPane.showConfirmDialog(
+                 this,
+                 "File already exists.\n" + file.getAbsolutePath() + "\n" + "Overwrite?\n",
+                 "Warning",
+                 JOptionPane.YES_NO_OPTION,
+                 JOptionPane.WARNING_MESSAGE);
+         if (n == JOptionPane.NO_OPTION) {
             return;
-        }
-        win.toFront();
-        Point loc = win.getLocation();
-        ImageCanvas ic = win.getCanvas();
-        ic.update(ic.getGraphics());
+         }
+      }
+   } else {
+      return;
+   }
 
-        Rectangle bounds = ic.getBounds();
-        loc.x += bounds.x;
-        loc.y += bounds.y;
-        Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
-        Robot robot = new Robot();
-        robot.delay(100);
-        Image img = robot.createScreenCapture(r);
-        if (img != null) {
-            imp2 = new ImagePlus("Grab of " + imp.getTitle(), img);
-            imp2.show();
-        }
+   // Save file.
+   try {
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+      lastFolder = file.getParent();
+      setIJDefaultDir(lastFolder);
 
-        //autosave in working directory
-        File file = image.getImageFile();
+      ImagePlus imp2 = null;
+      ImageWindow win = imp.getWindow();
+      if (win == null) {
+         return;
+      }
+      win.toFront();
+      Point loc = win.getLocation();
+      ImageCanvas ic = win.getCanvas();
+      ic.update(ic.getGraphics());
 
-        String dir = file.getParent() + File.separator;
-        ij.io.FileSaver saver = new ij.io.FileSaver(imp2);
-        String name = imp2.getTitle().replaceAll(" : ", "_");
-        name = name.replaceAll(" ", "_");
-        name = name.replaceAll("/", "_");
-        //double escapte for literal '\'
-        name = name.replaceAll("\\\\", "_");
-        if(p!=0) {
-            name = name + "_p" + p;
-        }
-        name = name + ".png";
-
-        int n = 1;
-        while(new java.io.File(dir+name).exists()) {
-            name = name.substring(0, name.length()-4);
-            name = name + "_" + n + ".png";
-        }
-
-        saver.saveAsPng(dir + name);
-
-    } catch (Exception e) {
-        logException(e);
-    }
-
+      Rectangle bounds = ic.getBounds();
+      loc.x += bounds.x;
+      loc.y += bounds.y;
+      Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
+      Robot robot = new Robot();
+      robot.delay(100);
+      Image img = robot.createScreenCapture(r);
+      if (img != null) {
+         imp2 = new ImagePlus(file.getName(), img);
+      }
+      FileSaver saver = new ij.io.FileSaver(imp2);
+      saver.saveAsPng(file.getAbsolutePath());
+   } catch (Exception e) {
+      ij.IJ.error("Save Error", "Error saving file.");
+   } finally {
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+   }
 }//GEN-LAST:event_captureImageMenuItemActionPerformed
 
 /**

@@ -79,6 +79,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     String hideAllRois = new String("Hide All Rois");
     String moveAllRois = new String("Move All");
     String hideAllLabels = new String("Hide Labels");
+    ListSelectionListener groupSelectionListener;
 
    /**
     * Creates a new instance of MimsRoiManager.
@@ -127,11 +128,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         groupListModel = new DefaultListModel();
         groupListModel.addElement(DEFAULT_GROUP);
         groupjlist = new JList(groupListModel);
-        groupjlist.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        groupSelectionListener = new ListSelectionListener() {
            public void valueChanged(ListSelectionEvent listSelectionEvent) {
              groupvalueChanged(listSelectionEvent);
            }
-        });
+        };
+        groupjlist.addListSelectionListener(groupSelectionListener);
 
         // Group scrollpane.
         Dimension d2 = new Dimension(230, 450);
@@ -452,6 +454,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           String roiName = (String)roiListModel.get(Roiidxs[i]);
           groupsMap.put(roiName, s);
        }
+       groupjlist.setSelectedValue(s, true);
 
     }
 
@@ -726,16 +729,16 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
       // For display purposes.
       Roi roi = (Roi)rois.get(label);
-      Roi temproi = (Roi) roi.clone();
-      temproi.setLocation((Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue());
-      imp.setRoi(temproi);
+      roi.setLocation((Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue());
+      imp.setRoi(roi);
+      move();
 
       updatePlots(false);
 
     }
 
     /** Action method for changing size spinners.*/
-    private void hwSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {
+     private void hwSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {
 
         String label = "";
 
@@ -765,9 +768,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Dont do anything if the values are changing
         // only because user selected a different ROI.
         if (oldroi.getType() == ij.gui.Roi.RECTANGLE) {
-            newroi = new ij.gui.Roi(rect.x, rect.y, (Integer) widthSpinner.getValue(), (Integer) heightSpinner.getValue(), imp);
+            newroi = new Roi(rect.x, rect.y, (Integer) widthSpinner.getValue(), (Integer) heightSpinner.getValue(), imp);
         } else if (oldroi.getType() == ij.gui.Roi.OVAL) {
-            newroi = new ij.gui.OvalRoi(rect.x, rect.y, (Integer) widthSpinner.getValue(), (Integer) heightSpinner.getValue());
+            newroi = new OvalRoi(rect.x, rect.y, (Integer) widthSpinner.getValue(), (Integer) heightSpinner.getValue());
         } else {
            return;
         }
@@ -775,7 +778,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         //we give it the old name so that setRoi will
         // know which original roi to delete.
         newroi.setName(oldroi.getName());
-        move(imp, newroi);
+        rois.put(newroi.getName(), newroi);
+        imp.setRoi(newroi);
+        imp.updateAndRepaintWindow();
         updatePlots(false);
     }
 
@@ -831,6 +836,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         addPopupItem("Squares");
         addPopupItem("Pixel values");
         addPopupItem("Add [t]");
+        addPopupItem("Reorder all");
         add(pm);
     }
 
@@ -895,6 +901,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             roiPixelvalues();
         } else if (command.equals(moveAllRois)) {
             bAllPlanes = cbAllPlanes.isSelected();
+        } else if (command.equals("Reorder all")) {
+           reorderAll();
         }
     }
 
@@ -928,50 +936,53 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * Determines the behavior when a group entry is clicked.
      */
     private void groupvalueChanged(ListSelectionEvent e) {
-       
-       if (e != null) {
-          if (!e.getValueIsAdjusting())
-             return;
-       }
-       holdUpdate = true;
-       boolean defaultGroupSelected = false;
 
-       // Get the selected groups.
-       int[] indices = groupjlist.getSelectedIndices();
-       String[] groupNames = new String[indices.length];
-       for (int i = 0; i < indices.length; i++){
-          groupNames[i] = (String)groupListModel.getElementAt(indices[i]);          
-          if (groupNames[i].equals(DEFAULT_GROUP))
-             defaultGroupSelected = true;          
-       }
+       if (e == null)
+          return;
 
-       // Show only Rois that are part of the selected groups.
-       roiListModel.removeAllElements();
-       ArrayList<String> names = new ArrayList<String>();
-       ArrayList<Integer> numeric = new ArrayList<Integer>();
-       for (Object object : rois.keySet()) {
-          String roiName = (String)object;
-          boolean contains = containsRoi(groupNames, roiName);
-          if (contains) {
-              roiListModel.addElement(roiName);
+       boolean adjust = e.getValueIsAdjusting();
+
+       if (!adjust){
+          holdUpdate = true;
+          boolean defaultGroupSelected = false;
+
+          // Get the selected groups.
+          int[] indices = groupjlist.getSelectedIndices();
+          String[] groupNames = new String[indices.length];
+          for (int i = 0; i < indices.length; i++){
+             groupNames[i] = (String)groupListModel.getElementAt(indices[i]);
+             if (groupNames[i].equals(DEFAULT_GROUP))
+                defaultGroupSelected = true;
           }
+
+          // Show only Rois that are part of the selected groups.
+          roiListModel.removeAllElements();
+          ArrayList<String> names = new ArrayList<String>();
+          ArrayList<Integer> numeric = new ArrayList<Integer>();
+          for (Object object : rois.keySet()) {
+             String roiName = (String)object;
+             boolean contains = containsRoi(groupNames, roiName);
+             if (contains) {
+                 roiListModel.addElement(roiName);
+             }
+          }
+
+          sortROIList();
+
+          // Disable delete button if Default Group is one of the groups selected.
+          //this is why the delete button is a class variable andd the others aren't...
+          if (defaultGroupSelected) {
+             delete.setEnabled(false);
+             rename.setEnabled(false);
+          } else {
+             delete.setEnabled(true);
+             rename.setEnabled(true);
+          }
+
+          ui.updateAllImages();
+
+          holdUpdate = false;
        }
-
-       sortROIList();
-
-       // Disable delete button if Default Group is one of the groups selected.
-       //this is why the delete button is a class variable andd the others aren't...
-       if (defaultGroupSelected) {
-          delete.setEnabled(false);
-          rename.setEnabled(false);
-       } else {
-          delete.setEnabled(true);
-          rename.setEnabled(true);
-       }
-       
-       ui.updateAllImages();
-
-       holdUpdate = false;
     }
 
     /**
@@ -1006,8 +1017,22 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Display data for a group of rois.
         if (indices.length > 1) {
-
            selectedRoisStats();
+        } else if (indices.length == 1) {
+           String roiName = (String)roiListModel.getElementAt(indices[0]);
+           String groupName = (String)groupsMap.get(roiName);
+
+           // This is my attempt at setting the selection of the
+           // groupjlist WITHOUT triggering the ListSelectionListener.
+           // The only way I have been able to accomplish this is by
+           // first removing the listener, setting the selectedvalue,
+           // then re-adding the listener. If you know a better way,
+           // let me know.
+           groupjlist.removeListSelectionListener(groupSelectionListener);
+           if (groupName == null)
+              groupName = DEFAULT_GROUP;
+           groupjlist.setSelectedValue(groupName, true);
+           groupjlist.addListSelectionListener(groupSelectionListener);
         }
 
         holdUpdate = false;
@@ -1507,7 +1532,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     }
 
     /**
-     * Prompts the user for a new name for the slected ROI.
+     * Prompts the user for a new name for the selected ROI.
      *
      * @param name2 ROI name.
      * @return <code>true</code> if successful, otherwise <code>/false</code>
@@ -1531,7 +1556,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            return false;
         }
         if (rois.get(name2) != null) {
-           return error("A Roi with that name already exists.");
+           System.out.println("A Roi with name " + name + "already exists.");
+           return false;
         }
         Roi roi = (Roi) rois.get(name);
         
@@ -1788,7 +1814,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * @return <code>true</code> if successful, otherwise <code>false</code>.
      */
     public boolean save(String name) {
-        if (roiListModel.size() == 0) {
+        if (rois.size() == 0) {
             return error("The selection list is empty.");
         }
         Roi[] tmprois = getAllROIs();
@@ -1954,6 +1980,22 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             Recorder.record("mimsRoiManager", "Add");
         }
         return;
+    }
+
+
+    private void reorderAll() {       
+       int[] idxs = roijlist.getSelectedIndices();
+       for (int i = 0; i <  idxs.length; i++) {
+          int j = idxs[i];
+          roijlist.setSelectedIndex(j);
+          int count = 1;
+          while (true) {
+             boolean success = rename(Integer.toString(count));
+             count++;
+             if (success)               
+                break;
+          }
+       }
     }
 
     /**
@@ -2616,7 +2658,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         if(roi == null) return;
         double[] roipix = imp.getRoiPixels();
 
-        if ((roi.getType() == roi.LINE) || (roi.getType() == roi.POLYLINE) || (roi.getType() == roi.FREELINE)) {
+        if ((roi.getType() == Roi.LINE) || (roi.getType() == Roi.POLYLINE) || (roi.getType() == Roi.FREELINE)) {
             ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(imp);
             ui.updateLineProfile(profileP.getProfile(), imp.getShortTitle() + " : " + roi.getName(), imp.getProcessor().getLineWidth());
         } else {

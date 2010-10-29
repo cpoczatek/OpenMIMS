@@ -427,7 +427,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        }
 
        if (ui.getIsPercentTurnover() && forHSI) {
-          rPixels = HSIProcessor.turnoverTransform(rPixels, HSIProcessor.REFERENCE, HSIProcessor.BACKGROUND, (float)(ratioProps.getRatioScaleFactor()));
+          float reference = ui.getPreferences().getReferenceRatio();
+          float background = ui.getPreferences().getBackgroundRatio();
+          rPixels = HSIProcessor.turnoverTransform(rPixels, reference, background, (float)(ratioProps.getRatioScaleFactor()));
        }
 
        // Set processor.
