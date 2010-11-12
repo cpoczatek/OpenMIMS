@@ -134,7 +134,7 @@ public class MimsCBControl extends javax.swing.JPanel {
         // Listen for key pressed events.
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
            public boolean dispatchKeyEvent(KeyEvent e) {
-             if (e.getID() == KeyEvent.KEY_PRESSED) {
+             if (e.getID() == KeyEvent.KEY_PRESSED && thisIsVisible() && ui.isActive()) {
                 chartPanel.keyPressed(e);
              }
              return false;
@@ -507,6 +507,10 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
            compManager = new com.nrims.managers.compositeManager(ui);
        }
        compManager.setVisible(true);
+   }
+
+   private boolean thisIsVisible(){
+      return this.isVisible();
    }
    
    private com.nrims.ContrastAdjuster contrastAdjuster1;

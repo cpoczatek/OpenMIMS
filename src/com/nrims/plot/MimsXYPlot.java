@@ -244,8 +244,11 @@ public class MimsXYPlot extends XYPlot {
             }
 
             for (int i = getDatasetCount() - 1; i >= 0; i--) {
-                foundData = render(g2, dataArea, i, info, crosshairState)
-                    || foundData;
+               try {
+                  foundData = render(g2, dataArea, i, info, crosshairState) || foundData;
+               } catch (IllegalArgumentException iae) {
+                  return;
+               }
             }
 
             // draw foreground annotations

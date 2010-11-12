@@ -68,7 +68,7 @@ public class MimsLineProfile extends JFrame {
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
             .addKeyEventDispatcher(new KeyEventDispatcher() {
                 public boolean dispatchKeyEvent(KeyEvent e) {
-                    if (e.getID() == KeyEvent.KEY_PRESSED) {
+                    if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
                         chartPanel.keyPressed(e);
                    }
                     return false;
@@ -196,5 +196,9 @@ public class MimsLineProfile extends JFrame {
 
         table.show("");
     }
+
+   private boolean thisHasFocus(){
+      return this.hasFocus();
+   }
 
 }

@@ -116,7 +116,7 @@ public class MimsJFreeChart extends JFrame {
          // Add key listener.
          KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             public boolean dispatchKeyEvent(KeyEvent e) {
-               if (e.getID() == KeyEvent.KEY_PRESSED) {
+               if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
                   chartpanel.keyPressed(e);
                }
                return false;
@@ -127,6 +127,10 @@ public class MimsJFreeChart extends JFrame {
          setVisible(true);
 
       }
+   }
+
+   private boolean thisHasFocus(){
+      return this.hasFocus();
    }
 
 /**

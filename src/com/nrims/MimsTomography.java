@@ -251,7 +251,7 @@ public class MimsTomography extends javax.swing.JPanel {
       KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
 
          public boolean dispatchKeyEvent(KeyEvent e) {
-            if (e.getID() == KeyEvent.KEY_PRESSED) {
+            if (e.getID() == KeyEvent.KEY_PRESSED && thisIsVisible() && ui.isActive()) {
                chartPanel.keyPressed(e);
             }
             return false;
@@ -557,6 +557,10 @@ public class MimsTomography extends javax.swing.JPanel {
       }
 
       return planes;
+   }
+
+   private boolean thisIsVisible() {
+      return this.isVisible();
    }
 
    /**
