@@ -521,7 +521,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             int nMasses = image.getNMasses();
             int nImages = image.getNImages();
 
-            long memRequired = nMasses * image.getWidth() * image.getHeight() * 2 * nImages;
+            long memRequired = ((long)nMasses) * ((long)image.getWidth()) * ((long)image.getHeight()) * ((long)2) * ((long)nImages);
             //added wiggle room to how big a file can be opened
             //was causing heap size exceptions to be thrown
             long maxMemory = IJ.maxMemory()-(128000000);
@@ -562,7 +562,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
                 nImages = (int) gd.getNextNumber();
 
-                memRequired = nMasses * image.getWidth() * image.getHeight() * 2 * nImages;
+                memRequired = memRequired = ((long)nMasses) * ((long)image.getWidth()) * ((long)image.getHeight()) * ((long)2) * ((long)nImages);
             }
 
             try {

@@ -93,7 +93,7 @@ public class Mims_Reader implements Opener {
         int bytesPerMass = pixelsPerImage * 2;
         short[] spixels = new short[pixelsPerImage];
 
-        long offset = dhdr.header_size + currentIndex * nMasses * bytesPerMass;
+        long offset = (long)dhdr.header_size + (long)currentIndex * (long)nMasses * (long)bytesPerMass;
         if (index > 0) {
             offset += index * bytesPerMass;
         }
