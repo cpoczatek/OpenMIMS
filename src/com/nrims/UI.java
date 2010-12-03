@@ -125,7 +125,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       System.out.println("Ui constructor");
       System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
 
-      revisionNumber = extractRevisionNumber();
+      //revisionNumber = extractRevisionNumber();
 
       /*
       // Set look and feel to native OS - this has been giving us issues
@@ -2256,7 +2256,7 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 /** Action method for File>About menu item. Displays basic information about the Open Mims plugins. */
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
-    String message = "OpenMIMS v1.0 Revision: " + this.revisionNumber + "\n\n";
+    String message = "OpenMIMS v1.0 " + this.revisionNumber + "\n\n";
     message += "OpenMIMS was developed at NRIMS, the National Resource \n";
     message += "for Imaging Mass Spectrometry. \n";
     message += "http://www.nrims.hms.harvard.edu/ \n";
@@ -2274,7 +2274,7 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     message += "above projects when applicable. \n";
     
     javax.swing.JFrame frame = new javax.swing.JFrame("About OpenMIMS");
-    frame.setSize(400, 300);
+    frame.setSize(420, 370);
 
     javax.swing.JScrollPane scroll = new javax.swing.JScrollPane();
     frame.add(scroll);
