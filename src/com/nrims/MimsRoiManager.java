@@ -2591,20 +2591,33 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         img.killRoi();
         Roi[] rois = this.getSelectedROIs();
         if(rois==null) return;
-        Roi roi = rois[0];
-        img.setRoi(roi);
-        double[] values = img.getRoiPixels();
-        img.killRoi();
+        if(rois.length == 0) return;
+
+        // Collect all the pixels within the highlighted rois.
+        ArrayList<Double> values = new ArrayList<Double>();
+        for (Roi roi : rois) {
+            img.setRoi(roi);
+            double[] roipixels = img.getRoiPixels();
+            for (double pixel : roipixels) {
+                values.add(pixel);
+            }
+            img.killRoi();
+        }
         
         ij.measure.ResultsTable rTable = new ij.measure.ResultsTable();
         rTable.addColumns();
         rTable.setHeading(0, "Value");
         
-        for(int i = 0; i<values.length; i++) {
+        for(int i = 0; i<values.size(); i++) {
             rTable.incrementCounter();
-            rTable.addValue(0, values[i]);
+            rTable.addValue(0, values.get(i));
         }
-        rTable.show(img.getRoundedTitle()+"-roi-"+roi.getName());
+
+        String title = "m"+img.getRoundedTitle()+"-roi-";
+        if (rois.length == 1)
+           title += rois[0].getName();
+        rTable.show(title);
+
     }
 
     /** Gets the current image. */
