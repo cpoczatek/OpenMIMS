@@ -22,9 +22,13 @@ public class NRIMS_Plugin implements PlugIn {
     /** Opens the GUI. */
     @Override
     public void run(String arg) {
-        System.out.println("NRIMS.run");
-        String options = ij.Macro.getOptions();            
-        ui.run(arg + options);
+        //System.out.println("NRIMS.run");
+        String options = ij.Macro.getOptions();
+        if(options!=null)
+            options = options.trim();
+        System.out.println("options="+options+",");
+
+        ui.run(options);
         if(ui.isVisible() == false) ui.setVisible(true);
     }
 
