@@ -2595,29 +2595,44 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Collect all the pixels within the highlighted rois.
         ArrayList<Double> values = new ArrayList<Double>();
+        ArrayList<String> groups = new ArrayList<String>();
         for (Roi roi : rois) {
             img.setRoi(roi);
             double[] roipixels = img.getRoiPixels();
+            String group = getRoiGroup(roi.getName());
             for (double pixel : roipixels) {
                 values.add(pixel);
+                groups.add(group);
             }
             img.killRoi();
         }
-        
+
+        // Setup table.
         ij.measure.ResultsTable rTable = new ij.measure.ResultsTable();
         rTable.addColumns();
-        rTable.setHeading(0, "Value");
-        
+        rTable.setHeading(0, "Group");
+        rTable.setHeading(1, "Value");
+
+        // Fill in the table.
         for(int i = 0; i<values.size(); i++) {
             rTable.incrementCounter();
-            rTable.addValue(0, values.get(i));
+            String group = groups.get(i);
+            if (group == null)
+               group = "null";
+            rTable.setLabel(group, i);
+            rTable.addValue(1, values.get(i));
         }
 
-        String title = "m"+img.getRoundedTitle()+"-roi-";
-        if (rois.length == 1)
-           title += rois[0].getName();
-        rTable.show(title);
+        // Set some parameters in case user wants to save table.
+        Prefs.set("options.ext", ".txt");
+        ui.setIJDefaultDir(ui.getImageDir());
 
+        // Set title and show table.
+        String title = ui.getImageFilePrefix() + "_m"+img.getRoundedTitle();
+        if (rois.length == 1)
+           title += "_roi"+rois[0].getName();
+        rTable.show(title);
+        
     }
 
     /** Gets the current image. */
