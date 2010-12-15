@@ -352,6 +352,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     }
                 }
             }
+            if (compImages[i] != null) {
+                compImages[i].removeListener(this);
+                if (bCloseOldWindows) {
+                    if (compImages[i].getWindow() != null) {
+                        compImages[i].getWindow().close();
+                        compImages[i] = null;
+                    }
+                }
+            }
         }
     }
 
@@ -360,6 +369,24 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     public synchronized File loadMIMSFile() {
         javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+        
+        MIMSFileFilter mff_images = new MIMSFileFilter(MIMS_EXTENSION.substring(1, MIMS_EXTENSION.length()));
+        mff_images.addExtension(NRRD_EXTENSION.substring(1, NRRD_EXTENSION.length()));
+        mff_images.setDescription("Mims images");
+        fc.addChoosableFileFilter(mff_images);
+        fc.setFileFilter(mff_images);
+
+        MIMSFileFilter mff_rois = new MIMSFileFilter(ROI_EXTENSION.substring(1, ROI_EXTENSION.length()));
+        mff_rois.addExtension("zip");
+        mff_rois.setDescription("Mims rois");
+        fc.addChoosableFileFilter(mff_rois);
+
+        MIMSFileFilter mff_dimages = new MIMSFileFilter(RATIO_EXTENSION.substring(1, RATIO_EXTENSION.length()));
+        mff_dimages.addExtension(HSI_EXTENSION.substring(1, HSI_EXTENSION.length()));
+        mff_dimages.addExtension(SUM_EXTENSION.substring(1, SUM_EXTENSION.length()));
+        mff_dimages.setDescription("Mims derived images");
+        fc.addChoosableFileFilter(mff_dimages);
+        
         fc.setMultiSelectionEnabled(false);
         fc.setPreferredSize(new java.awt.Dimension(650, 500));
 
@@ -568,7 +595,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
             try {
                 int n = 0;
-                int t = image.getNMasses() * nImages;
+                int t = image.getNMasses() * (nImages + 1);
                 for (int i = 0; i < image.getNMasses(); i++) {
                     IJ.showProgress(++n, t);
                     if (bOpenMass[i]) {
@@ -581,7 +608,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         }
                     }
                 }
-               
+
                 if (nImages > 1) {
                     // TODO why are we starting from 1 here?
                     for (int i = 1; i < nImages; i++) {
@@ -592,6 +619,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                                 massImages[mass].appendImage(i);
                             }
                         }
+                        updateStatus(i + " of " + nImages);
                     }
                 }
 
@@ -1120,6 +1148,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 sumImages[i].updateAndDraw();
                 sumImages[i].killRoi();
             }
+            if (compImages[i] != null) {
+                compImages[i].updateAndDraw();
+                compImages[i].killRoi();
+            }
         }
     }
 
@@ -1328,7 +1360,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                if (ratioImages[i] != null)
                   if (ratioImages[i].equals(mp))
                     ratioImages[i] = null;                
-            }            
+            }
+            for (i = 0; i < compImages.length; i++) {
+               if (compImages[i] != null)
+                  if (compImages[i].equals(mp))
+                    compImages[i] = null;
+            }
    }
 
    /**
@@ -2205,7 +2242,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
 
         if (img.getMimsType() == img.COMPOSITE_IMAGE) {
-            name = img.getTitle();
+            name += "_comp";
             return name;
         }
 
@@ -3212,14 +3249,15 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      * @param msg the message to display.
      */
     public synchronized void updateStatus(String msg) {
-        if (bUpdating) {
-            return;
-        }
-        if (!currentlyOpeningImages) {
+        //if (bUpdating) {
+        //    return;
+        //}
+        //if (!currentlyOpeningImages) {
             mainTextField.setText(msg);
-        } else {
+        //} else {
             IJ.showStatus(msg);
-        }
+            //IJ.
+        //}
     }
 
     /**
@@ -3239,6 +3277,32 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      */
     public String getLastFolder() {
         return lastFolder;
+    }
+
+    /**
+     * Set the directory of the last location used
+     * to retrieve data.
+     *
+     * @param the last folder.
+     */
+    public void setLastFolder(String path) {
+       if (path == null)
+          return;
+
+       File folder = new File(path);
+       if (folder.exists() && folder.isDirectory())
+          lastFolder = path;
+    }
+
+    /**
+     * Set the directory of the last location used
+     * to retrieve data.
+     *
+     * @param the last folder.
+     */
+    public void setLastFolder(File folder) {
+       if (folder.exists() && folder.isDirectory())
+          setLastFolder(folder.getAbsolutePath());
     }
 
     /**

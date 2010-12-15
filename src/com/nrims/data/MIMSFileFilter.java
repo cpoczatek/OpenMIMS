@@ -40,7 +40,7 @@ public class MIMSFileFilter extends FileFilter {
      * @see #addExtension
      */
     public MIMSFileFilter(String extension) {
-	this.filters = new Hashtable();
+	     this.filters = new Hashtable();
         addExtension(extension);
         setDescription("MIMS Format images");
     }
@@ -94,7 +94,7 @@ public class MIMSFileFilter extends FileFilter {
 
     public void addExtension(String extension) {
 	if(filters == null) {
-	    filters = new Hashtable(5);
+	    filters = new Hashtable();
 	}
 	filters.put(extension.toLowerCase(), this);
 	fullDescription = null;

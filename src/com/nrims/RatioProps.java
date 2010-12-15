@@ -52,7 +52,7 @@ public class RatioProps implements java.io.Serializable {
    }
 
     /**
-     * Two props objects are equal if numerator and denominator are the same.
+     * Two <code>RatioProps</code> objects are equal if numerator and denominator are the same.
      *
      * @param rp a <code>RatioProps</code> object.
      * @return <code>true</code> if <code>this</code> and <code>rp</code> are equal.

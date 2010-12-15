@@ -235,6 +235,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
    public MimsPlus(UI ui, CompositeProps compprops) {
        super();
        this.ui = ui;
+       this.compProps = compprops;
        this.nType = MimsPlus.COMPOSITE_IMAGE;
        fStateListeners = new EventListenerList() ;
        setupCompositeImage(compprops);
@@ -789,7 +790,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 return true;
             }
         } else if (mp.getMimsType() == COMPOSITE_IMAGE) {
-            //TODO: ??
+            if (mp.getCompositeProps().equals(getCompositeProps())) {
+                return true;
+            }
         } else if (mp.getMimsType() == SEG_IMAGE) {
             // TODO: Not sure what to add here
         }
@@ -1693,6 +1696,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return HSI properties
      */
     public HSIProps getHSIProps() { return getHSIProcessor().getHSIProps(); }
+
+    /**
+     *
+     * @return ratio properties
+     */
+    public CompositeProps getCompositeProps() { return compProps; }
 
     /**
      *

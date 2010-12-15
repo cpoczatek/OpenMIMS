@@ -69,6 +69,27 @@ public class SumProps implements java.io.Serializable {
        minLUT = 0.0;
        maxLUT = 1.0;
     }
+
+    /**
+     * Two <code>SumProps</code> objects are equal if numerator and denominator
+     * are the same, in the case of a sum of a ratio image. Or if the parent mass
+     * index is the same, in the case of a sum of a mass image.
+     *
+     * @param sp a <code>SumProps</code> object.
+     * @return <code>true</code> if <code>this</code> and <code>sp</code> are equal.
+     */
+    public boolean equals(SumProps sp) {
+
+       if (sumType == RATIO_IMAGE) {
+         if (sp.getNumMassIdx() == numMassIdx && sp.getDenMassIdx() == denMassIdx)
+            return true;
+      } else if (sumType == MASS_IMAGE) {
+         if (sp.getParentMassIdx() == parentMassIdx)
+            return true;
+      }
+
+       return false;
+   }
           
     /**
      * Gets the index of the numerator mass image.

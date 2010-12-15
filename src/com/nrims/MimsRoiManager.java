@@ -1,5 +1,6 @@
 package com.nrims;
 
+import com.nrims.data.MIMSFileFilter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import java.awt.*;
@@ -33,6 +34,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -869,9 +871,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         } else if (command.equals("Open")) {
             open(null, false);
         } else if (command.equals("Save")) {
-            //save(null); //opens with defaul imagej path
-            String path = ui.getImageDir();
-            save(path);
+            save();
         } else if (command.equals("Measure")) {
             measure();
         } else if (command.equals("Deselect")) {
@@ -882,6 +882,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         } else if (command.equals(hideAllLabels)) {
             hideLabels();
         } else if (command.equals("More>>")) {
+            ImagePlus imp = getImage();
+            if (imp == null)
+               return;
             Point ploc = panel.getLocation();
             Point bloc = moreButton.getLocation();
             pm.show(this, ploc.x, bloc.y);
@@ -1623,13 +1626,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * @param path a string containing the absolute path.
      * @param force forces overwrite of current ROIs.
      */
-    public void open(String path, boolean force) {
+    public void open(String abspath, boolean force) {
 
        // Does the user want to overwrite current Roi set?
        if (!force && roiListModel.size() > 0) {
           int n = JOptionPane.showConfirmDialog(
                   this,
-                  "Opening an ROI file will delete all current ROIs and ROI groups.\nContinue?\n",
+                  "Opening a roi zip file will delete all current ROIs and ROI groups.\n\t\tContinue?\n",
                   "Warning",
                   JOptionPane.YES_NO_OPTION,
                   JOptionPane.WARNING_MESSAGE);
@@ -1640,34 +1643,53 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         ImagePlus imp = getImage();
         if (imp == null) return;
         Macro.setOptions(null);
-        String name = null;
-        if (path == null) {
-            OpenDialog od = new OpenDialog("Open Selection(s)...", ui.getImageDir(), "");
-            String directory = od.getDirectory();
-            name = od.getFileName();
-            if (name == null) {
-                return;
-            }
-            path = directory + name;
+        File file = null;
+        if (abspath == null) {
+
+           javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+           MIMSFileFilter mff_rois = new MIMSFileFilter(ui.ROI_EXTENSION.substring(1, ui.ROI_EXTENSION.length()));
+           mff_rois.addExtension("zip");
+           mff_rois.setDescription("Mims rois");
+           fc.addChoosableFileFilter(mff_rois);
+           fc.setFileFilter(mff_rois);
+           fc.setMultiSelectionEnabled(false);
+           fc.setPreferredSize(new java.awt.Dimension(650, 500));
+           ui.getLastFolder();
+           if (ui.getLastFolder() != null) {
+              fc.setCurrentDirectory(new File(ui.getLastFolder()));
+           } else {
+              fc.setCurrentDirectory(new File(ui.getImageDir()));
+           }
+
+           if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION)
+               return;
+
+           file = fc.getSelectedFile();
+           if (file == null)
+              return;
+           abspath = file.getAbsolutePath();
+           ui.setIJDefaultDir(file.getParent());
+           ui.setLastFolder(file.getParentFile());
+
         }
-        if (path.endsWith(".zip")) {
-            openZip(path);
-            return;
-        }
-        ij.io.Opener o = new ij.io.Opener();
-        if (name == null) {
-            name = o.getName(path);
-        }
-        Roi roi = o.openRoi(path);
-        if (roi != null) {
-            if (name.endsWith(".roi")) {
+
+       if (file.getAbsolutePath().endsWith(".zip")) {
+          openZip(abspath);
+       } else {
+          String name = file.getName();
+          ij.io.Opener o = new ij.io.Opener();
+          Roi roi = o.openRoi(abspath);
+          if (roi != null) {
+             if (abspath.endsWith(".roi")) {
                 name = name.substring(0, name.length() - 4);
-            }
-            name = getUniqueName(name);
-            roiListModel.addElement(name);
-            rois.put(name, roi);
-        }
-        resetRoiLocationsLength();
+             }
+             name = getUniqueName(name);
+             roi.setName(name);
+             roiListModel.addElement(name);
+             rois.put(name, roi);
+          }
+          resetRoiLocationsLength();
+       }
     }
 
     /** Opens a zip file containing saved ROIs.*/
@@ -1813,12 +1835,23 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      *
      * @return <code>true</code> if successful, otherwise <code>false</code>.
      */
-    public boolean save(String name) {
+    public boolean save() {
+        ImagePlus imp = getImage();
+        if (imp == null)
+           return false;
+
         if (rois.size() == 0) {
             return error("The selection list is empty.");
         }
+
+        String path = ui.getImageDir();
+
         Roi[] tmprois = getAllROIs();
-        return saveMultiple(tmprois, name, true);
+        boolean success = saveMultiple(tmprois, path, true);
+        if (success)
+           ui.setLastFolder(path);
+
+        return success;
     }
 
     /**
@@ -1916,6 +1949,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
        // Get current plane.
        ImagePlus imp = getImage();
+       if (imp == null)
+          return;
+
        ArrayList planes = new ArrayList<Integer>();
        planes.add(ui.getOpenMassImages()[0].getCurrentSlice());
        table.setPlanes(planes);
