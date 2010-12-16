@@ -369,12 +369,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     public synchronized File loadMIMSFile() {
         javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
-        
-        MIMSFileFilter mff_images = new MIMSFileFilter(MIMS_EXTENSION.substring(1, MIMS_EXTENSION.length()));
-        mff_images.addExtension(NRRD_EXTENSION.substring(1, NRRD_EXTENSION.length()));
-        mff_images.setDescription("Mims images");
-        fc.addChoosableFileFilter(mff_images);
-        fc.setFileFilter(mff_images);
 
         MIMSFileFilter mff_rois = new MIMSFileFilter(ROI_EXTENSION.substring(1, ROI_EXTENSION.length()));
         mff_rois.addExtension("zip");
@@ -386,6 +380,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         mff_dimages.addExtension(SUM_EXTENSION.substring(1, SUM_EXTENSION.length()));
         mff_dimages.setDescription("Mims derived images");
         fc.addChoosableFileFilter(mff_dimages);
+
+        MIMSFileFilter mff_images = new MIMSFileFilter(MIMS_EXTENSION.substring(1, MIMS_EXTENSION.length()));
+        mff_images.addExtension(NRRD_EXTENSION.substring(1, NRRD_EXTENSION.length()));
+        mff_images.setDescription("Mims images");
+        fc.addChoosableFileFilter(mff_images);
+        fc.setFileFilter(mff_images);
         
         fc.setMultiSelectionEnabled(false);
         fc.setPreferredSize(new java.awt.Dimension(650, 500));
