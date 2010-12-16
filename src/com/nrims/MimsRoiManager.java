@@ -2664,7 +2664,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         ui.setIJDefaultDir(ui.getImageDir());
 
         // Set title and show table.
-        String title = ui.getImageFilePrefix() + "_m"+img.getRoundedTitle();
+        String title = "";
+        if (img.getMimsType() == MimsPlus.MASS_IMAGE)
+           title = ui.getImageFilePrefix() + "_m"+img.getRoundedTitle();
+        if (img.getMimsType() == MimsPlus.RATIO_IMAGE)
+           title = ui.getImageFilePrefix() + "_m"+img.getNumeratorImage().getRoundedTitle()+"_m"+img.getDenominatorImage().getRoundedTitle();
         if (rois.length == 1)
            title += "_roi"+rois[0].getName();
         rTable.show(title);
