@@ -1961,7 +1961,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        table.setStats(statnames);
        
        // Get rois.
-       Roi[] rois = getAllROIs();
+       Roi[] rois = getSelectedROIs();
        if (rois.length >= 1) {
           table.setRois(rois);
        } else {
