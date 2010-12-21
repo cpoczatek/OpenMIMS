@@ -36,10 +36,25 @@ public class LoadImageList {
     
     public boolean openList() {
         JFileChooser fc = new JFileChooser();
+        
         fc.setPreferredSize(new java.awt.Dimension(650, 500));
+
+        String lastFolder = ui.getLastFolder();
+        if (lastFolder != null) {
+            fc.setCurrentDirectory(new java.io.File(lastFolder));
+        } else {
+            String ijDir = OpenDialog.getDefaultDirectory();
+            if(ijDir != null && !(ijDir.equalsIgnoreCase("")) )
+                fc.setCurrentDirectory(new java.io.File(ijDir));
+        }
+
         if (fc.showOpenDialog(ui) == JFileChooser.CANCEL_OPTION) {
+            lastFolder = fc.getCurrentDirectory().getAbsolutePath();
             return false;
         }
+        lastFolder = fc.getSelectedFile().getParent();
+        ui.setIJDefaultDir(lastFolder);
+
         listFile = fc.getSelectedFile().getName();
         this.workingDirectory  = fc.getSelectedFile().getParent();
          

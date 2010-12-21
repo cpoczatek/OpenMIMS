@@ -619,7 +619,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                                 massImages[mass].appendImage(i);
                             }
                         }
-                        updateStatus(i + " of " + nImages);
+                        //updateStatus(i + " of " + nImages);
                     }
                 }
 
@@ -1443,6 +1443,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         genStackMenuItem = new javax.swing.JMenuItem();
         compositeMenuItem = new javax.swing.JMenuItem();
         testMenu = new javax.swing.JMenu();
+        testMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem6 = new javax.swing.JMenuItem();
 
         jMenuItem9.setText("Export all images");
@@ -1672,7 +1673,20 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         testMenu.setText("Testing");
 
-        jMenuItem6.setText("jMenuItem6");
+        testMenuItem1.setText("export QVis");
+        testMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                testMenuItem1ActionPerformed(evt);
+            }
+        });
+        testMenu.add(testMenuItem1);
+
+        jMenuItem6.setText("exception");
+        jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem6ActionPerformed(evt);
+            }
+        });
         testMenu.add(jMenuItem6);
 
         jMenuBar1.add(testMenu);
@@ -2650,9 +2664,22 @@ private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
    getRoiManager().showFrame();
 }//GEN-LAST:event_jMenuItem5ActionPerformed
 
+private void testMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testMenuItem1ActionPerformed
+    // TODO add your handling code here:
+
+    //should it grab the current image here or in method?
+    com.nrims.experimental.exportQVis.exportHSI_RGBA(this);
+}//GEN-LAST:event_testMenuItem1ActionPerformed
+
+private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
+    // TODO add your handling code here:
+    int i = 5;
+    i=i/0;
+}//GEN-LAST:event_jMenuItem6ActionPerformed
+
 /**
  * Generates a new MimsPlus image that is a stack. Whereas ratio
- * image ans HSI images are single plane images by design, this method
+ * image and HSI images are single plane images by design, this method
  * will turn it into a scrollable stack.
  *
  * @param img the image (ratio or HSI images only)/
@@ -2733,7 +2760,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      *
      * @return the directory of the current image file.
      */
-    String getImageDir() {
+    public String getImageDir() {
         String path = image.getImageFile().getParent();
         return path;
     }
@@ -3436,6 +3463,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuItem saveMIMSjMenuItem;
     private javax.swing.JMenuItem sumAllMenuItem;
     private javax.swing.JMenu testMenu;
+    private javax.swing.JMenuItem testMenuItem1;
     private javax.swing.JMenu utilitiesMenu;
     private javax.swing.JMenu viewMenu;
     // End of variables declaration//GEN-END:variables
