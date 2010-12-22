@@ -5,16 +5,15 @@
 
 package com.nrims.data;
 
+import com.nrims.MimsJFileChooser;
 import com.nrims.UI;
 import com.nrims.MimsPlus;
 
-import javax.swing.JFileChooser;
+import ij.IJ;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import ij.io.*;
 
 /**
  *
@@ -35,33 +34,27 @@ public class LoadImageList {
     }
     
     public boolean openList() {
-        JFileChooser fc = new JFileChooser();
+        MimsJFileChooser fc = new MimsJFileChooser(ui);
         
         fc.setPreferredSize(new java.awt.Dimension(650, 500));
 
-        String lastFolder = ui.getLastFolder();
-        if (lastFolder != null) {
-            fc.setCurrentDirectory(new java.io.File(lastFolder));
-        } else {
-            String ijDir = OpenDialog.getDefaultDirectory();
-            if(ijDir != null && !(ijDir.equalsIgnoreCase("")) )
-                fc.setCurrentDirectory(new java.io.File(ijDir));
-        }
-
-        if (fc.showOpenDialog(ui) == JFileChooser.CANCEL_OPTION) {
-            lastFolder = fc.getCurrentDirectory().getAbsolutePath();
+        if (fc.showOpenDialog(ui) == MimsJFileChooser.CANCEL_OPTION) {
             return false;
         }
-        lastFolder = fc.getSelectedFile().getParent();
-        ui.setIJDefaultDir(lastFolder);
 
         listFile = fc.getSelectedFile().getName();
         this.workingDirectory  = fc.getSelectedFile().getParent();
-         
-        return readList(workingDirectory+"/"+listFile);
+        File file = new File(workingDirectory, listFile);
+
+        if (file.exists())
+           return readList(file);
+        else {
+           IJ.error("Error locating: \n \n \t " + file.getAbsolutePath());
+           return false;
+        }
     }
     
-    public boolean readList(String listFile) {
+    public boolean readList(File listFile) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(listFile));
             String line;

@@ -555,14 +555,11 @@ public class MimsJTable {
    * Determines the behavior of the "Save" action.
    */
    private void saveActionPerformed(ActionEvent evt) {
-      javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+      MimsJFileChooser fc = new MimsJFileChooser(ui);
       fc.setPreferredSize(new java.awt.Dimension(650, 500));
       String lastFolder = ui.getLastFolder();
 
       try {
-         if (lastFolder != null) {
-            fc.setCurrentDirectory(new java.io.File(lastFolder));
-         }
          fc.setSelectedFile(new File(lastFolder, ui.getImageFilePrefix()+DEFAULT_TABLE_NAME));
 
          int returnVal = fc.showSaveDialog(frame);

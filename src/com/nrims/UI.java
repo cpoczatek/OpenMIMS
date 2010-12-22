@@ -195,6 +195,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
 
             File file = files[0];
+            setLastFolder(file.getParentFile());
 
             // Get HSIProps for all open ratio images.
             RatioProps[] rto_props = getOpenRatioProps();
@@ -365,56 +366,30 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     }
 
     /**
-     * Brings up the graphical pane for selecting files to be opened.
-     */
-    public synchronized File loadMIMSFile() {
-        javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+    * Brings up the graphical pane for selecting files to be opened.
+    */
+   public synchronized File loadMIMSFile() {
 
-        MIMSFileFilter mff_rois = new MIMSFileFilter(ROI_EXTENSION.substring(1, ROI_EXTENSION.length()));
-        mff_rois.addExtension("zip");
-        mff_rois.setDescription("Mims rois");
-        fc.addChoosableFileFilter(mff_rois);
+      // Bring up file chooser.
+      MimsJFileChooser fc = new MimsJFileChooser(this);
+      fc.setMultiSelectionEnabled(false);
+      fc.setPreferredSize(new java.awt.Dimension(650, 500));
+      int returnVal = fc.showOpenDialog(this);
 
-        MIMSFileFilter mff_dimages = new MIMSFileFilter(RATIO_EXTENSION.substring(1, RATIO_EXTENSION.length()));
-        mff_dimages.addExtension(HSI_EXTENSION.substring(1, HSI_EXTENSION.length()));
-        mff_dimages.addExtension(SUM_EXTENSION.substring(1, SUM_EXTENSION.length()));
-        mff_dimages.setDescription("Mims derived images");
-        fc.addChoosableFileFilter(mff_dimages);
-
-        MIMSFileFilter mff_images = new MIMSFileFilter(MIMS_EXTENSION.substring(1, MIMS_EXTENSION.length()));
-        mff_images.addExtension(NRRD_EXTENSION.substring(1, NRRD_EXTENSION.length()));
-        mff_images.setDescription("Mims images");
-        fc.addChoosableFileFilter(mff_images);
-        fc.setFileFilter(mff_images);
-        
-        fc.setMultiSelectionEnabled(false);
-        fc.setPreferredSize(new java.awt.Dimension(650, 500));
-
-        if (lastFolder != null) {
-            fc.setCurrentDirectory(new java.io.File(lastFolder));
-        } else {
-            String ijDir = new ij.io.OpenDialog("", "asdf").getDefaultDirectory();
-            if(ijDir != null && !(ijDir.equalsIgnoreCase("")) )
-                fc.setCurrentDirectory(new java.io.File(ijDir));
-        }
-
-        if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION) {
-            lastFolder = fc.getCurrentDirectory().getAbsolutePath();
+      // Open file or return null.
+      if (returnVal == JFileChooser.APPROVE_OPTION) {
+         File file = fc.getSelectedFile();
+         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+         boolean opened = openFile(file);
+         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+         if (opened)
+            return file;
+         else
             return null;
-        }
-        lastFolder = fc.getSelectedFile().getParent();
-        setIJDefaultDir(lastFolder);
-
-        File file = fc.getSelectedFile();
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        boolean opened = openFile(file);
-        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-
-        if (opened)
-           return file;
-        else
-           return null;
-    }
+      } else {
+         return null;
+      }
+   }
 
     /**
      * Relegates behavior for opening any of the various MimsPlus file types.
@@ -2373,9 +2348,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
    
    // Bring up JFileChooser and get file name.
    File file;
-   JFileChooser fc = new JFileChooser();
-   if (lastFolder != null)
-      fc.setCurrentDirectory(new java.io.File(lastFolder));
+   MimsJFileChooser fc = new MimsJFileChooser(this);
    if (this.getImageFilePrefix() != null)
       fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + "_m"+imp.getRoundedTitle() + ".png"));
    int returnVal = fc.showSaveDialog(jTabbedPane1);
@@ -2477,10 +2450,7 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
    String fileName;
    try {
       // User sets file prefix name
-      JFileChooser fc = new JFileChooser();
-      if (lastFolder != null) {
-         fc.setCurrentDirectory(new java.io.File(lastFolder));
-      }
+      MimsJFileChooser fc = new MimsJFileChooser(this);
       if (this.getImageFilePrefix() != null) {
          fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
       }

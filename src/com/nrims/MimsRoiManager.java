@@ -1643,34 +1643,23 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         ImagePlus imp = getImage();
         if (imp == null) return;
         Macro.setOptions(null);
-        File file = null;
+        File file = new File(abspath);
         if (abspath == null) {
 
-           javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
-           MIMSFileFilter mff_rois = new MIMSFileFilter(ui.ROI_EXTENSION.substring(1, ui.ROI_EXTENSION.length()));
+           MimsJFileChooser fc = new MimsJFileChooser(ui);
+           MIMSFileFilter mff_rois = new MIMSFileFilter(UI.ROI_EXTENSION.substring(1, UI.ROI_EXTENSION.length()));
            mff_rois.addExtension("zip");
            mff_rois.setDescription("Mims rois");
            fc.addChoosableFileFilter(mff_rois);
            fc.setFileFilter(mff_rois);
            fc.setMultiSelectionEnabled(false);
            fc.setPreferredSize(new java.awt.Dimension(650, 500));
-           ui.getLastFolder();
-           if (ui.getLastFolder() != null) {
-              fc.setCurrentDirectory(new File(ui.getLastFolder()));
-           } else {
-              fc.setCurrentDirectory(new File(ui.getImageDir()));
-           }
-
            if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION)
                return;
-
            file = fc.getSelectedFile();
            if (file == null)
               return;
            abspath = file.getAbsolutePath();
-           ui.setIJDefaultDir(file.getParent());
-           ui.setLastFolder(file.getParentFile());
-
         }
 
        if (file.getAbsolutePath().endsWith(".zip")) {
