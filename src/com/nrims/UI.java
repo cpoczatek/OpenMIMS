@@ -211,7 +211,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             if (opened == false)
                return;
-           
+
             // Generate all images that were previously open.
             // TODO: a better check than just looking at the first file?
             if( files[0].getAbsolutePath().endsWith(NRRD_EXTENSION) ||

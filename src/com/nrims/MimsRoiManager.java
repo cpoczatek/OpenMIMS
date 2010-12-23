@@ -2635,8 +2635,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Setup table.
         ij.measure.ResultsTable rTable = new ij.measure.ResultsTable();
         rTable.addColumns();
-        rTable.setHeading(0, "Group");
-        rTable.setHeading(1, "Value");
+        rTable.setHeading(0, "Value");
 
         // Fill in the table.
         for(int i = 0; i<values.size(); i++) {
@@ -2645,7 +2644,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             if (group == null)
                group = "null";
             rTable.setLabel(group, i);
-            rTable.addValue(1, values.get(i));
+            rTable.addValue(0, values.get(i));
         }
 
         // Set some parameters in case user wants to save table.

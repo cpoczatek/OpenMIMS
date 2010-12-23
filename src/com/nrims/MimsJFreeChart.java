@@ -3,6 +3,7 @@ package com.nrims;
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
+import ij.IJ;
 import ij.gui.*;
 import ij.process.*;
 
@@ -13,8 +14,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
+import java.util.ResourceBundle;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
@@ -25,6 +28,9 @@ import org.jfree.chart.plot.Plot;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.util.ResourceBundleWrapper;
+import org.jfree.ui.ExtensionFileFilter;
 
 /**
  * MimsJFreeChart class creates a frame containing a <code>MimsXYPlot</code>.
@@ -93,26 +99,43 @@ public class MimsJFreeChart extends JFrame {
          chartpanel.getPopupMenu().addSeparator();
          chartpanel.getPopupMenu().add(xhairs);
 
+         // Add menu item for toggling between linear and log scales.
          JMenuItem logscale = new JMenuItem("Log/Linear scale");
          logscale.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                MimsJFreeChart.logLinScale(chartpanel);
             }
          });
-         chartpanel.getPopupMenu().addSeparator();
          chartpanel.getPopupMenu().add(logscale);
 
+         // Replace Save As... menu item.
+         chartpanel.getPopupMenu().remove(3);
+         JMenuItem saveas = new JMenuItem("Save as...");
+         saveas.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
+               ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
+               ExtensionFileFilter filter = new ExtensionFileFilter(
+                       localizationResources.getString("PNG_Image_Files"), ".png");
+               fileChooser.addChoosableFileFilter(filter);
+               int option = fileChooser.showSaveDialog(chartpanel);
+               if (option == MimsJFileChooser.APPROVE_OPTION) {
+                  String filename = fileChooser.getSelectedFile().getPath();
+                  MimsJFreeChart.saveAs(filename, chartpanel, getWidth(), getHeight());
+               }
+            }
+         });
+         chartpanel.getPopupMenu().add(saveas, 3);
          
+         // Add an option for getting the underlying data
           JMenuItem asTextMenuItem = new javax.swing.JMenuItem("Display text");
           asTextMenuItem.addActionListener(new ActionListener() {
-
               public void actionPerformed(ActionEvent e) {
                   MimsJFreeChart.displayProfileData(chartpanel);
               }
           });
           chartpanel.getPopupMenu().add(asTextMenuItem, 2);
         
-
          // Add key listener.
          KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
             public boolean dispatchKeyEvent(KeyEvent e) {
@@ -407,6 +430,22 @@ public class MimsJFreeChart extends JFrame {
            xyplot.setRangeAxis(linaxis);
        }
    }
+
+   /**
+    * Saveas the chart as a .png
+    */
+    public static void saveAs(String filename, MimsChartPanel mchartpanel, int width, int height){
+
+          if (!filename.endsWith(".png")) {
+             filename = filename + ".png";
+          }
+          try {
+             ChartUtilities.saveChartAsPNG(new File(filename), mchartpanel.getChart(), width, height);
+          } catch (IOException ioe) {
+             IJ.error("Unable to save file.\n\n" + ioe.toString());
+          }
+
+    }
 
    /**
     * Extract and show table of plot's underlying data.

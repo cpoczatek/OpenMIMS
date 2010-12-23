@@ -1189,6 +1189,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
    /** The action method for the "Concatenate" button.*/
     private void concatButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_concatButtonActionPerformed
        UI tempUi = new UI();
+       tempUi.setLastFolder(ui.getLastFolder());
        tempUi.loadMIMSFile();
        Opener tempImage = tempUi.getOpener();
        if (tempImage == null) {
