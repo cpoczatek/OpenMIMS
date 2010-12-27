@@ -16,6 +16,7 @@ import ij.util.Tools;
 import ij.measure.Calibration;
 import ij.plugin.frame.*;
 import ij.plugin.filter.ParticleAnalyzer;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -2601,13 +2602,70 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         roiPixelvalues(img);
     }
 
+    public void roiPixelvalues(MimsPlus img) {
+
+       // Make sure we have an image.
+       ImagePlus imp = getImage();
+       if (imp == null) {
+          IJ.error("No image has been selected.");
+          return;
+       }
+
+        // make sure we have Rois.
+        img.killRoi();
+        Roi[] rois = this.getSelectedROIs();
+        if(rois==null) {
+          IJ.error("No rois have been selected.");
+          return;
+       }
+        if(rois.length == 0){
+          IJ.error("No rois have been selected.");
+          return;
+       }
+
+       // HSIs pixel data is stored in the internal ratio image.
+        if(img.getMimsType()==MimsPlus.HSI_IMAGE) {
+            roiPixelvalues(img.internalRatio);
+            return;
+        }
+
+        // Collect all the pixels within the highlighted rois.
+        ArrayList<Double> values = new ArrayList<Double>();
+        ArrayList<String> groups = new ArrayList<String>();
+        DecimalFormat twoDForm = new DecimalFormat("#.##");;
+        for (Roi roi : rois) {
+            img.setRoi(roi);
+            double[] roipixels = img.getRoiPixels();
+            String group = getRoiGroup(roi.getName());
+            for (double pixel : roipixels) {
+                if (img.getMimsType()==MimsPlus.RATIO_IMAGE)
+		             values.add(Double.valueOf(twoDForm.format(pixel)));
+                else
+                   values.add(pixel);
+                groups.add(group);
+            }
+            img.killRoi();
+        }
+
+        if (values == null) return;
+        if (values.size() == 0) return;
+
+       // Create table.
+       MimsJTable tbl = new MimsJTable(ui);
+       MimsPlus[] imgs = new MimsPlus[1];
+       imgs[0] = img;
+       tbl.setImages(imgs);
+       tbl.createPixelTable(groups, values);
+       tbl.showFrame();
+    }
+
     /**
      * Generates a table of pixel values for a
      * ROI for the passed image and current plane.
      *
      * @param img the image.
      */
-    public void roiPixelvalues(MimsPlus img) {
+    public void roiPixelvalues2(MimsPlus img) {
         if(img.getMimsType()==MimsPlus.HSI_IMAGE) {
             roiPixelvalues(img.internalRatio);
             return;

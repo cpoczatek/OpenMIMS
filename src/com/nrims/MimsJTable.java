@@ -123,6 +123,48 @@ public class MimsJTable {
    }
 
   /**
+   * Generates a table for listing Roi groups and their pixel values.
+   * Correct order is required and ArrayList must have the same length.
+   * Output table will look something like the following:
+   *
+   * Group  | Pixel Value
+   * -------------------
+   * group1 | pixel value 1
+   * group1 | pixel value 2
+   * group1 | pixel value 3
+   * group2 | pixel value 1
+   * group2 | pixel value 2
+   * group3 | pixel value 1
+   * group3 | pixel value 2
+   * group3 | pixel value 3
+   * group3 | pixel value 4
+   *
+   * @param groups ArrayList of groups. Repeats expected.
+   * @param groups ArrayList of pixel values.
+   */
+   void createPixelTable(ArrayList<String> groups, ArrayList<Double> values) {
+      if (groups == null || values == null) return;
+      if (groups.size() == 0 || values.size() == 0) return;
+      if (groups.size() != values.size()) return;
+
+      // Get data.
+      Object[][] data = new Object[values.size()][2];
+      String group = "";
+      for(int i = 0; i < values.size(); i++) {
+         group = (String)groups.get(i);
+         if (group == null)
+            group = "null";
+         if (group.trim().length() == 0)
+            group = "null";
+         data[i][0] = group;
+         data[i][1] = (Double)values.get(i);
+      }
+      String[] columnNames = {"Groups", "Pixel values"};
+
+      displayTable(data, columnNames);
+   }
+
+  /**
    * Does the actual displaying of the table and frame.
    */
    private void displayTable(Object[][] data, String[] columnNames){
