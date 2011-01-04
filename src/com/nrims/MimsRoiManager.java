@@ -1136,7 +1136,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           hLabel.setText("Height");
           widthSpinner.setValue(rect.width);
           heightSpinner.setValue(rect.height);
-       } else if (roiType == Roi.POLYGON || roiType == Roi.FREEROI) {
+       //} else if (roiType == Roi.POLYGON || roiType == Roi.FREEROI) {
+       } else if (roi.isArea() && !(roiType == Roi.RECTANGLE || roiType == Roi.OVAL)) {
           enablePosSpinners();
           disableSizeSpinners();
           java.awt.Rectangle rect = roi.getBoundingRect();
@@ -2054,20 +2055,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 roi.setLocation(r.x + (int) cal.xOrigin, r.y + (int) cal.yOrigin);
             }
             if (s1 == null) {
-                if (roi instanceof ShapeRoi) {
-                    s1 = (ShapeRoi) roi;
-                } else {
-                    s1 = new ShapeRoi(roi);
-                }
+                s1 = new ShapeRoi(roi);
                 if (s1 == null) {
                     return;
                 }
             } else {
-                if (roi instanceof ShapeRoi) {
-                    s2 = (ShapeRoi) roi;
-                } else {
-                    s2 = new ShapeRoi(roi);
-                }
+                s2 = new ShapeRoi(roi);
                 if (s2 == null) {
                     continue;
                 }

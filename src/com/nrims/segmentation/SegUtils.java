@@ -195,7 +195,7 @@ public class SegUtils extends javax.swing.SwingWorker<Boolean,Void>{
             ij.process.ImageProcessor ip = images[i].getProcessor(); 
             int height = ip.getHeight();
             int width = ip.getWidth();
-            double[][] imageData = new double[height][width];
+            double[][] imageData = new double[width][height];
             if(ip instanceof ij.process.ShortProcessor){
                 for(int y=0; y<height; y++){
                     for(int x=0; x<width; x++){
@@ -635,8 +635,9 @@ public class SegUtils extends javax.swing.SwingWorker<Boolean,Void>{
     private void calcROIs(){
         // setup values to report progress
         int progress = 0;
-        //int step = 100/(classNames.length*2+1);
-        int step = 100/(classNames.length);
+        //why is classNames.length==0 sometimes?
+        int step = 100/(classNames.length*2+1);
+        //int step = 100/(classNames.length);
 
         // create an image from the classification result in order to find ROIs
         ByteProcessor ip = new ByteProcessor(width,height);
