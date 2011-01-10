@@ -1645,13 +1645,15 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         ImagePlus imp = getImage();
         if (imp == null) return;
         Macro.setOptions(null);
-        File file = new File(abspath);
-        if (abspath == null) {
+        File file;
+        if (abspath != null)
+           file = new File(abspath);
+        else {
 
            MimsJFileChooser fc = new MimsJFileChooser(ui);
-           MIMSFileFilter mff_rois = new MIMSFileFilter(UI.ROI_EXTENSION.substring(1, UI.ROI_EXTENSION.length()));
+           MIMSFileFilter mff_rois = new MIMSFileFilter("rois.zip");
            mff_rois.addExtension("zip");
-           mff_rois.setDescription("Mims rois");
+           mff_rois.setDescription("Roi file");
            fc.addChoosableFileFilter(mff_rois);
            fc.setFileFilter(mff_rois);
            fc.setMultiSelectionEnabled(false);
@@ -1859,18 +1861,41 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         if (bPrompt) {
             String defaultname = ui.getImageFilePrefix();
             defaultname += UI.ROIS_EXTENSION;
-            SaveDialog sd = new SaveDialog("Save ROIs...", path,
-                    defaultname,
-                    ".zip");
-            String name = sd.getFileName();
-            if (name == null) {
+
+           File file;
+           MimsJFileChooser mfc = new MimsJFileChooser(ui);
+           mfc.setSelectedFile(new File(defaultname));
+           MIMSFileFilter mff_rois = new MIMSFileFilter("rois.zip");
+           mff_rois.addExtension("zip");
+           mff_rois.setDescription("Roi file");
+           mfc.addChoosableFileFilter(mff_rois);
+           mfc.setFileFilter(mff_rois);
+           int returnVal = mfc.showSaveDialog(this);
+           if (returnVal == JFileChooser.APPROVE_OPTION) {
+              String fileName = mfc.getSelectedFile().getAbsolutePath();
+            if (fileName == null) {
                 return false;
             }
-            if (!(name.endsWith(UI.ROIS_EXTENSION))) {
-                name = name + UI.ROIS_EXTENSION;
+            if (!(fileName.endsWith(UI.ROIS_EXTENSION))) {
+                fileName += UI.ROIS_EXTENSION;
             }
-            String dir = sd.getDirectory();
-            path = (new File(dir, name)).getAbsolutePath();
+              file = new File(fileName);
+              if (file.exists()) {
+                 int n = JOptionPane.showConfirmDialog(
+                         this,
+                         "File already exists.\n" + file.getAbsolutePath() + "\n" + "Overwrite?\n",
+                         "Warning",
+                         JOptionPane.YES_NO_OPTION,
+                         JOptionPane.WARNING_MESSAGE);
+                 if (n == JOptionPane.NO_OPTION) {
+                    return false;
+                 }
+              }
+           } else {
+              return false;
+           }
+
+            path = file.getAbsolutePath();
         }
         try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(path));

@@ -1,5 +1,6 @@
 package com.nrims;
 
+import com.nrims.data.MIMSFileFilter;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,6 +40,14 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
          if (lastFolderDir.exists())
             setCurrentDirectory(lastFolderDir);
       }
+      
+      MIMSFileFilter mff_nrrd = new MIMSFileFilter("nrrd");
+      mff_nrrd.setDescription("Mims image");
+      addChoosableFileFilter(mff_nrrd);
+      
+      MIMSFileFilter mff_im = new MIMSFileFilter("im");
+      mff_im.setDescription("Mims image");
+      addChoosableFileFilter(mff_im);
 
       // Add the filter accessory.
       fa = new FilterAccessory();
@@ -70,7 +79,7 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
    // can use for filtering which files will be displayed.
    class FilterAccessory extends JPanel {
 
-      MIMSFileFilter mff;
+      SimpleMIMSFileFilter mff;
       JTextField jtextfield;
 
       public FilterAccessory() {
@@ -119,16 +128,16 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
          }
 
          // Create and set filter.
-         mff = new MIMSFileFilter(files);
+         mff = new SimpleMIMSFileFilter(files);
          setFileFilter(mff);
       }
    }
 
-      class MIMSFileFilter extends javax.swing.filechooser.FileFilter {
+      class SimpleMIMSFileFilter extends javax.swing.filechooser.FileFilter {
 
          ArrayList<File> files;
 
-         public MIMSFileFilter(ArrayList<File> files) {
+         public SimpleMIMSFileFilter(ArrayList<File> files) {
             this.files = files;
          }
 

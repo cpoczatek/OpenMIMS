@@ -189,6 +189,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       this.mimsDrop = new FileDrop(null, jTabbedPane1, new FileDrop.Listener() {
          public void filesDropped(File[] files) {
 
+            if (files.length == 0) {
+               IJ.error("Unable to open file. Make sure file is not from a remote location.");
+               return;
+            }
+
             if (files.length > 1) {
                IJ.error("Please drag no more than one file.");
                return;
@@ -2351,6 +2356,10 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
    MimsJFileChooser fc = new MimsJFileChooser(this);
    if (this.getImageFilePrefix() != null)
       fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + "_m"+imp.getRoundedTitle() + ".png"));
+   MIMSFileFilter mff_png = new MIMSFileFilter("png");
+   mff_png.setDescription("Snapshot image");
+   fc.addChoosableFileFilter(mff_png);
+   fc.setFileFilter(mff_png);
    int returnVal = fc.showSaveDialog(jTabbedPane1);
    if (returnVal == JFileChooser.APPROVE_OPTION) {
       String fileName = fc.getSelectedFile().getAbsolutePath();

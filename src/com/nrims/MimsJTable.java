@@ -1,5 +1,6 @@
 package com.nrims;
 
+import com.nrims.data.MIMSFileFilter;
 import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
@@ -598,6 +599,10 @@ public class MimsJTable {
    */
    private void saveActionPerformed(ActionEvent evt) {
       MimsJFileChooser fc = new MimsJFileChooser(ui);
+      MIMSFileFilter mff_txt = new MIMSFileFilter("txt");
+      mff_txt.setDescription("Text file");
+      fc.addChoosableFileFilter(mff_txt);
+      fc.setFileFilter(mff_txt);
       fc.setPreferredSize(new java.awt.Dimension(650, 500));
       String lastFolder = ui.getLastFolder();
 

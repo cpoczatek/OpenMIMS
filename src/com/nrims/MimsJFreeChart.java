@@ -114,10 +114,12 @@ public class MimsJFreeChart extends JFrame {
          saveas.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
+               fileChooser.setSelectedFile(new File(ui.getLastFolder(), ui.getImageFilePrefix()+".png"));
                ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
                ExtensionFileFilter filter = new ExtensionFileFilter(
                        localizationResources.getString("PNG_Image_Files"), ".png");
                fileChooser.addChoosableFileFilter(filter);
+               fileChooser.setFileFilter(filter);
                int option = fileChooser.showSaveDialog(chartpanel);
                if (option == MimsJFileChooser.APPROVE_OPTION) {
                   String filename = fileChooser.getSelectedFile().getPath();
