@@ -292,6 +292,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
         addGroup(s);
+        int x = 0;
     }
 
    /**
@@ -362,8 +363,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
+
+        if (newName == null)
+           return;
+
         newName = newName.trim();
-        if (newName == null || newName.equals("") || newName.equals(DEFAULT_GROUP))
+
+        if (newName.equals("") || newName.equals(DEFAULT_GROUP))
            return;
                                
         if (addGroup(newName)) {
