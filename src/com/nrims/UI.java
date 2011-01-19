@@ -201,6 +201,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
             File file = files[0];
             setLastFolder(file.getParentFile());
+            setIJDefaultDir(file.getParent());
 
             // Get HSIProps for all open ratio images.
             RatioProps[] rto_props = getOpenRatioProps();
@@ -3318,10 +3319,13 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      *
      * @param dir the directory.
      */
-    public void setIJDefaultDir(String dir) {
-        ij.io.OpenDialog temp = new ij.io.OpenDialog("", "fubar");
-        temp.setDefaultDirectory(dir);
-        temp = null;
+    public void setIJDefaultDir(String dir) {       
+       File defaultDir = new File(dir);
+       if (!defaultDir.exists())
+          return;
+       ij.io.OpenDialog temp = new ij.io.OpenDialog("", dir);
+       temp.setDefaultDirectory(dir);
+       temp = null;
     }
 
     @Override

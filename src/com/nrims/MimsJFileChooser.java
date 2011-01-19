@@ -39,8 +39,15 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
          File lastFolderDir = new File(lastFolder);
          if (lastFolderDir.exists())
             setCurrentDirectory(lastFolderDir);
+      } else {
+         String ijDef = new ij.io.OpenDialog("", "asdf").getDefaultDirectory();
+         if(ijDef != null) {
+            File ijDefDir = new File(ijDef);
+            if (ijDefDir.exists())
+               setCurrentDirectory(ijDefDir);
+         }
       }
-      
+           
       MIMSFileFilter mff_nrrd = new MIMSFileFilter("nrrd");
       mff_nrrd.setDescription("Mims image");
       addChoosableFileFilter(mff_nrrd);
@@ -66,12 +73,13 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
          }
    }
 
-   // If user hits OK button, update last directory
+   // If user hits OK button or CANCEL button, update last directory
    public void actionPerformed(ActionEvent e) {
          String aname = e.getActionCommand();
          if (JFileChooser.APPROVE_SELECTION.equals(aname) ||
              JFileChooser.CANCEL_SELECTION.equals(aname)) {
             ui.setLastFolder(getCurrentDirectory());
+            ui.setIJDefaultDir(getCurrentDirectory().getAbsolutePath());
          }
    }
 

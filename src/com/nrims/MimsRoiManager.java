@@ -292,7 +292,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
         addGroup(s);
-        int x = 0;
     }
 
    /**
@@ -1847,8 +1846,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         Roi[] tmprois = getAllROIs();
         boolean success = saveMultiple(tmprois, path, true);
-        if (success)
+        if (success) {
            ui.setLastFolder(path);
+           ui.setIJDefaultDir(path);
+        }
 
         return success;
     }
