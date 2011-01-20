@@ -600,7 +600,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                                 massImages[mass].appendImage(i);
                             }
                         }
-                        //updateStatus(i + " of " + nImages);
+                        updateStatus(i + " of " + nImages);
                     }
                 }
 
