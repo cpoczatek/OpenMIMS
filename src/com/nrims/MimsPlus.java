@@ -1144,17 +1144,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                      killRoi();
                   }
 
-                  //get numerator and denominator stats
-                  if ((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE)&& internalNumerator!=null && internalDenominator!=null) {
-                      internalNumerator.setRoi(loopRoi);
-                      numeratorStats = internalNumerator.getStatistics();
-                      internalNumerator.killRoi();
-
-                      internalDenominator.setRoi(loopRoi);
-                      denominatorStats = internalDenominator.getStatistics();
-                      internalDenominator.killRoi();
-                  }
-
                   // Set as smallest Roi that the mouse is within and save stats
                   if (smallestRoi == null) {
                      smallestRoi = loopRoi;
@@ -1171,6 +1160,18 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                   }
             }
         }
+
+       //get numerator and denominator stats
+       if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE)
+                && internalNumerator != null && internalDenominator != null) {
+          internalNumerator.setRoi(smallestRoi);
+          numeratorStats = internalNumerator.getStatistics();
+          internalNumerator.killRoi();
+
+          internalDenominator.setRoi(smallestRoi);
+          denominatorStats = internalDenominator.getStatistics();
+          internalDenominator.killRoi();
+       }
 
         double sf=1.0;
         if(this.getMimsType()==HSI_IMAGE) {
