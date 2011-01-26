@@ -2643,6 +2643,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           IJ.error("No rois have been selected.");
           return;
        }
+
         if(rois.length == 0){
           IJ.error("No rois have been selected.");
           return;
@@ -2657,7 +2658,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Collect all the pixels within the highlighted rois.
         ArrayList<Double> values = new ArrayList<Double>();
         ArrayList<String> groups = new ArrayList<String>();
-        DecimalFormat twoDForm = new DecimalFormat("#.##");;
+        ArrayList<String> names  = new ArrayList<String>();
+        DecimalFormat twoDForm = new DecimalFormat("#.##");
         for (Roi roi : rois) {
             img.setRoi(roi);
             double[] roipixels = img.getRoiPixels();
@@ -2668,6 +2670,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 else
                    values.add(pixel);
                 groups.add(group);
+                names.add(roi.getName());
             }
             img.killRoi();
         }
@@ -2680,7 +2683,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        MimsPlus[] imgs = new MimsPlus[1];
        imgs[0] = img;
        tbl.setImages(imgs);
-       tbl.createPixelTable(groups, values);
+       tbl.createPixelTable(names, groups, values);
        tbl.showFrame();
     }
 
@@ -2850,7 +2853,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         return (Roi)rois.get(name);
     }
 
-    /** 
+    /**
      * Gets all the selected ROIs.
      *
      * @return ROI array.
@@ -2864,8 +2867,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        // get selected indexes.
        int[] roiIndexes = roijlist.getSelectedIndices();
        if (roiIndexes.length == 0) {
-          rois = new Roi[0];
-       } else {
+                rois = new Roi[0];
+          } else {
           rois = new ij.gui.Roi[roiIndexes.length];
           for (int i = 0; i < roiIndexes.length; i++) {
              roi = (ij.gui.Roi) getROIs().get(roijlist.getModel().getElementAt(roiIndexes[i]));

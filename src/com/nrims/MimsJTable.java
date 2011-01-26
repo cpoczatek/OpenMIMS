@@ -124,43 +124,55 @@ public class MimsJTable {
    }
 
   /**
-   * Generates a table for listing Roi groups and their pixel values.
-   * Correct order is required and ArrayList must have the same length.
+   * Generates a table for listing Roi info (name and group) and their pixel values.
+   * Correct order is required and ArrayLists must have the same length.
    * Output table will look something like the following:
    *
-   * Group  | Pixel Value
-   * -------------------
-   * group1 | pixel value 1
-   * group1 | pixel value 2
-   * group1 | pixel value 3
-   * group2 | pixel value 1
-   * group2 | pixel value 2
-   * group3 | pixel value 1
-   * group3 | pixel value 2
-   * group3 | pixel value 3
-   * group3 | pixel value 4
+   * Group  | Name  | Pixel Value
+   * ------------------------------
+   * group1 | name1 | pixel value 1
+   * group1 | name1 | pixel value 2
+   * group1 | name2 | pixel value 3
+   * group2 | name1 | pixel value 1
+   * group2 | name2 | pixel value 2
+   * group3 | name1 | pixel value 1
+   * group3 | name2 | pixel value 2
+   * group3 | name3 | pixel value 3
+   * group3 | name3 | pixel value 4
    *
+   * @param groups ArrayList of roi names. Repeats expected.
    * @param groups ArrayList of groups. Repeats expected.
    * @param groups ArrayList of pixel values.
    */
-   void createPixelTable(ArrayList<String> groups, ArrayList<Double> values) {
-      if (groups == null || values == null) return;
-      if (groups.size() == 0 || values.size() == 0) return;
-      if (groups.size() != values.size()) return;
+   void createPixelTable(ArrayList<String> names, ArrayList<String> groups, ArrayList<Double> values) {
+      
+      // Input checks.
+      if (names == null || groups == null || values == null)
+         return;
+      if (names.size() == 0 || groups.size() == 0 || values.size() == 0)
+         return;
+      if ((groups.size() != values.size()) || (names.size() != values.size()))
+         return;
 
       // Get data.
-      Object[][] data = new Object[values.size()][2];
-      String group = "";
+      Object[][] data = new Object[values.size()][3];
+      String group, name = "";
       for(int i = 0; i < values.size(); i++) {
+         name = (String)names.get(i);
          group = (String)groups.get(i);
          if (group == null)
             group = "null";
+         if (name == null)
+            name = "null";
          if (group.trim().length() == 0)
             group = "null";
+         if (name.trim().length() == 0)
+            name = "null";
          data[i][0] = group;
-         data[i][1] = (Double)values.get(i);
+         data[i][1] = name;
+         data[i][2] = (Double)values.get(i);
       }
-      String[] columnNames = {"Groups", "Pixel values"};
+      String[] columnNames = {"Groups", "Names", "Pixel values"};
 
       displayTable(data, columnNames);
    }
