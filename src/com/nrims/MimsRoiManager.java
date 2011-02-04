@@ -2639,14 +2639,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // make sure we have Rois.
         img.killRoi();
         Roi[] rois = this.getSelectedROIs();
-        if(rois==null) {
-          IJ.error("No rois have been selected.");
-          return;
-       }
-
-        if(rois.length == 0){
-          IJ.error("No rois have been selected.");
-          return;
+        if(rois==null || rois.length == 0) {
+           rois = getAllROIsInList();
+           if (rois==null || rois.length == 0) {
+              IJ.error("No rois in list.");
+              return;
+           }
        }
 
        // HSIs pixel data is stored in the internal ratio image.
@@ -2683,7 +2681,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        MimsPlus[] imgs = new MimsPlus[1];
        imgs[0] = img;
        tbl.setImages(imgs);
-       tbl.createPixelTable(names, groups, values);
+       tbl.createPixelTable(ui.getImageFilePrefix(), names, groups, values);
        tbl.showFrame();
     }
 
@@ -2874,6 +2872,25 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
              roi = (ij.gui.Roi) getROIs().get(roijlist.getModel().getElementAt(roiIndexes[i]));
              rois[i] = roi;
           }
+       }
+
+       return rois;
+    }
+
+    /**
+     * Gets all the selected ROIs.
+     *
+     * @return ROI array.
+     */
+    public Roi[] getAllROIsInList() {
+
+       // Loop over all Rois in list.
+       int listLength = roijlist.getModel().getSize();
+       Roi[] rois = new Roi[listLength];
+       for (int i = 0; i < listLength; i++) {
+          String roiName = (String)roijlist.getModel().getElementAt(i);
+          System.out.println("getting roi " + roiName);
+          rois[i] = ((Roi)getROIs().get(roijlist.getModel().getElementAt(i)));
        }
 
        return rois;

@@ -144,7 +144,7 @@ public class MimsJTable {
    * @param groups ArrayList of groups. Repeats expected.
    * @param groups ArrayList of pixel values.
    */
-   void createPixelTable(ArrayList<String> names, ArrayList<String> groups, ArrayList<Double> values) {
+   void createPixelTable(String file, ArrayList<String> names, ArrayList<String> groups, ArrayList<Double> values) {
       
       // Input checks.
       if (names == null || groups == null || values == null)
@@ -155,7 +155,7 @@ public class MimsJTable {
          return;
 
       // Get data.
-      Object[][] data = new Object[values.size()][3];
+      Object[][] data = new Object[values.size()][4];
       String group, name = "";
       for(int i = 0; i < values.size(); i++) {
          name = (String)names.get(i);
@@ -168,11 +168,12 @@ public class MimsJTable {
             group = "null";
          if (name.trim().length() == 0)
             name = "null";
-         data[i][0] = group;
-         data[i][1] = name;
-         data[i][2] = (Double)values.get(i);
+         data[i][0] = file;
+         data[i][1] = group;
+         data[i][2] = name;
+         data[i][3] = (Double)values.get(i);
       }
-      String[] columnNames = {"Groups", "Names", "Pixel values"};
+      String[] columnNames = {"File", "Roi Group", "Roi Name", "Pixel value"};
 
       displayTable(data, columnNames);
    }
