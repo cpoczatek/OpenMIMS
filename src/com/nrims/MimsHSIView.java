@@ -1,5 +1,6 @@
 package com.nrims;
 
+import ij.IJ;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -810,6 +811,10 @@ public class MimsHSIView extends javax.swing.JPanel {
           String label = (String) idx[i];
           int numerator = new Integer(label.substring(0, label.indexOf(":"))).intValue();
           int denomator = new Integer(label.substring(label.indexOf(":") + 1, label.length())).intValue();
+          if (numerator >= ui.getOpenMassImages().length) {
+             IJ.error("Error", "Sorry, numerator connot be 1.");
+             continue;
+          }
 
           int ri = ui.getRatioImageIndex(numerator, denomator);
           if (ri > -1) {
@@ -874,6 +879,12 @@ public class MimsHSIView extends javax.swing.JPanel {
           String label = (String) idx[i];
           int numerator = new Integer(label.substring(0, label.indexOf(":"))).intValue();
           int denomator = new Integer(label.substring(label.indexOf(":") + 1, label.length())).intValue();
+
+          if (numerator >= ui.getOpenMassImages().length ||
+                  denomator >= ui.getOpenMassImages().length) {
+             IJ.error("Error", "Numerator and denominator must both be mass images.");
+             return;
+          }
 
           int ri = ui.getHsiImageIndex(numerator, denomator);
           if (ri > -1) {
@@ -1207,7 +1218,18 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         // convert to the form 'Mass 13.01 / Mass 12.99'
         String[] massNames = ui.getOpener().getMassNames();
-        String label = " Mass "+massNames[num]+" / Mass "+massNames[den]+" ";
+        
+        String numLabel, denLabel;
+        if (num == massNames.length)
+           numLabel = "1";
+        else
+           numLabel = " Mass "+massNames[num];
+        if (den == massNames.length)
+           denLabel = "1";
+        else
+           denLabel = "Mass "+massNames[den]+" ";
+
+        String label = numLabel+" / "+denLabel;
 
         // set text
         setText(label);
@@ -1292,6 +1314,16 @@ public class MimsHSIView extends javax.swing.JPanel {
          denomatorPanel.add(jrb_den);
       }
 
+      // Add "1" to both numerator and denominator options.
+      JRadioButton jrb_num = new JRadioButton("1");
+      JRadioButton jrb_den = new JRadioButton("1");
+      jrb_num.setName((new Integer(massNames.length)).toString());
+      jrb_den.setName((new Integer(massNames.length)).toString());
+      numeratorGroup.add(jrb_num);
+      denomatorGroup.add(jrb_den);
+      numeratorPanel.add(jrb_num);
+      denomatorPanel.add(jrb_den);
+
       // Add panels to the frame
       setLayout(new FlowLayout());
       add(numeratorPanel);
@@ -1323,16 +1355,20 @@ public class MimsHSIView extends javax.swing.JPanel {
                den = b;
          }
 
-         // example names: m12.99, m13.01
-         String numName = num.getName();
-         String denName = den.getName();
+         if (num == null || den == null) {
+            JOptionPane.showMessageDialog(ui, "Must select both numerator and denominator", "Error", JOptionPane.ERROR_MESSAGE);
+         } else {
+            // example names: m12.99, m13.01
+            String numName = num.getName();
+            String denName = den.getName();
 
-         // Numberator and Denominator can not be the same.
-         if (numName.matches(denName))
-            JOptionPane.showMessageDialog(ui, "Numerator can not be the same as Denominator", "Error", JOptionPane.ERROR_MESSAGE);
-         else {
-            hsiview.addToRatioList(new Integer(num.getName()), new Integer(den.getName()));
-            closeWindow();
+            // Numberator and Denominator can not be the same.
+            if (numName.matches(denName))
+               JOptionPane.showMessageDialog(ui, "Numerator can not be the same as Denominator", "Error", JOptionPane.ERROR_MESSAGE);
+            else {
+               hsiview.addToRatioList(new Integer(num.getName()), new Integer(den.getName()));
+               closeWindow();
+            }
          }
 
       } else if (e.getActionCommand() == "Cancel") {

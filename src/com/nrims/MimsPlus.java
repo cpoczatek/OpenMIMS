@@ -161,12 +161,25 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       int width = op.getWidth();
       int height = op.getHeight();
       double sumPixels[] = new double[width*height];
-      ImageProcessor ipp = new FloatProcessor(width, height, sumPixels);
+      ImageProcessor ipp = new FloatProcessor(width, height, sumPixels);            
       title = "Sum : ";
-      if (sumProps.getSumType() == SumProps.MASS_IMAGE)
-         title += "m" + op.getMassNames()[sumProps.getParentMassIdx()] + " : " + op.getImageFile().getName();
-      else if (sumProps.getSumType() == SumProps.RATIO_IMAGE)
-         title += "m" + op.getMassNames()[sumProps.getNumMassIdx()] + "/m" + op.getMassNames()[sumProps.getDenMassIdx()] + " : " + op.getImageFile().getName();
+      if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
+         if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length)
+            title += "1";
+         else 
+            title += "m" + op.getMassNames()[sumProps.getParentMassIdx()] + " : " + op.getImageFile().getName();
+      } else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
+         String numString, denString;
+         if (sumProps.getNumMassIdx() == ui.getOpenMassImages().length)
+            numString = "1";
+         else
+            numString = "m" + op.getMassNames()[sumProps.getNumMassIdx()];
+         if (sumProps.getDenMassIdx() == ui.getOpenMassImages().length)
+            denString = "1";
+         else
+            denString = "m" + op.getMassNames()[sumProps.getDenMassIdx()];
+         title += numString + "/" + denString + " : " + op.getImageFile().getName();
+      }
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
       //before listeners were added in compute...
@@ -213,9 +226,16 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       float[] pixels = new float[width * height];
       ImageProcessor ip = new FloatProcessor(width, height, pixels, null);
       ip.setMinAndMax(0, 1.0);
-      String numName = ui.getOpener().getMassNames()[props.getNumMassIdx()];
-      String denName = ui.getOpener().getMassNames()[props.getDenMassIdx()];
-      title = "m" + numName + "/m" + denName + " : " + ui.getImageFilePrefix();
+      String numName, denName;
+      if (props.getNumMassIdx() == ui.getOpenMassImages().length)
+         numName = "1";
+      else
+         numName = "m" + ui.getOpener().getMassNames()[props.getNumMassIdx()];
+      if (props.getDenMassIdx() == ui.getOpenMassImages().length)
+         denName = "1";
+      else
+         denName = "m" + ui.getOpener().getMassNames()[props.getDenMassIdx()];
+      title = numName + "/" + denName + " : " + ui.getImageFilePrefix();
       setProcessor(title, ip);
       fStateListeners = new EventListenerList();
       //before listeners were added in compute...
@@ -414,6 +434,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if( this.ratioProps.getRatioScaleFactor()>0 ) {
             rSF = ((Double)this.ratioProps.getRatioScaleFactor()).floatValue();
         }
+
+        // If we are dealing with a ratio image whose numerator or denominator
+        // is "1", we DO NOT need to multiply the ratio by the ratioscalefactor.
+        if (denIndex == ui.getOpenMassImages().length)
+            rSF = (float) 1.0;
+
         for (int i = 0; i < rPixels.length; i++) {
             if( dPixels[i] != 0 && nPixels[i] > numThreshold && dPixels[i] > denThreshold) {
                 rPixels[i] = rSF * ((float) nPixels[i] / (float) dPixels[i]);
@@ -466,30 +492,38 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
           parentIdx = sumProps.getParentMassIdx();
           parentImage = ui.getMassImage(parentIdx);
+          if (parentIdx == ui.getOpenMassImages().length) {
+             int width = getWidth();
+             int height = getHeight();
+             int area = width * height;
+             sumPixels = new double[area];
+             for (int i = 0; i < area; i++)
+                sumPixels[i] = 1;
+          } else {
+             int templength = parentImage.getProcessor().getPixelCount();
+             sumPixels = new double[templength];
 
-          int templength = parentImage.getProcessor().getPixelCount();
-          sumPixels = new double[templength];
-          
-          Object[] o = parentImage.getStack().getImageArray();
-          int numSlices = parentImage.getNSlices();
-          if (o[0] instanceof float[]) {
-            float[] tempPixels = new float[templength];
-            for (int i = 0; i < sumlist.size(); i++) {
-                if (sumlist.get(i) < 1 || sumlist.get(i) > numSlices) continue;
-                tempPixels = (float[])o[sumlist.get(i)-1];
-                for (int j = 0; j < sumPixels.length; j++) {
-                    sumPixels[j] += ((int) ( tempPixels[j] ) );
-                }
-            }
-          } else if (o[0] instanceof short[]) {
-             short[] tempPixels = new short[templength];
-             for (int i = 0; i < sumlist.size(); i++) {
-                if (sumlist.get(i) < 1 || sumlist.get(i) > numSlices) continue;
-                tempPixels = (short[])o[sumlist.get(i)-1];
-                for (int j = 0; j < sumPixels.length; j++) {
-                    sumPixels[j] += ((int) ( tempPixels[j] & 0xffff) );
-                }
-            }
+             Object[] o = parentImage.getStack().getImageArray();
+             int numSlices = parentImage.getNSlices();
+             if (o[0] instanceof float[]) {
+               float[] tempPixels = new float[templength];
+               for (int i = 0; i < sumlist.size(); i++) {
+                   if (sumlist.get(i) < 1 || sumlist.get(i) > numSlices) continue;
+                   tempPixels = (float[])o[sumlist.get(i)-1];
+                   for (int j = 0; j < sumPixels.length; j++) {
+                       sumPixels[j] += ((int) ( tempPixels[j] ) );
+                   }
+               }
+             } else if (o[0] instanceof short[]) {
+                short[] tempPixels = new short[templength];
+                for (int i = 0; i < sumlist.size(); i++) {
+                   if (sumlist.get(i) < 1 || sumlist.get(i) > numSlices) continue;
+                   tempPixels = (short[])o[sumlist.get(i)-1];
+                   for (int j = 0; j < sumPixels.length; j++) {
+                       sumPixels[j] += ((int) ( tempPixels[j] & 0xffff) );
+                   }
+               }
+             }
           }
        }
        // Sum-ratio image
@@ -514,9 +548,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
 
           float rSF = ui.getHSIView().getRatioScaleFactor();
-            if( this.sumProps.getRatioScaleFactor()>0 ) {
-                rSF = ((Double)this.sumProps.getRatioScaleFactor()).floatValue();
-            }
+          if( this.sumProps.getRatioScaleFactor()>0 )
+            rSF = ((Double)this.sumProps.getRatioScaleFactor()).floatValue();
+          if (denIdx == ui.getOpenMassImages().length)
+            rSF = (float) 1.0;
           for (int i = 0; i < sumPixels.length; i++) {
              if (denPixels[i] != 0) {
                  sumPixels[i] = rSF * (numPixels[i] / denPixels[i]);
@@ -677,6 +712,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             int slashindex = tempstring.indexOf("/");
             String neumstring = tempstring.substring(1, slashindex);
             String denstring = tempstring.substring(slashindex + 2, colonindex - 1);
+            if (neumstring == null || neumstring.trim().length() == 0)
+               neumstring = "1";
+            if (denstring == null || denstring.trim().length() == 0)
+               denstring = "1";
             int nint = java.lang.Math.round(Float.parseFloat(neumstring));
             int dint = java.lang.Math.round(Float.parseFloat(denstring));
             return Integer.toString(nint) + "/" + Integer.toString(dint);
@@ -685,11 +724,25 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             SumProps props = this.getSumProps();
             if (props.getSumType() == SumProps.MASS_IMAGE) {
                 int ind = props.getParentMassIdx();
-                return "sum " + ui.getMassImage(ind).getRoundedTitle();
+                String title;
+                if (ind == ui.getOpenMassImages().length)
+                   title = "1";
+                else
+                   title = "sum " + ui.getMassImage(ind).getRoundedTitle();
+                return title;
             } else if (props.getSumType() == SumProps.RATIO_IMAGE) {
                 int den = props.getDenMassIdx();
                 int num = props.getNumMassIdx();
-                return "sum " + ui.getMassImage(num).getRoundedTitle() + "/" + ui.getMassImage(den).getRoundedTitle();
+                String numString, denString = "";
+                if (den == ui.getOpenMassImages().length)
+                   denString = "1";
+                else
+                   denString = ui.getMassImage(den).getRoundedTitle();
+                if (num == ui.getOpenMassImages().length)
+                   numString = "1";
+                else
+                   numString = ui.getMassImage(num).getRoundedTitle();
+                return "sum " + numString + "/" + denString;
             }
         }
         return "0";
