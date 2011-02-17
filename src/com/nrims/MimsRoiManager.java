@@ -355,50 +355,42 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     * Renames the selected group.
     */
     private void renameActionPerformed(ActionEvent e) {
-        int[] idxs = groupjlist.getSelectedIndices();
-        if(idxs.length==0)
-           return;
-        int index = idxs[0];
-        String groupName = (String)groupListModel.get(index);
 
-        String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
-                    JOptionPane.PLAIN_MESSAGE,null,null,"");
+       // Make sure only 1 group is selected.
+       int[] idxs = groupjlist.getSelectedIndices();
+       if(idxs.length==0)
+          return;
+       if(idxs.length>1) {
+          error("Please select only one group to rename.");
+          return;
+       }
 
-        if (newName == null)
-           return;
+       // Prompt user for new name and validate.
+       int index = idxs[0];
+       String groupName = (String)groupListModel.get(index);
+       String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
+          JOptionPane.PLAIN_MESSAGE,null,null,"");
+       if (newName == null)
+          return;
+       newName = newName.trim();
+       if (newName.equals("") || newName.equals(DEFAULT_GROUP))
+          return;
 
-        newName = newName.trim();
+       // Get all rois that belong to that group before we actually rename it.
+       Roi[] g_rois = getAllROIsInList();
 
-        if (newName.equals("") || newName.equals(DEFAULT_GROUP))
-           return;
-                               
         if (addGroup(newName)) {
 
-          // Collect all rois of that group
-          ArrayList<Roi> grprois = new ArrayList<Roi>();
-          for (int id = 0; id < roijlist.getModel().getSize(); id++) {
-             String roiName = roijlist.getModel().getElementAt(id).toString();
-             String roigroupName = (String) groupsMap.get(roiName);
-             if (roigroupName != null) {
-                if (roigroupName.equals(groupName)) {
-                   grprois.add(this.getRoiByName(roiName));
-                }
-             }
-          }
-
-          //update groups
+          // Remove old group entry.
           groups.remove(groupName);
-
-          //update list
           groupListModel.removeElement(groupName);
 
-          //deassign all rois
-          for (int i = 0; i < grprois.size(); i++)
-             groupsMap.remove(grprois.get(i).getName());
+          // Overwrite all previous maps.
+          for (int i = 0; i < g_rois.length; i++)
+             groupsMap.put(g_rois[i].getName(), newName);
 
-          //reassign all rois
-          for (int i = 0; i < grprois.size(); i++)
-             groupsMap.put(grprois.get(i).getName(), newName);
+          // Select new group.
+          groupjlist.setSelectedValue(newName, true);
        }
     }
 
@@ -1551,42 +1543,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }        
         ui.updateAllImages();
         return true;
-    }
-    
-    /**
-     * Renames the selected ROI in an ordered sequence
-     * starting with 1. If a Roi already exists with that
-     * name, it will be adjusted until a unique name is found.
-     * (e.g. 1-1, 1-2, etc)
-     */
-    public void renameGroup(int[] indices){
-
-       String newName, oldName;
-       int idx = 1;
-       for (int i = 0; i < indices.length; i++) {
-          oldName = roiListModel.get(indices[i]).toString();          
-
-          // update rois hashtable
-          Roi roi = (Roi) rois.get(oldName);          
-          rois.remove(oldName);
-          newName = getUniqueName(Integer.toString(idx));
-          roi.setName(newName);
-          rois.put(newName, roi);
-
-          // update locations array.
-          locations.put(newName, locations.get(oldName));
-          locations.remove(oldName);
-
-          // update groups map.
-          String group = (String) groupsMap.remove(oldName);
-          if (group != null)
-             groupsMap.put(newName, group);
-
-          // update the list display.
-          roiListModel.set(indices[i], newName);
-
-          idx++;
-       }
     }
 
     /**
@@ -2935,9 +2891,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        // Loop over all Rois in list.
        int listLength = roijlist.getModel().getSize();
        Roi[] lrois = new Roi[listLength];
-       for (int i = 0; i < listLength; i++) {
-          String roiName = (String)roijlist.getModel().getElementAt(i);
-          System.out.println("getting roi " + roiName);
+       for (int i = 0; i < listLength; i++) {          
           lrois[i] = ((Roi)getROIs().get(roijlist.getModel().getElementAt(i)));
        }
 
