@@ -62,7 +62,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     boolean ignoreInterrupts;
     JPopupMenu pm;
     JButton moreButton;
-    JButton delete;
+    JButton deleteButton;
     JButton rename;
     JCheckBox cbHideAll;
     JCheckBox cbAllPlanes;
@@ -79,9 +79,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     ArrayList groups = new ArrayList<String>();
     ParticlesManager partManager;
     SquaresManager squaresManager;
-    String hideAllRois = new String("Hide All Rois");
-    String moveAllRois = new String("Move All");
-    String hideAllLabels = new String("Hide Labels");
+    String hideAllRois = "Hide All Rois";
+    String moveAllRois = "Move All";
+    String hideAllLabels = "Hide Labels";
     ListSelectionListener groupSelectionListener;
 
    /**
@@ -108,6 +108,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // JList stuff - for ROIs
         roiListModel = new DefaultListModel();
         roijlist = new JList(roiListModel) {
+         @Override
            protected void processMouseEvent(MouseEvent e) {
               if (e.getID() == MouseEvent.MOUSE_PRESSED || e.getID() == MouseEvent.MOUSE_DRAGGED) {
                  if (roijlist.getCellBounds(0, roiListModel.size() - 1).contains(e.getPoint()) == false) {
@@ -158,9 +159,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
          public void actionPerformed(ActionEvent evt) {
             createActionPerformed(evt);
          }});
-        delete = new JButton("Delete");
-        delete.setMargin( new Insets(0, 0, 0, 0) );
-        delete.addActionListener(new ActionListener() {
+        deleteButton = new JButton("Delete");
+        deleteButton.setMargin( new Insets(0, 0, 0, 0) );
+        deleteButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent evt) {
             deleteActionPerformed(evt);
          }});
@@ -203,7 +204,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Left pane - south panel
         southPanel1.setLayout(new GridLayout(2,2));
         southPanel1.add(create);
-        southPanel1.add(delete);
+        southPanel1.add(deleteButton);
         southPanel1.add(rename);
 
         // Left pane - north panel
@@ -710,40 +711,46 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
    }
 
    /** Action method for changing position spinners.*/
-    private void posSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {
-        String label = "";
+   private void posSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {
+      String label = "";
 
-        if (holdUpdate) {
-            return;
-        }
-        if (roijlist.getSelectedIndices().length != 1) {
-            error("Exactly one item in the list must be selected.");
-            return;
-        } else {
-            label = roijlist.getSelectedValue().toString();
-        }
+      if (holdUpdate) {
+         return;
+      }
+      if (roijlist.getSelectedIndices().length != 1) {
+         error("Exactly one item in the list must be selected.");
+         return;
+      } else {
+         label = roijlist.getSelectedValue().toString();
+      }
 
-        // Make sure we have an image
-        ImagePlus imp = getImage();
-        if (imp == null) {
-            return;
-        }
+      // Make sure we have an image
+      ImagePlus imp = getImage();
+      if (imp == null) {
+         return;
+      }
 
+      // Update the
       int plane = imp.getCurrentSlice();
       int trueplane = ui.getmimsAction().trueIndex(plane);
-      ArrayList xylist = (ArrayList<Integer[]>)locations.get(label);
-      xylist.set(trueplane-1, new Integer[] {(Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue()});
+      ArrayList xylist = (ArrayList<Integer[]>) locations.get(label);
+      xylist.set(trueplane - 1, new Integer[]{(Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue()});
       locations.put(label, xylist);
 
-      // For display purposes.
-      Roi roi = (Roi)rois.get(label);
-      roi.setLocation((Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue());
+      // 
+      Roi roi = (Roi) rois.get(label);
+      if (roi.isLine()) {
+         moveLine(roi, (Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue());
+         roi = (Roi) rois.get(roi.getName());
+      } else {
+         roi.setLocation((Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue());
+      }
       imp.setRoi(roi);
       move();
 
       updatePlots(false);
 
-    }
+   }
 
     /** Action method for changing size spinners.*/
      private void hwSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {
@@ -981,10 +988,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           // Disable delete button if Default Group is one of the groups selected.
           //this is why the delete button is a class variable andd the others aren't...
           if (defaultGroupSelected) {
-             delete.setEnabled(false);
+             deleteButton.setEnabled(false);
              rename.setEnabled(false);
           } else {
-             delete.setEnabled(true);
+             deleteButton.setEnabled(true);
              rename.setEnabled(true);
           }
 
@@ -1055,14 +1062,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     private void selectedRoisStats() {
 
         // Get the group of selected rois. Ignore Line type rois.
-        Roi[] rois = getSelectedROIs();
+        Roi[] lrois = getSelectedROIs();
         ArrayList<Roi> roilist = new ArrayList<Roi>();
-        for (int i = 0; i < rois.length; i++) {
-            if (rois[i].getType() != Roi.LINE && rois[i].getType() != Roi.FREELINE && rois[i].getType() != Roi.POLYLINE) {
-                roilist.add(rois[i]);
+        for (int i = 0; i < lrois.length; i++) {
+            if (lrois[i].getType() != Roi.LINE && lrois[i].getType() != Roi.FREELINE && lrois[i].getType() != Roi.POLYLINE) {
+                roilist.add(lrois[i]);
             }
         }
-        if (roilist.size() == 0) {
+        if (roilist.isEmpty()) {
             return;
         }
 
@@ -1218,13 +1225,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
       }
       int plane = 1;
       int t = mp.getMimsType();
-      if( t==mp.RATIO_IMAGE ) {
+      if( t==MimsPlus.RATIO_IMAGE ) {
           plane = ui.getMassImage(mp.getRatioProps().getNumMassIdx()).getCurrentSlice();
-      }else if( t==mp.HSI_IMAGE ) {
+      }else if( t==MimsPlus.HSI_IMAGE ) {
           plane = ui.getMassImage(mp.getHSIProps().getNumMassIdx()).getCurrentSlice();
-      }else if( t==mp.SUM_IMAGE ) {
+      }else if( t==MimsPlus.SUM_IMAGE ) {
           plane = ui.getMassImage(mp.getSumProps().getParentMassIdx()).getCurrentSlice();
-      }else if(t==mp.MASS_IMAGE) {
+      }else if(t==MimsPlus.MASS_IMAGE) {
           plane = mp.getCurrentSlice();
       }
       int trueplane = ui.getmimsAction().trueIndex(plane);
@@ -1251,6 +1258,47 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
       }
       return true;
    }
+
+   /**
+    * Line rois require a special method for moving because
+    * the <code>setlocation()</code> method does not work for
+    * line Rois (at least not the way you would expact, and
+    * not the ways it works for shape Rois).
+    */
+   public void moveLine(Roi oldRoi, int newX, int newY){
+      ImagePlus imp = getImage();
+
+      if (oldRoi.isLine()) {
+        Rectangle rec = oldRoi.getBounds();
+        int oldx = rec.x;
+        int oldy = rec.y;
+        int deltax = newX-oldx;
+        int deltay = newY-oldy;
+        Line lineroi = (Line) oldRoi;
+        Line newline = new Line(lineroi.x1 + deltax, lineroi.y1 + deltay, lineroi.x2 + deltax, lineroi.y2 + deltay, imp);
+        newline.setName(oldRoi.getName());
+        moveLine(oldRoi, newline);
+      }
+   }
+
+   /**
+    * Line rois require a special method for moving because
+    * the <code>setlocation()</code> method does not work for
+    * line Rois (at least not the way you would expact, and
+    * not the ways it works for shape Rois).
+    */
+   public void moveLine(Roi oldRoi, Roi newRoi){
+
+       if (!oldRoi.getName().equals(newRoi.getName()))
+          System.out.println("WARNING: Rois should have the same name.");
+
+       if (!oldRoi.isLine() || !newRoi.isLine())
+          System.out.println("WARNING: Both Rois should be Line.");
+
+       rois.remove(oldRoi.getName());
+       rois.put(newRoi.getName(), newRoi);
+   }
+
 
    /** Sets the Roi in its current location. */
    public boolean move() {
@@ -1305,7 +1353,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         if(rois.isEmpty()) {
             label += 1;
         } else {
-           String maxname = new String("0");
+           String maxname = "0";
            Roi maxroi = getMaxNumericRoi();
            if (maxroi != null)
                 maxname = maxroi.getName();
@@ -1838,7 +1886,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         if (imp == null)
            return false;
 
-        if (rois.size() == 0) {
+        if (rois.isEmpty()) {
             return error("The selection list is empty.");
         }
 
@@ -1984,9 +2032,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        table.setStats(statnames);
        
        // Get rois.
-       Roi[] rois = getSelectedROIs();
-       if (rois.length >= 1) {
-          table.setRois(rois);
+       Roi[] lrois = getSelectedROIs();
+       if (lrois.length >= 1) {
+          table.setRois(lrois);
        } else {
           System.out.println("No rois");
           return;
@@ -2124,9 +2172,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             error("Image with composite selection required");
             return;
         }
-        Roi[] rois = ((ShapeRoi) roi).getRois();
-        for (int i = 0; i < rois.length; i++) {
-            imp.setRoi(rois[i]);
+        Roi[] lrois = ((ShapeRoi) roi).getRois();
+        for (int i = 0; i < lrois.length; i++) {
+            imp.setRoi(lrois[i]);
             add();
         }
     }
@@ -2638,10 +2686,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // make sure we have Rois.
         img.killRoi();
-        Roi[] rois = this.getSelectedROIs();
-        if(rois==null || rois.length == 0) {
-           rois = getAllROIsInList();
-           if (rois==null || rois.length == 0) {
+        Roi[] lrois = this.getSelectedROIs();
+        if(lrois==null || lrois.length == 0) {
+           lrois = getAllROIsInList();
+           if (lrois==null || lrois.length == 0) {
               IJ.error("No rois in list.");
               return;
            }
@@ -2655,10 +2703,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Collect all the pixels within the highlighted rois.
         ArrayList<Double> values = new ArrayList<Double>();
-        ArrayList<String> groups = new ArrayList<String>();
+        ArrayList<String> lgroups = new ArrayList<String>();
         ArrayList<String> names  = new ArrayList<String>();
         DecimalFormat twoDForm = new DecimalFormat("#.##");
-        for (Roi roi : rois) {
+        for (Roi roi : lrois) {
             img.setRoi(roi);
             double[] roipixels = img.getRoiPixels();
             String group = getRoiGroup(roi.getName());
@@ -2667,21 +2715,21 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 		             values.add(Double.valueOf(twoDForm.format(pixel)));
                 else
                    values.add(pixel);
-                groups.add(group);
+                lgroups.add(group);
                 names.add(roi.getName());
             }
             img.killRoi();
         }
 
         if (values == null) return;
-        if (values.size() == 0) return;
+        if (values.isEmpty()) return;
 
        // Create table.
        MimsJTable tbl = new MimsJTable(ui);
        MimsPlus[] imgs = new MimsPlus[1];
        imgs[0] = img;
        tbl.setImages(imgs);
-       tbl.createPixelTable(ui.getImageFilePrefix(), names, groups, values);
+       tbl.createPixelTable(ui.getImageFilePrefix(), names, lgroups, values);
        tbl.showFrame();
     }
 
@@ -2698,20 +2746,20 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
 
         img.killRoi();
-        Roi[] rois = this.getSelectedROIs();
-        if(rois==null) return;
-        if(rois.length == 0) return;
+        Roi[] lrois = this.getSelectedROIs();
+        if(lrois==null) return;
+        if(lrois.length == 0) return;
 
         // Collect all the pixels within the highlighted rois.
         ArrayList<Double> values = new ArrayList<Double>();
-        ArrayList<String> groups = new ArrayList<String>();
-        for (Roi roi : rois) {
+        ArrayList<String> lgroups = new ArrayList<String>();
+        for (Roi roi : lrois) {
             img.setRoi(roi);
             double[] roipixels = img.getRoiPixels();
             String group = getRoiGroup(roi.getName());
             for (double pixel : roipixels) {
                 values.add(pixel);
-                groups.add(group);
+                lgroups.add(group);
             }
             img.killRoi();
         }
@@ -2724,7 +2772,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Fill in the table.
         for(int i = 0; i<values.size(); i++) {
             rTable.incrementCounter();
-            String group = groups.get(i);
+            String group = lgroups.get(i);
             if (group == null)
                group = "null";
             rTable.setLabel(group, i);
@@ -2736,14 +2784,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         ui.setIJDefaultDir(ui.getImageDir());
 
         // Set title and show table.
-        String title = "";
+        String ltitle = "";
         if (img.getMimsType() == MimsPlus.MASS_IMAGE)
-           title = ui.getImageFilePrefix() + "_m"+img.getRoundedTitle();
+           ltitle = ui.getImageFilePrefix() + "_m"+img.getRoundedTitle();
         if (img.getMimsType() == MimsPlus.RATIO_IMAGE)
-           title = ui.getImageFilePrefix() + "_m"+img.getNumeratorImage().getRoundedTitle()+"_m"+img.getDenominatorImage().getRoundedTitle();
-        if (rois.length == 1)
-           title += "_roi"+rois[0].getName();
-        rTable.show(title);
+           ltitle = ui.getImageFilePrefix() + "_m"+img.getNumeratorImage().getRoundedTitle()+"_m"+img.getDenominatorImage().getRoundedTitle();
+        if (lrois.length == 1)
+           ltitle += "_roi"+lrois[0].getName();
+        rTable.show(ltitle);
         
     }
 
@@ -2860,21 +2908,21 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
        // initialize variables.
        Roi roi;
-       Roi[] rois;
+       Roi[] lrois;
 
        // get selected indexes.
        int[] roiIndexes = roijlist.getSelectedIndices();
        if (roiIndexes.length == 0) {
-                rois = new Roi[0];
+                lrois = new Roi[0];
           } else {
-          rois = new ij.gui.Roi[roiIndexes.length];
+          lrois = new ij.gui.Roi[roiIndexes.length];
           for (int i = 0; i < roiIndexes.length; i++) {
              roi = (ij.gui.Roi) getROIs().get(roijlist.getModel().getElementAt(roiIndexes[i]));
-             rois[i] = roi;
+             lrois[i] = roi;
           }
        }
 
-       return rois;
+       return lrois;
     }
 
     /**
@@ -2886,14 +2934,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
        // Loop over all Rois in list.
        int listLength = roijlist.getModel().getSize();
-       Roi[] rois = new Roi[listLength];
+       Roi[] lrois = new Roi[listLength];
        for (int i = 0; i < listLength; i++) {
           String roiName = (String)roijlist.getModel().getElementAt(i);
           System.out.println("getting roi " + roiName);
-          rois[i] = ((Roi)getROIs().get(roijlist.getModel().getElementAt(i)));
+          lrois[i] = ((Roi)getROIs().get(roijlist.getModel().getElementAt(i)));
        }
 
-       return rois;
+       return lrois;
     }
 
     /** 

@@ -994,10 +994,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         if(bStateChanging) return;
 
-        //Roi[] rois1 = ui.getRoiManager().getAllListedROIs();
-        //Roi[] rois2 = ui.getRoiManager().getAllROIs();
-        //int y = 0;
-
          float[] pix;
          if (this.nType == HSI_IMAGE ) {
             internalRatio.setRoi(getRoi());
@@ -1161,7 +1157,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         }
 
         // Loop over all Rois, determine which one to highlight.
-        int displayDigits = 3;
+        int displayDigits = 2;
         java.util.Hashtable rois = ui.getRoiManager().getROIs();
 
         Roi smallestRoi = null;
@@ -1177,12 +1173,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             if (!((DefaultListModel)ui.getRoiManager().getList().getModel()).contains(loopRoi.getName()))
                continue;            
 
-            boolean linecheck = false;
+            boolean linecheck = false;            
             int c = -1;
             if( (loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE) || (loopRoi.getType() == Roi.FREELINE) ) {
                 c = loopRoi.isHandle(x, y);
                 if(c != -1) linecheck=true;
-
             }
 
             if(loopRoi.contains(mX, mY) || linecheck) {
@@ -1192,9 +1187,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                       stats = internalRatio.getStatistics();
                       internalRatio.killRoi();
                   } else {
-                     setRoi(loopRoi);
-                     stats = this.getStatistics();
-                     killRoi();
+                      setRoi(loopRoi);
+                      stats = this.getStatistics();
+                      killRoi();
                   }
 
                   // Set as smallest Roi that the mouse is within and save stats
@@ -1238,8 +1233,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
         }
         //set image roi for vizualization
-        setRoi(smallestRoi);
         if (smallestRoi != null) {
+           setRoi(smallestRoi);
            if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE)
               msg += "\t ROI " + roi.getName() + ": L=" + IJ.d2s(roi.getLength(), 0);
            else
@@ -1342,7 +1337,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        int displayDigits = 3;
 
        // Get the ROI, (the area in yellow).
-      Roi roi = getRoi();
+       Roi roi = getRoi();
 
         double sf = 1.0;
         if (this.getMimsType() == HSI_IMAGE) {
@@ -1428,8 +1423,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             return;
         }
         // Update histogram (area Rois only).
-        if ((roi.getType() == roi.FREEROI) || (roi.getType() == roi.OVAL) ||
-                (roi.getType() == roi.POLYGON) || (roi.getType() == roi.RECTANGLE)) {
+        if ((roi.getType() == Roi.FREEROI) || (roi.getType() == Roi.OVAL) ||
+                (roi.getType() == Roi.POLYGON) || (roi.getType() == Roi.RECTANGLE)) {
             int imageLabel = ui.getRoiManager().getIndex(roi.getName()) + 1;
             String label = getShortTitle() + " Roi: (" + imageLabel + ")";
             double[] roiPix;
@@ -1447,26 +1442,27 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     }
 
-    /**
-     * Update image line profile. Line profiles for ratio images and
-     * HSI images should be identical.
-     */
-    private void updateLineProfile() {
-        if (roi == null) {
-            return;
-        }
-        // Line profiles for ratio images and HSI images should be identical.
-        if ((roi.getType() == roi.LINE) || (roi.getType() == roi.POLYLINE) || (roi.getType() == roi.FREELINE)) {
-            if (this.nType == HSI_IMAGE) {
-                internalRatio.setRoi(getRoi());
-                ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(internalRatio);
-                internalRatio.killRoi();
-                ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
-            } else {
-                ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(this);
-                ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
-            }
-        }
+   /**
+    * Update image line profile. Line profiles for ratio images and
+    * HSI images should be identical.
+    */
+   private void updateLineProfile() {
+      if (roi == null)
+         return;
+
+      if (!roi.isLine())
+         return;
+
+      // Line profiles for ratio images and HSI images should be identical.
+      if (this.nType == HSI_IMAGE) {
+         internalRatio.setRoi(getRoi());
+         ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(internalRatio);
+         internalRatio.killRoi();
+         ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
+      } else {
+         ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(this);
+         ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
+      }
 
    }
 

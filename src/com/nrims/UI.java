@@ -65,7 +65,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public static final String SAVE_SESSION = "Save Session";
 
     public int maxMasses = 8;
-    private int ratioScaleFactor = 10000;
     private double medianFilterRadius = 1;
     
     private boolean bSyncStack = true;
@@ -371,7 +370,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
-    /**
+   /**
     * Brings up the graphical pane for selecting files to be opened.
     */
    public synchronized File loadMIMSFile() {
@@ -1299,6 +1298,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         } else if (evt.getAttribute() == MimsPlusEvent.ATTR_ROI_MOVED) {
             MimsRoiManager rm = getRoiManager();
+            Roi roi = evt.getRoi();
+
+            // Lines have to be treated specially.
+            if(roi.isLine()) {
+               rm.moveLine(rm.getRoiByName(roi.getName()), roi);
+            }
+
             rm.move();
         }
 
