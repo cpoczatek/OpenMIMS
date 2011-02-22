@@ -2362,7 +2362,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
    File file;
    MimsJFileChooser fc = new MimsJFileChooser(this);
    if (this.getImageFilePrefix() != null)
-      fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + "_m"+imp.getRoundedTitle() + ".png"));
+      fc.setSelectedFile(new File(getExportName(imp) + ".png"));
    MIMSFileFilter mff_png = new MIMSFileFilter("png");
    mff_png.setDescription("Snapshot image");
    fc.addChoosableFileFilter(mff_png);

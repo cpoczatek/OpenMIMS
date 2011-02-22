@@ -319,7 +319,7 @@ public class MimsJFreeChart extends JFrame {
                   // Generate a name for the dataset.
                   if (seriesname[i][j][k] == null) {
                      seriesname[i][j][k] = image.getShortTitle();
-                     seriesname[i][j][k] = seriesname[i][j][k] + " " + stats[k] + " \n" + "r" + (ui.getRoiManager().getIndex(rois[i].getName()) + 1);
+                     seriesname[i][j][k] = seriesname[i][j][k] + " " + stats[k] + " \n" + "r" + rois[i].getName();
                   }
 
                   // Add data to the series.

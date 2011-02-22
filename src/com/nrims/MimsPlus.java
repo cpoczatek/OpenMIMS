@@ -980,7 +980,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
          Rectangle r = getRoi().getBounds();
          x1 = r.x; y1 = r.y; w1 = r.width; h1 = r.height;
 
-      }else if(getRoi() != null && ( ij.IJ.shiftKeyDown() && ij.IJ.controlKeyDown() ) ) {
+      } else if(getRoi() != null && ( ij.IJ.shiftKeyDown() && ij.IJ.controlKeyDown() ) ) {
           this.killRoi();
           bMoving = false;
 

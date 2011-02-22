@@ -511,7 +511,7 @@ public class MimsJTable {
                String prefix = "_";
                if (images[j].getType() == MimsPlus.MASS_IMAGE || images[j].getType() == MimsPlus.RATIO_IMAGE)
                   prefix = "_m";
-               header = stat + prefix + images[j].getRoundedTitle() + "_r" + (ui.getRoiManager().getIndex(rois[i].getName())+1);
+               header = stat + prefix + images[j].getRoundedTitle() + "_r" + rois[i].getName();
                columnNamesArray.add(header);
                col++;
             }
