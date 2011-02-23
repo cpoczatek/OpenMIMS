@@ -369,7 +369,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        int index = idxs[0];
        String groupName = (String)groupListModel.get(index);
        String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
-          JOptionPane.PLAIN_MESSAGE,null,null,"");
+          JOptionPane.PLAIN_MESSAGE,null,null,groupName);
        if (newName == null)
           return;
        newName = newName.trim();
