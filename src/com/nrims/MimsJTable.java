@@ -278,6 +278,8 @@ public class MimsJTable {
       Object data[][] = new Object[nRows][nCols];
       int plane = (Integer) planes.get(0);
       MimsPlus image = images[0];
+      if (image.getMimsType() == MimsPlus.HSI_IMAGE)
+         image = image.internalRatio;
       Roi roi;
       String stat;
 

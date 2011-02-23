@@ -1357,7 +1357,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
    /**
     * Returns the prefix of the current data files name.
-    * For example: test_file. im = test_file
+    * For example: test_file.im = test_file
     *
     * @return prefix file name.
     */

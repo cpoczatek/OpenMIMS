@@ -76,6 +76,15 @@ public class AutoTrack implements Runnable {
     }
 
     /**
+     * Constructor
+     * @param imp image object to use
+     */
+    public AutoTrack(ImagePlus imp) {
+        this.ui = null;
+        this.imp = imp;
+    }
+
+    /**
      * Sets the array of plane numbers from which the
      * image to be tracked is derived. It is NOT NECESSARY
      * to set this member variable, it is only used for
@@ -92,7 +101,8 @@ public class AutoTrack implements Runnable {
      */
     public void run() {
         double[][] trans = track(this.imp);
-        ui.getmimsStackEditing().notifyComplete(trans);
+        if (ui != null)
+           ui.getmimsStackEditing().notifyComplete(trans);
     }
 
     private double[][] track(ImagePlus imp) {
@@ -188,7 +198,8 @@ public class AutoTrack implements Runnable {
 
             //System.out.println(percent);
             System.out.println(planesDone);
-            ui.updateStatus(planesDone + " planes of " + planesTotal + " total...");
+            if (ui != null)
+               ui.updateStatus(planesDone + " planes of " + planesTotal + " total...");
         }
         if ((1 < targetSlice) && (targetSlice < imp.getStackSize())) {
             globalTransform[0][0] = 1.0;
@@ -222,7 +233,7 @@ public class AutoTrack implements Runnable {
         trans[0][1] = 0;
         for (int s = targetSlice + 1; (s <= size); s++) {
 
-            if (ui.getmimsStackEditing().STATE == MimsStackEditor.CANCEL) {
+            if (ui != null && ui.getmimsStackEditing().STATE == MimsStackEditor.CANCEL) {
                 return null;
             }
 
@@ -248,7 +259,7 @@ public class AutoTrack implements Runnable {
             planesDone = planesDone + 1;
 
             // Display purposes only.
-            if (ui.getMassImage(0) == null) {
+            if (ui == null || ui.getMassImage(0) == null) {
                 //do nothing
             } else if (includeList.size() >= s && includeList.get(s-1) != null) {
                 ui.getMassImage(0).setSlice(includeList.get(s-1));
