@@ -25,10 +25,10 @@ import ij.plugin.PlugIn;
 import java.io.*;
 import java.util.Date;
                           
-public class Nrrd_Writer implements PlugIn {
+public class Nrrd_Writer {
 
-    static private UI ui;
-    private static final String plugInName = "Nrrd Writer";
+   private static Opener op;
+   private static final String plugInName = "Nrrd Writer";
 	private static final String noImages = plugInName+"...\n"+ "No images are open.";
 	private static final String supportedTypes =
 		plugInName+"..." + "Supported types:\n\n" +
@@ -46,32 +46,12 @@ public class Nrrd_Writer implements PlugIn {
 
     // Constructor.
     public Nrrd_Writer(UI ui) {
-       this.ui=ui;
+       op = ui.getOpener();
     }
 
-    // Save the open images int the .nrrd file format.
-	public void run(String arg) {
-
-        // Get all mass images.
-        ImagePlus[] imp = ui.getOpenMassImages();
-		if (imp == null) {
-			IJ.showMessage(noImages);
-			return;
-		}
-
-        // Get name.
-		String name = arg;
-		if (arg == null || arg.equals("")) {
-			name = ui.getImageFilePrefix();
-		}
-
-        // Open save dialog box.
-		SaveDialog sd = new SaveDialog(plugInName+"...", name, ".nrrd");
-		String file = sd.getFileName();
-		if (file == null) return;
-		String directory = sd.getDirectory();
-		save(imp, directory, file);
-	}
+    public Nrrd_Writer(Opener opener) {
+       op = opener;
+    }
 
     //
 	public File save(ImagePlus[] imp, String directory, String file) {
@@ -81,7 +61,7 @@ public class Nrrd_Writer implements PlugIn {
 		}
 
       // Get FileInfo for each image although only the one is rfeally needed for the header.
-		FileInfo[] fi = new FileInfo[ui.getOpener().getNMasses()];
+		FileInfo[] fi = new FileInfo[op.getNMasses()];
         for (int i = 0; i < fi.length; i++) {
             fi[i] = imp[i].getFileInfo();
         }
@@ -168,7 +148,7 @@ public class Nrrd_Writer implements PlugIn {
         out.write("dimension: "+dimension+"\n");
 		
         // Sizes.
-        out.write("sizes: "+fi.width+" "+fi.height+" "+fi.nImages+" "+ui.getOpener().getNMasses()+"\n");
+        out.write("sizes: "+fi.width+" "+fi.height+" "+fi.nImages+" "+op.getNMasses()+"\n");
 
         // Kinds.
         out.write("kinds: space space space list\n");
@@ -206,45 +186,45 @@ public class Nrrd_Writer implements PlugIn {
 
        // Mass numbers
        line = Opener.Mims_mass_numbers+Opener.Nrrd_seperator;
-       for (int i=0; i<ui.getOpener().getNMasses(); i++)
-          line += ui.getOpener().getMassNames()[i]+" ";
+       for (int i=0; i< op.getNMasses(); i++)
+          line += op.getMassNames()[i]+" ";
        out.write(line+"\n");
 
        // Position
-       out.write(Opener.Mims_position+Opener.Nrrd_seperator+ui.getOpener().getPosition()+"\n");
+       out.write(Opener.Mims_position+Opener.Nrrd_seperator+op.getPosition()+"\n");
 
        // Date
-       out.write(Opener.Mims_date+Opener.Nrrd_seperator+ui.getOpener().getSampleDate()+"\n");
+       out.write(Opener.Mims_date+Opener.Nrrd_seperator+op.getSampleDate()+"\n");
 
        // Hour
-       out.write(Opener.Mims_hour+Opener.Nrrd_seperator+ui.getOpener().getSampleHour()+"\n");
+       out.write(Opener.Mims_hour+Opener.Nrrd_seperator+op.getSampleHour()+"\n");
 
        // Username
-       out.write(Opener.Mims_user_name+Opener.Nrrd_seperator+ui.getOpener().getUserName()+"\n");
+       out.write(Opener.Mims_user_name+Opener.Nrrd_seperator+op.getUserName()+"\n");
 
        // Sample name
-       out.write(Opener.Mims_sample_name+Opener.Nrrd_seperator+ui.getOpener().getSampleName()+"\n");
+       out.write(Opener.Mims_sample_name+Opener.Nrrd_seperator+op.getSampleName()+"\n");
 
        // Dwell time
-       out.write(Opener.Mims_dwell_time+Opener.Nrrd_seperator+ui.getOpener().getDwellTime()+"\n");
+       out.write(Opener.Mims_dwell_time+Opener.Nrrd_seperator+op.getDwellTime()+"\n");
 
        // Count time
-       out.write(Opener.Mims_count_time+Opener.Nrrd_seperator+ui.getOpener().getCountTime()+"\n");
+       out.write(Opener.Mims_count_time+Opener.Nrrd_seperator+op.getCountTime()+"\n");
 
        // Duration
-       out.write(Opener.Mims_duration+Opener.Nrrd_seperator+ui.getOpener().getDuration()+"\n");
+       out.write(Opener.Mims_duration+Opener.Nrrd_seperator+op.getDuration()+"\n");
 
        // Raster
-       out.write(Opener.Mims_raster+Opener.Nrrd_seperator+ui.getOpener().getRaster()+"\n");
+       out.write(Opener.Mims_raster+Opener.Nrrd_seperator+op.getRaster()+"\n");
 
        // Pixel width
-       out.write(Opener.Mims_pixel_width+Opener.Nrrd_seperator+ui.getOpener().getPixelWidth()+"\n");
+       out.write(Opener.Mims_pixel_width+Opener.Nrrd_seperator+op.getPixelWidth()+"\n");
 
        // Pixel height
-       out.write(Opener.Mims_pixel_height+Opener.Nrrd_seperator+ui.getOpener().getPixelHeight()+"\n");
+       out.write(Opener.Mims_pixel_height+Opener.Nrrd_seperator+op.getPixelHeight()+"\n");
 
        // Image Notes
-       String notes = ui.getOpener().getNotes();
+       String notes = op.getNotes();
        //this is redundant but
        //double checking that file is written with no \n's
        notes = outputFormatNotes(notes);

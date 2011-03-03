@@ -294,7 +294,7 @@ public class MimsJFreeChart extends JFrame {
       XYSeriesCollection dataset = new XYSeriesCollection();
       XYSeries series[][][] = new XYSeries[rois.length][images.length][stats.length];
       String seriesname[][][] = new String[rois.length][images.length][stats.length];
-      ImageStatistics tempstats = null;
+      ImageStatistics imageStats = null;
       int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
 
       // Image loop
@@ -331,8 +331,8 @@ public class MimsJFreeChart extends JFrame {
                   Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
                   rois[i].setLocation(xy[0], xy[1]);
                   image.setRoi(rois[i]);
-                  tempstats = image.getStatistics();
-                  series[i][j][k].add(((Integer) planes.get(ii)).intValue(), getSingleStat(tempstats, stats[k]));
+                  imageStats = image.getStatistics(MimsJTable.mOptions);
+                  series[i][j][k].add(((Integer) planes.get(ii)).intValue(), getSingleStat(imageStats, stats[k]));
 
                } // End of Stat
             } // End of Roi
@@ -524,18 +524,12 @@ public class MimsJFreeChart extends JFrame {
             return stats.minor;
         if(statname.equals("angle"))
             return stats.angle;
-        if(statname.equals("feret"))
-            return stats.FERET;
         if(statname.equals("sum"))
             return (stats.pixelCount*stats.mean);
         if(statname.equals("median"))
             return stats.median;
         if(statname.equals("kurtosis"))
             return stats.kurtosis;
-        if(statname.equals("areafraction"))
-            return stats.AREA_FRACTION;
-        if(statname.equals("perimeter"))
-            return stats.PERIMETER;
 
         return -999;
     }

@@ -57,6 +57,15 @@ public class MimsJTable {
    static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
    static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
 
+   public static final int mOptions = ImageStatistics.AREA+ImageStatistics.MEAN+ImageStatistics.STD_DEV +
+                 ImageStatistics.MODE+ImageStatistics.MIN_MAX+ImageStatistics.CENTROID +
+                 ImageStatistics.CENTER_OF_MASS+ImageStatistics.PERIMETER+ImageStatistics.LIMIT +
+                 ImageStatistics.RECT+ImageStatistics.LABELS+ImageStatistics.ELLIPSE +
+                 ImageStatistics.INVERT_Y+ImageStatistics.CIRCULARITY+ImageStatistics.SHAPE_DESCRIPTORS +
+                 ImageStatistics.INTEGRATED_DENSITY+ImageStatistics.MEDIAN +
+                 ImageStatistics.SKEWNESS+ImageStatistics.KURTOSIS + ImageStatistics.SLICE +
+                 ImageStatistics.STACK_POSITION+ImageStatistics.SCIENTIFIC_NOTATION;
+
    public MimsJTable(UI ui) {
       this.ui = ui;
    }
@@ -309,6 +318,7 @@ public class MimsJTable {
       }
 
       // Fill in the data.
+      ImageStatistics imageStats = null;
       for (int row = 0; row < rois.length; row++) {
          roi = rois[row];
          int colnum = SUM_IMAGE_MANDOTORY_COLUMNS.length;
@@ -323,7 +333,7 @@ public class MimsJTable {
             Integer[] xy = ui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
             rois[row].setLocation(xy[0], xy[1]);
             image.setRoi(rois[row]);
-            ImageStatistics tempstats = image.getStatistics();
+            imageStats = image.getStatistics(mOptions);
 
             // "Group" is a mandatory row, so ignore if user selected it.
             if (stat.startsWith(GROUP))
@@ -332,7 +342,7 @@ public class MimsJTable {
             // No decimal for area statistic.
             if (stat.equals(AREA))
                precision = 0;
-            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stat), precision);
+            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stat), precision);
 
             colnum++;
          }
@@ -358,7 +368,7 @@ public class MimsJTable {
       Roi roi;
       MimsPlus image;
       String stat;
-      ImageStatistics tempstats;      
+      ImageStatistics imageStats;
 
       // Fill in "mandatory" fields... ususally non-numeric file/Roi information.
       for (int row = 0; row < rois.length; row++) {
@@ -400,7 +410,7 @@ public class MimsJTable {
                   Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), plane);
                   roi.setLocation(xy[0], xy[1]);
                   image.setRoi(roi);
-                  tempstats = image.getStatistics();
+                  imageStats = image.getStatistics(mOptions);
 
                   // "Group" is a mandatory row, so ignore if user selected it.
                   if (stat.startsWith(GROUP))
@@ -410,12 +420,12 @@ public class MimsJTable {
                   if (col1 == 0) {
                      if (stat.equals(AREA))
                         precision = 0;                     
-                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stat), precision);
+                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stat), precision);
                   } else {
                      if (stat.equals(AREA))
                         continue;
                      else
-                        data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stat), precision);
+                        data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stat), precision);
                   }
                   colnum++;
                }
@@ -431,7 +441,7 @@ public class MimsJTable {
    private Object[][] getDataSet() {
 
       // initialize variables.
-      ImageStatistics tempstats = null;
+      ImageStatistics imageStats = null;
       int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
       Object[][] data = new Object[planes.size()][rois.length * images.length * stats.length + 1];
 
@@ -456,7 +466,7 @@ public class MimsJTable {
                   Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
                   rois[i].setLocation(xy[0], xy[1]);
                   image.setRoi(rois[i]);
-                  tempstats = image.getStatistics();
+                  imageStats = image.getStatistics(mOptions);                  
                   if (j == 0) {
                      if (stats[k].startsWith("area"))
                         precision = 0;
@@ -467,12 +477,12 @@ public class MimsJTable {
                         else
                            data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
                      } else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), precision);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stats[k]), precision);
                   } else {
                      if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
                         continue;
                      else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(tempstats, stats[k]), precision);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stats[k]), precision);
 
                   }
                   col++;
