@@ -1420,6 +1420,52 @@ public class MimsChartPanel extends JPanel implements ChartChangeListener,
     }
 
     /**
+     * Returns <code>true</code> if the point (x,y) belongs to an
+     * AxisEntity, otherwise returns <code>false</code>.
+     * @param viewX the x position
+     * @param viewY the y position
+     * @return true if point (x,y) belongs to an AxisEntity.
+     */
+    private boolean isAxisEntity(int viewX, int viewY) {
+
+       ChartEntity chartEntity = null;
+       EntityCollection entities = this.info.getEntityCollection();
+       for (int i = 0; i < entities.getEntities().size(); i++) {
+          chartEntity = entities.getEntity(i);
+          if (chartEntity instanceof AxisEntity) {
+            if (chartEntity.getArea().contains(viewX, viewY)) {
+               return true;
+             }
+          }
+       }
+       return false;
+    }
+
+
+    /**
+     * Returns the AxisEntity belonging to point (x,y). Returns
+     * <code>null</code> if point does not belong to an AxisEntity.
+     * @param viewX the x position
+     * @param viewY the y position
+     * @return the AxisEntity, otherwise null.
+     */
+    private AxisEntity getAxisEntity(int viewX, int viewY) {
+
+       AxisEntity axisEntity = null;
+       ChartEntity chartEntity = null;
+       EntityCollection entities = this.info.getEntityCollection();
+       for (int i = 0; i < entities.getEntities().size(); i++) {
+          chartEntity = entities.getEntity(i);
+          if (chartEntity instanceof AxisEntity) {
+            if (chartEntity.getArea().contains(viewX, viewY)) {
+               axisEntity = (AxisEntity)chartEntity;
+             }
+          }
+       }
+       return axisEntity;
+    }
+
+    /**
      * Returns the flag that controls whether or not the offscreen buffer
      * needs to be refreshed.
      *
@@ -1722,6 +1768,8 @@ public class MimsChartPanel extends JPanel implements ChartChangeListener,
     public void mousePressed(MouseEvent e) {
         Plot plot = this.chart.getPlot();
         ChartEntity entity = null;
+        AxisEntity axisEntity = null;
+        boolean isAxisEntity = false;
 
        // Get the entity the mouse is over (PlotEntity, LegendEntity, AxisEntity...)
        EntityCollection entities = this.info.getEntityCollection();
@@ -1733,15 +1781,20 @@ public class MimsChartPanel extends JPanel implements ChartChangeListener,
                   getEntityForPoint(
                   (int) e.getX(),
                   (int) e.getY());
+          
+          isAxisEntity = isAxisEntity((int) e.getX(), (int) e.getY());
+          if (isAxisEntity)
+             axisEntity = getAxisEntity((int) e.getX(), (int) e.getY());
+
        }
 
         if (e.isPopupTrigger()) {
                 if (this.popup != null) {
                     displayPopupMenu(e.getX(), e.getY());
                 }
-        } else if (entity instanceof AxisEntity && plot instanceof XYPlot) {
+        } else if (isAxisEntity && plot instanceof XYPlot) {
            XYPlot xyplot = (XYPlot) plot;
-           String entityLabel = ((AxisEntity)entity).getAxis().getLabel();
+           String entityLabel = axisEntity.getAxis().getLabel();
            String domainAxisLabel = xyplot.getDomainAxis().getLabel();
            String rangeAxisLabel = xyplot.getRangeAxis().getLabel();
 
