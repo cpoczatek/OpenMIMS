@@ -284,7 +284,7 @@ public class MimsData extends javax.swing.JPanel {
                 else massNames += "]";
             }
             jLabel18.setText(massNames);
-            jLabel22.setText(image.getHeight() +" x " + image.getWidth());
+            jLabel22.setText(image.getWidth() +" x " + image.getHeight());
             
             syncjCheckBox.setEnabled(image.getNImages() > 1);
         }

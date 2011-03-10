@@ -1243,6 +1243,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
            updateLineProfile();
            if((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE) && numeratorStats!=null && denominatorStats!=null) {
                double ratio_means = sf*(numeratorStats.mean/denominatorStats.mean);
+               if (this.getMimsType()==HSI_IMAGE && ui.getIsPercentTurnover())
+                  ratio_means = smallestRoiStats.mean;
                msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
            }
         }

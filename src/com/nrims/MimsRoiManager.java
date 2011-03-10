@@ -1398,10 +1398,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
         
         String label = "";
-        if(rois.isEmpty()) {
+        Roi maxRoi = getMaxNumericRoi();
+        if(rois.isEmpty() || maxRoi == null) {
             label += 1;
         } else {
-            String maxname = getMaxNumericRoi().getName();
+            String maxname = maxRoi.getName();
             int m = Integer.parseInt(maxname);
             m = m +1;
             label += m;

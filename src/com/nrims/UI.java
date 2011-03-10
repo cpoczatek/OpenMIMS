@@ -2308,7 +2308,7 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 /** Action method for File>About menu item. Displays basic information about the Open Mims plugins. */
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
-    String message = "OpenMIMS v1.0 " + this.revisionNumber + "\n\n";
+    String message = "OpenMIMS v1.4 " + this.revisionNumber + "\n\n";
     message += "OpenMIMS was developed at NRIMS, the National Resource \n";
     message += "for Imaging Mass Spectrometry. \n";
     message += "http://www.nrims.hms.harvard.edu/ \n";
