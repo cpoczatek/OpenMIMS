@@ -323,17 +323,16 @@ public class MimsJTable {
          roi = rois[row];
          int colnum = SUM_IMAGE_MANDOTORY_COLUMNS.length;
          
+         // Set the ROI location.
+         Integer[] xy = ui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
+         rois[row].setLocation(xy[0], xy[1]);
+         image.setRoi(rois[row]);
+
          for (int col = 0; col < stats.length; col++) {
             stat = stats[col];
 
             // Set decimal precision.
             int precision = 2;
-
-            // Set the ROI location.
-            Integer[] xy = ui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
-            rois[row].setLocation(xy[0], xy[1]);
-            image.setRoi(rois[row]);
-            imageStats = image.getStatistics(mOptions);
 
             // "Group" is a mandatory row, so ignore if user selected it.
             if (stat.startsWith(GROUP))
@@ -342,7 +341,7 @@ public class MimsJTable {
             // No decimal for area statistic.
             if (stat.equals(AREA))
                precision = 0;
-            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stat), precision);
+            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat), precision);
 
             colnum++;
          }
@@ -395,42 +394,41 @@ public class MimsJTable {
          int colnum = SUM_IMAGE_MANDOTORY_COLUMNS.length;
 
          for (int col1 = 0; col1 < images.length; col1++) {
-            image = images[col1];            
+            image = images[col1];
 
-               for (int col2 = 0; col2 < stats.length; col2++) {
-                  stat = stats[col2];
-                  
-                  // Set decimal percision.
-                  int precision = 2;
-                  
-                  // Sum images, by definition, are only 1 plane. Since Rois
-                  // can have different location on different planes, we will
-                  // choose the location for the currently displayed slice.
-                  int plane = ui.getMassImages()[0].getCurrentSlice();
-                  Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), plane);
-                  roi.setLocation(xy[0], xy[1]);
-                  image.setRoi(roi);
-                  imageStats = image.getStatistics(mOptions);
+            // Sum images, by definition, are only 1 plane. Since Rois
+            // can have different location on different planes, we will
+            // choose the location for the currently displayed slice.
+            int plane = ui.getMassImages()[0].getCurrentSlice();
+            Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), plane);
+            roi.setLocation(xy[0], xy[1]);
+            image.setRoi(roi);
 
-                  // "Group" is a mandatory row, so ignore if user selected it.
-                  if (stat.startsWith(GROUP))
+            for (int col2 = 0; col2 < stats.length; col2++) {
+               stat = stats[col2];
+
+               // Set decimal percision.
+               int precision = 2;
+
+               // "Group" is a mandatory row, so ignore if user selected it.
+               if (stat.startsWith(GROUP))
+                  continue;
+
+               // Some stats we only want to put in once, like "area".
+               if (col1 == 0) {
+                  if (stat.equals(AREA))
+                     precision = 0;
+                  data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat), precision);
+               } else {
+                  if (stat.equals(AREA))
                      continue;
-
-                  // Some stats we only want to put in once, like "area".
-                  if (col1 == 0) {
-                     if (stat.equals(AREA))
-                        precision = 0;                     
-                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stat), precision);
-                  } else {
-                     if (stat.equals(AREA))
-                        continue;
-                     else
-                        data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stat), precision);
-                  }
-                  colnum++;
+                  else
+                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat), precision);
                }
-           }
-       }
+               colnum++;
+            }
+         }
+      }
 
       return data;
    }
@@ -461,11 +459,14 @@ public class MimsJTable {
             else if (image.getMimsType() == MimsPlus.RATIO_IMAGE)
                image.setSlice(plane, image);
             for (int i = 0; i < rois.length; i++) {
+
+               Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
+               rois[i].setLocation(xy[0], xy[1]);
+               image.setRoi(rois[i]);
+
                for (int k = 0; k < stats.length; k++) {
                   int precision = 2;
-                  Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
-                  rois[i].setLocation(xy[0], xy[1]);
-                  image.setRoi(rois[i]);
+                  
                   imageStats = image.getStatistics(mOptions);                  
                   if (j == 0) {
                      if (stats[k].startsWith("area"))
@@ -477,13 +478,12 @@ public class MimsJTable {
                         else
                            data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
                      } else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stats[k]), precision);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k]), precision);
                   } else {
                      if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
                         continue;
                      else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(imageStats, stats[k]), precision);
-
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k]), precision);
                   }
                   col++;
                }

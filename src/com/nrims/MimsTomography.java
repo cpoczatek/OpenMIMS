@@ -83,7 +83,7 @@ public class MimsTomography extends javax.swing.JPanel {
       jLabel3.setText("Statistics to plot");
 
       statJList.setModel(new javax.swing.AbstractListModel() {
-         String[] strings = { "mean", "stddev", "median", "min", "max", "sum", "mode", "area", "group (table only)", "xcentroid", "ycentroid", "xcentermass", "ycentermass", "roix", "roiy", "roiwidth", "roiheight", "major", "minor", "angle", "kurtosis"};
+         String[] strings = { "mean", "stddev", "median", "N/D", "min", "max", "sum", "mode", "area", "group (table only)", "xcentroid", "ycentroid", "xcentermass", "ycentermass", "roix", "roiy", "roiwidth", "roiheight", "major", "minor", "angle", "kurtosis"};
          public int getSize() { return strings.length; }
          public Object getElementAt(int i) { return strings[i]; }
       });

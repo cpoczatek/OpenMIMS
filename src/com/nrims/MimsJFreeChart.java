@@ -313,6 +313,11 @@ public class MimsJFreeChart extends JFrame {
             // Roi loop
             for (int i = 0; i < rois.length; i++) {
 
+               // Set the Roi to the image.
+               Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
+               rois[i].setLocation(xy[0], xy[1]);
+               image.setRoi(rois[i]);
+
                // Stat loop
                for (int k = 0; k < stats.length; k++) {
 
@@ -326,13 +331,9 @@ public class MimsJFreeChart extends JFrame {
                   if (series[i][j][k] == null) {
                      series[i][j][k] = new XYSeries(seriesname[i][j][k]);
                   }
-
-                  // Get the stats.
-                  Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
-                  rois[i].setLocation(xy[0], xy[1]);
-                  image.setRoi(rois[i]);
-                  imageStats = image.getStatistics(MimsJTable.mOptions);
-                  series[i][j][k].add(((Integer) planes.get(ii)).intValue(), getSingleStat(imageStats, stats[k]));
+                  
+                  // Get the statistic.
+                  series[i][j][k].add(((Integer) planes.get(ii)).intValue(), getSingleStat(image, stats[k]));
 
                } // End of Stat
             } // End of Roi
@@ -488,7 +489,10 @@ public class MimsJFreeChart extends JFrame {
     * @param statname a string naming the desired statistic.
     * @return the statistic value (default value = -999).
     */
-   public static double getSingleStat(ImageStatistics stats, String statname) {
+   public static double getSingleStat(MimsPlus image, String statname) {
+
+        //ImageStatistics stats = image.getStatistics(MimsJTable.mOptions);
+      ImageStatistics stats = image.getStatistics();
 
         if(statname.equals("area"))
             return stats.area;
@@ -496,6 +500,8 @@ public class MimsJFreeChart extends JFrame {
             return stats.mean;
         if(statname.equals("stddev"))
             return stats.stdDev;
+        if (statname.equals("N/D"))
+            return getNoverDstat(image);
         if(statname.equals("mode"))
             return stats.mode;
         if(statname.equals("min"))
@@ -533,4 +539,45 @@ public class MimsJFreeChart extends JFrame {
 
         return -999;
     }
+
+   /**
+    * Computes N/D statistic. 
+    */
+   private static double getNoverDstat(MimsPlus image) {
+      double sf = 10000.0;
+      double returnVal = -999;
+      Roi roi = image.getRoi();
+
+      boolean isRatio = (image.getMimsType() == MimsPlus.RATIO_IMAGE);
+      boolean isSum = (image.getMimsType() == MimsPlus.SUM_IMAGE);
+      boolean isSumRatio = false;
+
+      if (isSum) {
+         SumProps sp = image.getSumProps();
+         isSumRatio = (sp.getSumType() == MimsPlus.RATIO_IMAGE);
+      }
+
+      if (isRatio || isSumRatio) {
+
+         // Get scale factor.
+         if (image.getMimsType() == MimsPlus.HSI_IMAGE) {
+            sf = image.getHSIProps().getRatioScaleFactor();
+         } else if (image.getMimsType() == MimsPlus.RATIO_IMAGE) {
+            sf = image.getRatioProps().getRatioScaleFactor();
+         }
+
+         // Calculate the statistic.
+         MimsPlus mp_num = image.internalNumerator;
+         mp_num.setRoi(roi);
+         double num = mp_num.getStatistics().mean;
+
+         MimsPlus mp_den = image.internalDenominator;
+         mp_den.setRoi(roi);
+         double den = mp_den.getStatistics().mean;
+
+         returnVal = (double) sf*(num)/(den);
+      }
+
+      return returnVal;
+   }
 }
