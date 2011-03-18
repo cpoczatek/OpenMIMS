@@ -491,8 +491,7 @@ public class MimsJFreeChart extends JFrame {
     */
    public static double getSingleStat(MimsPlus image, String statname) {
 
-        //ImageStatistics stats = image.getStatistics(MimsJTable.mOptions);
-      ImageStatistics stats = image.getStatistics();
+        ImageStatistics stats = image.getStatistics(MimsJTable.mOptions);
 
         if(statname.equals("area"))
             return stats.area;

@@ -466,8 +466,7 @@ public class MimsJTable {
 
                for (int k = 0; k < stats.length; k++) {
                   int precision = 2;
-                  
-                  imageStats = image.getStatistics(mOptions);                  
+                           
                   if (j == 0) {
                      if (stats[k].startsWith("area"))
                         precision = 0;
