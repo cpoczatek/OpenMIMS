@@ -1287,7 +1287,7 @@ public class MimsHSIView extends javax.swing.JPanel {
       JPanel buttonPanel = new JPanel();
       JButton add = new JButton("Add");
       add.addActionListener(this);
-      JButton cancel = new JButton("Cancel");
+      JButton cancel = new JButton("Close");
       cancel.addActionListener(this);
       buttonPanel.add(add);
       buttonPanel.add(cancel);
@@ -1332,7 +1332,7 @@ public class MimsHSIView extends javax.swing.JPanel {
       add(new JSeparator(JSeparator.HORIZONTAL));
       add(buttonPanel);
 
-      setSize(new Dimension(250, 325));
+      setSize(new Dimension(275, 325));
    }
 
    public void actionPerformed(ActionEvent e) {
@@ -1367,11 +1367,10 @@ public class MimsHSIView extends javax.swing.JPanel {
                JOptionPane.showMessageDialog(ui, "Numerator can not be the same as Denominator", "Error", JOptionPane.ERROR_MESSAGE);
             else {
                hsiview.addToRatioList(new Integer(num.getName()), new Integer(den.getName()));
-               closeWindow();
             }
          }
 
-      } else if (e.getActionCommand() == "Cancel") {
+      } else if (e.getActionCommand() == "Close") {
          closeWindow();
       }
    }

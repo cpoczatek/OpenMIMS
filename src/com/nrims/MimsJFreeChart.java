@@ -294,8 +294,8 @@ public class MimsJFreeChart extends JFrame {
       XYSeriesCollection dataset = new XYSeriesCollection();
       XYSeries series[][][] = new XYSeries[rois.length][images.length][stats.length];
       String seriesname[][][] = new String[rois.length][images.length][stats.length];
-      ImageStatistics imageStats = null;
       int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
+      double stat;
 
       // Image loop
       for (int j = 0; j < images.length; j++) {
@@ -333,7 +333,10 @@ public class MimsJFreeChart extends JFrame {
                   }
                   
                   // Get the statistic.
-                  series[i][j][k].add(((Integer) planes.get(ii)).intValue(), getSingleStat(image, stats[k]));
+                  stat = getSingleStat(image, stats[k]);
+                  if (stat > Double.MAX_VALUE || stat < (-1.0)*Double.MAX_VALUE)
+                     stat = Double.NaN;
+                  series[i][j][k].add(((Integer) planes.get(ii)).intValue(), stat);
 
                } // End of Stat
             } // End of Roi
