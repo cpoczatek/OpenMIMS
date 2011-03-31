@@ -37,6 +37,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -2771,6 +2772,38 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             return massImages[i];
         }
         return null;
+    }
+
+    /**
+     * Returns all mass indices with a mass value within of <code>massValue</code> +/- <code>tolerance</code>.
+     *
+     * @param massValue the massValue.
+     * @param tolerance the range of possible masses from <code>massValue</code>.
+     * @return the indices
+     */
+    public int[] getMassIndices(double massValue, double tolerance) {
+       double massVal1, diff;
+
+       if (tolerance > 0.0) {
+          // do nothing
+       }  else {
+          return null;
+       }
+
+       MimsPlus[] mps = getOpenMassImages();
+       ArrayList imageList = new ArrayList<MimsPlus>();
+       for (int i = 0; i < mps.length; i++){
+          massVal1 = mps[i].getMassValue();
+          diff = Math.abs(massValue - massVal1);
+          if (diff < tolerance)
+             imageList.add(mps[i]);
+       }
+
+       int[] indices = new int[imageList.size()];
+       for (int i = 0; i < imageList.size(); i++)
+          indices[i] = ((MimsPlus)imageList.get(i)).getMassIndex();
+
+       return indices;
     }
 
     /**

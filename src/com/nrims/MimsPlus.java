@@ -66,6 +66,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     boolean autoAdjustContrast = false;
     static boolean bStateChanging = false ;
     private int massIndex = 0 ;
+    private double massValue = -999.0;
     private int nType = 0 ;
     private int x1, x2, y1, y2, w1, w2, h1, h2;
     private boolean bIsStack = false ;
@@ -97,24 +98,30 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         // Get a copy of the opener and setup image parameters.
         Opener op = ui.getOpener();
-        int width = op.getWidth();
-        int height = op.getHeight();        
+        int w = op.getWidth();
+        int h = op.getHeight();        
         op.setStackIndex(0);
 
         // Set processor.
         ij.process.ImageProcessor ip = null;
         if (ui.getOpener().getFileType() == FileInfo.GRAY16_UNSIGNED) {
-           short[] pixels = new short[width * height];
-           ip = new ij.process.ShortProcessor(width, height, pixels, null);
+           short[] pixels = new short[w * h];
+           ip = new ij.process.ShortProcessor(w, h, pixels, null);
         } else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT) {
-           float[] pixels = new float[width * height];
-           ip = new ij.process.FloatProcessor(width, height, pixels, null);
+           float[] pixels = new float[w * h];
+           ip = new ij.process.FloatProcessor(w, h, pixels, null);
         }
 
         //Don't do this, massNames should allready have the correctly formated string
         //Double massNumber = new Double(op.getMassNames()[index]);
-        String title = "m" + op.getMassNames()[index] + " : " + ui.getImageFilePrefix();
-        setProcessor(title, ip);
+        String massValueString = op.getMassNames()[index];
+        try {
+           massValue = new Double(massValueString);
+        } catch (NumberFormatException nfe) {
+           massValue = new Double(index);
+        }
+        String titleString = "m" + massValueString + " : " + ui.getImageFilePrefix();
+        setProcessor(titleString, ip);
         fStateListeners = new EventListenerList() ;
     }
 
@@ -158,10 +165,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
       // Setup image.
       Opener op = ui.getOpener();
-      int width = op.getWidth();
-      int height = op.getHeight();
-      double sumPixels[] = new double[width*height];
-      ImageProcessor ipp = new FloatProcessor(width, height, sumPixels);            
+      int w = op.getWidth();
+      int h = op.getHeight();
+      double sumPixels[] = new double[w*h];
+      ImageProcessor ipp = new FloatProcessor(w, h, sumPixels);
       title = "Sum : ";
       if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
          if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length)
@@ -221,10 +228,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
       // Setup image.
       Opener op = ui.getOpener();
-      int width = op.getWidth();
-      int height = op.getHeight();
-      float[] pixels = new float[width * height];
-      ImageProcessor ip = new FloatProcessor(width, height, pixels, null);
+      int w = op.getWidth();
+      int h = op.getHeight();
+      float[] pixels = new float[w * h];
+      ImageProcessor ip = new FloatProcessor(w, h, pixels, null);
       ip.setMinAndMax(0, 1.0);
       String numName, denName;
       if (props.getNumMassIdx() == ui.getOpenMassImages().length)
@@ -286,10 +293,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        MimsPlus[] imgs = compprops.getImages();
 
        Opener op = ui.getOpener();
-       int width = op.getWidth();
-       int height = op.getHeight();
-       int[] rgbPixels = new int[width * height];
-       ImageProcessor ip = new ColorProcessor(width, height, rgbPixels);
+       int w = op.getWidth();
+       int h = op.getHeight();
+       int[] rgbPixels = new int[w * h];
+       ImageProcessor ip = new ColorProcessor(w, h, rgbPixels);
        title = ui.getImageFilePrefix();
        for (int i = 0; i < imgs.length; i++) {
            if (imgs[i] != null) {
@@ -331,12 +338,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
       // Setup image.
       Opener op = ui.getOpener();
-      int width = op.getWidth();
-      int height = op.getHeight();
+      int w = op.getWidth();
+      int h = op.getHeight();
       if(props.getLabelMethod() > 0)
-         height += 16;
-      int [] rgbPixels = new int[width*height];
-      ImageProcessor ip = new ColorProcessor(width, height, rgbPixels);
+         h += 16;
+      int [] rgbPixels = new int[w*h];
+      ImageProcessor ip = new ColorProcessor(w, h, rgbPixels);
       String numName = ui.getOpener().getMassNames()[props.getNumMassIdx()];
       String denName = ui.getOpener().getMassNames()[props.getDenMassIdx()];
       title = "HSI : m" + numName +"/m"+ denName + " : " + ui.getImageFilePrefix();
@@ -493,9 +500,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
           parentIdx = sumProps.getParentMassIdx();
           parentImage = ui.getMassImage(parentIdx);
           if (parentIdx == ui.getOpenMassImages().length) {
-             int width = getWidth();
-             int height = getHeight();
-             int area = width * height;
+             int w = getWidth();
+             int h = getHeight();
+             int area = w * h;
              sumPixels = new double[area];
              for (int i = 0; i < area; i++)
                 sumPixels[i] = 1;
@@ -1728,6 +1735,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return mass index
      */
     public int getMassIndex() { return massIndex; }
+
+    /**
+     *
+     * @return mass value
+     */
+    public double getMassValue() { return massValue; }
 
     /**
      *

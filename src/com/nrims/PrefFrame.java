@@ -32,7 +32,10 @@ public class PrefFrame extends PlugInJFrame {
     UI ui;
     float reference = (float) 0.0130;
     float background = (float) 0.0037;
-    
+    String numerators = "";
+    String denominators = "";
+    double massDiff = 0.5;
+
     final String PREFS_KEY = "openmims.";
 
     /** Instantiates the class and creates the frame.*/
@@ -224,10 +227,12 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         ratioReciprocals = (boolean) Prefs.get(PREFS_KEY + "ratioReciprocals", ratioReciprocals);
         reference = (float) Prefs.get(PREFS_KEY + "reference", reference);
         background = (float) Prefs.get(PREFS_KEY + "background", background);
+        numerators = Prefs.get(PREFS_KEY + "numerators", numerators);
+        denominators = Prefs.get(PREFS_KEY + "denominators", denominators);
     }
 
     /** Saves the preferences file.*/
-    private void savePreferences() {
+    public void savePreferences() {
         includeHSI = HSIcheckbox.isSelected();
         includeSum = sumCheckbox.isSelected();
         includeMass = massCheckbox.isSelected();
@@ -274,6 +279,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         Prefs.set(PREFS_KEY + "ratioReciprocals", ratioReciprocals);
         Prefs.set(PREFS_KEY + "background", background);
         Prefs.set(PREFS_KEY + "reference", reference);
+        Prefs.set(PREFS_KEY + "numerators", numerators);
+        Prefs.set(PREFS_KEY + "denominators", denominators);
         Prefs.savePreferences();
         close();
     }
@@ -341,6 +348,15 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     }
 
     /**
+     * Gets the difference in mass allowed between atomic numbers
+     * for ratio images saved by the user.
+     * @return double
+     */
+    double getMassDiff() {
+        return massDiff;
+    }
+
+    /**
      * Include reciprocals in the ratio image list (13/12 and 12/13).
      * @return boolean
      */
@@ -362,6 +378,101 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
      */
     float getReferenceRatio(){
        return reference;
+    }
+
+    /**
+     * Get the list of ratio images preferred by the user.
+     */
+    String[] getNumerators() {
+       String[] numStrArray = new String[0];
+       if (numerators != null)
+          numStrArray = numerators.split(",");
+       return numStrArray;
+    }
+
+    /**
+     * Get the list of ratio images preferred by the user.
+     */
+    String[] getDenominators() {
+       String[] denStrArray = new String[0];
+       if (denominators != null)
+          denStrArray = denominators.split(",");
+       return denStrArray;
+    }
+    
+    /**
+     * Add a ratio image with numerator num and
+     * denominator den to the list of default ratio images.     
+     */
+    void addRatioImage(double num, double den) {
+       if (numerators == null || numerators.length() == 0 || numerators.length() != denominators.length()) {
+          numerators = "";
+          denominators = "";
+       } else {
+          numerators += ",";
+          denominators += ",";
+       }
+       numerators += Double.toString(num);
+       denominators += Double.toString(den);
+    }
+
+    /**
+     * Add a ratio image with numerator num and
+     * denominator den to the list of default ratio images.
+     */
+    void addRatioImage(String num, String den) {
+
+       Double numValue, denValue;
+       try {
+          numValue = Double.parseDouble(num);
+          denValue = Double.parseDouble(den);
+       } catch (NumberFormatException nfe) {
+          return;
+       }
+       addRatioImage(numValue, denValue);
+    }
+
+    /**
+     * Remove a ratio image with numerator num, and
+     * denominator den, to the list of default ratio images.
+     */
+    void removeRatioImage(double num, double den) {
+       if (numerators == null || numerators.length() == 0) {
+          return;
+       }
+       String[] numStrArray = numerators.split(",");
+       String[] denStrArray = denominators.split(",");
+       if (numStrArray.length != denStrArray.length) {
+          return;
+       }
+
+       // Clear the numerator and denominator list and 
+       // add back those ratio images that are NOT to be removed.
+       numerators = null;
+       denominators = null;
+       Double numValue, denValue, numDiff, denDiff;
+       for (int i = 0; i < numStrArray.length; i++) {
+
+          try {
+             numValue = Double.parseDouble(numStrArray[i]);
+             denValue = Double.parseDouble(denStrArray[i]);
+          } catch (NumberFormatException nfe) {
+             continue;
+          }
+
+          numDiff = Math.abs(num - numValue);
+          denDiff = Math.abs(den - denValue);
+          System.out.println();
+          System.out.println("numValue = " + numValue);
+          System.out.println("numDiff = " + numDiff + ", denDiff = " + denDiff);
+          System.out.println(numDiff < massDiff && denDiff < massDiff);
+          if (numDiff > massDiff && denDiff > massDiff) {
+             addRatioImage(numValue, denValue);
+          }
+       }
+       System.out.println();
+       System.out.println("numerators = " + numerators);
+
     }
 
    // Variables declaration - do not modify//GEN-BEGIN:variables

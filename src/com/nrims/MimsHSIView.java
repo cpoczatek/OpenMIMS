@@ -784,8 +784,23 @@ public class MimsHSIView extends javax.swing.JPanel {
 
     private void removeRatiojButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeRatiojButtonActionPerformed
        int index[] = jList1.getSelectedIndices();
-       for (int i = index.length-1; i >= 0; i--){
+       int num, den;
+       double numd, dend;
+       for (int i = index.length-1; i >= 0; i--){          
+          String[] num_den = ((String)listModel.getElementAt(index[i])).split(":");
           listModel.removeElementAt(index[i]);
+          if (num_den.length != 2)
+             return;
+          try {
+             num = Integer.parseInt(num_den[0]);
+             den = Integer.parseInt(num_den[1]);
+          } catch(NumberFormatException nfe) {
+             continue;
+          }
+          numd = ui.getMassValue(num);
+          dend = ui.getMassValue(den);
+          ui.getPreferences().removeRatioImage(numd, dend);
+          ui.getPreferences().savePreferences();
        }
 }//GEN-LAST:event_removeRatiojButtonActionPerformed
 
@@ -957,9 +972,6 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         bUpdating = true ;
 
-        // Get the current list of ratio images.
-        Object[] current_list = listModel.toArray();
-
         // Clear the list.
         listModel.removeAllElements();
 
@@ -971,7 +983,7 @@ public class MimsHSIView extends javax.swing.JPanel {
         double maxDiff = ui.getPreferences().getRatioSpan();
         boolean reciprocals = ui.getPreferences().getRatioReciprocals();
 
-        // Populate the list.
+        // Populate the list with default ratio images.
         for(int i=massNames.length-1; i >= 1; i--) {
            Double d1 = new Double(massNames[i]);
            for(int j=i-1; j >= 0; j--) {
@@ -985,15 +997,40 @@ public class MimsHSIView extends javax.swing.JPanel {
            }
         }
 
-        // Add any ratios that existed in the old list
-        for (int k = 0; k < current_list.length; k++){
-           String[] num_den = ((String)current_list[k]).split(":");
-           int num = new Integer(num_den[0]).intValue();
-           int den = new Integer(num_den[1]).intValue();
-           Object element = new String(num+":"+den);
-           if (num < massNames.length && den < massNames.length && !listModel.contains(element))
-              listModel.addElement(element);
-        }
+       // Populate the list with user added ratio images.
+       maxDiff = ui.getPreferences().getMassDiff();
+       String[] numValues = ui.getPreferences().getNumerators();
+       String[] denValues = ui.getPreferences().getDenominators();
+
+       if (numValues.length != denValues.length) {
+          numValues = new String[0];
+          denValues = new String[0];
+       }
+
+       double prefNumVal, prefDenVal;
+       for (int j = 0; j < numValues.length; j++) {
+
+          try {
+             prefNumVal = new Double(numValues[j]);
+             prefDenVal = new Double(denValues[j]);
+          } catch(NumberFormatException nfe) {
+             continue;
+          }
+          int[] numIndices = ui.getMassIndices(prefNumVal, maxDiff);
+          int[] denIndices = ui.getMassIndices(prefDenVal, maxDiff);
+
+          for (int k = 0; k < numIndices.length; k++) {
+             for (int l = 0; l < denIndices.length; l++) {
+                double numMass = ui.getMassValue(numIndices[k]);
+                double denMass = ui.getMassValue(denIndices[l]);
+                if (numIndices[k] == denIndices[l])
+                   continue;
+                String listElement = numIndices[k] + ":" + denIndices[l];
+                if (numMass != denMass && ((prefNumVal > prefDenVal) && (numMass > denMass)) && !listModel.contains(listElement))
+                   listModel.addElement(listElement);
+             }
+          }
+       }
 
         // Clear selection by default
         jList1.clearSelection();
@@ -1366,7 +1403,11 @@ public class MimsHSIView extends javax.swing.JPanel {
             if (numName.matches(denName))
                JOptionPane.showMessageDialog(ui, "Numerator can not be the same as Denominator", "Error", JOptionPane.ERROR_MESSAGE);
             else {
-               hsiview.addToRatioList(new Integer(num.getName()), new Integer(den.getName()));
+               Integer numIdx = new Integer(num.getName());
+               Integer denIdx = new Integer(den.getName());
+               hsiview.addToRatioList(numIdx, denIdx);
+               ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
+               ui.getPreferences().savePreferences();
             }
          }
 
