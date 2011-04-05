@@ -505,6 +505,25 @@ public class MimsTomography extends javax.swing.JPanel {
    }
 
    /**
+    * Sets the statistics to be highlighted.
+    *
+    * @return the int array of indices selected in the statistics list.
+    */
+    public int[] getSelectedStatIndices() {
+       int[] indices = statJList.getSelectedIndices();
+       return indices;
+    }
+
+   /**
+    * Sets the statistics to be highlighted.
+    *
+    * @param indices the indices to be selected.
+    */
+   public void setSelectedStatIndices(int[] indices) {
+      statJList.setSelectedIndices(indices);
+   }
+
+   /**
     * Gets the statistics selected by the user in the jlist.
     *
     * @return an array of statistic names.

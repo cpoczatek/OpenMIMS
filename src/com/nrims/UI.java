@@ -660,7 +660,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 mimsData = new com.nrims.MimsData(this, image);
                 cbControl = new MimsCBControl(this);
                 mimsStackEditing = new MimsStackEditor(this, image);
+                int[] indices = mimsTomography.getSelectedStatIndices();
                 mimsTomography = new MimsTomography(this);
+                mimsTomography.setSelectedStatIndices(indices);
                 mimsAction = new MimsAction(image);
                 //TODO: throws an exception when opening an image with 2 masses
                 segmentation = new SegmentationForm(this);
