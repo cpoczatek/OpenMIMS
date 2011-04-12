@@ -83,6 +83,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     String moveAllRois = "Move All";
     String hideAllLabels = "Hide Labels";
     ListSelectionListener groupSelectionListener;
+    ListSelectionListener roiSelectionListener;
 
    /**
     * Creates a new instance of MimsRoiManager.
@@ -122,11 +123,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         };
         roijlist.setCellRenderer(new ComboBoxRenderer());
         roijlist.addKeyListener(ij);
-        roijlist.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        roiSelectionListener = new ListSelectionListener() {
            public void valueChanged(ListSelectionEvent listSelectionEvent) {
               roivalueChanged(listSelectionEvent);
            }
-        });
+        };
+        roijlist.addListSelectionListener(roiSelectionListener);
 
         // JList stuff - for Groups
         groupListModel = new DefaultListModel();
@@ -964,17 +966,15 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           }
 
           // Show only Rois that are part of the selected groups.
-          roiListModel.removeAllElements();
-          ArrayList<String> names = new ArrayList<String>();
-          ArrayList<Integer> numeric = new ArrayList<Integer>();
+          String roiName;
+          roiListModel.clear();
           for (Object object : rois.keySet()) {
-             String roiName = (String)object;
+             roiName = (String)object;
              boolean contains = containsRoi(groupNames, roiName);
              if (contains) {
                  roiListModel.addElement(roiName);
              }
           }
-
           sortROIList();
 
           // Disable delete button if Default Group is one of the groups selected.
@@ -998,7 +998,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      */
     public void roivalueChanged(ListSelectionEvent e) {
 
-        // DO NOTHING!!  Wait till we are done switching
+        // DO NOTHING!!  Wait till we are done switching        
         if (!e.getValueIsAdjusting()) return;
 
         holdUpdate = true;
@@ -3089,7 +3089,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
          setText("<html> <BGCOLOR="+"#"+hexStr+"> <font color=gray>"+idxStr+"</font> <font color=black>"+" "+label+"</font></html>");
          */
          // Attempt failed.
-         setText("<html> <font color=gray>"+"("+idx+")"+"</font> <font color=black>"+" "+label+"</font></html>");
+         //setText("<html> <font color=gray>"+"("+idx+")"+"</font> <font color=black>"+" "+label+"</font></html>");
+         setText(label);
 
 
          if (isSelected) {
