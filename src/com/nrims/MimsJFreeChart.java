@@ -323,7 +323,7 @@ public class MimsJFreeChart extends JFrame {
 
                   // Generate a name for the dataset.
                   if (seriesname[i][j][k] == null) {
-                     seriesname[i][j][k] = image.getShortTitle();
+                     seriesname[i][j][k] = image.getRoundedTitle();
                      seriesname[i][j][k] = seriesname[i][j][k] + " " + stats[k] + " \n" + "r" + rois[i].getName();
                   }
 
@@ -362,8 +362,15 @@ public class MimsJFreeChart extends JFrame {
     *
     * @param images a set of MimsPlus images.
     */
-   public void setImages(MimsPlus[] images) {
-      this.images = images;
+   public void setImages(MimsPlus[] images){
+      ArrayList<MimsPlus> mpa = new ArrayList<MimsPlus>();
+      for (MimsPlus mp : images) {
+         if (mp.getMimsType() == MimsPlus.HSI_IMAGE)
+            mp = mp.internalRatio;
+         mpa.add(mp);
+      }
+      this.images = new MimsPlus[mpa.size()];
+      mpa.toArray(this.images);
    }
 
    /**

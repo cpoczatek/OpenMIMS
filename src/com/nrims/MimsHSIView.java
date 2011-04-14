@@ -1145,6 +1145,13 @@ public class MimsHSIView extends javax.swing.JPanel {
      * Returns <code>true</code> if the "Use Sum" radio button is selected.
      * @return <code>true</code> if the "Use Sum" radio button is selected, otherwise <code>false</code>.
      */
+    public boolean isUseSumSelected() {
+        return hsiSumRadioButton.isSelected();
+    }
+
+    /**
+     * Sets the "Use Sum" radio button to <code>bool</code>.
+     */
     public void setIsSum(boolean bool){
         bUpdating = true ;
         hsiSumRadioButton.setSelected(bool);
@@ -1152,8 +1159,7 @@ public class MimsHSIView extends javax.swing.JPanel {
     }
 
     /**
-     * Returns <code>true</code> if the "Use Window" radio button is selected.
-     * @return <code>true</code> if the "Use Window" radio button is selected, otherwise <code>false</code>.
+     * Sets the "Use Window" radio button to <code>bool</code>.
      */
     public void setIsWindow(boolean bool) {
         bUpdating = true ;

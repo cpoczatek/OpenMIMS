@@ -271,6 +271,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          if (mp.getMimsType() == MimsPlus.HSI_IMAGE && hsiImages[i] == null) {
             inserted = true;
             hsiImages[i] = mp;
+            getmimsTomography().resetImageNamesList();
             return true;
          }
          if (mp.getMimsType() == MimsPlus.SEG_IMAGE && segImages[i] == null) {

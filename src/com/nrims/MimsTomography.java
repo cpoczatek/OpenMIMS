@@ -4,6 +4,7 @@ import com.nrims.data.Opener;
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
+import ij.IJ;
 
 import ij.gui.Roi;
 
@@ -12,6 +13,7 @@ import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -330,7 +332,7 @@ public class MimsTomography extends javax.swing.JPanel {
        if (rois.length >= 1) {
           tomoChart.setRois(rois);
        } else {
-          System.out.println("No rois selected");
+          IJ.error("No rois selected");
           return;
        }
 
@@ -356,7 +358,7 @@ public class MimsTomography extends javax.swing.JPanel {
      * Action method for the "Table" button. Generates a table
      * containing statistical information. The format of the table
      * depends on the type of image being generated... Sum images
-     * will contain 1 row per ROI whereas most other types of images
+     * will contain 1 row per ROI whereas images with depth
      * will contain 1 row per plane. If it is a single plane image
      * than the output will be similar to that of a Sum image.
      */
@@ -408,22 +410,34 @@ public class MimsTomography extends javax.swing.JPanel {
           return;
        }
 
-       // Is at least 1 mass or ratio image present.
-       boolean isOneMassOrRatioImagePresent = false;
-       for (int i = 0; i < images.length; i++) {
-          if (images[i].getMimsType() == MimsPlus.MASS_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE) {
-             isOneMassOrRatioImagePresent = true;
+       // Decide if we are going to make a depth table or sum style table.
+       boolean createDepthTable = false;
+       int numplanes = ui.getOpenMassImages()[0].getStackSize();
+       boolean sumRadioButtonChecked = ui.getHSIView().isUseSumSelected();
+       for (MimsPlus mp : images){
+          int m_type = mp.getMimsType();
+          // Mass images
+          if (m_type == MimsPlus.MASS_IMAGE) {
+             if (numplanes > 1) {
+                createDepthTable = true;
+                break;
+             }
+          }
+          // Ratio and HSI images.
+          if (m_type == MimsPlus.RATIO_IMAGE || m_type == MimsPlus.HSI_IMAGE) {             
+             if (numplanes > 1 && sumRadioButtonChecked == false) {
+                createDepthTable = true;
+                break;
+             }
           }
        }
 
-       // Show Roi formatted table if only dealing with one plane
-       if (isOneMassOrRatioImagePresent && planes.size() != 1) {
-          table.createTable(appendCheckBox.isSelected());
+       // Generate Sum table.
+       if (createDepthTable) {
+          table.createTable(appendCheckBox.isSelected());          
        } else {
           table.createSumTable(appendCheckBox.isSelected());
        }
-
-       // Show table
        table.showFrame();
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -454,18 +468,14 @@ public class MimsTomography extends javax.swing.JPanel {
       MimsPlus[] rp = ui.getOpenRatioImages();
       MimsPlus[] mp = ui.getOpenMassImages();
       MimsPlus[] sp = ui.getOpenSumImages();
+      MimsPlus[] hp = ui.getOpenHSIImages();
 
       // Build array of image names.
       java.util.ArrayList<MimsPlus> images = new java.util.ArrayList<MimsPlus>();
-      for (int j = 0; j < mp.length; j++) {
-         images.add(mp[j]);
-      }
-      for (int j = 0; j < rp.length; j++) {
-         images.add(rp[j]);
-      }
-      for (int j = 0; j < sp.length; j++) {
-         images.add(sp[j]);
-      }
+      images.addAll(Arrays.asList(mp));
+      images.addAll(Arrays.asList(rp));
+      images.addAll(Arrays.asList(sp));
+      images.addAll(Arrays.asList(hp));
 
       // Insert into list.
       final MimsPlus[] img = new MimsPlus[images.size()];

@@ -700,60 +700,57 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return Text string containing the rounded mass value. For example:
      * <ul>
      * <li>"13" for Mass images.
-     * <li>"13/12" for Ratio images.
+     * <li>"ratio 13/12" for Ratio images.
+     * <li>"hsi 13/12" for HSI images.
      * <li>"sum 13" for Sum images.
      * <li>"0" by default.
      * </ul>
      */
     public String getRoundedTitle() {
-        if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
-            String tempstring = this.getTitle();
-            int colonindex = tempstring.indexOf(":");
-            tempstring = tempstring.substring(1, colonindex - 1);
-            int massint = java.lang.Math.round(Float.parseFloat(tempstring));
-            return Integer.toString(massint);
-        }
-        if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
-            String tempstring = this.getTitle();
-            int colonindex = tempstring.indexOf(":");
-            int slashindex = tempstring.indexOf("/");
-            String neumstring = tempstring.substring(1, slashindex);
-            String denstring = tempstring.substring(slashindex + 2, colonindex - 1);
-            if (neumstring == null || neumstring.trim().length() == 0)
-               neumstring = "1";
-            if (denstring == null || denstring.trim().length() == 0)
-               denstring = "1";
-            int nint = java.lang.Math.round(Float.parseFloat(neumstring));
-            int dint = java.lang.Math.round(Float.parseFloat(denstring));
-            return Integer.toString(nint) + "/" + Integer.toString(dint);
-        }
-        if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
+
+      String roundedTitle = "";
+      try {
+         if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
+            int mass_idx = getMassIndex();
+            double mass_d = ui.getMassValue(mass_idx);
+            long num_l = java.lang.Math.round(mass_d);
+            roundedTitle = Long.toString(num_l);
+         }
+         if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
+            HSIProps hprops = getHSIProps();
+            double num_d = ui.getMassValue(hprops.getNumMassIdx());
+            double den_d = ui.getMassValue(hprops.getDenMassIdx());
+            long num_l = java.lang.Math.round(num_d);
+            long den_l = java.lang.Math.round(den_d);
+            roundedTitle = "hsi " + Long.toString(num_l) + "/" + Long.toString(den_l);
+         }
+         if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+            RatioProps rprops = getRatioProps();
+            double num_d = ui.getMassValue(rprops.getNumMassIdx());
+            double den_d = ui.getMassValue(rprops.getDenMassIdx());
+            long num_l = java.lang.Math.round(num_d);
+            long den_l = java.lang.Math.round(den_d);
+            roundedTitle = "ratio " + Long.toString(num_l) + "/" + Long.toString(den_l);
+         }
+         if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
             SumProps props = this.getSumProps();
             if (props.getSumType() == SumProps.MASS_IMAGE) {
-                int ind = props.getParentMassIdx();
-                String title;
-                if (ind == ui.getOpenMassImages().length)
-                   title = "1";
-                else
-                   title = "sum " + ui.getMassImage(ind).getRoundedTitle();
-                return title;
+               int mass_idx = props.getParentMassIdx();
+               roundedTitle = "sum " + ui.getMassImage(mass_idx).getRoundedTitle();
             } else if (props.getSumType() == SumProps.RATIO_IMAGE) {
-                int den = props.getDenMassIdx();
-                int num = props.getNumMassIdx();
-                String numString, denString = "";
-                if (den == ui.getOpenMassImages().length)
-                   denString = "1";
-                else
-                   denString = ui.getMassImage(den).getRoundedTitle();
-                if (num == ui.getOpenMassImages().length)
-                   numString = "1";
-                else
-                   numString = ui.getMassImage(num).getRoundedTitle();
-                return "sum " + numString + "/" + denString;
+               double num_d = ui.getMassValue(props.getNumMassIdx());
+               double den_d = ui.getMassValue(props.getDenMassIdx());
+               long num_l = java.lang.Math.round(num_d);
+               long den_l = java.lang.Math.round(den_d);
+               roundedTitle = "sum " + Long.toString(num_l) + "/" + Long.toString(den_l);
             }
-        }
-        return "0";
-    }
+         }
+      } catch (Exception e) {
+         roundedTitle = "0";
+      }
+
+      return roundedTitle;
+   }
 
     /**
      * Returns numerator image if such exists.

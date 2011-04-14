@@ -448,8 +448,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
        // Clear the numerator and denominator list and 
        // add back those ratio images that are NOT to be removed.
-       numerators = null;
-       denominators = null;
+       numerators = "";
+       denominators = "";
        Double numValue, denValue, numDiff, denDiff;
        for (int i = 0; i < numStrArray.length; i++) {
 

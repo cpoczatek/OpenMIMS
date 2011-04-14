@@ -707,7 +707,14 @@ public class MimsJTable {
     * @param images a set of MimsPlus images.
     */
    public void setImages(MimsPlus[] images){
-      this.images = images;
+      ArrayList<MimsPlus> mpa = new ArrayList<MimsPlus>();
+      for (MimsPlus mp : images) {
+         if (mp.getMimsType() == MimsPlus.HSI_IMAGE)
+            mp = mp.internalRatio;
+         mpa.add(mp);
+      }
+      this.images = new MimsPlus[mpa.size()];
+      mpa.toArray(this.images);
    }
 
    /**
