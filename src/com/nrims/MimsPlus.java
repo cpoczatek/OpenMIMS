@@ -468,7 +468,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
        // Set processor.
        ImageProcessor ip = new FloatProcessor(getWidth(), getHeight(), rPixels, getProcessor().getColorModel());
-       ip.setMinAndMax(getProcessor().getMin(), getProcessor().getMax());
+       ip.setMinAndMax(ratioProps.getMinLUT(), ratioProps.getMaxLUT());
        setProcessor(title, ip);
        internalRatio = this;
 
@@ -574,10 +574,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     }
 
+    public void showWindow() {
+       showWindow(true);
+    }
+
     /**
      * Shows the current window.
      */
-    public void showWindow() {
+    public void showWindow(boolean forceAutoContrast) {
         show();
 
         // Set window location.
@@ -590,7 +594,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         // Autocontrast image by default.
         if ((this.getMimsType() == MimsPlus.MASS_IMAGE) || (this.getMimsType() == MimsPlus.RATIO_IMAGE) || (this.getMimsType() == MimsPlus.SUM_IMAGE)) {
-            ui.autoContrastImage(this);
+           if(forceAutoContrast)
+              ui.autoContrastImage(this);
         }
 
         this.restoreMag();
@@ -746,6 +751,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             }
          }
       } catch (Exception e) {
+         e.printStackTrace();
          roundedTitle = "0";
       }
 
@@ -1755,13 +1761,34 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      *
      * @return ratio properties
      */
-    public RatioProps getRatioProps() { return ratioProps; }
+    public RatioProps getRatioProps() {
+       if (isVisible()) {
+          ratioProps.setXWindowLocation(getWindow().getX());
+          ratioProps.setYWindowLocation(getWindow().getY());
+          ratioProps.setMag(getCanvas().getMagnification());
+       }
+       ratioProps.setNumMassValue(ui.getMassValue(ratioProps.getNumMassIdx()));
+       ratioProps.setDenMassValue(ui.getMassValue(ratioProps.getDenMassIdx()));
+       ratioProps.setMinLUT(getDisplayRangeMin());
+       ratioProps.setMaxLUT(getDisplayRangeMax());
+       return ratioProps;
+    }
 
     /**
      *
      * @return HSI properties
      */
-    public HSIProps getHSIProps() { return getHSIProcessor().getHSIProps(); }
+    public HSIProps getHSIProps() { 
+       hsiProps = getHSIProcessor().getHSIProps();
+       if (isVisible()) {
+          hsiProps.setXWindowLocation(getWindow().getX());
+          hsiProps.setYWindowLocation(getWindow().getY());
+          hsiProps.setMag(getCanvas().getMagnification());
+       }
+       hsiProps.setNumMassValue(ui.getMassValue(hsiProps.getNumMassIdx()));
+       hsiProps.setDenMassValue(ui.getMassValue(hsiProps.getDenMassIdx()));       
+       return hsiProps;
+    }
 
     /**
      *

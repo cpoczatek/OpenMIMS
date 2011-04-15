@@ -2857,6 +2857,19 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
     /**
+     * Gets the HSI image with index <code>i</code>.
+     *
+     * @param i the index
+     * @return the image.
+     */
+    public MimsPlus getHSIImage(int i) {
+        if (i >= 0 && i < maxMasses) {
+            return hsiImages[i];
+        }
+        return null;
+    }
+
+    /**
      * Returns the open mass images as an array.
      *
      * @return array of images.
@@ -3009,15 +3022,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        MimsPlus[] hsi = getOpenHSIImages();
        HSIProps[] hsi_props = new HSIProps[hsi.length];
        for (int i=0; i<hsi.length; i++){
-          hsi_props[i] = hsi[i].getHSIProps();
-          hsi_props[i].setXWindowLocation(hsi[i].getWindow().getX());
-          hsi_props[i].setYWindowLocation(hsi[i].getWindow().getY());
-          hsi_props[i].setNumMassValue(getMassValue(hsi_props[i].getNumMassIdx()));
-          hsi_props[i].setDenMassValue(getMassValue(hsi_props[i].getDenMassIdx()));
-
-          //should this be set inside getprops?
-          //maybe...
-          hsi_props[i].setMag(hsi[i].getCanvas().getMagnification());
+          hsi_props[i] = hsi[i].getHSIProps();         
        }
        return hsi_props;
     }
@@ -3032,17 +3037,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        RatioProps[] rto_props = new RatioProps[rto.length];
        for (int i=0; i<rto.length; i++){
           rto_props[i] = rto[i].getRatioProps();
-          rto_props[i].setXWindowLocation(rto[i].getWindow().getX());
-          rto_props[i].setYWindowLocation(rto[i].getWindow().getY());
-          rto_props[i].setNumMassValue(getMassValue(rto_props[i].getNumMassIdx()));
-          rto_props[i].setDenMassValue(getMassValue(rto_props[i].getDenMassIdx()));
-
-          //should these be set inside getprops?
-          //maybe...
-          rto_props[i].setMinLUT(rto[i].getDisplayRangeMin());
-          rto_props[i].setMaxLUT(rto[i].getDisplayRangeMax());
-
-          rto_props[i].setMag(rto[i].getCanvas().getMagnification());
        }
        return rto_props;
     }

@@ -820,27 +820,41 @@ public class MimsHSIView extends javax.swing.JPanel {
        // should have the form 2:1 or 4:3 etc.
        Object[] idx = jList1.getSelectedValues();
        MimsPlus mp;
+       boolean autoAdjust = true;
 
        // Generate images
        for (int i = 0; i < idx.length; i++) {
           String label = (String) idx[i];
           int numerator = new Integer(label.substring(0, label.indexOf(":"))).intValue();
           int denomator = new Integer(label.substring(label.indexOf(":") + 1, label.length())).intValue();
-          if (numerator >= ui.getOpenMassImages().length) {
-             IJ.error("Error", "Sorry, numerator connot be 1.");
+
+          if (numerator >= ui.getOpenMassImages().length ||
+                  denomator >= ui.getOpenMassImages().length) {
+             IJ.error("Error", "Numerator and denominator must both be mass images.");
              continue;
           }
-
+          // Bring to front if already exists.
           int ri = ui.getRatioImageIndex(numerator, denomator);
           if (ri > -1) {
-             MimsPlus[] mps = ui.getOpenRatioImages();
-             mp = mps[ri];
-             mp.getWindow().toFront();
+             MimsPlus mps = ui.getRatioImage(ri);
+             mps.getWindow().toFront();
           } else {
+             // If a ratio image already exists for this numerator
+             // denominator pair, than use the same parameters.
+             double scalefactor = (double)getRatioScaleFactor();
              RatioProps ratioProps = new RatioProps(numerator, denomator);
-             ratioProps.setRatioScaleFactor(ui.getPreferences().getscaleFactor());
+             ratioProps.setRatioScaleFactor(scalefactor);
+             int hsiIdx = ui.getHsiImageIndex(numerator, denomator);
+             if (hsiIdx > -1 ){
+                MimsPlus hp = ui.getHSIImage(hsiIdx);
+                HSIProps props = hp.getHSIProps();
+                ratioProps.setRatioScaleFactor(props.getRatioScaleFactor());
+                ratioProps.setMaxLUT(props.getMaxRatio());
+                ratioProps.setMinLUT(props.getMinRatio());
+                autoAdjust = false;
+             }
              mp = new MimsPlus(ui, ratioProps);
-             mp.showWindow();
+             mp.showWindow(autoAdjust);
           }
        }
 }//GEN-LAST:event_displayRatiojButtonActionPerformed
@@ -888,6 +902,7 @@ public class MimsHSIView extends javax.swing.JPanel {
        // should have the form 2:1 or 4:3 etc.
        Object[] idx = jList1.getSelectedValues();
        MimsPlus mp;
+       boolean autoAdjust = true;
 
        // Generate images
        for (int i = 0; i < idx.length; i++) {
@@ -898,20 +913,31 @@ public class MimsHSIView extends javax.swing.JPanel {
           if (numerator >= ui.getOpenMassImages().length ||
                   denomator >= ui.getOpenMassImages().length) {
              IJ.error("Error", "Numerator and denominator must both be mass images.");
-             return;
+             continue;
           }
 
+          // Bring to front if already exists.
           int ri = ui.getHsiImageIndex(numerator, denomator);
           if (ri > -1) {
-             MimsPlus[] mps = ui.getOpenHSIImages();
-             mp = mps[ri];
-             mp.getWindow().toFront();
+             MimsPlus mps = ui.getHSIImage(ri);
+             mps.getWindow().toFront();
           } else {
+             // If a ratio image already exists for this numerator
+             // denominator pair, than use the same parameters.
+             double scalefactor = (double)getRatioScaleFactor();
              HSIProps hsiProps = new HSIProps(numerator, denomator);
-             hsiProps.setRatioScaleFactor(ui.getPreferences().getscaleFactor());
-             hsiProps.setRatioScaleFactor((Double)ratioSFjSpinner.getValue());
+             hsiProps.setRatioScaleFactor(scalefactor);
+             int ratioIdx = ui.getRatioImageIndex(numerator, denomator);
+             if (ratioIdx > -1 ){
+                MimsPlus rp = ui.getRatioImage(ratioIdx);
+                RatioProps props = rp.getRatioProps();
+                hsiProps.setRatioScaleFactor(props.getRatioScaleFactor());
+                hsiProps.setMaxRatio(props.getMaxLUT());
+                hsiProps.setMinRatio(props.getMinLUT());
+                autoAdjust = false;
+             }
              mp = new MimsPlus(ui, hsiProps);
-             mp.showWindow();
+             mp.showWindow(autoAdjust);
           }
        }
 }//GEN-LAST:event_displayHSIjButtonActionPerformed
@@ -1063,8 +1089,8 @@ public class MimsHSIView extends javax.swing.JPanel {
          else
             ratioRadioButton.setSelected(false);
          
-         rartioMaxjSpinner.setValue(props.getMaxRatio());
-         ratioMinjSpinner.setValue(props.getMinRatio());
+         rartioMaxjSpinner.setValue((int)props.getMaxRatio());
+         ratioMinjSpinner.setValue((int)props.getMinRatio());
          numThresholdjSpinner.setValue(props.getNumThreshold());
          denThresholdjSpinner.setValue(props.getDenThreshold());
          rgbMaxjSlider.setValue(props.getMaxRGB());

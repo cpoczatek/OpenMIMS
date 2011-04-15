@@ -295,6 +295,8 @@ public class MimsJFreeChart extends JFrame {
       XYSeries series[][][] = new XYSeries[rois.length][images.length][stats.length];
       String seriesname[][][] = new String[rois.length][images.length][stats.length];
       int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
+      ArrayList<String> seriesNames = new ArrayList<String>();
+      String tempName = "";
       double stat;
 
       // Image loop
@@ -323,8 +325,14 @@ public class MimsJFreeChart extends JFrame {
 
                   // Generate a name for the dataset.
                   if (seriesname[i][j][k] == null) {
-                     seriesname[i][j][k] = image.getRoundedTitle();
-                     seriesname[i][j][k] = seriesname[i][j][k] + " " + stats[k] + " \n" + "r" + rois[i].getName();
+                     tempName = image.getRoundedTitle() + " " + stats[k] + " \n" + "r" + rois[i].getName();
+                     int dup = 1;
+                     while (seriesNames.contains(tempName)) {
+                        tempName = image.getRoundedTitle() + " " + stats[k] + " \n" + "r" + rois[i].getName() + " (" + dup + ")";
+                        dup++;
+                     }
+                     seriesNames.add(tempName);
+                     seriesname[i][j][k] = tempName;
                   }
 
                   // Add data to the series.
