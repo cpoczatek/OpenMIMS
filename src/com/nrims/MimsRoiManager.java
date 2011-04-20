@@ -2945,7 +2945,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            roijlist.clearSelection();
            return;
         } else if (index > -1 && index < n) {
+           roijlist.removeListSelectionListener(roiSelectionListener);
            roijlist.setSelectedIndex(index);
+           roijlist.addListSelectionListener(roiSelectionListener);
         }
 
 
