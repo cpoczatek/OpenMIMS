@@ -341,7 +341,7 @@ public class MimsJTable {
             // No decimal for area statistic.
             if (stat.equals(AREA))
                precision = 0;
-            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat), precision);
+            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat, ui), precision);
 
             colnum++;
          }
@@ -418,12 +418,12 @@ public class MimsJTable {
                if (col1 == 0) {
                   if (stat.equals(AREA))
                      precision = 0;
-                  data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat), precision);
+                  data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat, ui), precision);
                } else {
                   if (stat.equals(AREA))
                      continue;
                   else
-                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat), precision);
+                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat, ui), precision);
                }
                colnum++;
             }
@@ -471,18 +471,17 @@ public class MimsJTable {
                      if (stats[k].startsWith("area"))
                         precision = 0;
                      if (stats[k].startsWith("group")) {
-                        String group = "null";
-                        if (ui.getRoiManager().getRoiGroup(rois[i].getName()) == null)
-                           data[ii][col] = group;
-                        else
-                           data[ii][col] = ui.getRoiManager().getRoiGroup(rois[i].getName());
+                        String group = ui.getRoiManager().getRoiGroup(rois[i].getName());
+                        if (group == null)
+                           group = "null";
+                        data[ii][col] = group;
                      } else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k]), precision);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k], ui), precision);
                   } else {
                      if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
                         continue;
                      else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k]), precision);
+                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k], ui), precision);
                   }
                   col++;
                }
@@ -683,7 +682,7 @@ public class MimsJTable {
               out.close();
 
           } catch (IOException e) {
-              e.printStackTrace();
+             IJ.error("Unable to write data. Possible permissions error.");
           }
    }
 

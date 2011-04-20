@@ -341,7 +341,7 @@ public class MimsJFreeChart extends JFrame {
                   }
                   
                   // Get the statistic.
-                  stat = getSingleStat(image, stats[k]);
+                  stat = getSingleStat(image, stats[k], ui);
                   if (stat > Double.MAX_VALUE || stat < (-1.0)*Double.MAX_VALUE)
                      stat = Double.NaN;
                   series[i][j][k].add(((Integer) planes.get(ii)).intValue(), stat);
@@ -505,9 +505,10 @@ public class MimsJFreeChart extends JFrame {
     *
     * @param stats image statistics object.
     * @param statname a string naming the desired statistic.
+    * @param ui needed only as a check to see if we are in Percent turnover mode (wanted to avoid passing this but felt it necessary).
     * @return the statistic value (default value = -999).
     */
-   public static double getSingleStat(MimsPlus image, String statname) {
+   public static double getSingleStat(MimsPlus image, String statname, UI ui) {
 
         ImageStatistics stats = image.getStatistics(MimsJTable.mOptions);
 
@@ -518,7 +519,7 @@ public class MimsJFreeChart extends JFrame {
         if(statname.equals("stddev"))
             return stats.stdDev;
         if (statname.equals("N/D"))
-            return getNoverDstat(image);
+            return getNoverDstat(image, ui);
         if(statname.equals("mode"))
             return stats.mode;
         if(statname.equals("min"))
@@ -560,7 +561,7 @@ public class MimsJFreeChart extends JFrame {
    /**
     * Computes N/D statistic. 
     */
-   private static double getNoverDstat(MimsPlus image) {
+   private static double getNoverDstat(MimsPlus image, UI ui) {
       double sf = 10000.0;
       double returnVal = -999;
       Roi roi = image.getRoi();
@@ -575,7 +576,6 @@ public class MimsJFreeChart extends JFrame {
       }
 
       if (isRatio || isSumRatio) {
-
          // Get scale factor.
          if (image.getMimsType() == MimsPlus.HSI_IMAGE) {
             sf = image.getHSIProps().getRatioScaleFactor();
@@ -593,8 +593,12 @@ public class MimsJFreeChart extends JFrame {
          double den = mp_den.getStatistics().mean;
 
          returnVal = (double) sf*(num)/(den);
+         if (ui.getIsPercentTurnover()) {            
+            float reference = ui.getPreferences().getReferenceRatio();
+            float background = ui.getPreferences().getBackgroundRatio();
+            returnVal = HSIProcessor.turnoverTransform((float) returnVal, reference, background, (float)sf);
+         }         
       }
-
       return returnVal;
    }
 }
