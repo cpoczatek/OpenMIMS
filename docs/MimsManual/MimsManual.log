@@ -1,0 +1,346 @@
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.4.13)  21 APR 2011 16:34
+entering extended mode
+ %&-line parsing enabled.
+**MimsManual.tex
+(./MimsManual.tex
+LaTeX2e <2009/09/24>
+Babel <v3.8l> and hyphenation patterns for english, usenglishmax, dumylang, noh
+yphenation, loaded.
+(/usr/share/texmf-texlive/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/share/texmf-texlive/tex/latex/base/size10.clo
+File: size10.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(/usr/share/texmf-texlive/tex/latex/geometry/geometry.sty
+Package: geometry 2008/12/21 v4.2 Page Geometry
+
+(/usr/share/texmf-texlive/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/share/texmf-texlive/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2009/04/10 v2.0 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in pdf mode detected.
+)
+(/usr/share/texmf-texlive/tex/generic/oberdiek/ifvtex.sty
+Package: ifvtex 2008/11/04 v1.4 Switches for detecting VTeX and its modes (HO)
+Package ifvtex Info: VTeX not detected.
+)
+\Gm@cnth=\count87
+\Gm@cntv=\count88
+\c@Gm@tempcnt=\count89
+\Gm@bindingoffset=\dimen103
+\Gm@wd@mp=\dimen104
+\Gm@odd@mp=\dimen105
+\Gm@even@mp=\dimen106
+\Gm@dimlist=\toks15
+)
+(/usr/share/texmf-texlive/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texmf-texlive/tex/latex/graphics/graphics.sty
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texmf-texlive/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/etc/texmf/tex/latex/config/graphics.cfg
+File: graphics.cfg 2009/08/28 v1.8 graphics configuration of TeX Live
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
+
+(/usr/share/texmf-texlive/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2010/03/12 v0.04p Graphics/color for pdfTeX
+\Gread@gobject=\count90
+))
+\Gin@req@height=\dimen107
+\Gin@req@width=\dimen108
+)
+(/usr/share/texmf-texlive/tex/latex/fancyhdr/fancyhdr.sty
+\fancy@headwidth=\skip43
+\f@ncyO@elh=\skip44
+\f@ncyO@erh=\skip45
+\f@ncyO@olh=\skip46
+\f@ncyO@orh=\skip47
+\f@ncyO@elf=\skip48
+\f@ncyO@erf=\skip49
+\f@ncyO@olf=\skip50
+\f@ncyO@orf=\skip51
+)
+(/usr/share/texmf-texlive/tex/latex/ltxmisc/parskip.sty
+Package: parskip 2001/04/09 non-zero parskip adjustments
+)
+(/usr/share/texmf-texlive/tex/latex/subfigure/subfigure.sty
+Package: subfigure 2002/03/15 v2.1.5 subfigure package
+\subfigtopskip=\skip52
+\subfigcapskip=\skip53
+\subfigcaptopadj=\dimen109
+\subfigbottomskip=\skip54
+\subfigcapmargin=\dimen110
+\subfiglabelskip=\skip55
+\c@subfigure=\count91
+\c@lofdepth=\count92
+\c@subtable=\count93
+\c@lotdepth=\count94
+
+****************************************
+* Local config file subfigure.cfg used *
+****************************************
+(/usr/share/texmf-texlive/tex/latex/subfigure/subfigure.cfg)
+\subfig@top=\skip56
+\subfig@bottom=\skip57
+) (./MimsManual.aux)
+\openout1 = `MimsManual.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+
+*geometry auto-detecting driver*
+*geometry detected driver: pdftex*
+-------------------- Geometry parameters
+paper: letterpaper
+landscape: --
+twocolumn: --
+twoside: --
+asymmetric: --
+h-parts: 54.2025pt, 505.89pt, 54.2025pt
+v-parts: 57.81598pt, 650.43pt, 86.72401pt
+hmarginratio: 1:1
+vmarginratio: 2:3
+lines: --
+heightrounded: --
+bindingoffset: 0.0pt
+truedimen: --
+includehead: --
+includefoot: --
+includemp: --
+driver: pdftex
+-------------------- Page layout dimensions and switches
+\paperwidth  614.295pt
+\paperheight 794.96999pt
+\textwidth  505.89pt
+\textheight 650.43pt
+\oddsidemargin  -18.06749pt
+\evensidemargin -18.06749pt
+\topmargin  -51.45401pt
+\headheight 12.0pt
+\headsep    25.0pt
+\footskip   30.0pt
+\marginparwidth 65.0pt
+\marginparsep   11.0pt
+\columnsep  10.0pt
+\skip\footins  9.0pt plus 4.0pt minus 2.0pt
+\hoffset 0.0pt
+\voffset 0.0pt
+\mag 1000
+
+(1in=72.27pt, 1cm=28.45pt)
+-----------------------
+(/usr/share/texmf-texlive/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count95
+\scratchdimen=\dimen111
+\scratchbox=\box26
+\nofMPsegments=\count96
+\nofMParguments=\count97
+\everyMPshowfont=\toks16
+\MPscratchCnt=\count98
+\MPscratchDim=\dimen112
+\MPnumerator=\count99
+\everyMPtoPDFconversion=\toks17
+)
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 46.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 46.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 46.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 66.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 66.
+ <snapshot_cochlea_m26.png, id=1, 324.412pt x 344.6723pt>
+File: snapshot_cochlea_m26.png Graphic file (type png)
+
+<use snapshot_cochlea_m26.png>
+<snapshot_cochlea_m27.png, id=2, 324.412pt x 344.6723pt>
+File: snapshot_cochlea_m27.png Graphic file (type png)
+
+<use snapshot_cochlea_m27.png> [1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./snapshot_cochlea_m26.png
+ (PNG copy)> <./snapshot_cochlea_m27.png (PNG copy)>]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 91.
+ (/usr/share/texmf-texlive/tex/latex/base/omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 91.
+
+<snapshot_Desktop_3.png, id=15, 1264.725pt x 785.18344pt>
+File: snapshot_Desktop_3.png Graphic file (type png)
+
+<use snapshot_Desktop_3.png> [2 <./snapshot_Desktop_3.png (PNG copy)>]
+<snapshot_MimsData.png, id=21, 635.976pt x 469.755pt>
+File: snapshot_MimsData.png Graphic file (type png)
+
+<use snapshot_MimsData.png> [3 <./snapshot_MimsData.png (PNG copy)>]
+<snapshot_Process.png, id=25, 635.976pt x 469.755pt>
+File: snapshot_Process.png Graphic file (type png)
+
+<use snapshot_Process.png> [4 <./snapshot_Process.png>]
+<snapshot_MimsContrast.png, id=31, 635.976pt x 469.755pt>
+File: snapshot_MimsContrast.png Graphic file (type png)
+
+<use snapshot_MimsContrast.png> [5 <./snapshot_MimsContrast.png (PNG copy)>]
+<snapshot_MimsStackEditing.png, id=35, 635.976pt x 451.26732pt>
+File: snapshot_MimsStackEditing.png Graphic file (type png)
+
+<use snapshot_MimsStackEditing.png>
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ú in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ù in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ú in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ù in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ú in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ù in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ú in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ù in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ú in font cmr10!
+Missing character: There is no ‚ in font cmr10!
+Missing character: There is no Ä in font cmr10!
+Missing character: There is no ù in font cmr10!
+ [6 <./snapshot_MimsStackEditing.png (PNG copy)>] <snapshot_MimsTomography.png,
+ id=39, 625.77318pt x 424.37616pt>
+File: snapshot_MimsTomography.png Graphic file (type png)
+
+<use snapshot_MimsTomography.png>
+<snapshot_TomographyPlot2.png, id=40, 562.1pt x 273.02pt>
+File: snapshot_TomographyPlot2.png Graphic file (type png)
+
+<use snapshot_TomographyPlot2.png> [7 <./snapshot_MimsTomography.png (PNG copy)
+> <./snapshot_TomographyPlot2.png>]
+<snapshot_LineROI.png, id=46, 275.0275pt x 306.14375pt>
+File: snapshot_LineROI.png Graphic file (type png)
+
+<use snapshot_LineROI.png>
+<snapshot_ProfilePlot.png, id=47, 509.905pt x 306.14375pt>
+File: snapshot_ProfilePlot.png Graphic file (type png)
+
+<use snapshot_ProfilePlot.png> [8 <./snapshot_LineROI.png> <./snapshot_ProfileP
+lot.png>] <snapshot_MimsSegmentation.png, id=53, 635.976pt x 469.755pt>
+File: snapshot_MimsSegmentation.png Graphic file (type png)
+
+<use snapshot_MimsSegmentation.png>
+<snapshot_Model_Config.png, id=54, 715.89812pt x 305.88698pt>
+File: snapshot_Model_Config.png Graphic file (type png)
+
+<use snapshot_Model_Config.png>
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[9
+
+ <./snapshot_MimsSegmentation.png>] [10 <./snapshot_Model_Config.png (PNG copy)
+>] <snapshot_MimsLog.png, id=62, 635.976pt x 469.755pt>
+File: snapshot_MimsLog.png Graphic file (type png)
+
+<use snapshot_MimsLog.png> [11 <./snapshot_MimsLog.png (PNG copy)>]
+<snapshot_m26ROIs.png, id=66, 234.66495pt x 257.14674pt>
+File: snapshot_m26ROIs.png Graphic file (type png)
+
+<use snapshot_m26ROIs.png>
+<snapshot_ROImanager.png, id=67, 476.13176pt x 327.73605pt>
+File: snapshot_ROImanager.png Graphic file (type png)
+
+<use snapshot_ROImanager.png> [12 <./snapshot_m26ROIs.png (PNG copy)> <./snapsh
+ot_ROImanager.png (PNG copy)>]
+<snapshot_MenuItems.png, id=71, 193.00342pt x 36.97534pt>
+File: snapshot_MenuItems.png Graphic file (type png)
+
+<use snapshot_MenuItems.png> [13 <./snapshot_MenuItems.png (PNG copy)>]
+[14] <snapshot_HSIimage.png, id=79, 452.32518pt x 485.72163pt>
+File: snapshot_HSIimage.png Graphic file (type png)
+
+<use snapshot_HSIimage.png> [15
+
+ <./snapshot_HSIimage.png (PNG copy)>]
+<snapshot_ActionFile.png, id=83, 440.64626pt x 607.26875pt>
+File: snapshot_ActionFile.png Graphic file (type png)
+
+<use snapshot_ActionFile.png> [16 <./snapshot_ActionFile.png>]
+<seg_lechene_94p.png, id=88, 769.87625pt x 770.88pt>
+File: seg_lechene_94p.png Graphic file (type png)
+ <use seg_lechene_94p.png>
+[17 <./seg_lechene_94p.png (PNG copy)>]
+<snapshot_ImageList.png, id=92, 491.8375pt x 489.83pt>
+File: snapshot_ImageList.png Graphic file (type png)
+
+<use snapshot_ImageList.png> [18 <./snapshot_ImageList.png>]
+<snapshot_Table.png, id=97, 573.90883pt x 595.80733pt>
+File: snapshot_Table.png Graphic file (type png)
+
+<use snapshot_Table.png> [19 <./snapshot_Table.png (PNG copy)>]
+(./MimsManual.aux) ) 
+Here is how much of TeX's memory you used:
+ 1728 strings out of 495061
+ 24140 string characters out of 1182621
+ 77239 words of memory out of 3000000
+ 4902 multiletter control sequences out of 15000+50000
+ 8895 words of font info for 31 fonts, out of 3000000 for 9000
+ 28 hyphenation exceptions out of 8191
+ 25i,10n,43p,993b,294s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cm
+bx10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx12.pfb></
+usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/t
+exmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive
+/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-texlive/fonts/type1
+/public/amsfonts/cm/cmr6.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfo
+nts/cm/cmr8.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy10
+.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/
+share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti12.pfb>
+Output written on MimsManual.pdf (19 pages, 3382838 bytes).
+PDF statistics:
+ 134 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 111 words of extra memory for PDF output out of 10000 (max. 10000000)
+
