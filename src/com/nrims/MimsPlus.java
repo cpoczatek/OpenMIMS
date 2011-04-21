@@ -48,6 +48,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     // Window position.
     private int xloc = -1;
     private int yloc = -1;
+    private double mag = 1.0;
 
     // Props objects.
     public SumProps sumProps = null;
@@ -162,6 +163,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       this.nType = SUM_IMAGE;
       this.xloc = sumProps.getXWindowLocation();
       this.yloc = sumProps.getYWindowLocation();
+      this.mag = sumProps.getMag();
 
       // Setup image.
       Opener op = ui.getOpener();
@@ -225,6 +227,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       this.nType = RATIO_IMAGE;
       this.xloc = props.getXWindowLocation();
       this.yloc = props.getYWindowLocation();
+      this.mag = props.getMag();
 
       // Setup image.
       Opener op = ui.getOpener();
@@ -280,6 +283,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       this.nType = HSI_IMAGE;
       this.xloc = props.getXWindowLocation();
       this.yloc = props.getYWindowLocation();
+      this.mag = props.getMag();
 
       setupHSIImage(props);
     }
@@ -605,18 +609,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * Restores previous magnification.
      */
     public void restoreMag() {
-        if(this.getCanvas()==null) return;
-        double mag = 1.0;
-
-        if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
-            mag = this.getHSIProps().getMag();
-        }
-        if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
-            mag = this.getRatioProps().getMag();
-        }
-        if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
-            mag = this.getSumProps().getMag();
-        }
+        if(this.getCanvas()==null)
+           return;
 
         double z = this.getCanvas().getMagnification();
 

@@ -203,37 +203,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             setLastFolder(file.getParentFile());
             setIJDefaultDir(file.getParent());
 
-            // Get HSIProps for all open ratio images.
-            RatioProps[] rto_props = getOpenRatioProps();
-
-            // Get HSIProps for all open hsi images.
-            HSIProps[] hsi_props = getOpenHSIProps();
-
-            // Get SumProps for all open sum images.
-            SumProps[] sum_props = getOpenSumProps();
-
-            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            boolean opened = openFile(file);
-            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            if (opened == false)
-               return;
-
-            // Generate all images that were previously open.
-            // TODO: a better check than just looking at the first file?
-            if( files[0].getAbsolutePath().endsWith(NRRD_EXTENSION) ||
-               files[0].getAbsolutePath().endsWith(MIMS_EXTENSION) ) {
-                  restoreState(rto_props, hsi_props, sum_props);
-            }
-            MimsRoiManager rm = getRoiManager();
-            if( rm!=null ) {
-                rm.resetRoiLocationsLength();
-            }
-
-            //Autocontrast mass images.
-            //Should add option to apply settings from previous image?
-            autoContrastImages(getOpenMassImages());
-            autoContrastImages(getOpenSumImages());
-       }
+            openImage(file);
+         }
       });
 
       // Create and start the thread
@@ -2057,55 +2028,80 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Action method for File>Open Mims Image menu item. If opening
      */
     private void openMIMSImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                      
-       
+       openImage(null);
+    }
+
+    /**
+     * The first method one should call when attempting to open a file.
+     * If <code>file</code> is null then the user will be prompted
+     * with a file chooser. Otherwise an attempt will be made to open
+     * the file passed.
+     *
+     * @param file the file to be opened.
+     */
+    public void openImage(File file) {
+
        // Get HSIProps for all open ratio images.
        RatioProps[] rto_props = getOpenRatioProps();
-       
-       // Get HSIProps for all open hsi images.     
-       HSIProps[] hsi_props = getOpenHSIProps();
-       
-       // Get SumProps for all open sum images.    
-       SumProps[] sum_props = getOpenSumProps();
-             
-       // Load the new file.
-       File file = loadMIMSFile();
-       if (file == null)
-          return;
 
-       // Restores state if image file.
-       if( file.getAbsolutePath().endsWith(NRRD_EXTENSION) ||
-           file.getAbsolutePath().endsWith(MIMS_EXTENSION) ) {
-                  restoreState(rto_props, hsi_props, sum_props);
+       // Get HSIProps for all open hsi images.
+       HSIProps[] hsi_props = getOpenHSIProps();
+
+       // Get SumProps for all open sum images.
+       SumProps[] sum_props = getOpenSumProps();
+
+       // Get previous image size.
+       int old_width = 0;
+       int old_height= 0;
+       int old_numMasses = 0;
+       if (image != null) {
+          old_width = image.getWidth();
+          old_height = image.getHeight();
+          old_numMasses = image.getNMasses();
        }
        
+       // Load the file.
+       if (file == null) {
+          file = loadMIMSFile();
+          if (file == null)
+             return;
+       } else {
+          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+          boolean opened = openFile(file);
+          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+          if (!opened)
+             return;
+       }
+
+       // Get new image size.
+       int new_width = image.getWidth();
+       int new_height = image.getHeight();
+       boolean same_size = ((old_height == new_height) && (old_width == new_width));
+       int new_numMasses = image.getNMasses();
+
+       // Perform some checks to see if we wanna restore state.
+       boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
+       boolean sameNumberMasses = (old_numMasses == new_numMasses);
+               
+       // Generate all images that were previously open.
+       if (isImageFile && sameNumberMasses) {
+          restoreState(rto_props, hsi_props, sum_props, same_size);
+       }
+       MimsRoiManager rm = getRoiManager();
+       if (rm != null) {
+          rm.resetRoiLocationsLength();
+       }
+
        //Autocontrast mass images.
        //Should add option to apply settings from previous image?
        autoContrastImages(getOpenMassImages());
-
-        MimsRoiManager rm = getRoiManager();
-        if( rm!=null ) {
-            rm.resetRoiLocationsLength();
-        }
-
-
-       // Keep the HSIView GUI up to date.
-       if (medianFilterRatios) {
-           hsiControl.setIsMedianFiltered(true);
-           hsiControl.setMedianFilterRadius(medianFilterRadius);
-       }
-       if (isSum) {
-           hsiControl.setIsSum(true);
-       }
-       if (isWindow) {
-           hsiControl.setIsWindow(true);
-           hsiControl.setWindowRange(windowRange);
-       }
+       autoContrastImages(getOpenSumImages());
 
         //Update notes gui
         if(image!=null) {
             imgNotes.setOutputFormatedText(image.getNotes());
-        }
-}                                                     
+        }       
+    }
 
     /**
      * Regenerates the ratio images, hsi images and sum images with
@@ -2116,8 +2112,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @param rto_props array of <code>RatioProps</code> objects.
      * @param hsi_props array of <code>HSIProps</code> objects.
      * @param sum_props array of <code>SumProps</code> objects.
+     * @param same_size <code>true</code> restores magnification.
      */
-    public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props){
+    public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props, boolean same_size){
 
        if (rto_props == null)
           rto_props = new RatioProps[0];
@@ -2133,6 +2130,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        for (int i=0; i<rto_props.length; i++){
           if (closeEnough(rto_props[i].getNumMassIdx(), rto_props[i].getNumMassValue()) &&
               closeEnough(rto_props[i].getDenMassIdx(), rto_props[i].getDenMassValue())) {
+             if (!same_size)
+                rto_props[i].setMag(1.0);
              mp = new MimsPlus(this, rto_props[i]);
              mp.showWindow();
              mp.setDisplayRange(rto_props[i].getMinLUT(), rto_props[i].getMaxLUT());
@@ -2143,11 +2142,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        for (int i=0; i<hsi_props.length; i++){
           if (closeEnough(hsi_props[i].getNumMassIdx(), hsi_props[i].getNumMassValue()) &&
               closeEnough(hsi_props[i].getDenMassIdx(), hsi_props[i].getDenMassValue())) {
-              HSIProps tempprops = hsi_props[i].clone();
-              mp = new MimsPlus(this, hsi_props[i]);
+             if (!same_size)
+                hsi_props[i].setMag(1.0);
+             mp = new MimsPlus(this, hsi_props[i]);
              mp.showWindow();
-             mp.getHSIProcessor().setProps(tempprops);
-             mp.hsiProps = tempprops;
+             mp.getHSIProcessor().setProps(hsi_props[i]);
+             mp.hsiProps = hsi_props[i];
           }
        }
 
@@ -2157,12 +2157,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
               //boolean foo = closeEnough(sum_props[i].getNumMassIdx(), sum_props[i].getNumMassValue()) && closeEnough(sum_props[i].getDenMassIdx(), sum_props[i].getDenMassValue());
              if (closeEnough(sum_props[i].getNumMassIdx(), sum_props[i].getNumMassValue()) &&
                  closeEnough(sum_props[i].getDenMassIdx(), sum_props[i].getDenMassValue())) {
+                if (!same_size)
+                   sum_props[i].setMag(1.0);
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
                 mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
              }
           } else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
              if (closeEnough(sum_props[i].getParentMassIdx(), sum_props[i].getParentMassValue())) {
+                if (!same_size)
+                   sum_props[i].setMag(1.0);
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
                 mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
