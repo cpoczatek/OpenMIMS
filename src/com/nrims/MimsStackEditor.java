@@ -855,7 +855,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
                is16Bit = false;
             }
          }
-         idx++;
+         idx++;         
       }
 
       for (int i = 0; i < cp[0].length; i++) {
@@ -1438,6 +1438,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
        // Get the block size from the text box.
        String comptext = compressTextField.getText();
+       if (comptext.trim().length() == 0)
+          comptext = Integer.toString(ui.getmimsAction().getSizeMinusNumberDropped());
        int blockSize = 1;
        try {
           blockSize = Integer.parseInt(comptext);
