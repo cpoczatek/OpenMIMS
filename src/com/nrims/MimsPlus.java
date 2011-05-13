@@ -1178,8 +1178,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             boolean linecheck = false;            
             int c = -1;
             if( (loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE) || (loopRoi.getType() == Roi.FREELINE) ) {
-                c = loopRoi.isHandle(x, y);
-                if(c != -1) linecheck=true;
+                c = loopRoi.isHandle(mX, mY);
+                if(c != -1)
+                   linecheck=true;
             }
 
             if(loopRoi.contains(mX, mY) || linecheck) {
