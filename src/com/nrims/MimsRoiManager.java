@@ -46,6 +46,7 @@ import javax.swing.JTextField;
  */
 public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
+    File roiFile = null;
     JPanel panel;
     MimsJTable table;
     static Frame instance;
@@ -1655,9 +1656,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         ImagePlus imp = getImage();
         if (imp == null) return;
         Macro.setOptions(null);
-        File file;
         if (abspath != null)
-           file = new File(abspath);
+           roiFile = new File(abspath);
         else {
 
            MimsJFileChooser fc = new MimsJFileChooser(ui);
@@ -1670,16 +1670,16 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            fc.setPreferredSize(new java.awt.Dimension(650, 500));
            if (fc.showOpenDialog(this) == JFileChooser.CANCEL_OPTION)
                return;
-           file = fc.getSelectedFile();
-           if (file == null)
+           roiFile = fc.getSelectedFile();
+           if (roiFile == null)
               return;
-           abspath = file.getAbsolutePath();
+           abspath = roiFile.getAbsolutePath();
         }
 
-       if (file.getAbsolutePath().endsWith(".zip")) {
+       if (roiFile.getAbsolutePath().endsWith(".zip")) {
           openZip(abspath);
        } else {
-          String name = file.getName();
+          String name = roiFile.getName();
           ij.io.Opener o = new ij.io.Opener();
           Roi roi = o.openRoi(abspath);
           if (roi != null) {
@@ -1948,6 +1948,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             savedpath = path;
             previouslySaved = true;
             resetTitle();
+            roiFile = new File(path);
         } catch (IOException e) {
             error("" + e);
             System.out.println(e.toString());
@@ -3580,6 +3581,15 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }catch(Exception e){
             return false;
         }
+    }
+
+    /**
+     * Gets the name of the current roi file
+     *
+     * @return the roi File, <code>null</code> if not open or not yet saved.
+     */
+    public File getRoiFile() {
+        return roiFile;
     }
 
 }
