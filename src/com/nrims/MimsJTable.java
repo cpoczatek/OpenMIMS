@@ -208,10 +208,20 @@ public class MimsJTable {
          JMenuItem menuItem;
          menu = new JMenu("File");
          menuBar.add(menu);
-         menuItem = new JMenuItem("Save");
+         
+         // Save as menut item.
+         menuItem = new JMenuItem("Save as...");
          menuItem.addActionListener(new java.awt.event.ActionListener() {
          public void actionPerformed(java.awt.event.ActionEvent evt) {
             saveActionPerformed(evt);
+         }});
+         menu.add(menuItem);
+
+         // Generate report menu item.
+         menuItem = new JMenuItem("Generate report");
+         menuItem.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            generateReport();
          }});
          menu.add(menuItem);
 
@@ -698,6 +708,21 @@ public class MimsJTable {
          return false;
 
       return true;
+   }
+
+   /**
+    * Display the reportGenerator object for generating user reports.
+    */
+   public void generateReport() {
+      ReportGenerator rg = new ReportGenerator(ui, this);
+      rg.setVisible(true);
+   }
+
+   /**
+    * Gets the scroll pane containing the table.
+    */
+   public JTable getJTable() {
+      return table;
    }
 
    /**

@@ -6,8 +6,10 @@
 package com.nrims;
 
 import com.nrims.data.MIMSFileFilter;
+import com.nrims.plot.MimsChartPanel;
 import com.tutego.jrtf.Rtf;
 import static com.tutego.jrtf.Rtf.rtf;
+import com.tutego.jrtf.RtfPara;
 import static com.tutego.jrtf.RtfPara.*;
 import com.tutego.jrtf.RtfPicture;
 import static com.tutego.jrtf.RtfText.*;
@@ -15,6 +17,7 @@ import ij.IJ;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import java.awt.AWTException;
+import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -38,9 +41,13 @@ import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 /**
  * ReportGenerator class displays a pop-up window that contains
@@ -56,18 +63,57 @@ public class ReportGenerator extends javax.swing.JFrame {
    File reportFile;
    MimsPlus imp;
    Date date;
+   MimsJFreeChart jfc;
+   MimsJTable jt;
+
+   private int reportType = 0;
    private int iconWidth = 128;
    private int iconHeight = 128;
+
    public static final String REPORT_EXTENSION = "_report.rtf";
+   public static final int IMAGE = 1;
+   public static final int PLOT = 2;
+   public static final int TABLE = 3;
 
    /**
-    * ReportGenerator constructor.
+    * ReportGenerator constructor for images.
     *
     * @param ui
     */
    public ReportGenerator(UI ui) {
       this.ui = ui;
       this.date = new Date();
+      this.reportType = IMAGE;
+      initComponents();
+      initComponentsCustom();
+   }
+
+   /**
+    * ReportGenerator constructor for plots.
+    *
+    * @param ui
+    * @param mimsjfreechart
+    */
+   public ReportGenerator(UI ui, MimsJFreeChart jfc) {
+      this.ui = ui;
+      this.date = new Date();
+      this.jfc = jfc;
+      this.reportType = PLOT;
+      initComponents();
+      initComponentsCustom();
+   }
+
+   /**
+    * ReportGenerator constructor for tables.
+    *
+    * @param ui
+    * @param mimsjtable
+    */
+   public ReportGenerator(UI ui, MimsJTable jt) {
+      this.ui = ui;
+      this.date = new Date();
+      this.jt = jt;
+      this.reportType = TABLE;
       initComponents();
       initComponentsCustom();
    }
@@ -81,11 +127,11 @@ public class ReportGenerator extends javax.swing.JFrame {
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
    private void initComponents() {
 
+      jScrollPane2 = new javax.swing.JScrollPane();
       jScrollPane1 = new javax.swing.JScrollPane();
       notesTextArea = new javax.swing.JTextArea();
       okButton = new javax.swing.JButton();
       cancelButton = new javax.swing.JButton();
-      reportJLabel = new javax.swing.JLabel();
       browseButton = new javax.swing.JButton();
       jPanel1 = new javax.swing.JPanel();
       imageIcon = new javax.swing.JLabel();
@@ -93,8 +139,10 @@ public class ReportGenerator extends javax.swing.JFrame {
       imageJlabel = new javax.swing.JLabel();
       imageFileJlabel = new javax.swing.JLabel();
       dateJlabel = new javax.swing.JLabel();
+      reportJLabel = new javax.swing.JLabel();
+      jPanel2 = new javax.swing.JPanel();
 
-      setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+      setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
       notesTextArea.setColumns(20);
       notesTextArea.setRows(5);
@@ -113,8 +161,6 @@ public class ReportGenerator extends javax.swing.JFrame {
             cancelButtonActionPerformed(evt);
          }
       });
-
-      reportJLabel.setText("reportfile");
 
       browseButton.setText("Browse...");
       browseButton.addActionListener(new java.awt.event.ActionListener() {
@@ -160,31 +206,40 @@ public class ReportGenerator extends javax.swing.JFrame {
             .addComponent(dateJlabel))
       );
 
+      reportJLabel.setText("reportfile");
+
+      javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+      jPanel2.setLayout(jPanel2Layout);
+      jPanel2Layout.setHorizontalGroup(
+         jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGap(0, 561, Short.MAX_VALUE)
+      );
+      jPanel2Layout.setVerticalGroup(
+         jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+         .addGap(0, 94, Short.MAX_VALUE)
+      );
+
       javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
       getContentPane().setLayout(layout);
       layout.setHorizontalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGroup(layout.createSequentialGroup()
+         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
             .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+               .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+               .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
                .addGroup(layout.createSequentialGroup()
-                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                           .addGroup(layout.createSequentialGroup()
-                              .addComponent(browseButton)
-                              .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                              .addComponent(reportJLabel))
-                           .addGroup(layout.createSequentialGroup()
-                              .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                              .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                              .addComponent(metadataJpanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 416, Short.MAX_VALUE))
-                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(cancelButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                  .addComponent(cancelButton)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                   .addComponent(okButton))
-               .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 583, Short.MAX_VALUE))
+               .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                  .addComponent(browseButton)
+                  .addGap(6, 6, 6)
+                  .addComponent(reportJLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 490, Short.MAX_VALUE))
+               .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                  .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                  .addComponent(metadataJpanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
             .addContainerGap())
       );
       layout.setVerticalGroup(
@@ -194,10 +249,12 @@ public class ReportGenerator extends javax.swing.JFrame {
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                .addComponent(metadataJpanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 81, Short.MAX_VALUE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                .addComponent(browseButton)
-               .addComponent(reportJLabel))
+               .addComponent(reportJLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -239,12 +296,7 @@ public class ReportGenerator extends javax.swing.JFrame {
     * @param args the command line arguments
     */
    public static void main(String args[]) {
-      java.awt.EventQueue.invokeLater(new Runnable() {
 
-         public void run() {
-            new ReportGenerator(null).setVisible(true);
-         }
-      });
    }
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JButton browseButton;
@@ -254,7 +306,9 @@ public class ReportGenerator extends javax.swing.JFrame {
    private javax.swing.JLabel imageIcon;
    private javax.swing.JLabel imageJlabel;
    private javax.swing.JPanel jPanel1;
+   private javax.swing.JPanel jPanel2;
    private javax.swing.JScrollPane jScrollPane1;
+   private javax.swing.JScrollPane jScrollPane2;
    private javax.swing.JPanel metadataJpanel;
    private javax.swing.JTextArea notesTextArea;
    private javax.swing.JButton okButton;
@@ -264,8 +318,6 @@ public class ReportGenerator extends javax.swing.JFrame {
    private void initComponentsCustom() {
 
       Font font = new Font(Font.SERIF, Font.PLAIN, 12);
-      metadataJpanel.setFont(font);
-      getContentPane().setFont(font);
 
       // Set the image.
       imp = (MimsPlus) ij.WindowManager.getCurrentImage();
@@ -273,8 +325,11 @@ public class ReportGenerator extends javax.swing.JFrame {
          return;
       }
       Image massImage = getImage();
-      ImageIcon icon = new ImageIcon(massImage);
-      icon = new ImageIcon(getScaledImage(icon.getImage(), iconWidth, iconHeight));
+      ImageIcon icon = null;
+      if (massImage != null){
+         icon = new ImageIcon(massImage);
+         icon = new ImageIcon(getScaledImage(icon.getImage(), iconWidth, iconHeight));
+      }
       imageIcon.setIcon(icon);
       imageIcon.setText("");
 
@@ -288,10 +343,24 @@ public class ReportGenerator extends javax.swing.JFrame {
 
       // Set the image label.
       String imageText = "<html><B>Image:</B> ";
-      if (imp.getMimsType() == MimsPlus.MASS_IMAGE) {
-         imageText += "mass ";
+      if (reportType == IMAGE) {
+         if (imp.getMimsType() == MimsPlus.MASS_IMAGE)
+            imageText += "mass ";
+         imageText += imp.getRoundedTitle();
+         remove(jPanel2);
+      } else if (reportType == PLOT) {
+         imageText += "Plot";
+         remove(jPanel2);
+      } else if (reportType == TABLE) {
+         imageText += "Table";
+         remove(imageIcon);
+         JTable table1 = jt.getJTable();
+         JTable table = new JTable(table1.getModel());
+         JScrollPane jsp = new JScrollPane(table);         
+         jsp.setPreferredSize(jPanel2.getPreferredSize());
+         jPanel2.setLayout(new BorderLayout());
+         jPanel2.add(jsp);
       }
-      imageText += imp.getRoundedTitle();
       imageJlabel.setFont(font);
       imageJlabel.setText(imageText);
 
@@ -308,6 +377,7 @@ public class ReportGenerator extends javax.swing.JFrame {
       dateJlabel.setFont(font);
       dateJlabel.setText(dateText);
 
+      pack();
    }
 
    /**
@@ -331,28 +401,11 @@ public class ReportGenerator extends javax.swing.JFrame {
     * @return - the current image
     */
    private Image getImage() {
-      ImageWindow win = imp.getWindow();
-      if (win == null) {
-         return null;
-      }
-      win.toFront();
-      Point loc = win.getLocation();
-      ImageCanvas ic = win.getCanvas();
-      ic.update(ic.getGraphics());
-
-      Rectangle bounds = ic.getBounds();
-      loc.x += bounds.x;
-      loc.y += bounds.y;
-      Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
-      Robot robot = null;
-      try {
-         robot = new Robot();
-      } catch (AWTException ex) {
-         IJ.error("Unable to capture image");
-         return null;
-      }
-      robot.delay(100);
-      Image img = robot.createScreenCapture(r);
+      Image img = null;
+      if (reportType == IMAGE)
+         img = ui.getScreenCaptureCurrentImage();
+      else if (reportType == PLOT)
+         img = getPlotImage();
 
       return img;
    }
@@ -361,50 +414,16 @@ public class ReportGenerator extends javax.swing.JFrame {
     * Writes the report.
     */
    private void writeReport() {
-      Image img = getImage();
-
-      // Meta Data
-      
-      // date
-      DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm");
-      String dateText = dateFormat.format(date);
-
-      // image
-      String imageName = "";
-      if (imp.getMimsType() == MimsPlus.MASS_IMAGE)
-         imageName = "mass";
-      imageName += imp.getRoundedTitle();
-
-      // raster
-      int raster = ui.getOpener().getRaster()/1000;
-      String rs = ((Integer)raster).toString() + " microns";
-
-      // image file
-      String imageFile = ui.getOpener().getImageFile().getAbsolutePath();
-
-      // roi file
-      String roiFileString = "null";
-      File roiFile = ui.getRoiManager().getRoiFile();
-      if (roiFile != null)
-         roiFileString = roiFile.getAbsolutePath();
-
-      // notes
-      String notes = notesTextArea.getText();
 
       Rtf newcontent = null;
       try {
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         ImageIO.write((RenderedImage) img, "PNG", baos);
-         newcontent = rtf().section(
-                 p(bold("DATE: "), dateText),
-                 p(picture(new ByteArrayInputStream(baos.toByteArray())).type(RtfPicture.PictureType.AUTOMATIC)),
-                 p(bold("Image: "), imageName, bold(" Raster: "), rs),
-                 p(bold("Image File: "), imageFile),
-                 p(bold("Roi File: "), roiFileString),
-                 p(bold("Notes: "), notes),
-                 p(""),
-                 p("")
-         );
+         if (reportType == IMAGE) {
+            newcontent = getImageRtfContent();
+         } else if (reportType == PLOT) {
+            newcontent = getPlotRtfContent();
+         } else if (reportType == TABLE) {
+            newcontent = getTableRtfContent();
+         }
 
          if (reportFile.exists()) {
             boolean isRTF = isValidRTF();
@@ -424,7 +443,6 @@ public class ReportGenerator extends javax.swing.JFrame {
             newcontent.out(new FileWriter(reportFile));
             close();
          }
-
       } catch (Exception x) {
          IJ.error("Error writing " + reportFile.getName());
       }
@@ -544,5 +562,137 @@ public class ReportGenerator extends javax.swing.JFrame {
 
       return last_cb_position;
    }
-}
 
+   /**
+    * Returns the AWT Image associated with a MimsJFreeChart object.
+    *
+    * @return the AWT image of the plot.
+    */
+   private Image getPlotImage() {
+      MimsChartPanel mcp = jfc.getChartPanel();
+      BufferedImage img = mcp.getChart().createBufferedImage(mcp.getWidth(), mcp.getHeight());
+      return img;
+   }
+
+   private Rtf getImageRtfContent() {
+
+      // image
+      Image img = getImage();
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try {
+         ImageIO.write((RenderedImage) img, "PNG", baos);
+      } catch (IOException ex) {
+         return null;
+      }
+      Rtf newcontent = rtf().section(
+              p(bold("DATE: "), getDate()),
+              p(picture(new ByteArrayInputStream(baos.toByteArray())).type(RtfPicture.PictureType.AUTOMATIC)),
+              p(bold("Image: "), getImageName(), bold(" Raster: "), getRaster()),
+              p(bold("Image File: "), ui.getOpener().getImageFile().getAbsolutePath()),
+              p(bold("Roi File: "), getRoiFileString()),
+              p(bold("Notes: "), notesTextArea.getText()),
+              p(""),
+              p(""));
+
+      return newcontent;
+   }
+
+   private Rtf getPlotRtfContent() {
+
+      // image
+      Image img = getImage();
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try {
+         ImageIO.write((RenderedImage) img, "PNG", baos);
+      } catch (IOException ex) {
+         return null;
+      }
+      Rtf newcontent = rtf().section(
+              p(bold("DATE: "), getDate()),
+              p(picture(new ByteArrayInputStream(baos.toByteArray())).type(RtfPicture.PictureType.AUTOMATIC)),
+              p(bold("Image File: "), ui.getOpener().getImageFile().getAbsolutePath()),
+              p(bold("Roi File: "), getRoiFileString()),
+              p(bold("Notes: "), notesTextArea.getText()),
+              p(""),
+              p(""));
+
+      return newcontent;
+   }
+
+   private Rtf getTableRtfContent() throws IOException {
+
+      // initialize
+      DefaultTableModel dft = (DefaultTableModel) jt.getJTable().getModel();
+      int cols = dft.getColumnCount();
+      int rows = dft.getRowCount();
+      Object[] objs = new Object[cols];
+      ArrayList rtfs_arr = new ArrayList<RtfPara>();
+
+      // Date
+      rtfs_arr.add(p(bold("DATE: "), getDate()));
+
+      // Column headers
+      for (int i = 0; i < cols; i++)
+         objs[i] = dft.getColumnName(i);
+      rtfs_arr.add(row(objs).bottomCellBorder().leftCellBorder().rightCellBorder());
+
+      // Data
+      for (int row = 0; row < rows; row++) {
+         objs = new Object[cols];
+         for (int col = 0; col < cols; col++) {
+            objs[col] = dft.getValueAt(row, col);
+         }
+         rtfs_arr.add(row(objs).leftCellBorder().rightCellBorder());
+      }
+
+      // Other
+      rtfs_arr.add(p(bold("Image File: "), ui.getOpener().getImageFile().getAbsolutePath()));
+      rtfs_arr.add(p(bold("Roi File: "), getRoiFileString()));
+      rtfs_arr.add(p(bold("Notes: "), notesTextArea.getText()));
+      rtfs_arr.add(p(""));
+      rtfs_arr.add(p(""));
+
+
+      RtfPara[] rtf_para = new RtfPara[rtfs_arr.size()];
+      for (int index = 0; index < rtfs_arr.size(); index++) {
+         rtf_para[index] = (RtfPara)rtfs_arr.get(index);
+      }
+      Rtf newcontent = rtf().section(rtf_para);
+
+      return newcontent;
+   }
+
+
+   private String getDate() {
+      DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+      String dateText = dateFormat.format(date);
+      return dateText;
+   }
+
+   private String getImageName() {
+      String imageName = "";
+      if (imp.getMimsType() == MimsPlus.MASS_IMAGE)
+         imageName = "mass";
+      imageName += imp.getRoundedTitle();
+      return imageName;
+   }
+
+   private String getRaster() {
+      int raster = ui.getOpener().getRaster()/1000;
+      String rs = ((Integer)raster).toString() + " microns";
+      return rs;
+   }
+
+   private String getRoiFileString() {
+            // roi file
+      String roiFileString = "null";
+      File roiFile = ui.getRoiManager().getRoiFile();
+      if (roiFile != null)
+         roiFileString = roiFile.getAbsolutePath();
+      return roiFileString;
+   }
+
+
+}

@@ -3051,12 +3051,22 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         return cbHideLabels.isSelected();
     }
 
-    /**Shows the ROI manager frame.*/
-    public void showFrame() {
+   /**Shows the ROI manager frame.*/
+   public void showFrame() {
         setVisible(true);
         toFront();
         setExtendedState(NORMAL);
-    }
+   }
+
+   /**Shows the ROI manager frame.*/
+   public void viewManager() {
+      if (super.getExtendedState() == ICONIFIED) {
+         showFrame();
+      } else {
+         setVisible(false);
+         setVisible(true);
+      }
+   }
 
     /**
      * This class controls how ROIs are listed and displayed in

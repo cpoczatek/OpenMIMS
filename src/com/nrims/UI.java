@@ -15,6 +15,7 @@ import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
 
 import ij.io.FileSaver;
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -278,6 +279,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * windows if the mode is set to close open windows.
      */
     private synchronized void closeCurrentImage() {
+       if (getRoiManager() != null) {
+          if (getRoiManager().isVisible())
+             getRoiManager().close();
+       }
         this.windowPositions = gatherWindowPosistions();
         this.hiddenWindows = gatherHiddenWindows();
         this.windowZooms = this.gatherWindowZooms();
@@ -2378,7 +2383,11 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
        IJ.noImage();
        return;
    }
-   
+
+   Image img = getScreenCaptureCurrentImage();
+   if (img == null)
+      return;
+
    // Bring up JFileChooser and get file name.
    File file;
    MimsJFileChooser fc = new MimsJFileChooser(this);
@@ -2410,13 +2419,33 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
    // Save file.
    try {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      lastFolder = file.getParent();
-      setIJDefaultDir(lastFolder);
+      ImagePlus imp2 = new ImagePlus(file.getName(), img);
+      FileSaver saver = new ij.io.FileSaver(imp2);
+      saver.saveAsPng(file.getAbsolutePath());
+   } catch (Exception e) {
+      ij.IJ.error("Save Error", "Error saving file.");
+   } finally {
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+   }
+}//GEN-LAST:event_captureImageMenuItemActionPerformed
 
-      ImagePlus imp2 = null;
-      ImageWindow win = imp.getWindow();
+/**
+ * Gets a screen capture for the current image.
+ *
+ * @return the AWT Image.
+ */
+public Image getScreenCaptureCurrentImage() {
+   MimsPlus imp = (MimsPlus) ij.WindowManager.getCurrentImage();
+   ImageWindow win = imp.getWindow();
       if (win == null) {
-         return;
+         return null;
+      }
+      win.setVisible(false);
+      win.setVisible(true);
+      win.repaint();
+      try {
+         Thread.sleep(500);
+      } catch (Exception e) {
       }
       win.toFront();
       Point loc = win.getLocation();
@@ -2427,20 +2456,19 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
       loc.x += bounds.x;
       loc.y += bounds.y;
       Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
-      Robot robot = new Robot();
+      Robot robot = null;
+      try {
+         robot = new Robot();
+      } catch (AWTException ex) {
+         IJ.error("Unable to capture image");
+         return null;
+      }
       robot.delay(100);
       Image img = robot.createScreenCapture(r);
-      if (img != null) {
-         imp2 = new ImagePlus(file.getName(), img);
-      }
-      FileSaver saver = new ij.io.FileSaver(imp2);
-      saver.saveAsPng(file.getAbsolutePath());
-   } catch (Exception e) {
-      ij.IJ.error("Save Error", "Error saving file.");
-   } finally {
-      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-   }
-}//GEN-LAST:event_captureImageMenuItemActionPerformed
+
+      return img;
+}
+
 
 /**
  * Action method for the Utilities>Import .im  List menu item. Loads
@@ -2668,7 +2696,7 @@ private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GE
 
 /** Action method for View>Roi Manager menu item. Display the Roi Manager. */
 private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-   getRoiManager().showFrame();
+   getRoiManager().viewManager();
 }//GEN-LAST:event_jMenuItem5ActionPerformed
 
 private void testMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testMenuItem1ActionPerformed

@@ -27,6 +27,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.chart.plot.Plot;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.util.ResourceBundleWrapper;
@@ -51,6 +53,33 @@ public class MimsJFreeChart extends JFrame {
    public MimsJFreeChart(UI ui) {
       super("Plot");
       this.ui = ui;
+      JMenuBar menuBar = new JMenuBar();
+      JMenu menu;
+      JMenuItem menuItem;
+      menu = new JMenu("File");
+      menuBar.add(menu);
+
+      // Save as menu item.
+      menuItem = new JMenuItem("Save");
+      menuItem.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            saveAs();
+         }
+      });
+      menu.add(menuItem);
+
+      // Generate report menu item.
+      menuItem = new JMenuItem("Generate Report");
+      menuItem.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            generateReport();
+         }
+      });
+      menu.add(menuItem);
+
+      // Generate frame.
+      setJMenuBar(menuBar);
+      pack();
       setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
    }
 
@@ -108,23 +137,21 @@ public class MimsJFreeChart extends JFrame {
          });
          chartpanel.getPopupMenu().add(logscale);
 
+         // Add menu item for exporting plot to report.
+         JMenuItem genreport = new JMenuItem("Generate Report");
+         genreport.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               generateReport();
+            }
+         });
+         chartpanel.getPopupMenu().add(genreport);
+
          // Replace Save As... menu item.
          chartpanel.getPopupMenu().remove(3);
          JMenuItem saveas = new JMenuItem("Save as...");
          saveas.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
-               fileChooser.setSelectedFile(new File(ui.getLastFolder(), ui.getImageFilePrefix()+".png"));
-               ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
-               ExtensionFileFilter filter = new ExtensionFileFilter(
-                       localizationResources.getString("PNG_Image_Files"), ".png");
-               fileChooser.addChoosableFileFilter(filter);
-               fileChooser.setFileFilter(filter);
-               int option = fileChooser.showSaveDialog(chartpanel);
-               if (option == MimsJFileChooser.APPROVE_OPTION) {
-                  String filename = fileChooser.getSelectedFile().getPath();
-                  MimsJFreeChart.saveAs(filename, chartpanel, getWidth(), getHeight());
-               }
+               saveAs();
             }
          });
          chartpanel.getPopupMenu().add(saveas, 3);
@@ -325,10 +352,10 @@ public class MimsJFreeChart extends JFrame {
 
                   // Generate a name for the dataset.
                   if (seriesname[i][j][k] == null) {
-                     tempName = image.getRoundedTitle() + " " + stats[k] + " \n" + "r" + rois[i].getName();
+                     tempName = image.getRoundedTitle() + " " + stats[k] + " r" + rois[i].getName();
                      int dup = 1;
                      while (seriesNames.contains(tempName)) {
-                        tempName = image.getRoundedTitle() + " " + stats[k] + " \n" + "r" + rois[i].getName() + " (" + dup + ")";
+                        tempName = image.getRoundedTitle() + " " + stats[k] + " r" + rois[i].getName() + " (" + dup + ")";
                         dup++;
                      }
                      seriesNames.add(tempName);
@@ -409,6 +436,23 @@ public class MimsJFreeChart extends JFrame {
    }
 
    /**
+    * Display the reportGenerator object for generating user reports.
+    */
+   public void generateReport() {
+      ReportGenerator rg = new ReportGenerator(ui, this);
+      rg.setVisible(true);
+   }
+
+   /**
+    * Returns the ChartPanel.
+    *
+    * @return the chartpanel.
+    */
+   public MimsChartPanel getChartPanel() {
+      return chartpanel;
+   }
+
+   /**
     * Swap crosshairs from hidden to shown or vice versa
     * @param chartpanel GUI element to be affected
     */
@@ -455,17 +499,26 @@ public class MimsJFreeChart extends JFrame {
    /**
     * Saveas the chart as a .png
     */
-    public static void saveAs(String filename, MimsChartPanel mchartpanel, int width, int height){
-
+    public void saveAs(){
+       MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
+       fileChooser.setSelectedFile(new File(ui.getLastFolder(), ui.getImageFilePrefix() + ".png"));
+       ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
+       ExtensionFileFilter filter = new ExtensionFileFilter(
+               localizationResources.getString("PNG_Image_Files"), ".png");
+       fileChooser.addChoosableFileFilter(filter);
+       fileChooser.setFileFilter(filter);
+       int option = fileChooser.showSaveDialog(chartpanel);
+       if (option == MimsJFileChooser.APPROVE_OPTION) {
+          String filename = fileChooser.getSelectedFile().getPath();
           if (!filename.endsWith(".png")) {
              filename = filename + ".png";
           }
           try {
-             ChartUtilities.saveChartAsPNG(new File(filename), mchartpanel.getChart(), width, height);
+             ChartUtilities.saveChartAsPNG(new File(filename), chartpanel.getChart(), getWidth(), getHeight());
           } catch (IOException ioe) {
              IJ.error("Unable to save file.\n\n" + ioe.toString());
           }
-
+       }
     }
 
    /**
