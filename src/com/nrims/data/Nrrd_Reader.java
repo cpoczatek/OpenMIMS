@@ -351,6 +351,9 @@ public class Nrrd_Reader implements Opener {
       return pixels;
     }
 
+    public void close() {
+    }
+
     public void setStackIndex(int index) throws IndexOutOfBoundsException {
         this.currentIndex = index;
     }

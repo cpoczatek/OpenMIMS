@@ -43,6 +43,8 @@ public interface Opener {
 
     public void setStackIndex(int currentIndex);
 
+    public void close();
+
     // Metadata
     public String getPosition();
     public String[] getMassNames();
