@@ -4,6 +4,8 @@ import java.io.*;
 import java.text.DecimalFormat;
 import com.nrims.common.*;
 import ij.io.FileInfo;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Class responsible for opening MIMS files.
@@ -705,6 +707,16 @@ public class Mims_Reader implements Opener {
     public void setNotes(String notes) {
         this.notes = notes;
     }
+
+    public void close() {
+      try {
+         if (in != null)
+            in.close();
+      } catch (IOException ex) {
+         ex.printStackTrace();
+      }
+    }
+    
     /*
     public String getInfo() {
         String info = "";
