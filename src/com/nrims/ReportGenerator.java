@@ -14,17 +14,11 @@ import static com.tutego.jrtf.RtfPara.*;
 import com.tutego.jrtf.RtfPicture;
 import static com.tutego.jrtf.RtfText.*;
 import ij.IJ;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
-import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
@@ -60,7 +54,7 @@ import javax.swing.table.DefaultTableModel;
 public class ReportGenerator extends javax.swing.JFrame {
 
    UI ui;
-   File reportFile;
+   static File reportFile;
    MimsPlus imp;
    Date date;
    MimsJFreeChart jfc;
@@ -334,10 +328,13 @@ public class ReportGenerator extends javax.swing.JFrame {
       imageIcon.setText("");
 
       // Set the report file label.
-      File imageDir = ui.getOpener().getImageFile().getParentFile();
-      String dirName = imageDir.getName();
-      String reportName = dirName + REPORT_EXTENSION;
-      reportFile = new File(imageDir, reportName);
+      if (reportFile == null) {
+         File imageDir = ui.getOpener().getImageFile().getParentFile();
+         String dirName = imageDir.getName();
+         String reportName = dirName + REPORT_EXTENSION;
+         reportFile = new File(imageDir, reportName);
+         
+      }
       reportJLabel.setFont(font);
       reportJLabel.setText(reportFile.getAbsolutePath());
 
