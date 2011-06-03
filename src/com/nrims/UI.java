@@ -38,10 +38,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -81,6 +85,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private boolean isRatio = true;
     private boolean[] bOpenMass = new boolean[maxMasses];
     private static boolean isTesting = false;
+    private boolean silentMode = false;
             
     private String lastFolder = null;      
     public  File   tempActionFile;                        
@@ -225,6 +230,31 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       });
    }
 
+    public UI(boolean silentMode) {
+      super("NRIMS Analysis Module");
+
+      this.silentMode = true;      
+      System.out.println("Ui constructor");
+      System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
+
+      //read in preferences so values are gettable
+      //by various tabs (ie mimsTomography, HSIView, etc.
+      //when constructed further down.
+      prefs = new PrefFrame(this);
+
+      if (image == null) {
+         for (int i = 0; i < maxMasses; i++) {
+            massImages[i] = null;
+            ratioImages[i] = null;
+            hsiImages[i] = null;
+            segImages[i] = null;
+         }
+         for (int i = 0; i < 2 * maxMasses; i++) {
+            sumImages[i] = null;
+         }
+      }
+   }
+
     /**
      * Insertion status of the current MimsPlus object
      * @param mp object to be inserted.
@@ -278,11 +308,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Closes the current image and its associated set of
      * windows if the mode is set to close open windows.
      */
-    private synchronized void closeCurrentImage() {
-       if (getRoiManager() != null) {
-          if (getRoiManager().isVisible())
-             getRoiManager().close();
-       }
+    public synchronized void closeCurrentImage() {
+        if (getRoiManager() != null) {
+           if (getRoiManager().isVisible())
+              getRoiManager().close();
+        }
         this.windowPositions = gatherWindowPosistions();
         this.hiddenWindows = gatherHiddenWindows();
         this.windowZooms = this.gatherWindowZooms();
@@ -345,6 +375,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     }
                 }
             }
+        }
+        if (image != null) {
+            image.close();
         }
     }
 
@@ -476,7 +509,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @param file absolute file path.
      * @throws java.lang.NullPointerException
      */
-    public synchronized void loadMIMSFile(File file) throws NullPointerException {
+    public synchronized boolean loadMIMSFile(File file) throws NullPointerException {
         if (!file.exists()) {
             throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
         }
@@ -497,11 +530,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 } else if (file.getName().endsWith(NRRD_EXTENSION)) {
                    image = new Nrrd_Reader(file);
                 } else {
-                   return;
+                   return false;
                 }               
             } catch (Exception e) {
                 IJ.error("Failed to open " + file + "\n");
-                return;
+                return false;
             }
 
             int nMasses = image.getNMasses();
@@ -535,7 +568,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 gd.showDialog();
                 if (gd.wasCanceled()) {
                     image = null;
-                    return;
+                    return false;
                 }
 
                 nMasses = 0;
@@ -586,10 +619,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         if (image.getNImages() > 1) {
                             massImages[i].setSlice(1);
                         }
-                        massImages[i].show();
+                        if (isSilentMode() == false)
+                           massImages[i].show();
                     }
                 }
 
+                if (isSilentMode() == false) {
                 if (this.windowPositions != null) {
                     applyWindowPositions(windowPositions);
                 } else {
@@ -599,6 +634,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (this.windowZooms != null) {
                    applyWindowZooms(windowZooms);
                 }
+               }
 
             } catch (Exception x) {
                 x.printStackTrace();
@@ -606,7 +642,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
             for (int i = 0; i < image.getNMasses(); i++) {
                 if (bOpenMass[i]) {
-                    massImages[i].addListener(this);
+                   if (isSilentMode() == false)
+                       massImages[i].addListener(this);
                 } else {
                     massImages[i] = null;
                 }
@@ -623,6 +660,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 //TODO: throws an exception when opening an image with 2 masses
                 segmentation = new SegmentationForm(this);
 
+                if (isSilentMode() == false) {
                 jTabbedPane1.setComponentAt(0, mimsData);
                 jTabbedPane1.setTitleAt(0, "MIMS Data");
                 jTabbedPane1.add("Process", hsiControl);
@@ -631,6 +669,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 jTabbedPane1.add("Tomography", mimsTomography);
                 jTabbedPane1.add("Segmentation", segmentation);
                 jTabbedPane1.add("MIMS Log", mimsLog);
+                }
 
             } else {
                 resetViewMenu();
@@ -640,9 +679,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 int[] indices = mimsTomography.getSelectedStatIndices();
                 mimsTomography = new MimsTomography(this);
                 mimsTomography.setSelectedStatIndices(indices);
-                mimsAction = new MimsAction(image);
-                //TODO: throws an exception when opening an image with 2 masses
+                mimsAction = new MimsAction(image);                
                 segmentation = new SegmentationForm(this);
+
+                if (isSilentMode() == false) {
                 jTabbedPane1.setComponentAt(0, mimsData);
                 jTabbedPane1.setTitleAt(0, "MIMS Data");
                 jTabbedPane1.setComponentAt(1, hsiControl);
@@ -653,8 +693,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
                 mimsData.setMimsImage(image);
                 hsiControl.updateImage();
+               }
             }
-            
+
+            if (isSilentMode() == false) {
             jTabbedPane1.addChangeListener(new ChangeListener() {
                public void stateChanged(ChangeEvent e){
                   int selected = jTabbedPane1.getSelectedIndex();
@@ -663,15 +705,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   } 
                }
             });
+           }
 
             this.mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
             this.mimsTomography.resetImageNamesList();
-            this.mimsStackEditing.resetSpinners();
-
+            this.mimsStackEditing.resetSpinners();         
+            
             openers.clear();
             String fName = file.getName();
-            openers.put(fName, image);            
-            
+            openers.put(fName, image);
+
             // Add the windows to the combobox in CBControl.            
             MimsPlus[] mp = getOpenMassImages();
             for(int i = 0; i < mp.length; i++) {
@@ -685,7 +728,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         } finally {
             currentlyOpeningImages = false;
-        }        
+        }
+
+        return true;
     }
 
     /**
@@ -822,9 +867,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * mass images in the current data file.
      */
     private void resetViewMenu() {
-        int c=0;
+
+       if (isSilentMode())
+          return;
+
+       int c=0;
         for(int i = 0; i< windowPositions.length; i++) {
-            if(windowPositions[i]!=null) c++;
+           if(windowPositions[i]!=null) c++;
         }
 
         for (int i = 0; i < viewMassMenuItems.length; i++) {
@@ -851,6 +900,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Initializes the view menu.*/
     private void initializeViewMenu() {
+
+       if (isSilentMode())
+          return;
+
         this.viewMassMenuItems = new javax.swing.JRadioButtonMenuItem[this.maxMasses];
 
         for (int i = 0; i < viewMassMenuItems.length; i++) {
@@ -1954,7 +2007,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       try {
 
-        this.getOpener().setNotes(imgNotes.getOutputFormatedText());
+        if (imgNotes != null)
+           getOpener().setNotes(imgNotes.getOutputFormatedText());
+
         // Save the original .im file to a new file of the .nrrd file type.
         String nrrdFileName = name;
         if (!name.endsWith(NRRD_EXTENSION))
@@ -2436,13 +2491,13 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
  */
 public Image getScreenCaptureCurrentImage() {
    MimsPlus imp = (MimsPlus) ij.WindowManager.getCurrentImage();
-   ImageWindow win = imp.getWindow();
+      final ImageWindow win = imp.getWindow();
       if (win == null) {
          return null;
       }
       win.setVisible(false);
       win.setVisible(true);
-      win.repaint();
+            win.repaint();
       try {
          Thread.sleep(500);
       } catch (Exception e) {
@@ -3268,6 +3323,15 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
     /**
+     * Return <code>true</code> if the plugin is in silent mode.
+     *
+     * @return <code>true</code> if the plugin is in silent mode.
+     */
+    public boolean isSilentMode() {
+        return silentMode;
+    }
+
+    /**
      * Gets the flag indicating if the plugin is in the process of updating.
      *
      * @return <code>true</code> if updating, otherwise false.
@@ -3342,6 +3406,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      * @param msg the message to display.
      */
     public synchronized void updateStatus(String msg) {
+       if (isSilentMode())
+          return;
         //if (bUpdating) {
         //    return;
         //}

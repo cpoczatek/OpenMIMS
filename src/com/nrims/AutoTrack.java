@@ -105,7 +105,7 @@ public class AutoTrack implements Runnable {
            ui.getmimsStackEditing().notifyComplete(trans);
     }
 
-    private double[][] track(ImagePlus imp) {
+    public double[][] track(ImagePlus imp) {
 
         if (imp == null) {
             IJ.error("No image available");

@@ -1,0 +1,456 @@
+package com.nrims;
+
+import com.nrims.AutoTrack;
+import com.nrims.HSIProps;
+import com.nrims.UI;
+import com.nrims.data.Mims_Reader;
+import com.nrims.data.Nrrd_Reader;
+import com.nrims.data.Nrrd_Writer;
+import com.nrims.data.Opener;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.io.FileInfo;
+import ij.io.FileSaver;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Properties;
+
+public class Converter {
+
+   // Properties file strings.
+   Properties defaultProps;
+   public static final String  PROPERTIES_PNGS          = "PNGS";
+   public static final String  PROPERTIES_PNG_DIRECTORY = "PNG_DIRECTORY";
+   public static final String  PROPERTIES_TRACK         = "TRACK";
+   public static final String  PROPERTIES_TRACK_MASS    = "TRACK_MASS";
+   public static final String  PROPERTIES_HSI           = "HSI";
+   public static final String  PROPERTIES_THRESH_UPPER  = "HSI_THRESH_UPPER";
+   public static final String  PROPERTIES_THRESH_LOWER  = "HSI_THRESH_LOWER";
+   public static final String  PROPERTIES_RGB_MAX       = "HSI_RGB_MAX";
+   public static final String  PROPERTIES_RGB_MIN       = "HSI_RGB_MIN";
+   public static final String  PROPERTIES_USE_SUM       = "USE_SUM";
+   public static final String  PROPERTIES_MEDIANIZE     = "MEDIANIZE";
+   public static final String  PROPERTIES_MEDIANIZATION_RADIUS = "THRESH_LOWER";
+
+   // Default values.
+   public static final boolean TRACK_DEFAULT            = false;
+   public static final boolean PNG_DEFAULT              = false;
+   public static final boolean USE_SUM_DEFAULT          = false;
+   public static final boolean MEDIANIZE_DEFAULT        = false;
+   public static final double  MEDIANIZE_RADIUS_DEFAULT = 1.5;
+   public static final String  TRACK_MASS_DEFAULT       = "0";
+   public static final String  HSI_DEFAULT              = "";
+   public static final String  THRESH_UPPER_DEFAULT     = "";
+   public static final String  THRESH_LOWER_DEFAULT     = "";
+   public static final String  RGB_MAX_DEFAULT          = "";
+   public static final String  RGB_MIN_DEFAULT          = "";
+   public static final int     RGB_MAX_INT_DEFAULT      = 51;
+   public static final int     RGB_MIN_INT_DEFAULT      = 1;
+   public static final String  PNG_DIRECTORY_DEFAULT    = "";
+   public static final String  NRRD_EXTENSION           = ".nrrd";
+
+   UI ui;
+   boolean track           = TRACK_DEFAULT;
+   boolean pngs            = PNG_DEFAULT;
+   boolean useSum          = USE_SUM_DEFAULT;
+   boolean medianize       = MEDIANIZE_DEFAULT;
+   String massToTrack      = TRACK_MASS_DEFAULT;
+   String[] HSIs           = new String[0];
+   String[] threshUppers   = new String[0];
+   String[] threshLowers   = new String[0];
+   String[] rgbMaxes       = new String[0];
+   String[] rgbMins        = new String[0];
+   int trackIndex          = 0;
+   double medianizeRadius  = MEDIANIZE_RADIUS_DEFAULT;
+   String pngDir           = PNG_DIRECTORY_DEFAULT;
+   
+   public Converter(boolean png, boolean bTrack, String sMassToTrack,
+           String propertiesFileString, ArrayList<String> filesArrayList) {
+
+      ui = new UI(true);
+      pngs = png;
+      track = bTrack;
+      massToTrack = sMassToTrack;
+
+      if (pngs) {
+         try {
+            readProperties(propertiesFileString);
+            setUISettings();
+         } catch (FileNotFoundException fnfe) {
+            System.out.println("Can not find Properties file: " + propertiesFileString);
+            return;
+         } catch (IOException ioe) {
+            System.out.println("Trouble reading Properties file: " + propertiesFileString);
+            return;
+         }
+      }
+      go(filesArrayList);
+   }
+
+   private void readProperties(String propertiesFileString) throws FileNotFoundException, IOException {
+
+      // create and load default properties
+      defaultProps = new Properties();
+      FileInputStream in = new FileInputStream(propertiesFileString);
+      defaultProps.load(in);
+      defaultProps.list(System.out);
+      in.close();
+
+      // Track.
+      track = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_TRACK, Boolean.toString(track)));
+      if (track)
+         massToTrack = defaultProps.getProperty(PROPERTIES_TRACK_MASS, massToTrack);
+
+      // Pngs
+      pngs = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_PNGS, Boolean.toString(pngs)));
+      if (pngs) {
+         String pngDirString = defaultProps.getProperty(PROPERTIES_PNG_DIRECTORY, PNG_DIRECTORY_DEFAULT);
+         if (pngDirString.trim().length() == 0)
+            pngDir = null;
+         else
+            pngDir = (new File(pngDirString)).getAbsolutePath();
+      } else {
+         return;
+      }
+
+      // Hsi's
+      String HSI = defaultProps.getProperty(PROPERTIES_HSI, HSI_DEFAULT);
+      HSIs = HSI.split(" ");
+      if (HSIs.length == 0)
+         return;
+
+      // Upper threshold.
+      String threshUpper = defaultProps.getProperty(PROPERTIES_THRESH_UPPER, THRESH_UPPER_DEFAULT);
+      threshUppers = threshUpper.split(" ");
+
+      // Lower threshold
+      String threshLower = defaultProps.getProperty(PROPERTIES_THRESH_LOWER, THRESH_LOWER_DEFAULT);
+      threshLowers = threshLower.split(" ");
+
+      // RGB Max
+      String rgbMax = defaultProps.getProperty(PROPERTIES_RGB_MAX, RGB_MAX_DEFAULT);
+      rgbMaxes = rgbMax.split(" ");
+
+      // RGB Min
+      String rgbMin = defaultProps.getProperty(PROPERTIES_RGB_MIN, RGB_MIN_DEFAULT);
+      rgbMins = rgbMin.split(" ");
+
+      // Use sum.
+      useSum = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_USE_SUM, Boolean.toString(USE_SUM_DEFAULT)));
+
+      // Medianize
+      medianize = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_MEDIANIZE, Boolean.toString(MEDIANIZE_DEFAULT)));
+
+      // Medianization radius
+      medianizeRadius = Double.parseDouble(defaultProps.getProperty(PROPERTIES_MEDIANIZATION_RADIUS, Double.toString(MEDIANIZE_RADIUS_DEFAULT)));
+
+   }
+
+   private void setUISettings() {
+      if (useSum)
+         ui.setIsSum(true);
+
+      if (medianize) {
+         ui.setMedianFilterRatios(true);
+         ui.setMedianFilterRadius(medianizeRadius);
+      }
+   }
+
+   private void go(ArrayList<String> filesArrayList) {
+
+      // Make sure we have files.
+      if (filesArrayList.isEmpty()) {
+         System.out.println("No files specified.");
+         return;
+      }
+
+      // Open the file, track and save.
+      for (String fileString : filesArrayList) {
+         
+         // Open File.         
+         boolean opened = openFile(fileString);
+         if (!opened) {
+            System.out.println("Failed to open " + fileString);
+            continue;
+         }
+
+         // Track File.
+         if (track) {
+            boolean tracked = trackFile();
+            if (!tracked) {
+               System.out.println("Failed to track " + fileString);
+               continue;
+            }
+         }
+
+         // Generate Pngs.
+         if (pngs) {
+            generate_pngs();
+         }
+         
+         // Save File.         
+         boolean wrote = writeNrrd();
+         if (!wrote) {
+            System.out.println("Failed to convert " + fileString);
+            continue;
+         }
+
+         ui.closeCurrentImage();
+      }
+   }
+
+   private boolean writeNrrd(){
+
+      // Initialize variables.
+      boolean written = false;
+      File imFile = ui.getOpener().getImageFile().getAbsoluteFile();
+      String imDirectory = imFile.getParent();
+
+      // Save the original .im file to a new file of the .nrrd file type.
+      String nrrdFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
+      File saveFile = new File(imDirectory, nrrdFileName);
+      if (saveFile.getParentFile().canWrite()) {
+         System.out.println("      Saving... " + saveFile.getAbsolutePath());
+         ui.saveSession(saveFile.getAbsolutePath(), true);
+         written = true;
+      } else {
+         written = false;
+      }
+      return written;
+   }
+
+   private void generate_pngs() {
+      if (pngDir == null)
+         pngDir = (new File(ui.getOpener().getImageFile().getParent())).getAbsolutePath();
+
+      File pngDirFile = new File(pngDir);
+
+      if (!pngDirFile.exists()) {
+         pngDirFile.mkdir();
+      }
+
+      if (!pngDirFile.canWrite()) {
+         System.out.println("WARNING: Can not create or write to directory: " + pngDir);
+         return;
+      }
+      generateMassImagePNGs();
+      generateHSIImagePNGs();
+   }
+
+   private void generateMassImagePNGs() {
+
+      // Generate mass images.
+      String name;
+      FileSaver saver;
+      MimsPlus img;
+      File saveName;
+      MimsPlus[] mp = ui.getOpenMassImages();
+      for (int i = 0; i < mp.length; i++) {
+         img = mp[i];
+         saver = new ij.io.FileSaver(img);
+         name = ui.getImageFilePrefix() + "_m" + Math.round(new Double(ui.getOpener().getMassNames()[i])) + ".png";
+         saveName = new File(pngDir, name);
+         saver.saveAsPng(saveName.getAbsolutePath());
+      }
+   }
+
+   private void generateHSIImagePNGs() {
+
+      // Generate hsi images.
+      int numIdx, denIdx;
+      double numMass, denMass;
+      double upperThresh, lowerThresh;
+      int rgbMax, rgbMin;
+      String numerator, denominator;
+      int counter = 0;
+      MimsPlus hsi_mp;
+      for (String hsi : HSIs) {
+         numerator = hsi.substring(0, hsi.indexOf("/"));
+         denominator = hsi.substring(hsi.indexOf("/")+1, hsi.length());
+         try {
+            numMass = (new Double(numerator)).doubleValue();
+            denMass = (new Double(denominator)).doubleValue();
+            numIdx = getClosestMassIndices(numMass, 0.5);
+            denIdx = getClosestMassIndices(denMass, 0.5);
+         } catch (Exception e) {
+            System.out.println("Skipping \"" + hsi + "\".");
+            continue;
+         }
+
+         HSIProps hsiprops = new HSIProps(numIdx, denIdx);
+
+         if (counter < threshUppers.length) {
+            try {
+               upperThresh = (new Double(threshUppers[counter])).doubleValue();
+               hsiprops.setMaxRatio(upperThresh);
+            } catch (NumberFormatException nfe) {
+               System.out.println("WARNING: Bad format for upper threshold: " + threshUppers[counter] + ". Auto thresholding");
+            }
+         }
+
+         if (counter < threshLowers.length) {
+            try {
+               lowerThresh = (new Double(threshLowers[counter])).doubleValue();
+               hsiprops.setMinRatio(lowerThresh);
+            } catch (NumberFormatException nfe) {
+               System.out.println("WARNING: Bad format for lower threshold: " + threshLowers[counter] + ". Auto thresholding");
+            }
+         }
+         
+         if (counter < rgbMaxes.length) {
+            try {
+               rgbMax = (new Integer(rgbMaxes[counter])).intValue();
+               hsiprops.setMaxRGB(rgbMax);
+            } catch (NumberFormatException nfe) {
+               hsiprops.setMaxRGB(RGB_MAX_INT_DEFAULT);
+               System.out.println("WARNING: Bad format for max RGB: " + rgbMaxes[counter] + ". Auto setting");
+            }
+         }
+
+         if (counter < rgbMins.length) {
+            try {
+               rgbMin = (new Integer(rgbMins[counter])).intValue();
+               hsiprops.setMinRGB(rgbMin);
+            } catch (NumberFormatException nfe) {
+               hsiprops.setMinRGB(RGB_MIN_INT_DEFAULT);
+               System.out.println("WARNING: Bad format for min RGB: " + rgbMins[counter] + ". Auto setting");
+            }
+         }
+
+         hsi_mp = new MimsPlus(ui, hsiprops);
+         ImagePlus img = (ImagePlus)hsi_mp;
+         ij.io.FileSaver saver = new ij.io.FileSaver(img);
+         String name = ui.getExportName(hsi_mp) + ".png";
+         File saveName = new File(pngDir,name);
+         while(hsi_mp.getHSIProcessor().isRunning()) {
+            try {
+               Thread.sleep(100);
+            } catch(InterruptedException ie) {
+               // do nothing
+            }
+         }
+         saver.saveAsPng(saveName.getAbsolutePath());
+         counter++;
+      }
+
+   }
+
+   private boolean trackFile(){
+
+      try {
+         double massString = new Double(massToTrack);
+         trackIndex = getClosestMassIndices(massString, 0.5);
+      } catch (Exception e) {
+         System.out.println(massToTrack + " must be a number.");
+         trackIndex = 0;
+      }
+
+      try {
+         System.out.println("   Tracking... ");
+         MimsPlus mp = ui.getMassImage(trackIndex);
+         AutoTrack autoTrack = new AutoTrack(ui, mp);
+         ArrayList<Integer> includeList = new ArrayList<Integer>();
+         for (int i = 0; i < mp.getNSlices(); i++) {
+            includeList.add(i, i + 1);
+         }
+         autoTrack.setIncludeList(includeList);
+         double[][] trans = autoTrack.track(mp);
+         ui.getmimsStackEditing().applyTranslations(trans, includeList);
+      } catch (Exception e) {
+         e.printStackTrace();
+         return false;
+      }
+      return true;
+      
+   }
+
+   private boolean openFile(String fileString) {      
+      boolean opened = false;
+      File file = new File(fileString);
+
+      if (file.exists() && file.canRead()) {
+         System.out.println("Opening... " + fileString);
+         opened = ui.loadMIMSFile(file);
+      } else {
+         opened = false;
+      }
+      return opened;
+   }
+
+    public static void main(String[] args) {
+       
+
+       boolean png = PNG_DEFAULT;
+       
+       // Properties defaults.
+       String propertiesFileString = "";
+
+        // Tracking defaults.
+        boolean track = TRACK_DEFAULT;
+        String massToTrack = TRACK_MASS_DEFAULT;
+
+        // File list
+        ArrayList filesArrayList = new ArrayList<String>();
+
+        // Collect input arguments.
+        String arg = "";
+        for (int i = 0; i < args.length; i++) {
+            arg = args[i].trim();
+            System.out.println("arg = " + arg);
+            if(arg.equals("-t")) {
+               i++;
+               massToTrack = args[i].trim();
+               track = true;
+            }
+            else if (arg.startsWith("-properties")) {
+               i++;
+               propertiesFileString = args[i].trim();
+               png = true;
+            }
+            else {
+               if (args[i].endsWith(".im"))
+                  filesArrayList.add(args[i]);
+            }
+        }
+
+        Converter mn = new Converter(png, track, massToTrack, propertiesFileString, filesArrayList);
+
+   }
+
+    /**
+     * Return the index of the mass that falls closest to massValue (and within tolerance).
+     *
+     * @param massValue the massValue.
+     * @param tolerance the range of possible masses from <code>massValue</code>.
+     * @return the index
+     */
+    public int getClosestMassIndices(double massValue, double tolerance) {
+       double massVal1, diff;
+       double mindiff = Double.MAX_VALUE;
+       int returnIdx = -1;
+
+       if (tolerance > 0.0) {
+          // do nothing
+       }  else {
+          return returnIdx;
+       }
+
+       String[] massNames = ui.getOpener().getMassNames();
+       for (int i = 0; i < massNames.length; i++){
+          massVal1 = (new Double(ui.getOpener().getMassNames()[i])).doubleValue();
+          diff = Math.abs(massValue - massVal1);
+          if (diff < mindiff && diff < tolerance)
+             returnIdx = i;
+       }
+
+       return returnIdx;
+    }
+
+}

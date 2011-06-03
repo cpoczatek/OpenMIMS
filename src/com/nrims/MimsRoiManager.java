@@ -2757,6 +2757,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     public ImagePlus getImage() {
         ImagePlus imp = WindowManager.getCurrentImage();
         if (imp == null) {
+            int[] x = new int[0];
+            int y = x[3];
             error("There are no images open.");
             return null;
         } else {
