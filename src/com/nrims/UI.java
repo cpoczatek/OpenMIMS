@@ -125,10 +125,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     private static final String IMFILE_OPTION = "-imfile";
 
-    /** Creates a new instance of the OpenMIMS analysis interface.*/
     public UI() {
-        super("NRIMS Analysis Module");
-      
+       this(false);
+    }
+
+    /** Creates a new instance of the OpenMIMS analysis interface.*/
+    public UI(boolean silentMode) {
+      super("NRIMS Analysis Module");
+
+      this.silentMode = silentMode;
       System.out.println("Ui constructor");
       System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
 
@@ -156,7 +161,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       ijapp = IJ.getInstance();
       if (ijapp == null || (ijapp != null && !ijapp.isShowing())) {
-         ijapp = new ij.ImageJ(null);
+         if (silentMode)
+            ijapp = new ij.ImageJ(ij.ImageJ.NO_SHOW);
+         else
+            ijapp = new ij.ImageJ();
+
          setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       }
 
@@ -228,31 +237,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             close();
          }
       });
-   }
-
-    public UI(boolean silentMode) {
-      super("NRIMS Analysis Module");
-
-      this.silentMode = true;      
-      System.out.println("Ui constructor");
-      System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
-
-      //read in preferences so values are gettable
-      //by various tabs (ie mimsTomography, HSIView, etc.
-      //when constructed further down.
-      prefs = new PrefFrame(this);
-
-      if (image == null) {
-         for (int i = 0; i < maxMasses; i++) {
-            massImages[i] = null;
-            ratioImages[i] = null;
-            hsiImages[i] = null;
-            segImages[i] = null;
-         }
-         for (int i = 0; i < 2 * maxMasses; i++) {
-            sumImages[i] = null;
-         }
-      }
    }
 
     /**
@@ -617,6 +601,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 for (int i = 0; i < image.getNMasses(); i++) {
                     if (bOpenMass[i]) {
                         if (image.getNImages() > 1) {
+                            massImages[i].setIsStack(true);
                             massImages[i].setSlice(1);
                         }
                         if (isSilentMode() == false)
@@ -642,8 +627,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
             for (int i = 0; i < image.getNMasses(); i++) {
                 if (bOpenMass[i]) {
-                   if (isSilentMode() == false)
-                       massImages[i].addListener(this);
+                   massImages[i].addListener(this);
                 } else {
                     massImages[i] = null;
                 }
@@ -660,7 +644,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 //TODO: throws an exception when opening an image with 2 masses
                 segmentation = new SegmentationForm(this);
 
-                if (isSilentMode() == false) {
                 jTabbedPane1.setComponentAt(0, mimsData);
                 jTabbedPane1.setTitleAt(0, "MIMS Data");
                 jTabbedPane1.add("Process", hsiControl);
@@ -669,7 +652,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 jTabbedPane1.add("Tomography", mimsTomography);
                 jTabbedPane1.add("Segmentation", segmentation);
                 jTabbedPane1.add("MIMS Log", mimsLog);
-                }
 
             } else {
                 resetViewMenu();
@@ -682,7 +664,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 mimsAction = new MimsAction(image);                
                 segmentation = new SegmentationForm(this);
 
-                if (isSilentMode() == false) {
                 jTabbedPane1.setComponentAt(0, mimsData);
                 jTabbedPane1.setTitleAt(0, "MIMS Data");
                 jTabbedPane1.setComponentAt(1, hsiControl);
@@ -692,11 +673,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 jTabbedPane1.setComponentAt(5, segmentation);
 
                 mimsData.setMimsImage(image);
-                hsiControl.updateImage();
-               }
+                hsiControl.updateImage();              
             }
 
-            if (isSilentMode() == false) {
             jTabbedPane1.addChangeListener(new ChangeListener() {
                public void stateChanged(ChangeEvent e){
                   int selected = jTabbedPane1.getSelectedIndex();
@@ -705,7 +684,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   } 
                }
             });
-           }
 
             this.mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
             this.mimsTomography.resetImageNamesList();
@@ -900,9 +878,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Initializes the view menu.*/
     private void initializeViewMenu() {
-
-       if (isSilentMode())
-          return;
 
         this.viewMassMenuItems = new javax.swing.JRadioButtonMenuItem[this.maxMasses];
 
@@ -3406,8 +3381,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      * @param msg the message to display.
      */
     public synchronized void updateStatus(String msg) {
-       if (isSilentMode())
-          return;
+       //if (isSilentMode())
+       //   return;
         //if (bUpdating) {
         //    return;
         //}

@@ -1,20 +1,7 @@
 package com.nrims;
 
-import com.nrims.AutoTrack;
-import com.nrims.HSIProps;
-import com.nrims.UI;
-import com.nrims.data.Mims_Reader;
-import com.nrims.data.Nrrd_Reader;
-import com.nrims.data.Nrrd_Writer;
-import com.nrims.data.Opener;
-import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
-import ij.io.FileInfo;
 import ij.io.FileSaver;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-import ij.process.ShortProcessor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,6 +27,7 @@ public class Converter {
    public static final String  PROPERTIES_MEDIANIZATION_RADIUS = "THRESH_LOWER";
 
    // Default values.
+   public static final boolean PNGS_ONLY_DEFAULT        = false;
    public static final boolean TRACK_DEFAULT            = false;
    public static final boolean PNG_DEFAULT              = false;
    public static final boolean USE_SUM_DEFAULT          = false;
@@ -53,10 +41,11 @@ public class Converter {
    public static final String  RGB_MIN_DEFAULT          = "";
    public static final int     RGB_MAX_INT_DEFAULT      = 51;
    public static final int     RGB_MIN_INT_DEFAULT      = 1;
-   public static final String  PNG_DIRECTORY_DEFAULT    = "";
+   public static final String  PNG_DIRECTORY_DEFAULT    = null;
    public static final String  NRRD_EXTENSION           = ".nrrd";
 
    UI ui;
+   boolean pngs_only       = PNGS_ONLY_DEFAULT;
    boolean track           = TRACK_DEFAULT;
    boolean pngs            = PNG_DEFAULT;
    boolean useSum          = USE_SUM_DEFAULT;
@@ -71,15 +60,15 @@ public class Converter {
    double medianizeRadius  = MEDIANIZE_RADIUS_DEFAULT;
    String pngDir           = PNG_DIRECTORY_DEFAULT;
    
-   public Converter(boolean png, boolean bTrack, String sMassToTrack,
-           String propertiesFileString, ArrayList<String> filesArrayList) {
+   public Converter(boolean readProps, boolean bpngs_only, boolean bTrack,
+           String sMassToTrack, String propertiesFileString) {
 
       ui = new UI(true);
-      pngs = png;
+      pngs_only = bpngs_only;
       track = bTrack;
       massToTrack = sMassToTrack;
 
-      if (pngs) {
+      if (readProps) {
          try {
             readProperties(propertiesFileString);
             setUISettings();
@@ -90,8 +79,7 @@ public class Converter {
             System.out.println("Trouble reading Properties file: " + propertiesFileString);
             return;
          }
-      }
-      go(filesArrayList);
+      }      
    }
 
    private void readProperties(String propertiesFileString) throws FileNotFoundException, IOException {
@@ -111,35 +99,36 @@ public class Converter {
       // Pngs
       pngs = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_PNGS, Boolean.toString(pngs)));
       if (pngs) {
-         String pngDirString = defaultProps.getProperty(PROPERTIES_PNG_DIRECTORY, PNG_DIRECTORY_DEFAULT);
-         if (pngDirString.trim().length() == 0)
-            pngDir = null;
-         else
-            pngDir = (new File(pngDirString)).getAbsolutePath();
+         pngDir = defaultProps.getProperty(PROPERTIES_PNG_DIRECTORY, PNG_DIRECTORY_DEFAULT);        
       } else {
          return;
       }
 
       // Hsi's
       String HSI = defaultProps.getProperty(PROPERTIES_HSI, HSI_DEFAULT);
+      HSI = HSI.replace("\"", "");
       HSIs = HSI.split(" ");
       if (HSIs.length == 0)
          return;
 
       // Upper threshold.
       String threshUpper = defaultProps.getProperty(PROPERTIES_THRESH_UPPER, THRESH_UPPER_DEFAULT);
+      threshUpper = threshUpper.replaceAll("\"", "");
       threshUppers = threshUpper.split(" ");
 
       // Lower threshold
       String threshLower = defaultProps.getProperty(PROPERTIES_THRESH_LOWER, THRESH_LOWER_DEFAULT);
+      threshLower = threshLower.replaceAll("\"", "");
       threshLowers = threshLower.split(" ");
 
       // RGB Max
       String rgbMax = defaultProps.getProperty(PROPERTIES_RGB_MAX, RGB_MAX_DEFAULT);
+      rgbMax = rgbMax.replaceAll("\"", "");
       rgbMaxes = rgbMax.split(" ");
 
       // RGB Min
       String rgbMin = defaultProps.getProperty(PROPERTIES_RGB_MIN, RGB_MIN_DEFAULT);
+      rgbMin = rgbMin.replaceAll("\"", "");
       rgbMins = rgbMin.split(" ");
 
       // Use sum.
@@ -182,7 +171,7 @@ public class Converter {
          }
 
          // Track File.
-         if (track) {
+         if (track && !pngs_only) {
             boolean tracked = trackFile();
             if (!tracked) {
                System.out.println("Failed to track " + fileString);
@@ -195,11 +184,13 @@ public class Converter {
             generate_pngs();
          }
          
-         // Save File.         
-         boolean wrote = writeNrrd();
-         if (!wrote) {
-            System.out.println("Failed to convert " + fileString);
-            continue;
+         // Save File.
+         if (!pngs_only) {
+            boolean wrote = writeNrrd();
+            if (!wrote) {
+               System.out.println("Failed to convert " + fileString);
+               continue;
+            }
          }
 
          ui.closeCurrentImage();
@@ -217,7 +208,7 @@ public class Converter {
       String nrrdFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
       File saveFile = new File(imDirectory, nrrdFileName);
       if (saveFile.getParentFile().canWrite()) {
-         System.out.println("      Saving... " + saveFile.getAbsolutePath());
+         System.out.println("          Saving... " + saveFile.getAbsolutePath());
          ui.saveSession(saveFile.getAbsolutePath(), true);
          written = true;
       } else {
@@ -227,10 +218,12 @@ public class Converter {
    }
 
    private void generate_pngs() {
-      if (pngDir == null)
-         pngDir = (new File(ui.getOpener().getImageFile().getParent())).getAbsolutePath();
 
-      File pngDirFile = new File(pngDir);
+      String pngDirectory= new File(ui.getOpener().getImageFile().getParent()).getAbsolutePath();
+      if (pngDir != null)
+         pngDirectory = (new File(ui.getOpener().getImageFile().getParent(), pngDir)).getAbsolutePath();
+
+      File pngDirFile = new File(pngDirectory);
 
       if (!pngDirFile.exists()) {
          pngDirFile.mkdir();
@@ -240,11 +233,11 @@ public class Converter {
          System.out.println("WARNING: Can not create or write to directory: " + pngDir);
          return;
       }
-      generateMassImagePNGs();
-      generateHSIImagePNGs();
+      generateMassImagePNGs(pngDirFile);
+      generateHSIImagePNGs(pngDirFile);
    }
 
-   private void generateMassImagePNGs() {
+   private void generateMassImagePNGs(File pngDirFile) {
 
       // Generate mass images.
       String name;
@@ -252,16 +245,20 @@ public class Converter {
       MimsPlus img;
       File saveName;
       MimsPlus[] mp = ui.getOpenMassImages();
+      SumProps sp;
       for (int i = 0; i < mp.length; i++) {
-         img = mp[i];
+         sp = new SumProps(i);
+         img = new MimsPlus(ui, sp, null);
+         ui.autoContrastImage(img);
          saver = new ij.io.FileSaver(img);
-         name = ui.getImageFilePrefix() + "_m" + Math.round(new Double(ui.getOpener().getMassNames()[i])) + ".png";
-         saveName = new File(pngDir, name);
+         name = ui.getExportName(img) + ".png";
+         saveName = new File(pngDirFile, name);
+         System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
          saver.saveAsPng(saveName.getAbsolutePath());
       }
    }
 
-   private void generateHSIImagePNGs() {
+   private void generateHSIImagePNGs(File pngDirFile) {
 
       // Generate hsi images.
       int numIdx, denIdx;
@@ -328,7 +325,7 @@ public class Converter {
          ImagePlus img = (ImagePlus)hsi_mp;
          ij.io.FileSaver saver = new ij.io.FileSaver(img);
          String name = ui.getExportName(hsi_mp) + ".png";
-         File saveName = new File(pngDir,name);
+         File saveName = new File(pngDirFile,name);
          while(hsi_mp.getHSIProcessor().isRunning()) {
             try {
                Thread.sleep(100);
@@ -336,6 +333,7 @@ public class Converter {
                // do nothing
             }
          }
+         System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
          saver.saveAsPng(saveName.getAbsolutePath());
          counter++;
       }
@@ -347,14 +345,16 @@ public class Converter {
       try {
          double massString = new Double(massToTrack);
          trackIndex = getClosestMassIndices(massString, 0.5);
+         if (trackIndex < 0)
+            trackIndex = 0;
       } catch (Exception e) {
          System.out.println(massToTrack + " must be a number.");
          trackIndex = 0;
       }
 
       try {
-         System.out.println("   Tracking... ");
-         MimsPlus mp = ui.getMassImage(trackIndex);
+         System.out.println("   Tracking... (using index " + trackIndex + ")");
+         ImagePlus mp = (ImagePlus)ui.getMassImage(trackIndex).clone();
          AutoTrack autoTrack = new AutoTrack(ui, mp);
          ArrayList<Integer> includeList = new ArrayList<Integer>();
          for (int i = 0; i < mp.getNSlices(); i++) {
@@ -379,22 +379,23 @@ public class Converter {
          System.out.println("Opening... " + fileString);
          opened = ui.loadMIMSFile(file);
       } else {
+         System.out.println("Can not find, or can not read " + fileString);
          opened = false;
       }
       return opened;
    }
 
     public static void main(String[] args) {
-       
 
-       boolean png = PNG_DEFAULT;
-       
        // Properties defaults.
+       boolean readProps = false;
        String propertiesFileString = "";
 
         // Tracking defaults.
         boolean track = TRACK_DEFAULT;
         String massToTrack = TRACK_MASS_DEFAULT;
+
+        boolean lpngs_only = PNGS_ONLY_DEFAULT;
 
         // File list
         ArrayList filesArrayList = new ArrayList<String>();
@@ -412,16 +413,21 @@ public class Converter {
             else if (arg.startsWith("-properties")) {
                i++;
                propertiesFileString = args[i].trim();
-               png = true;
+               readProps = true;
+            }
+            else if (arg.startsWith("-pngs_only")) {
+               lpngs_only = true;
             }
             else {
-               if (args[i].endsWith(".im"))
+               if (args[i].endsWith(".im") || args[i].endsWith(".nrrd")) {
                   filesArrayList.add(args[i]);
+               }
             }
         }
 
-        Converter mn = new Converter(png, track, massToTrack, propertiesFileString, filesArrayList);
-
+        Converter mn = new Converter(readProps, lpngs_only, track, massToTrack, propertiesFileString);
+        mn.go(filesArrayList);
+        System.exit(0);
    }
 
     /**
