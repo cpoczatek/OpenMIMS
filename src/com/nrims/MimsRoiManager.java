@@ -2147,14 +2147,24 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         return indexes;
     }
 
-    /** Documentation Required. */
-    public void roiThreshold(Roi roi, MimsPlus img, double[] params) {
+    /**
+     * Finds particles like IJ's ParticleAnalyzer (which has been exhibiting
+     * odd behavior) and adds them to MimsRoiManager.
+     * Uses com.nrims.segmentation.NrimsParticleAnalyzer.
+     * @param roi Bounding Roi
+     * @param img Image to work on
+     * @param params min/max threshold and size
+     */
+    public Roi[] roiThreshold(Roi roi, MimsPlus img, double[] params) {
         //check param size
-        if(params.length!=5) return;
+        if(params.length!=5) {
+            return null;
+        }
         double mint = params[0];
         double maxt = params[1];
         double mins = params[2];
         double maxs = params[3];
+        //at the moment diag is unused because of switch to NrimsParticleAnalyzer
         int diag = (int)params[4];
 
         img.setRoi(roi, true);
@@ -2171,26 +2181,90 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             }
         }
 
-        //apply "mask"
+        //apply roi "mask"
+        //need to do this regardless of cropping
+        //for non-rectangular rois
         for (int j = 0; j < imgheight; j++) {
             for (int i = 0; i < imgwidth; i++) {
                 if (!roi.contains(i, j)) {
-                    pix[i][j] = 0;
+                    pix[i][j] = Float.NaN;
                 }
             }
         }
 
         //threshold image
         FloatProcessor proc = new FloatProcessor(pix);
-        proc.setThreshold(mint, maxt, FloatProcessor.NO_LUT_UPDATE);
+        
+        
+        //crop
+        Roi bounds = new ij.gui.Roi(roi.getBounds());
+        //need ofsets because of crop
+        int xoffset = roi.getBounds().x;
+        int yoffset = roi.getBounds().y;
+        proc.setRoi(bounds);
+        proc = (FloatProcessor)proc.crop();
 
         ImagePlus temp_img = new ImagePlus("temp_img", proc);
+        //temp_img.show();
+
+
+        ij.process.ByteProcessor byteproc = new ij.process.ByteProcessor(temp_img.getImage());
+        //do explicit setting of bytes since thresholding wasn't working
+        float[] temppix = (float[])proc.getPixels();
+        byte[] bytepix = new byte[temppix.length];
+        for (int i = 0; i < temppix.length; i++) {
+            if ((mint <= temppix[i]) && (temppix[i] <= maxt)) {
+                bytepix[i] = (byte)255;
+            } else {
+                bytepix[i] = (byte)0;
+            }
+        }
+        byteproc.setPixels(bytepix);
+        
+        ImagePlus byte_img = new ImagePlus("bin", byteproc);
+        //byte_img.show();
+
+        //unsure about arguments...
+        //this is probably bad....
+        int s = new Long(new Double(mins).longValue()).intValue();
+        com.nrims.segmentation.NrimsParticleAnalyzer nPA = new com.nrims.segmentation.NrimsParticleAnalyzer(byte_img, 255, 0, s);
+        ArrayList<Roi> rs = nPA.analyze();
+
+        //Throw out rois that are too large.
+        //This is apparently the proper way to modify a collection
+        //while iterating over it.  The loop below throws java.util.ConcurrentModificationException
+
+        for (Iterator<Roi> it = rs.iterator(); it.hasNext();) {
+            Roi r = it.next();
+            temp_img.setRoi(r);
+            double a = temp_img.getProcessor().getStatistics().area;
+            //System.out.println("roi: " + rs.get(i) + " area: " + a);
+            if (a>maxs) {
+                it.remove();
+            }
+        }
+
+        //temp_img.close();
+        for(Roi r : rs) {
+            int xpos = r.getBounds().x;
+            int ypos = r.getBounds().y;
+            r.setLocation(xoffset + xpos, yoffset + ypos);
+                    //r.setLocation(s, s);
+        }
+
+        Roi[] returnarr = new Roi[rs.size()];
+        return rs.toArray(returnarr);
+
+        //old code using IJ particle analyzer
+        //This DOES NOT WORK.  Rois are missed and not using INCLUDE_HOLES
+        //seems to do nothing.  Left as a warning for those that come later...
+        /*
         //generate rois
         int options = ParticleAnalyzer.ADD_TO_MANAGER;
         if(diag!=0) {
             options = options | diag;
         }
-        //options = options | ParticleAnalyzer.INCLUDE_HOLES;
+        options = options | ParticleAnalyzer.INCLUDE_HOLES;
         ParticleAnalyzer pa = new ParticleAnalyzer(options, 0, Analyzer.getResultsTable(), mins, maxs);
         pa.analyze(temp_img);
         RoiManager rm = (RoiManager) WindowManager.getFrame("ROI Manager");
@@ -2203,17 +2277,40 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
         rm.close();
         temp_img.close();
+        */
+        
 
     }
 
-    /** Documentation Required. */
-    public void roiThreshold(Roi[] rois, MimsPlus img, double[] params) {
-        for(int i = 0; i < rois.length; i++) {
-            roiThreshold(rois[i], img, params);
+    /**
+     * Iteravley calls roiThreshold for each Roi in rois
+     *
+     * @param rois Array of rois to be passed to roiThreshold
+     * @param img Working image
+     * @param params min/max threshold and size
+     */
+    public Roi[] roiThreshold(Roi[] rois, MimsPlus img, double[] params) {
+        ArrayList<Roi> returnlist = new ArrayList<Roi>();
+        if (rois.length == 0) {
+            Roi[] temparr = roiThreshold(new ij.gui.Roi(0, 0, img.getWidth(), img.getHeight()), img, params);
+            returnlist.addAll(Arrays.asList(temparr));
+        } else {
+            for (int i = 0; i < rois.length; i++) {
+                Roi[] temparr = roiThreshold(rois[i], img, params);
+                returnlist.addAll(Arrays.asList(temparr));
+            }
         }
+        Roi[] returnarr = new Roi[returnlist.size()];
+        return returnlist.toArray(returnarr);
     }
 
-    /** Documentation Required. */
+    /** 
+     * Checks for Roi overlap.
+     * Returns true iff and pixel in Roi r is also in Roi q
+     * @param r Roi
+     * @param q Roi
+     * @return
+     */
     public boolean roiOverlap(Roi r, Roi q) {
         boolean overlap = false;
         if((r.getType()==Roi.RECTANGLE) && (q.getType()==Roi.RECTANGLE)) {
@@ -3120,7 +3217,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
       }
    }
 
-    /** Documentation Required. */
+    /**
+     * Gui class for getting parameters to pass to roiThreshold()
+     */
     public class ParticlesManager extends com.nrims.PlugInJFrame implements ActionListener {
 
         Frame instance;
@@ -3187,9 +3286,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
             jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-            jPanel.add(allowDiagonal);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            //removed until NrimsParticleAnalyzer can be made to work with different
+            //wand types
+            //jPanel.add(allowDiagonal);
+            //jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            //jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
 
             // Set up "OK" and "Cancel" buttons.
@@ -3219,25 +3320,49 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 //
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
-                    double mint = Double.parseDouble(threshMinField.getText());
-                    double maxt = Double.parseDouble(threshMaxField.getText());
-                    double mins = Double.parseDouble(sizeMinField.getText());
-                    double maxs = Double.parseDouble(sizeMaxField.getText());
+                    Roi[] rois = getSelectedROIs();
+                    //better fix? to current image not castable to MimsPlus?
+                    MimsPlus img;
+                    if(workingimage == null) {
+                        img = (MimsPlus)getImage();
+                    } else {
+                        img = workingimage;
+                    }
+
+                    double mint = img.getProcessor().minValue();
+                    double maxt = img.getProcessor().maxValue();
+                    double mins = 0;
+                    double maxs = img.getProcessor().getPixelCount();
                     double diag = 0;
-                    if(allowDiagonal.isSelected()){ diag = 0; } else { diag = ij.plugin.filter.ParticleAnalyzer.FOUR_CONNECTED; }
+
+                    if (!threshMinField.getText().isEmpty()) {
+                        mint = Double.parseDouble(threshMinField.getText());
+                    }
+                    if (!threshMaxField.getText().isEmpty()) {
+                        maxt = Double.parseDouble(threshMaxField.getText());
+                    }
+                    if (!sizeMinField.getText().isEmpty()) {
+                        mins = Double.parseDouble(sizeMinField.getText());
+                    }
+                    if (!sizeMaxField.getText().isEmpty()) {
+                        maxs = Double.parseDouble(sizeMaxField.getText());
+                    }
+                    
+                    //if(allowDiagonal.isSelected()){ diag = 0; } else { diag = ij.plugin.filter.ParticleAnalyzer.FOUR_CONNECTED; }
 
                     double[] params = {mint, maxt, mins, maxs, diag};
 
-                    Roi[] rois = getSelectedROIs();
-                    MimsPlus img = (MimsPlus)getImage();
+                    Roi[] calcrois;
                     if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
-                        roiThreshold(rois, img.internalRatio, params);
+                        calcrois = roiThreshold(rois, img.internalRatio, params);
                     } else {
-                        roiThreshold(rois, img, params);
+                        calcrois = roiThreshold(rois, img, params);
                     }
 
+                    ui.getRoiManager().add(calcrois);
                 } catch(Exception x) {
                     ij.IJ.error("Error", "Not a number.");
+                    x.printStackTrace();
                       return;
                 } finally {
                     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

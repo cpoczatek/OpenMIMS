@@ -50,8 +50,8 @@ public class NrimsParticleAnalyzer{
         wandMode = Wand.FOUR_CONNECTED;
         roiType = Wand.allPoints()?Roi.FREEROI:Roi.TRACED_ROI;
 
-//        vis = new ImagePlus("", ip.duplicate());
-//        vis.show();
+        //ImagePlus vis = new ImagePlus("vis", ip.duplicate());
+        //vis.show();
     }
 
     public void finalize(){
