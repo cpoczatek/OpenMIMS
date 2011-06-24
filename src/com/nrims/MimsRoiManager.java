@@ -1442,6 +1442,52 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         return val;
     }
 
+    public boolean addToGroup(Roi[] roiarr, String group) {
+        boolean val = true;
+        for (int i = 0; i < roiarr.length; i++) {
+            val = val && this.addToGroup(roiarr[i], group);
+        }
+        return val;
+    }
+
+    public boolean addToGroup(Roi roi, String group) {
+        boolean val = true;
+
+        String label = "";
+        if (rois.isEmpty()) {
+            label += 1;
+        } else {
+            String maxname = getMaxNumericRoi().getName();
+            int m = Integer.parseInt(maxname);
+            m = m + 1;
+            label += m;
+        }
+
+
+        roiListModel.addElement(label);
+        roi.setName(label);
+
+        Rectangle r = roi.getBounds();
+
+        // Create positions arraylist.
+        int stacksize = ui.getmimsAction().getSize();
+        ArrayList xypositions = new ArrayList<Integer[]>();
+        Integer[] xy = new Integer[2];
+        for (int i = 0; i < stacksize; i++) {
+            xy = new Integer[]{r.x, r.y};
+            xypositions.add(i, xy);
+        }
+        locations.put(label, xypositions);
+
+        // Add roi to list.
+        rois.put(label, roi);
+
+        // Assign group.
+        groupsMap.put(label, group);
+
+        return val;
+    }
+
     /** Sorts the list of ROIs.*/
     private void sortROIList() {
         String[] roinames = new String[roiListModel.size()];
@@ -3328,9 +3374,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                     } else {
                         img = workingimage;
                     }
-
-                    double mint = img.getProcessor().minValue();
-                    double maxt = img.getProcessor().maxValue();
+                    img.killRoi();
+                    double mint = img.getProcessor().getStatistics().min;
+                    double maxt = img.getProcessor().getStatistics().max;
                     double mins = 0;
                     double maxs = img.getProcessor().getPixelCount();
                     double diag = 0;
@@ -3347,7 +3393,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                     if (!sizeMaxField.getText().isEmpty()) {
                         maxs = Double.parseDouble(sizeMaxField.getText());
                     }
-                    
+
+                    //set the text fields to what was actually used in case
+                    //the user goes back to change paramters
+                    threshMinField.setText(Double.toString(mint));
+                    threshMaxField.setText(Double.toString(maxt));
+                    sizeMinField.setText(Double.toString(mins));
+                    sizeMaxField.setText(Double.toString(maxs));
+
                     //if(allowDiagonal.isSelected()){ diag = 0; } else { diag = ij.plugin.filter.ParticleAnalyzer.FOUR_CONNECTED; }
 
                     double[] params = {mint, maxt, mins, maxs, diag};
