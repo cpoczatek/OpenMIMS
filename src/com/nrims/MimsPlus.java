@@ -799,17 +799,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      */
     @Override
     public void show() {
-        //this is a little weird...
         super.show() ;
-        ImageWindow lwin = getWindow();
-        if(lwin != null || getWindow() != null) {
-            if(!(getWindow().getCanvas() instanceof MimsCanvas )) {
-                if (getStackSize() > 1) {
-                    new StackWindow(this, new MimsCanvas(this, ui));
-                } else {
-                    new ImageWindow(this, new MimsCanvas(this, ui));
-                }
-            }
+        if(getWindow() != null) {
             getWindow().addWindowListener(this);
             getWindow().getCanvas().addMouseListener(this);
             getWindow().getCanvas().addMouseMotionListener(this);
