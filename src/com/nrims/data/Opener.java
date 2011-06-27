@@ -229,6 +229,7 @@ public interface Opener {
         int release;
         int analysis_type;
         int header_size;
+        int sample_type;
         int data_included;
         int sple_pos_x;
         int sple_pos_y;

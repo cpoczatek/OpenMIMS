@@ -15,7 +15,10 @@ public class Mims_Reader implements Opener {
     /**
      * The number of bits per image pixel.  This is currently always 16.
      */
+    //BITS_PER_PIXEL appeared nowhere ???  and why not bytes?
     public static final int BITS_PER_PIXEL = 16;
+    public int bytes_per_pixel = 2;
+
     private File file = null;
     private RandomAccessEndianFile in;
     private int verbose = 0;
@@ -92,7 +95,10 @@ public class Mims_Reader implements Opener {
 
         int i, j, b1, b2, gl;
         int pixelsPerImage = width * height;
-        int bytesPerMass = pixelsPerImage * 2;
+        int bytesPerMass = pixelsPerImage * bytes_per_pixel;
+        //int bytesPerMass = pixelsPerImage * 2;
+        //should be ???? int bytesPerMass = pixelsPerImage * BITS_PER_PIXEL/8;
+
         short[] spixels = new short[pixelsPerImage];
 
         long offset = (long)dhdr.header_size + (long)currentIndex * (long)nMasses * (long)bytesPerMass;
@@ -107,7 +113,8 @@ public class Mims_Reader implements Opener {
         byte[] bArray = new byte[bytesPerMass];
         in.read(bArray);
 
-        for (i = 0, j=0; i < pixelsPerImage; i++, j += 2) {
+        //j increment should be ??? bytes_per_pixel
+        for (i = 0, j=0; i < pixelsPerImage; i++, j += bytes_per_pixel) {
 
             if ( getBigEndianFlag() )
             {
@@ -176,7 +183,7 @@ public class Mims_Reader implements Opener {
         dhdr.release = in.readIntEndian();
         dhdr.analysis_type = in.readIntEndian();
         dhdr.header_size = in.readIntEndian();
-        int noused = in.readIntEndian();
+        dhdr.sample_type = in.readIntEndian();
         dhdr.data_included = in.readIntEndian();
         dhdr.sple_pos_x = in.readIntEndian();
         dhdr.sple_pos_y = in.readIntEndian();
@@ -186,11 +193,12 @@ public class Mims_Reader implements Opener {
         dhdr.date = getChar(16);
         dhdr.hour = getChar(16);
 
-        if (this.verbose > 2) {
+        if (this.verbose > -1) {
             System.out.println("readDefAnalysis OK");
             System.out.println("dhdr.release:" + dhdr.release);
             System.out.println("dhdr.analysis_type:" + dhdr.analysis_type);
             System.out.println("dhdr.header_size:" + dhdr.header_size);
+            System.out.println("dhdr.sample_type:" + dhdr.sample_type);
             System.out.println("dhdr.data_included:" + dhdr.data_included);
             System.out.println("dhdr.sple_pos_x:" + dhdr.sple_pos_x);
             System.out.println("dhdr.sple_pos_y:" + dhdr.sple_pos_y);
@@ -294,7 +302,14 @@ public class Mims_Reader implements Opener {
             System.out.println("mask.nMasses:" + nMasses);//	Read the Tab_mass *tab_mass[10]..
         }
         int tab_mass_ptr;
-        for (int i = 0; i < 10; i++) {
+
+        //changed from tab_mass[10] to tab_mass[60] in v7 of .im file spec
+        // seems like this coresponds to release=4108
+        int n_tabmasses = 10;
+        if(this.dhdr.release >=4108) {
+            n_tabmasses = 60;
+        }
+        for (int i = 0; i < n_tabmasses; i++) {
             tab_mass_ptr = in.readIntEndian();
             if (this.verbose > 2) {
                 System.out.println("mask.tmp:" + tab_mass_ptr);
