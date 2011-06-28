@@ -281,7 +281,11 @@ public class Converter {
             continue;
          }
 
-         HSIProps hsiprops = new HSIProps(numIdx, denIdx);
+         HSIProps hsiprops;
+         if (numIdx >= 0 && denIdx >= 0)
+            hsiprops = new HSIProps(numIdx, denIdx);
+         else
+            continue;
 
          if (counter < threshUppers.length) {
             try {
