@@ -2378,11 +2378,12 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     message += "    nrrd plugins: http://flybrain.stanford.edu/nrrd \n";
     message += "    jFreeChart:  http://www.jfree.org/jfreechart/ \n";
     message += "    FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ \n";
+    message += "    jRTF:  http://code.google.com/p/jrtf/ \n";
     message += "\nPlease cite OpenMIMS or any of the \n";
     message += "above projects when applicable. \n";
     
     javax.swing.JFrame frame = new javax.swing.JFrame("About OpenMIMS");
-    frame.setSize(420, 370);
+    frame.setSize(450, 390);
 
     javax.swing.JScrollPane scroll = new javax.swing.JScrollPane();
     frame.add(scroll);
