@@ -207,6 +207,7 @@ public class Converter {
       // Save the original .im file to a new file of the .nrrd file type.
       String nrrdFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
       File saveFile = new File(imDirectory, nrrdFileName);
+      saveFile.setWritable(true, false);
       if (saveFile.getParentFile().canWrite()) {
          System.out.println("          Saving... " + saveFile.getAbsolutePath());
          ui.saveSession(saveFile.getAbsolutePath(), true);
@@ -253,6 +254,7 @@ public class Converter {
          saver = new ij.io.FileSaver(img);
          name = ui.getExportName(img) + ".png";
          saveName = new File(pngDirFile, name);
+         saveName.setWritable(true, false);
          System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
          saver.saveAsPng(saveName.getAbsolutePath());
       }
@@ -330,6 +332,7 @@ public class Converter {
          ij.io.FileSaver saver = new ij.io.FileSaver(img);
          String name = ui.getExportName(hsi_mp) + ".png";
          File saveName = new File(pngDirFile,name);
+         saveName.setWritable(true, false);
          while(hsi_mp.getHSIProcessor().isRunning()) {
             try {
                Thread.sleep(100);
