@@ -228,6 +228,7 @@ public class Converter {
 
       if (!pngDirFile.exists()) {
          pngDirFile.mkdir();
+         pngDirFile.setWritable(true, false);
       }
 
       if (!pngDirFile.canWrite()) {
@@ -253,10 +254,10 @@ public class Converter {
          ui.autoContrastImage(img);
          saver = new ij.io.FileSaver(img);
          name = ui.getExportName(img) + ".png";
-         saveName = new File(pngDirFile, name);
-         saveName.setWritable(true, false);
+         saveName = new File(pngDirFile, name);         
          System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
          saver.saveAsPng(saveName.getAbsolutePath());
+         saveName.setWritable(true, false);
       }
    }
 
@@ -332,7 +333,6 @@ public class Converter {
          ij.io.FileSaver saver = new ij.io.FileSaver(img);
          String name = ui.getExportName(hsi_mp) + ".png";
          File saveName = new File(pngDirFile,name);
-         saveName.setWritable(true, false);
          while(hsi_mp.getHSIProcessor().isRunning()) {
             try {
                Thread.sleep(100);
@@ -342,6 +342,7 @@ public class Converter {
          }
          System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
          saver.saveAsPng(saveName.getAbsolutePath());
+         saveName.setWritable(true, false);
          counter++;
       }
 
