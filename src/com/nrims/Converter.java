@@ -15,6 +15,7 @@ public class Converter {
    Properties defaultProps;
    public static final String  PROPERTIES_PNGS          = "PNGS";
    public static final String  PROPERTIES_PNG_DIRECTORY = "PNG_DIRECTORY";
+   public static final String  PROPERTIES_PNG_OVERWRITE = "PNG_OVERWRITE";
    public static final String  PROPERTIES_TRACK         = "TRACK";
    public static final String  PROPERTIES_TRACK_MASS    = "TRACK_MASS";
    public static final String  PROPERTIES_HSI           = "HSI";
@@ -30,6 +31,7 @@ public class Converter {
    public static final boolean PNGS_ONLY_DEFAULT        = false;
    public static final boolean TRACK_DEFAULT            = false;
    public static final boolean PNG_DEFAULT              = false;
+   public static final boolean PNG_OVERWRITE_DEFAULT    = false;
    public static final boolean USE_SUM_DEFAULT          = false;
    public static final boolean MEDIANIZE_DEFAULT        = false;
    public static final double  MEDIANIZE_RADIUS_DEFAULT = 1.5;
@@ -48,6 +50,7 @@ public class Converter {
    boolean pngs_only       = PNGS_ONLY_DEFAULT;
    boolean track           = TRACK_DEFAULT;
    boolean pngs            = PNG_DEFAULT;
+   boolean overwrite_pngs  = PNG_OVERWRITE_DEFAULT;
    boolean useSum          = USE_SUM_DEFAULT;
    boolean medianize       = MEDIANIZE_DEFAULT;
    String massToTrack      = TRACK_MASS_DEFAULT;
@@ -103,6 +106,7 @@ public class Converter {
       } else {
          return;
       }
+      overwrite_pngs = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_PNG_OVERWRITE, Boolean.toString(overwrite_pngs)));
 
       // Hsi's
       String HSI = defaultProps.getProperty(PROPERTIES_HSI, HSI_DEFAULT);
@@ -251,13 +255,17 @@ public class Converter {
       for (int i = 0; i < mp.length; i++) {
          sp = new SumProps(i);
          img = new MimsPlus(ui, sp, null);
-         ui.autoContrastImage(img);
-         saver = new ij.io.FileSaver(img);
          name = ui.getExportName(img) + ".png";
          saveName = new File(pngDirFile, name);         
-         System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
-         saver.saveAsPng(saveName.getAbsolutePath());
-         saveName.setWritable(true, false);
+         if (!saveName.exists() || ( saveName.exists() && overwrite_pngs)) {
+            System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
+            ui.autoContrastImage(img);
+            saver = new ij.io.FileSaver(img);
+            saver.saveAsPng(saveName.getAbsolutePath());
+            saveName.setWritable(true, false);
+         } else {
+            System.out.println("       PNG " + saveName.getAbsolutePath() + " already exists.");
+         }
       }
    }
 
@@ -271,14 +279,16 @@ public class Converter {
       String numerator, denominator;
       int counter = 0;
       MimsPlus hsi_mp;
+      FileSaver saver;
+      File saveName;
       for (String hsi : HSIs) {
          numerator = hsi.substring(0, hsi.indexOf("/"));
          denominator = hsi.substring(hsi.indexOf("/")+1, hsi.length());
          try {
             numMass = (new Double(numerator)).doubleValue();
             denMass = (new Double(denominator)).doubleValue();
-            numIdx = getClosestMassIndices(numMass, 0.5);
-            denIdx = getClosestMassIndices(denMass, 0.5);
+            numIdx = getClosestMassIndices(numMass, 0.45);
+            denIdx = getClosestMassIndices(denMass, 0.45);
          } catch (Exception e) {
             System.out.println("Skipping \"" + hsi + "\".");
             continue;
@@ -329,20 +339,23 @@ public class Converter {
          }
 
          hsi_mp = new MimsPlus(ui, hsiprops);
-         ImagePlus img = (ImagePlus)hsi_mp;
-         ij.io.FileSaver saver = new ij.io.FileSaver(img);
          String name = ui.getExportName(hsi_mp) + ".png";
-         File saveName = new File(pngDirFile,name);
-         while(hsi_mp.getHSIProcessor().isRunning()) {
-            try {
-               Thread.sleep(100);
-            } catch(InterruptedException ie) {
-               // do nothing
+         saveName = new File(pngDirFile,name);
+         if (!saveName.exists() || ( saveName.exists() && overwrite_pngs)) {
+            System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
+            while (hsi_mp.getHSIProcessor().isRunning()) {
+               try {
+                  Thread.sleep(100);
+               } catch (InterruptedException ie) {
+                  // do nothing
+               }
             }
+            saver = new FileSaver(hsi_mp);
+            saver.saveAsPng(saveName.getAbsolutePath());
+            saveName.setWritable(true, false);
+         } else {
+            System.out.println("       PNG " + saveName.getAbsolutePath() + " already exists.");
          }
-         System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
-         saver.saveAsPng(saveName.getAbsolutePath());
-         saveName.setWritable(true, false);
          counter++;
       }
 
