@@ -193,7 +193,7 @@ public class Mims_Reader implements Opener {
         dhdr.date = getChar(16);
         dhdr.hour = getChar(16);
 
-        if (this.verbose > -1) {
+        if (this.verbose > 1) {
             System.out.println("readDefAnalysis OK");
             System.out.println("dhdr.release:" + dhdr.release);
             System.out.println("dhdr.analysis_type:" + dhdr.analysis_type);

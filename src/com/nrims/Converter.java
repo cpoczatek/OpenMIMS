@@ -8,8 +8,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
+import javax.swing.SwingWorker;
 
-public class Converter {
+public class Converter extends SwingWorker<Void, Void> {
 
    // Properties file strings.
    Properties defaultProps;
@@ -62,6 +63,8 @@ public class Converter {
    int trackIndex          = 0;
    double medianizeRadius  = MEDIANIZE_RADIUS_DEFAULT;
    String pngDir           = PNG_DIRECTORY_DEFAULT;
+   ArrayList<String> files = new ArrayList<String>();
+   boolean proceed         = true;
    
    public Converter(boolean readProps, boolean bpngs_only, boolean bTrack,
            String sMassToTrack, String propertiesFileString) {
@@ -156,49 +159,12 @@ public class Converter {
       }
    }
 
-   private void go(ArrayList<String> filesArrayList) {
+   public void setFiles(ArrayList<String> filesArrayList) {
+      files = filesArrayList;
+   }
 
-      // Make sure we have files.
-      if (filesArrayList.isEmpty()) {
-         System.out.println("No files specified.");
-         return;
-      }
-
-      // Open the file, track and save.
-      for (String fileString : filesArrayList) {
-         
-         // Open File.         
-         boolean opened = openFile(fileString);
-         if (!opened) {
-            System.out.println("Failed to open " + fileString);
-            continue;
-         }
-
-         // Track File.
-         if (track && !pngs_only) {
-            boolean tracked = trackFile();
-            if (!tracked) {
-               System.out.println("Failed to track " + fileString);
-               continue;
-            }
-         }
-
-         // Generate Pngs.
-         if (pngs) {
-            generate_pngs();
-         }
-         
-         // Save File.
-         if (!pngs_only) {
-            boolean wrote = writeNrrd();
-            if (!wrote) {
-               System.out.println("Failed to convert " + fileString);
-               continue;
-            }
-         }
-
-         ui.closeCurrentImage();
-      }
+   public void proceed(boolean proceed) {
+      this.proceed = proceed;
    }
 
    private boolean writeNrrd(){
@@ -257,15 +223,11 @@ public class Converter {
          img = new MimsPlus(ui, sp, null);
          name = ui.getExportName(img) + ".png";
          saveName = new File(pngDirFile, name);         
-         if (!saveName.exists() || ( saveName.exists() && overwrite_pngs)) {
-            System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
-            ui.autoContrastImage(img);
-            saver = new ij.io.FileSaver(img);
-            saver.saveAsPng(saveName.getAbsolutePath());
-            saveName.setWritable(true, false);
-         } else {
-            System.out.println("       PNG " + saveName.getAbsolutePath() + " already exists.");
-         }
+         System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
+         ui.autoContrastImage(img);
+         saver = new ij.io.FileSaver(img);
+         saver.saveAsPng(saveName.getAbsolutePath());
+         saveName.setWritable(true, false);
       }
    }
 
@@ -341,21 +303,17 @@ public class Converter {
          hsi_mp = new MimsPlus(ui, hsiprops);
          String name = ui.getExportName(hsi_mp) + ".png";
          saveName = new File(pngDirFile,name);
-         if (!saveName.exists() || ( saveName.exists() && overwrite_pngs)) {
-            System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
-            while (hsi_mp.getHSIProcessor().isRunning()) {
-               try {
-                  Thread.sleep(100);
-               } catch (InterruptedException ie) {
-                  // do nothing
-               }
+         System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
+         while (hsi_mp.getHSIProcessor().isRunning()) {
+            try {
+               Thread.sleep(100);
+            } catch (InterruptedException ie) {
+               // do nothing
             }
-            saver = new FileSaver(hsi_mp);
-            saver.saveAsPng(saveName.getAbsolutePath());
-            saveName.setWritable(true, false);
-         } else {
-            System.out.println("       PNG " + saveName.getAbsolutePath() + " already exists.");
          }
+         saver = new FileSaver(hsi_mp);
+         saver.saveAsPng(saveName.getAbsolutePath());
+         saveName.setWritable(true, false);
          counter++;
       }
 
@@ -447,7 +405,8 @@ public class Converter {
         }
 
         Converter mn = new Converter(readProps, lpngs_only, track, massToTrack, propertiesFileString);
-        mn.go(filesArrayList);
+        mn.setFiles(filesArrayList);
+        mn.doInBackground();
         System.exit(0);
    }
 
@@ -479,5 +438,74 @@ public class Converter {
 
        return returnIdx;
     }
+
+   @Override
+   protected Void doInBackground() {
+      
+      int percentComplete = 0;
+      setProgress(percentComplete);
+
+      // Make sure we have files.
+      if (files.isEmpty())
+         System.out.println("No files specified.");
+           
+      // Open the file, track and save.
+      int counter = 0;
+      int num_steps = 4;
+      int total = files.size()*num_steps;
+      for (String fileString : files) {
+
+         if (!proceed) {
+            break;
+         }
+
+            // Open File.
+            boolean opened = openFile(fileString);
+            if (!opened) {
+               System.out.println("Failed to open " + fileString);
+               continue;
+            }
+
+            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)1.0)/(float)total);
+            setProgress(percentComplete);
+
+            // Track File.
+            if (track && !pngs_only) {
+               boolean tracked = trackFile();
+               if (!tracked) {
+                  System.out.println("Failed to track " + fileString);
+                  continue;
+               }
+            }
+
+            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)2.0)/(float)total);
+            setProgress(percentComplete);
+
+            // Generate Pngs.
+            if (pngs) {
+               generate_pngs();
+            }
+
+            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)3.0)/(float)total);
+            setProgress(percentComplete);
+
+            // Save File.
+            if (!pngs_only) {
+               boolean wrote = writeNrrd();
+               if (!wrote) {
+                  System.out.println("Failed to convert " + fileString);
+                  continue;
+               }
+            }
+
+            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)4.0)/(float)total);
+            setProgress(percentComplete);            
+
+            ui.closeCurrentImage();
+            counter++;
+      }
+
+      return null;
+   }
 
 }

@@ -6,6 +6,7 @@
 package com.nrims;
 
 import com.nrims.data.*;
+import com.nrims.managers.convertManager;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -1617,7 +1618,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       utilitiesMenu.add(captureImageMenuItem);
       utilitiesMenu.add(jSeparator3);
 
-      jMenuItem7.setText("Batch Autotrack");
+      jMenuItem7.setText("Batch covert to nrrd");
+      jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jMenuItem7ActionPerformed(evt);
+         }
+      });
       utilitiesMenu.add(jMenuItem7);
 
       exportjMenu.setText("Export...");
@@ -2731,7 +2737,6 @@ private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
 }//GEN-LAST:event_jMenuItem5ActionPerformed
 
 private void testMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testMenuItem1ActionPerformed
-    // TODO add your handling code here:
 
     //should it grab the current image here or in method?
     com.nrims.experimental.exportQVis.exportHSI_RGBA(this);
@@ -2747,6 +2752,12 @@ private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
     ReportGenerator rg = new ReportGenerator(this);
     rg.setVisible(true);
 }//GEN-LAST:event_jMenuItem8ActionPerformed
+
+private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+   convertManager cm = new convertManager(this);
+   cm.setVisible(true);
+   cm.selectFiles();
+}//GEN-LAST:event_jMenuItem7ActionPerformed
 
 /**
  * Generates a new MimsPlus image that is a stack. Whereas ratio
