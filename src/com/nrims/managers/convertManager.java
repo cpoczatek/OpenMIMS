@@ -158,7 +158,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
        // Open file or return null.
        if (returnVal == JFileChooser.APPROVE_OPTION) {
           files = mjfc.getSelectedFiles();
-       }
+       } else
+          return;
 
        for (File file : files) {
           if (file.isFile())
@@ -167,7 +168,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     }
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
-       co.proceed(false);
+       
+       if (co != null)
+          co.proceed(false);
        setCursor(null);
        close();
     }//GEN-LAST:event_cancelButtonActionPerformed
