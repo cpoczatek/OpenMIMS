@@ -3,14 +3,19 @@ package com.nrims;
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
+import ij.IJ;
 
 import java.awt.event.*;
 import java.awt.Color;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.io.File;
+import java.io.IOException;
+import java.util.ResourceBundle;
 import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import javax.swing.JMenuItem;
+import org.jfree.chart.ChartUtilities;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -18,6 +23,8 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.util.ResourceBundleWrapper;
+import org.jfree.ui.ExtensionFileFilter;
 
 /**
  * The MimsLineProfile class creates a line plot 
@@ -65,7 +72,17 @@ public class MimsLineProfile extends JFrame {
          chartPanel.getPopupMenu().addSeparator();
          chartPanel.getPopupMenu().add(xhairs);
 
-        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+         // Replace Save As... menu item.
+         chartPanel.getPopupMenu().remove(3);
+         JMenuItem saveas = new JMenuItem("Save as...");
+         saveas.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               saveAs();
+            }
+         });
+         chartPanel.getPopupMenu().add(saveas, 3);
+
+         KeyboardFocusManager.getCurrentKeyboardFocusManager()
             .addKeyEventDispatcher(new KeyEventDispatcher() {
                 public boolean dispatchKeyEvent(KeyEvent e) {
                     if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
@@ -200,5 +217,30 @@ public class MimsLineProfile extends JFrame {
    private boolean thisHasFocus(){
       return this.hasFocus();
    }
+
+   /**
+    * Saveas the chart as a .png
+    */
+    public void saveAs(){
+       MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
+       fileChooser.setSelectedFile(new File(ui.getLastFolder(), ui.getImageFilePrefix() + ".png"));
+       ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
+       ExtensionFileFilter filter = new ExtensionFileFilter(
+               localizationResources.getString("PNG_Image_Files"), ".png");
+       fileChooser.addChoosableFileFilter(filter);
+       fileChooser.setFileFilter(filter);
+       int option = fileChooser.showSaveDialog(chartPanel);
+       if (option == MimsJFileChooser.APPROVE_OPTION) {
+          String filename = fileChooser.getSelectedFile().getPath();
+          if (!filename.endsWith(".png")) {
+             filename = filename + ".png";
+          }
+          try {
+             ChartUtilities.saveChartAsPNG(new File(filename), chartPanel.getChart(), getWidth(), getHeight());
+          } catch (IOException ioe) {
+             IJ.error("Unable to save file.\n\n" + ioe.toString());
+          }
+       }
+    }
 
 }

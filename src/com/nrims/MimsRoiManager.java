@@ -1920,7 +1920,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             String defaultname = ui.getImageFilePrefix();
             defaultname += UI.ROIS_EXTENSION;
 
-           File file;
            MimsJFileChooser mfc = new MimsJFileChooser(ui);
            mfc.setSelectedFile(new File(defaultname));
            MIMSFileFilter mff_rois = new MIMSFileFilter("rois.zip");
@@ -1930,31 +1929,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            mfc.setFileFilter(mff_rois);
            int returnVal = mfc.showSaveDialog(this);
            if (returnVal == JFileChooser.APPROVE_OPTION) {
-              String fileName = mfc.getSelectedFile().getAbsolutePath();
-            if (fileName == null) {
-                return false;
-            }
-            if (!(fileName.endsWith(UI.ROIS_EXTENSION))) {
-                fileName += UI.ROIS_EXTENSION;
-            }
-              file = new File(fileName);
-              if (file.exists()) {
-                 int n = JOptionPane.showConfirmDialog(
-                         this,
-                         "File already exists.\n" + file.getAbsolutePath() + "\n" + "Overwrite?\n",
-                         "Warning",
-                         JOptionPane.YES_NO_OPTION,
-                         JOptionPane.WARNING_MESSAGE);
-                 if (n == JOptionPane.NO_OPTION) {
-                    return false;
-                 }
-              }
+              path = mfc.getSelectedFile().getAbsolutePath();
            } else {
               return false;
            }
-
-            path = file.getAbsolutePath();
         }
+
         try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(path));
             DataOutputStream out = new DataOutputStream(new BufferedOutputStream(zos));

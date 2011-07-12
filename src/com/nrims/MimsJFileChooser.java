@@ -13,6 +13,7 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -81,6 +82,23 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
             ui.setLastFolder(getCurrentDirectory());
             ui.setIJDefaultDir(getCurrentDirectory().getAbsolutePath());
          }
+   }
+
+   // Always ask user if they want to overwrite existing file.
+   @Override
+   public void approveSelection() {
+      if (getDialogType() == SAVE_DIALOG) {
+         File file = getSelectedFile();
+         if ((file != null) && file.exists()) {
+            int answer = JOptionPane.showConfirmDialog(
+                    this, file + " exists. Overwrite?", "Overwrite?",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (answer != JOptionPane.OK_OPTION) {
+               return;
+            }
+         }
+      }
+      super.approveSelection();
    }
 
    // This accessory has a text field that the user
