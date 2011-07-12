@@ -106,7 +106,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             java.awt.Rectangle r = roi.getBounds();
             int x = screenX(r.x + r.width / 2);
             int y = screenY(r.y + r.height / 2);
-            if (!(roi instanceof Line) && drawLabel)
+            if (drawLabel)
                g.drawString(name, x, y);
             bDraw = true;
 
@@ -178,7 +178,6 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                            y2 = screenY(xy[1]);
                         }                                                
                         g.drawLine(x1, y1, x2, y2);
-                        g.drawString(name, x1+width/2, y1+height/2);
                         break;
                     }
                     case Roi.POINT: {
