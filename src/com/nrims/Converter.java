@@ -451,8 +451,7 @@ public class Converter extends SwingWorker<Void, Void> {
            
       // Open the file, track and save.
       int counter = 0;
-      int num_steps = 4;
-      int total = files.size()*num_steps;
+      int total = files.size();
       for (String fileString : files) {
 
          if (!proceed) {
@@ -466,7 +465,7 @@ public class Converter extends SwingWorker<Void, Void> {
                continue;
             }
 
-            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)1.0)/(float)total);
+            percentComplete = Math.round(100*((float)counter+(float)0.25)/(float)total);
             setProgress(percentComplete);
 
             // Track File.
@@ -478,7 +477,7 @@ public class Converter extends SwingWorker<Void, Void> {
                }
             }
 
-            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)2.0)/(float)total);
+            percentComplete = Math.round(100*((float)counter+(float)0.5)/(float)total);
             setProgress(percentComplete);
 
             // Generate Pngs.
@@ -486,7 +485,7 @@ public class Converter extends SwingWorker<Void, Void> {
                generate_pngs();
             }
 
-            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)3.0)/(float)total);
+            percentComplete = Math.round(100*((float)counter+(float)0.75)/(float)total);
             setProgress(percentComplete);
 
             // Save File.
@@ -498,7 +497,7 @@ public class Converter extends SwingWorker<Void, Void> {
                }
             }
 
-            percentComplete = Math.round(100*((float)counter*(float)files.size()+(float)4.0)/(float)total);
+            percentComplete = Math.min(Math.round(100*((float)counter+(float)1.0)/(float)total), 100);
             setProgress(percentComplete);            
 
             ui.closeCurrentImage();
