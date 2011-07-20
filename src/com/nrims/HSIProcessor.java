@@ -304,23 +304,9 @@ public class HSIProcessor implements Runnable {
                     String label = IJ.d2s(minRatio, 0) ;
                     hsiImage.getProcessor().drawString( label ) ;                    
 
-                    // Mid label.
-                    //hsiImage.getProcessor().moveTo(hsiImage.getWidth()/2 - 12, hsiImage.getHeight()) ;
-                    //double midVal = (maxRatio-minRatio)/2 + minRatio;
-                    //int sigDigits = 1;
-                    //if (midVal == (int) midVal)
-                    //   sigDigits = 0;
-                    //label = IJ.d2s(((maxRatio-minRatio)/2 + minRatio), sigDigits) ;
-                    //hsiImage.getProcessor().drawString( label ) ;
-
                     // Max label.
                     label = IJ.d2s(maxRatio, 0);
-                    int offset = 0;
-                    switch(label.length()){
-                       case 1: offset = 8; break;
-                       case 2: offset = 16; break;
-                       default: offset = 24; break;
-                    }
+                    int offset = label.length()*8;
                     hsiImage.getProcessor().moveTo(hsiImage.getWidth() - offset, hsiImage.getHeight()) ;
                     hsiImage.getProcessor().drawString( label ) ;
 
