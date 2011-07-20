@@ -1040,10 +1040,10 @@ public class AutoTrack implements Runnable {
                 throw (new ClassNotFoundException());
             }
             target.setProcessor(null, source.getProcessor());
-            method = turboReg.getClass().getMethod("getSourcePoints", null);
-            sourcePoints = ((double[][]) method.invoke(turboReg, null));
-            method = turboReg.getClass().getMethod("getTargetPoints", null);
-            targetPoints = ((double[][]) method.invoke(turboReg, null));
+            method = turboReg.getClass().getMethod("getSourcePoints", (Class[])null);
+            sourcePoints = ((double[][]) method.invoke(turboReg, (Object[])null));
+            method = turboReg.getClass().getMethod("getTargetPoints", (Class[])null);
+            targetPoints = ((double[][]) method.invoke(turboReg, (Object[])null));
             localTransform = getTransformationMatrix(targetPoints, sourcePoints,
                     transformation);
             double[][] rescued = {
@@ -1174,12 +1174,12 @@ public class AutoTrack implements Runnable {
                             return (null);
                         }
                     }
-                    method = turboRegR.getClass().getMethod("getTransformedImage", null);
-                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, null);
-                    method = turboRegG.getClass().getMethod("getTransformedImage", null);
-                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, null);
-                    method = turboRegB.getClass().getMethod("getTransformedImage", null);
-                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, null);
+                    method = turboRegR.getClass().getMethod("getTransformedImage", (Class[])null);
+                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, (Object[])null);
+                    method = turboRegG.getClass().getMethod("getTransformedImage", (Class[])null);
+                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, (Object[])null);
+                    method = turboRegB.getClass().getMethod("getTransformedImage", (Class[])null);
+                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, (Object[])null);
                     transformedSourceR.getStack().deleteLastSlice();
                     transformedSourceG.getStack().deleteLastSlice();
                     transformedSourceB.getStack().deleteLastSlice();
@@ -1316,12 +1316,12 @@ public class AutoTrack implements Runnable {
                             return (null);
                         }
                     }
-                    method = turboRegR.getClass().getMethod("getTransformedImage", null);
-                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, null);
-                    method = turboRegG.getClass().getMethod("getTransformedImage", null);
-                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, null);
-                    method = turboRegB.getClass().getMethod("getTransformedImage", null);
-                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, null);
+                    method = turboRegR.getClass().getMethod("getTransformedImage", (Class<?>[])null);
+                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, (Object[])null);
+                    method = turboRegG.getClass().getMethod("getTransformedImage", (Class<?>[])null);
+                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, (Object[])null);
+                    method = turboRegB.getClass().getMethod("getTransformedImage", (Class<?>[])null);
+                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, (Object[])null);
                     transformedSourceR.getStack().deleteLastSlice();
                     transformedSourceG.getStack().deleteLastSlice();
                     transformedSourceB.getStack().deleteLastSlice();
@@ -1406,8 +1406,8 @@ public class AutoTrack implements Runnable {
                     if (turboReg == null) {
                         throw (new ClassNotFoundException());
                     }
-                    method = turboReg.getClass().getMethod("getTransformedImage", null);
-                    ImagePlus transformedSource = (ImagePlus) method.invoke(turboReg, null);
+                    method = turboReg.getClass().getMethod("getTransformedImage", (Class[])null);
+                    ImagePlus transformedSource = (ImagePlus) method.invoke(turboReg, (Object[])null);
                     transformedSource.getStack().deleteLastSlice();
                     switch (imp.getType()) {
                         case ImagePlus.GRAY8: {
