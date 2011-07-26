@@ -26,23 +26,14 @@ public interface Opener {
 
     // Worker functions.
     public File getImageFile();
-
     public int getNMasses();
-
     public int getNImages();
-
     public int getWidth();
-
     public int getHeight();
-
     public Object getPixels(int index) throws IndexOutOfBoundsException, IOException;
-
     public float getPixelWidth();
-
     public float getPixelHeight();
-
     public void setStackIndex(int currentIndex);
-
     public void close();
 
     // Metadata
