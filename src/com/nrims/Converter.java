@@ -249,8 +249,8 @@ public class Converter extends SwingWorker<Void, Void> {
          try {
             numMass = (new Double(numerator)).doubleValue();
             denMass = (new Double(denominator)).doubleValue();
-            numIdx = getClosestMassIndices(numMass, 0.45);
-            denIdx = getClosestMassIndices(denMass, 0.45);
+            numIdx = getClosestMassIndices(numMass, 0.49);
+            denIdx = getClosestMassIndices(denMass, 0.49);
          } catch (Exception e) {
             System.out.println("Skipping \"" + hsi + "\".");
             continue;
