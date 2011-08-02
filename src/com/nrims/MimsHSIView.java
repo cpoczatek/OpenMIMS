@@ -827,10 +827,8 @@ public class MimsHSIView extends javax.swing.JPanel {
           String label = (String) idx[i];
           int numerator = new Integer(label.substring(0, label.indexOf(":"))).intValue();
           int denomator = new Integer(label.substring(label.indexOf(":") + 1, label.length())).intValue();
-
-          if (numerator >= ui.getOpenMassImages().length ||
-                  denomator >= ui.getOpenMassImages().length) {
-             IJ.error("Error", "Numerator and denominator must both be mass images.");
+          if (numerator >= ui.getOpenMassImages().length) {
+             IJ.error("Error", "Sorry, numerator connot be 1.");
              continue;
           }
           // Bring to front if already exists.
