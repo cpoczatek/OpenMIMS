@@ -76,15 +76,25 @@ public class HSIProps implements java.io.Serializable {
 
     }
 
-    private void setDenMassIdx(int n) { denMassIdx = n ; }
-    private void setNumMassIdx(int n) { numMassIdx = n ; }
+   /**
+    * Overwrites the index of the numerator mass set in the constructor.
+    * @param numerator mass index (e.g. 0,1,2).
+    */
+   public void setNumMassIdx(int numerator) { 
+      this.numMassIdx = numerator;
+   }
 
-    /**
-     * Gets the index of the mass image of the numerator
-     *
-     * @return numerator mass index.
-     */
-    public int getNumMassIdx() { return numMassIdx ; }
+   /**
+    * Gets the index of the mass image of the numerator.
+    * @return int
+    */
+   public int getNumMassIdx() { return numMassIdx ; }
+
+   /**
+    * Overwrites the index of the denominator mass set in the constructor.
+    * @param denomator mass index (e.g. 0,1,2).
+    */
+   public void setDenMassIdx(int denomator) { this.denMassIdx = denomator; }
     
     /**
      * Gets the index of the mass image of the denominator.

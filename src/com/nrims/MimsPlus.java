@@ -1746,7 +1746,26 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      *
      * @return sum properties
      */
-    public SumProps getSumProps() { return sumProps; }
+    public SumProps getSumProps() { 
+       if (isVisible()) {
+          sumProps.setXWindowLocation(getWindow().getX());
+          sumProps.setYWindowLocation(getWindow().getY());
+          sumProps.setMag(getCanvas().getMagnification());
+       }     
+       
+       if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
+          sumProps.setNumMassValue(ui.getMassValue(sumProps.getNumMassIdx()));
+          sumProps.setDenMassValue(ui.getMassValue(sumProps.getDenMassIdx()));
+       } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
+          sumProps.setParentMassValue(ui.getMassValue(sumProps.getParentMassIdx()));
+       }
+       
+       sumProps.setMinLUT(getDisplayRangeMin());
+       sumProps.setMaxLUT(getDisplayRangeMax());
+       
+       return sumProps;
+
+    }
 
     /**
      *

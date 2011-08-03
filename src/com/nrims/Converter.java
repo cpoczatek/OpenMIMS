@@ -249,8 +249,8 @@ public class Converter extends SwingWorker<Void, Void> {
          try {
             numMass = (new Double(numerator)).doubleValue();
             denMass = (new Double(denominator)).doubleValue();
-            numIdx = getClosestMassIndices(numMass, 0.49);
-            denIdx = getClosestMassIndices(denMass, 0.49);
+            numIdx = ui.getClosestMassIndices(numMass, 0.49);
+            denIdx = ui.getClosestMassIndices(denMass, 0.49);
          } catch (Exception e) {
             System.out.println("Skipping \"" + hsi + "\".");
             continue;
@@ -323,7 +323,7 @@ public class Converter extends SwingWorker<Void, Void> {
 
       try {
          double massString = new Double(massToTrack);
-         trackIndex = getClosestMassIndices(massString, 0.5);
+         trackIndex = ui.getClosestMassIndices(massString, 0.5);
          if (trackIndex < 0)
             trackIndex = 0;
       } catch (Exception e) {
@@ -409,35 +409,6 @@ public class Converter extends SwingWorker<Void, Void> {
         mn.doInBackground();
         System.exit(0);
    }
-
-    /**
-     * Return the index of the mass that falls closest to massValue (and within tolerance).
-     *
-     * @param massValue the massValue.
-     * @param tolerance the range of possible masses from <code>massValue</code>.
-     * @return the index
-     */
-    public int getClosestMassIndices(double massValue, double tolerance) {
-       double massVal1, diff;
-       double mindiff = Double.MAX_VALUE;
-       int returnIdx = -1;
-
-       if (tolerance > 0.0) {
-          // do nothing
-       }  else {
-          return returnIdx;
-       }
-
-       String[] massNames = ui.getOpener().getMassNames();
-       for (int i = 0; i < massNames.length; i++){
-          massVal1 = (new Double(ui.getOpener().getMassNames()[i])).doubleValue();
-          diff = Math.abs(massValue - massVal1);
-          if (diff < mindiff && diff < tolerance)
-             returnIdx = i;
-       }
-
-       return returnIdx;
-    }
 
    @Override
    protected Void doInBackground() {

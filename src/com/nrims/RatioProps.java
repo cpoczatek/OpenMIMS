@@ -65,11 +65,23 @@ public class RatioProps implements java.io.Serializable {
    }
 
    /**
+    * Overwrites the index of the numerator mass set in the constructor.
+    * @param numerator mass index (e.g. 0,1,2).
+    */
+   public void setNumMassIdx(int numerator) { this.numMassIdx = numerator; }
+
+   /**
     * Gets the index of the mass image of the numerator.
     * @return int
     */
    public int getNumMassIdx() { return numMassIdx ; }
    
+   /**
+    * Overwrites the index of the denominator mass set in the constructor.
+    * @param denomator mass index (e.g. 0,1,2).
+    */
+   public void setDenMassIdx(int denomator) { this.denMassIdx = denomator; }
+
    /**
     * Gets the index of the mass image of the denominator.
     * @return int

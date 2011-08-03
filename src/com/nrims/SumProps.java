@@ -91,12 +91,17 @@ public class SumProps implements java.io.Serializable {
        return false;
    }
           
-    /**
-     * Gets the index of the numerator mass image.
-     *
-     * @return index of the numerator mass image.
-     */
-    public int getNumMassIdx() { return numMassIdx; }
+   /**
+    * Overwrites the index of the numerator mass set in the constructor.
+    * @param numerator mass index (e.g. 0,1,2).
+    */
+   public void setNumMassIdx(int numerator) { this.numMassIdx = numerator; }
+
+   /**
+    * Gets the index of the mass image of the numerator.
+    * @return int
+    */
+   public int getNumMassIdx() { return numMassIdx ; }
 
     /**
      * Sets the mass of the numerator image.
@@ -109,6 +114,12 @@ public class SumProps implements java.io.Serializable {
      * @return mass of numerator image.
      */
     public double getNumMassValue() { return numMassValue; }
+
+   /**
+    * Overwrites the index of the denominator mass set in the constructor.
+    * @param numerator mass index (e.g. 0,1,2).
+    */
+   public void setDenMassIdx(int denomator) { this.denMassIdx = denomator; }
 
     /**
      * Gets the index of the denominator image.
@@ -139,6 +150,12 @@ public class SumProps implements java.io.Serializable {
      * @return the scale factor.
      */
     public double getRatioScaleFactor() { return ratioScaleFactor; }
+
+    /**
+    * Overwrites the index of the parent mass set in the constructor.
+    * @param numerator mass index (e.g. 0,1,2).
+     */
+    public void setParentMassIdx(int parentMassIdx) { this.parentMassIdx = parentMassIdx; }
 
     /**
      * Gets the index of the parent mass.

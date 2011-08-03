@@ -2135,12 +2135,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
        // Perform some checks to see if we wanna restore state.
        boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
-       boolean sameNumberMasses = (old_numMasses == new_numMasses);
                
        // Generate all images that were previously open.
-       if (isImageFile && sameNumberMasses) {
+       if (isImageFile) 
           restoreState(rto_props, hsi_props, sum_props, same_size);
-       }
+       
        MimsRoiManager rm = getRoiManager();
        if (rm != null) {
           rm.resetRoiLocationsLength();
@@ -2182,52 +2181,67 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        MimsPlus mp;
        // Generate ratio images.
        for (int i=0; i<rto_props.length; i++){
-          if (closeEnough(rto_props[i].getNumMassIdx(), rto_props[i].getNumMassValue()) &&
-              closeEnough(rto_props[i].getDenMassIdx(), rto_props[i].getDenMassValue())) {
-             if (!same_size)
+          int nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
+          int didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+          if (nidx == -1 || didx == -1)
+             continue;
+
+          rto_props[i].setNumMassIdx(nidx);
+          rto_props[i].setDenMassIdx(didx);
+          if (!same_size)
                 rto_props[i].setMag(1.0);
-             mp = new MimsPlus(this, rto_props[i]);
-             mp.showWindow();
-             mp.setDisplayRange(rto_props[i].getMinLUT(), rto_props[i].getMaxLUT());
-          }
+          mp = new MimsPlus(this, rto_props[i]);
+          mp.showWindow();
+          mp.setDisplayRange(rto_props[i].getMinLUT(), rto_props[i].getMaxLUT());          
        }
        
        // Generate hsi images.
        for (int i=0; i<hsi_props.length; i++){
-          if (closeEnough(hsi_props[i].getNumMassIdx(), hsi_props[i].getNumMassValue()) &&
-              closeEnough(hsi_props[i].getDenMassIdx(), hsi_props[i].getDenMassValue())) {
-             if (!same_size)
-                hsi_props[i].setMag(1.0);
-             mp = new MimsPlus(this, hsi_props[i]);
-             mp.showWindow();
-             mp.getHSIProcessor().setProps(hsi_props[i]);
-             mp.hsiProps = hsi_props[i];
-          }
+          int nidx = getClosestMassIndices(hsi_props[i].getNumMassValue(), 0.49);
+          int didx = getClosestMassIndices(hsi_props[i].getDenMassValue(), 0.49);
+          if (nidx == -1 || didx == -1)
+             continue;
+
+          hsi_props[i].setNumMassIdx(nidx);
+          hsi_props[i].setDenMassIdx(didx);
+          if (!same_size) 
+             hsi_props[i].setMag(1.0);
+
+          mp = new MimsPlus(this, hsi_props[i]);
+          mp.showWindow();
+          mp.getHSIProcessor().setProps(hsi_props[i]);
+          mp.hsiProps = hsi_props[i];          
        }
 
        // Generate sum images.
        for (int i=0; i<sum_props.length; i++){
-          if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {
-              //boolean foo = closeEnough(sum_props[i].getNumMassIdx(), sum_props[i].getNumMassValue()) && closeEnough(sum_props[i].getDenMassIdx(), sum_props[i].getDenMassValue());
-             if (closeEnough(sum_props[i].getNumMassIdx(), sum_props[i].getNumMassValue()) &&
-                 closeEnough(sum_props[i].getDenMassIdx(), sum_props[i].getDenMassValue())) {
+          if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {             
+               int nidx = getClosestMassIndices(sum_props[i].getNumMassValue(), 0.49);
+               int didx = getClosestMassIndices(sum_props[i].getDenMassValue(), 0.49);
+               if (nidx == -1 || didx == -1)
+                  continue;
+
+                sum_props[i].setNumMassIdx(nidx);
+                sum_props[i].setDenMassIdx(didx);
                 if (!same_size)
                    sum_props[i].setMag(1.0);
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
                 mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
-             }
+
           } else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
-             if (closeEnough(sum_props[i].getParentMassIdx(), sum_props[i].getParentMassValue())) {
+                int pidx = getClosestMassIndices(sum_props[i].getParentMassValue(), 0.49);
+                if (pidx == -1)
+                  continue;
+
+                sum_props[i].setParentMassIdx(pidx);
                 if (!same_size)
                    sum_props[i].setMag(1.0);
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
-                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
-             }
+                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());             
           }
-       }
-       
+       }       
     }
 
     /**
@@ -2844,6 +2858,35 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
     /**
+     * Return the index of the mass that falls closest to massValue (and within tolerance).
+     *
+     * @param massValue the massValue.
+     * @param tolerance the range of possible masses from <code>massValue</code>.
+     * @return the index
+     */
+    public int getClosestMassIndices(double massValue, double tolerance) {
+       double massVal1, diff;
+       double mindiff = Double.MAX_VALUE;
+       int returnIdx = -1;
+
+       if (tolerance > 0.0) {
+          // do nothing
+       }  else {
+          return returnIdx;
+       }
+
+       String[] massNames = getOpener().getMassNames();
+       for (int i = 0; i < massNames.length; i++){
+          massVal1 = (new Double(getOpener().getMassNames()[i])).doubleValue();
+          diff = Math.abs(massValue - massVal1);
+          if (diff < mindiff && diff < tolerance)
+             returnIdx = i;
+       }
+
+       return returnIdx;
+    }
+
+    /**
      * Returns all mass indices with a mass value within of <code>massValue</code> +/- <code>tolerance</code>.
      *
      * @param massValue the massValue.
@@ -2873,26 +2916,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           indices[i] = ((MimsPlus)imageList.get(i)).getMassIndex();
 
        return indices;
-    }
-
-    /**
-     * Determines if the mass value for a given index <code>i</code>
-     * is close enough to the mass value <code>d</code> to be considered
-     * equal. The current range is hard coded as being .9 to 1.1 of the
-     * same value to be considered equal, these parameters should be
-     * made as preferences.
-     *
-     * @param i the index for a current mass value.
-     * @param d the original mass value.
-     * @return <code>true</code> if the mass falls within the specified range, otherwise <code>false</code>.
-     */
-    public boolean closeEnough(int i, double d) {
-       double mass = getMassValue(i);
-       double q = d/mass;
-       if (q > 0.9 && q < 1.1)
-          return true;
-       else 
-          return false;
     }
 
     /**
