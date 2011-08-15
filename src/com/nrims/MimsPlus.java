@@ -1116,13 +1116,28 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         // Get the slice number.
         int cslice = getCurrentSlice();
+        String cstring = Integer.toString(cslice);
         boolean stacktest = isStack();
         if (this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) {
             stacktest = stacktest || this.getNumeratorImage().isStack();
-            if(stacktest) cslice = this.getNumeratorImage().getCurrentSlice();
+            if(stacktest) {
+                if(ui.getIsSum()) {
+                    //if it's a sum HSI/ratio show the whole range of z values
+                    cstring = "[1-" + this.getNumeratorImage().getStackSize() + "]";
+                } else if(ui.getIsWindow() && ( ui.getWindowRange() > 0 ) ) {
+                    //if there's a non-zero radius window used show the range
+                    //covered by the window, need to check edges too
+                    int r = ui.getWindowRange();
+                    int min = java.lang.Math.max(1, this.getNumeratorImage().getSlice()-r);
+                    int max = java.lang.Math.min(this.getNumeratorImage().getSlice()+r, this.getNumeratorImage().getStackSize());
+                    cstring = "[" + min + "-" + max +"]";
+                } else {
+                    cstring = "" + this.getNumeratorImage().getCurrentSlice();
+                }
+            }
         }
         if (stacktest)
-            msg += "," + cslice + " = ";
+            msg += "," + cstring + " = ";
         else
             msg += " = ";
 
@@ -1146,11 +1161,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             msg += IJ.d2s(s,0);
         } else {
             MimsPlus[] ml = ui.getOpenMassImages() ;
+            int mindex = this.getMassIndex();
             for(int i = 0 ; i < ml.length ; i++ ) {
-                //int [] gl = ml[i].getPixel(mX,mY);
-                //float s = Float.intBitsToFloat(gl[0]);
-                msg += ml[i].getValueAsString(mX, mY);
-                //msg += IJ.d2s(s,0);
+                if(i == mindex) {
+                    //use "[]" to highlight current mass
+                    msg += "[" + ml[i].getValueAsString(mX, mY) + "]";
+                } else {
+                    msg += ml[i].getValueAsString(mX, mY);
+                }
                 if( i+1 < ml.length )
                     msg += ", ";
             }
@@ -1298,14 +1316,29 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        int mY = getWindow().getCanvas().offScreenY(y);
        String msg = "" + mX + "," + mY;
 
-       int cslice = getCurrentSlice();
+        int cslice = getCurrentSlice();
+        String cstring = Integer.toString(cslice);
         boolean stacktest = isStack();
         if (this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) {
             stacktest = stacktest || this.getNumeratorImage().isStack();
-            if(stacktest) cslice = this.getNumeratorImage().getCurrentSlice();
+            if (stacktest) {
+                if (ui.getIsSum()) {
+                    //if it's a sum HSI/ratio show the whole range of z values
+                    cstring = "[1-" + this.getNumeratorImage().getStackSize() + "]";
+                } else if (ui.getIsWindow() && (ui.getWindowRange() > 0)) {
+                    //if there's a non-zero radius window used show the range
+                    //covered by the window, need to check edges too
+                    int r = ui.getWindowRange();
+                    int min = java.lang.Math.max(1, this.getNumeratorImage().getSlice() - r);
+                    int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r, this.getNumeratorImage().getStackSize());
+                    cstring = "[" + min + "-" + max + "]";
+                } else {
+                    cstring = "" + this.getNumeratorImage().getCurrentSlice();
+                }
+            }
         }
         if (stacktest) {
-            msg += "," + cslice + " = ";
+            msg += "," + cstring + " = ";
         } else {
             msg += " = ";
         }
