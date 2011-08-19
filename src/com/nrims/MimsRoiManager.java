@@ -1482,6 +1482,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Add roi to list.
         rois.put(label, roi);
 
+        //add group to list if not there
+        if(!groups.contains(group)) {
+            addGroup(group);
+        }
+
         // Assign group.
         groupsMap.put(label, group);
 
@@ -1583,6 +1588,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             if (delete) {
                 locations.remove(roiListModel.get(i));
                 rois.remove(roiListModel.get(i));
+                groupsMap.remove(roiListModel.get(i));
                 roiListModel.remove(i);
             }
         }
