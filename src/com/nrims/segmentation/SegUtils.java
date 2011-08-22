@@ -850,6 +850,10 @@ public class SegUtils extends javax.swing.SwingWorker<Boolean,Void>{
         return success;
     }
 
+    public int getMinSize(){
+        return minSize;
+    }
+
     @Override
     protected Boolean doInBackground() throws Exception {
         try{

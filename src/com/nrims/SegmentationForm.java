@@ -62,6 +62,9 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         // #########
 
         resetForm();
+        
+        //to remove....
+        this.classesCombo.setEnabled(false);
     }
 
     public void resetForm() {
@@ -209,6 +212,8 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
 
     private void setActiveClass(String className) {
         // remove ROIs from the RoiManager, if required
+        System.out.println("BAD METHOD HIT");
+        if(true) return;
         if (roiManager.roijlist.getModel().getSize() > 0) {
             roiManager.selectAll();
             roiManager.delete();
@@ -998,8 +1003,22 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                             workLabel.setText("done");
                             progressBar.setValue(0);
                             predClasses = cm;
-                            fillBox();
-                            setActiveClass(predClasses.getClasses()[0]); // set first class as active class
+
+                            int nclasses = predClasses.getClasses().length;
+                            for(int c = 0; c < nclasses; c++) {
+                                String classname = predClasses.getClasses()[c];
+                                Roi[] segrois = new Roi[predClasses.getRois(classname).length];
+                                for(int r = 0; r < segrois.length; r++) {
+                                    segrois[r] = predClasses.getRois(classname)[r].getRoi();
+                                }
+                                String grpname = "seg,a"+segUtil.getMinSize()+","+classname;
+                                
+                                roiManager.addToGroup(segrois, grpname);
+                            }
+                            roiManager.showFrame();
+                            mimsUi.updateAllImages();
+                            //fillBox();
+                            //setActiveClass(predClasses.getClasses()[0]); // set first class as active class
                         } else { // TODO error handling
                             workLabel.setText("calculating ROIs failed!");
                         }

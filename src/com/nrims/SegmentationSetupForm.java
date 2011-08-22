@@ -738,6 +738,7 @@ public class SegmentationSetupForm extends javax.swing.JDialog {
         form.setColorImageIndex(colorCombo.getSelectedIndex());
         form.setProperties(props);
         form.updateControls();
+        form.setClassNames(classes.getClasses());
 
         closeForm();
 }//GEN-LAST:event_okButtonActionPerformed

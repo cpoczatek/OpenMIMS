@@ -93,6 +93,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             //make color preference selectable
             if(roiManager.isSelected(label)) {
                 g.setColor(Color.GREEN);
+                //should this be drawn "last"?
             } else {
                 if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
                     g.setColor(Color.WHITE);
@@ -122,7 +123,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                     case Roi.COMPOSITE: {
                         roi.setImage(imp);
                         //make color preference selectable
-                        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
+                        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
                             roi.setInstanceColor(Color.WHITE);
                         } else {
                             roi.setInstanceColor(Color.RED);
