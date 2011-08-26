@@ -903,7 +903,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         } else if (command.equals("Split")) {
             split();
         } else if (command.equals("Particles")) {
-            if(partManager==null) { partManager = new ParticlesManager(); }
+            if(partManager==null) { partManager = new ParticlesManager(this); }
             partManager.showFrame();
         } else if (command.equals("Squares")) {
             if(squaresManager==null) { squaresManager = new SquaresManager(this); }
@@ -2341,7 +2341,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * Returns true iff and pixel in Roi r is also in Roi q
      * @param r Roi
      * @param q Roi
-     * @return
+     * @return boolean
      */
     public boolean roiOverlap(Roi r, Roi q) {
         boolean overlap = false;
@@ -2366,7 +2366,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         return overlap;
     }
 
-    /** Documentation Required. */
+    /**
+     * Checks for Roi overlap.
+     * Returns true iff an pixel in Roi r is also in any roi in rois[]
+     * @param r Roi
+     * @param rois Roi[]
+     * @return boolean
+     */
     public boolean roiOverlap(Roi r, Roi[] rois) {
         boolean overlap = false;
         for(int i = 0; i < rois.length; i++) {
@@ -3257,6 +3263,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         Frame instance;
 
         MimsPlus workingimage;
+        MimsRoiManager rm;
 
         JLabel label;
         JTextField threshMinField = new JTextField();
@@ -3264,11 +3271,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         JTextField sizeMinField = new JTextField();
         JTextField sizeMaxField = new JTextField();
         JCheckBox allowDiagonal = new JCheckBox("Allow Diagonal Connections", false);
+        JCheckBox makeGroups = new JCheckBox("Make Groups", true);
         JButton cancelButton;
         JButton okButton;
 
-        public ParticlesManager() {
+
+        public ParticlesManager(MimsRoiManager rm) {
             super("Particles Manager");
+            this.rm = rm;
 
             if (instance != null) {
                 instance.toFront();
@@ -3324,6 +3334,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             //jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
             //jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
+            jPanel.add(makeGroups);
+            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
             // Set up "OK" and "Cancel" buttons.
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -3391,14 +3404,22 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
                     double[] params = {mint, maxt, mins, maxs, diag};
 
-                    Roi[] calcrois;
-                    if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
-                        calcrois = roiThreshold(rois, img.internalRatio, params);
-                    } else {
-                        calcrois = roiThreshold(rois, img, params);
+                    for (int r = 0; r < rois.length; r++) {
+                        String grpname = rm.getRoiGroup(rois[r].getName())+",roi-"+rois[r].getName()+",part";
+                        if (img.getMimsType() == MimsPlus.HSI_IMAGE && img.internalRatio != null) {
+                            if(makeGroups.isSelected()) {
+                                rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), grpname);
+                            } else {
+                                rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), rm.getRoiGroup(rois[r].getName()));
+                            }
+                        } else {
+                            if(makeGroups.isSelected()) {
+                                rm.addToGroup(roiThreshold(rois, img, params), grpname);
+                            } else {
+                                rm.addToGroup(roiThreshold(rois, img, params),rm.getRoiGroup(rois[r].getName()));
+                            }
+                        }
                     }
-
-                    ui.getRoiManager().add(calcrois);
                 } catch(Exception x) {
                     ij.IJ.error("Error", "Not a number.");
                     x.printStackTrace();
@@ -3454,6 +3475,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         JTextField numberField = new JTextField();
         JTextField rangeField = new JTextField();
         JCheckBox allowOverlap = new JCheckBox("Allow Overlap", false);
+        JCheckBox makeGroups = new JCheckBox("Make Groups", true);
 
         JButton cancelButton;
         JButton SButton;
@@ -3483,7 +3505,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
             //add textfields
-            JLabel label2 = new JLabel("Square size");
+            JLabel label2 = new JLabel("Square size (n x n pixels)");
             jPanel.add(label2);
             jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
             jPanel.add(sizeField);
@@ -3498,6 +3520,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
             jPanel.add(allowOverlap);
+            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+            jPanel.add(makeGroups);
             jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
             jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
@@ -3552,7 +3578,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                     double overlap = 0.0;
                     if(allowOverlap.isSelected()) { overlap = 1.0; }
 
-
                     double[] params = {size, num, overlap};
 
                     Roi[] rois = rm.getSelectedROIs();
@@ -3564,14 +3589,25 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
                     MimsPlus img = (MimsPlus)getImage();
 
-                    if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
-                        rm.add(roiSquares(rois, img.internalRatio, params));
-                    } else {
-                        rm.add(roiSquares(rois, img, params));
+                    for (int r = 0; r < rois.length; r++) {
+                        String grpname = rm.getRoiGroup(rois[r].getName())+",roi-"+rois[r].getName()+",sq";
+                        if (img.getMimsType() == MimsPlus.HSI_IMAGE && img.internalRatio != null) {
+                            if(makeGroups.isSelected()) {
+                                rm.addToGroup(roiSquares(rois[r], img.internalRatio, params), grpname);
+                            } else {
+                                rm.addToGroup(roiSquares(rois[r], img.internalRatio, params), rm.getRoiGroup(rois[r].getName()));
+                            }
+                        } else {
+                            if(makeGroups.isSelected()) {
+                                rm.addToGroup(roiSquares(rois[r], img, params), grpname);
+                            } else {
+                                rm.addToGroup(roiSquares(rois[r], img, params),rm.getRoiGroup(rois[r].getName()));
+                            }
+                        }
                     }
 
                 } catch(Exception x) {
-                    x.printStackTrace();
+                    //x.printStackTrace();
                     ij.IJ.error("Error", "Not a number.");
                     return;
                 } finally {
