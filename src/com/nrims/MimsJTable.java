@@ -7,16 +7,23 @@ import ij.process.ImageStatistics;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ScrollPaneConstants;
@@ -24,6 +31,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
@@ -44,16 +52,17 @@ public class MimsJTable {
    Roi[] rois;
    ArrayList planes;
    JFrame frame;
+   JPopupMenu popupMenu;
+   int selectedColumn;
 
    static String DEFAULT_TABLE_NAME = "_data.txt";
+   static String DELETE_COLUMN_CMD = "Delete Column";
    static String AREA = "area";
    static String GROUP = "group";
-
    static String FILENAME = "file";
    static String ROIGROUP = "Roi group";
    static String ROINAME = "Roi name";
    static String SLICE = "Slice";
-   
    static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
    static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
 
@@ -158,7 +167,7 @@ public class MimsJTable {
       // Input checks.
       if (names == null || groups == null || values == null)
          return;
-      if (names.size() == 0 || groups.size() == 0 || values.size() == 0)
+      if (names.isEmpty() || groups.isEmpty() || values.isEmpty())
          return;
       if ((groups.size() != values.size()) || (names.size() != values.size()))
          return;
@@ -193,12 +202,29 @@ public class MimsJTable {
    private void displayTable(Object[][] data, String[] columnNames){
 
          // Create table and set column width.
-         DefaultTableModel tm = new DefaultTableModel(data, columnNames);
+         MyDefaultTableModel tm = new MyDefaultTableModel(data, columnNames);
          table = new JTable(tm);
-         table = autoResizeColWidth(table, tm);
+         table = autoResizeColWidth();
          table.setAutoCreateRowSorter(true);
+         table.setColumnSelectionAllowed(true);
+         table.setRowSelectionAllowed(true);
+         setColumnRenderer();
 
-         //Create the scroll pane and add the table to it.
+
+         // Set the popup menu.
+         popupMenu = new JPopupMenu();
+         JMenuItem popupmenuItem = new JMenuItem(DELETE_COLUMN_CMD);
+         popupmenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               removeColumnAndData();
+            }
+         });
+         popupMenu.add(popupmenuItem);        
+         MouseListener popupListener = new PopupListener();
+         table.getTableHeader().addMouseListener(popupListener);
+         table.addMouseListener(popupListener);
+
+         // Create the scroll pane and add the table to it.
          JScrollPane scrollPane = new JScrollPane(table);
          scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
               
@@ -240,12 +266,12 @@ public class MimsJTable {
    */
    private void appendDataToTable(Object[][] data, String[] columnNames) {
       TableModel tm = table.getModel();
-      DefaultTableModel model = (DefaultTableModel) tm;
+      MyDefaultTableModel model = (MyDefaultTableModel) tm;
       for (int i = 0; i < data.length; i++) {
          model.addRow(data[i]);
          model.setColumnIdentifiers(columnNames);
       }
-      autoResizeColWidth(table, model);
+      autoResizeColWidth();
 
       // Update title.
       String title = ui.getImageFilePrefix();
@@ -340,19 +366,11 @@ public class MimsJTable {
 
          for (int col = 0; col < stats.length; col++) {
             stat = stats[col];
-
-            // Set decimal precision.
-            int precision = 2;
-
             // "Group" is a mandatory row, so ignore if user selected it.
             if (stat.startsWith(GROUP))
                continue;
 
-            // No decimal for area statistic.
-            if (stat.equals(AREA))
-               precision = 0;
-            data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat, ui), precision);
-
+            data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, ui);
             colnum++;
          }
      }
@@ -377,7 +395,6 @@ public class MimsJTable {
       Roi roi;
       MimsPlus image;
       String stat;
-      ImageStatistics imageStats;
 
       // Fill in "mandatory" fields... ususally non-numeric file/Roi information.
       for (int row = 0; row < rois.length; row++) {
@@ -417,23 +434,18 @@ public class MimsJTable {
             for (int col2 = 0; col2 < stats.length; col2++) {
                stat = stats[col2];
 
-               // Set decimal percision.
-               int precision = 2;
-
                // "Group" is a mandatory row, so ignore if user selected it.
                if (stat.startsWith(GROUP))
                   continue;
 
                // Some stats we only want to put in once, like "area".
-               if (col1 == 0) {
-                  if (stat.equals(AREA))
-                     precision = 0;
-                  data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat, ui), precision);
-               } else {
+               if (col1 == 0)
+                  data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, ui);
+               else {
                   if (stat.equals(AREA))
                      continue;
                   else
-                     data[row][colnum] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stat, ui), precision);
+                     data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, ui);
                }
                colnum++;
             }
@@ -449,13 +461,12 @@ public class MimsJTable {
    private Object[][] getDataSet() {
 
       // initialize variables.
-      ImageStatistics imageStats = null;
       int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
       Object[][] data = new Object[planes.size()][rois.length * images.length * stats.length + 1];
 
       // Fill in "slice" field.
       for (int ii = 0; ii < planes.size(); ii++) {
-         data[ii][0] = ((Integer)planes.get(ii)).toString();
+         data[ii][0] = (Integer)planes.get(ii);
       }
 
       // Fill in data.
@@ -475,23 +486,20 @@ public class MimsJTable {
                image.setRoi(rois[i]);
 
                for (int k = 0; k < stats.length; k++) {
-                  int precision = 2;
                            
                   if (j == 0) {
-                     if (stats[k].startsWith("area"))
-                        precision = 0;
-                     if (stats[k].startsWith("group")) {
+                     if (stats[k].startsWith(GROUP)) {
                         String group = ui.getRoiManager().getRoiGroup(rois[i].getName());
                         if (group == null)
                            group = "null";
                         data[ii][col] = group;
                      } else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k], ui), precision);
+                        data[ii][col] = MimsJFreeChart.getSingleStat(image, stats[k], ui);                        
                   } else {
-                     if ((stats[k].startsWith("group") || stats[k].equalsIgnoreCase("area")))
+                     if ((stats[k].startsWith(GROUP) || stats[k].equalsIgnoreCase(AREA)))
                         continue;
                      else
-                        data[ii][col] = IJ.d2s(MimsJFreeChart.getSingleStat(image, stats[k], ui), precision);
+                        data[ii][col] = MimsJFreeChart.getSingleStat(image, stats[k], ui);
                   }
                   col++;
                }
@@ -512,7 +520,7 @@ public class MimsJTable {
       // initialze variables.
       ArrayList<String> columnNamesArray = new ArrayList<String>();
       String header = "";
-      columnNamesArray.add("slice");
+      columnNamesArray.add(SLICE);
       String tableOnly = "(table only)";
 
       // Generate header based on image, roi, stat.
@@ -656,44 +664,43 @@ public class MimsJTable {
       }
    }
 
-  /**
-   * Writes the actual data.
-   */
+   /**
+    * Writes the actual data.
+    */
    private void writeData(File file) {
       try {
-              PrintWriter out = new PrintWriter(new FileWriter(file));
-              DefaultTableModel dtm = (DefaultTableModel)table.getModel();
+         PrintWriter out = new PrintWriter(new FileWriter(file));
 
-              // Write column headers              
-              for (int i = 0; i < dtm.getColumnCount(); i++) {
-                 out.print(dtm.getColumnName(i));
-                 if (i < dtm.getColumnCount() - 1)
-                     out.print("\t");                 
-              }
-              out.println();
+         // Write column headers
+         for (int i = 0; i < table.getColumnCount(); i++) {
+            out.print(table.getColumnName(i));
+            if (i < table.getColumnCount() - 1)
+               out.print("\t");
+         }
+         out.println();
 
-              // Write data
-              String value = "";
-              for (int i = 0; i < dtm.getRowCount(); i++) {
-                 for (int j = 0; j < dtm.getColumnCount(); j++) {
-                    Object objVal = dtm.getValueAt(i, j);
-                    if (value == null)
-                       value = "null";
-                    else
-                       value = objVal.toString();
-                    out.print(value);
-                    if (j < dtm.getColumnCount() - 1)
-                       out.print("\t");                                     
-                 }
-                 out.println();
-              }
+         // Write data
+         String value = "";
+         for (int i = 0; i < table.getRowCount(); i++) {
+            for (int j = 0; j < table.getColumnCount(); j++) {
+               Object objVal = table.getValueAt(i, j);
+               if (value == null)
+                  value = "null";
+               else
+                  value = objVal.toString();
+               out.print(value);
+               if (j < table.getColumnCount() - 1)
+                  out.print("\t");
+            }
+            out.println();
+         }
 
-              // Close file
-              out.close();
+         // Close file
+         out.close();
 
-          } catch (IOException e) {
-             IJ.error("Unable to write data. Possible permissions error.");
-          }
+      } catch (IOException e) {
+         IJ.error("Unable to write data. Possible permissions error.");
+      }
    }
 
   /**
@@ -793,12 +800,9 @@ public class MimsJTable {
     * @param table the JTable.
     * @param model the table model.
     */
-   private JTable autoResizeColWidth(JTable table, DefaultTableModel model) {
-
+   private JTable autoResizeColWidth() {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.setModel(model);
-
         int margin = 5;
         int minWidth = 75;
 
@@ -842,4 +846,130 @@ public class MimsJTable {
         return table;
     }
 
+   // Removes the selectedCulmn from the table and the associated
+   // call data from the table model.
+   public void removeColumnAndData() {
+      MyDefaultTableModel model = (MyDefaultTableModel) table.getModel();
+      TableColumn col = table.getColumnModel().getColumn(selectedColumn);
+      int columnModelIndex = col.getModelIndex();
+      Vector data = model.getDataVector();
+      Vector colIds = model.getColumnIdentifiers();
+
+      // Remove the column from the table
+      table.removeColumn(col);
+
+      // Remove the column header from the table model
+      colIds.removeElementAt(columnModelIndex);
+
+      // Remove the column data
+      for (int r = 0; r < data.size(); r++) {
+         Vector row = (Vector) data.get(r);
+         row.removeElementAt(columnModelIndex);
+      }
+      model.setDataVector(data, colIds);
+
+      // Correct the model indices in the TableColumn objects
+      // by decrementing those indices that follow the deleted column
+      Enumeration colEnum = table.getColumnModel().getColumns();
+      for (; colEnum.hasMoreElements(); ) {
+         TableColumn c = (TableColumn)colEnum.nextElement();
+         if (c.getModelIndex() >= columnModelIndex) {
+            c.setModelIndex(c.getModelIndex()-1);
+         }
+      }
+      model.fireTableStructureChanged();
+      autoResizeColWidth();
+   }
+
+   class PopupListener implements MouseListener {
+
+      public void mousePressed(MouseEvent e) {
+         showPopup(e);
+      }
+
+      public void mouseReleased(MouseEvent e) {
+         showPopup(e);
+      }
+
+      private void showPopup(MouseEvent e) {
+         if (e.isPopupTrigger()) {
+            JTable source;
+            if (e.getSource() instanceof JTableHeader)
+               source = ((JTableHeader)e.getSource()).getTable();
+            else if (e.getSource() instanceof JTable)
+               source = (JTable)e.getSource();
+            else
+               return;
+            int row = source.rowAtPoint( e.getPoint() );
+            int column = source.columnAtPoint( e.getPoint() );
+            selectedColumn = column;
+            if (! source.isRowSelected(row))
+                source.changeSelection(row, column, false, false);
+            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+         }
+      }
+
+      public void mouseClicked(MouseEvent e) {
+      }
+
+      public void mouseEntered(MouseEvent e) {
+      }
+
+      public void mouseExited(MouseEvent e) {
+      }
+   }
+
+   /**
+    * Sets the renderers for the various columns.
+    */
+   public void setColumnRenderer() {
+      String colName = "";
+      for(int i = 0; i < table.getColumnCount(); i++) {
+         colName = table.getColumnName(i);
+         if (colName.matches(AREA)     || colName.startsWith(GROUP) || colName.matches(FILENAME) ||
+             colName.matches(ROIGROUP) || colName.matches(ROINAME)  || colName.matches(SLICE)) {
+            // do nothing
+         } else {
+             table.getColumnModel().getColumn(i).setCellRenderer(new DecimalFormatRenderer() );
+         }
+      }
+   }
+
+   /**
+    * A custom renderer that display a Number to two decimal places.
+    */
+   static class DecimalFormatRenderer extends DefaultTableCellRenderer {
+
+      private static final DecimalFormat formatter = new DecimalFormat("0.00");
+
+      public Component getTableCellRendererComponent(
+              JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+         // First format the cell value as required
+
+         value = formatter.format((Number) value);
+
+         // And pass it on to parent class
+
+         return super.getTableCellRendererComponent(
+                 table, value, isSelected, hasFocus, row, column);
+      }
+   }
+}
+
+// This subclass adds a method to retrieve the columnIdentifiers
+// which is needed to implement the removal of
+// column data from the table model
+class MyDefaultTableModel extends DefaultTableModel {
+
+   public MyDefaultTableModel(Object rowData[][], Object columnNames[]) {
+      super(rowData, columnNames);
+   }
+
+   public Vector getColumnIdentifiers() {
+      return columnIdentifiers;
+   }
+
+   public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
 }
