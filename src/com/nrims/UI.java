@@ -29,6 +29,8 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,14 +41,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -56,7 +54,7 @@ import javax.swing.event.ChangeListener;
  * serves as the central hub for all classes involved
  * with the user interface.
  */
-public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListener {
+public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListener, PropertyChangeListener {
 
     public static final long serialVersionUID = 1;
     public static final String NRRD_EXTENSION = ".nrrd";
@@ -125,6 +123,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Private stings for option parsing
      */
     private static final String IMFILE_OPTION = "-imfile";
+    public boolean continueTask = true;
 
     public UI() {
        this(false);
@@ -200,7 +199,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       this.setLocation(xloc, yloc);
       ij.WindowManager.addWindow(this);
-      IJ.showProgress(1.0);
 
       this.mimsDrop = new FileDrop(null, jTabbedPane1, new FileDrop.Listener() {
          public void filesDropped(File[] files) {
@@ -219,14 +217,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             setLastFolder(file.getParentFile());
             setIJDefaultDir(file.getParent());
 
-            openImage(file);
+            openFileInBackground(file);
          }
       });
 
       // Create and start the thread
       //Thread thread = new StartupScript(this);
       //thread.start();
-      //loadMIMSFile(new File("/nrims/home3/zkaufman/Images/test_file.nrrd"));
+      //loadMIMSFile1(new File("/nrims/home3/cpl/JASON/LOSCALZO/EXP4/110324-c3_2_1-82Se-2x999_1_2_3_4_concat.nrrd"));
 
       // I added this listener because for some reason,
       // neither the windowClosing() method in this class, nor the
@@ -293,7 +291,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Closes the current image and its associated set of
      * windows if the mode is set to close open windows.
      */
-    public synchronized void closeCurrentImage() {
+    public void closeCurrentImage() {
         if (getRoiManager() != null) {
            if (getRoiManager().isVisible())
               getRoiManager().close();
@@ -393,324 +391,38 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
    }
 
     /**
-     * Relegates behavior for opening any of the various MimsPlus file types.
+     * Opens a MIMS file in the background. Do no call this method if your code
+     * does work with the file once opened, instead call openFile.
      * @param file to be opened.
      */
-    public boolean openFile(File file) {
-      
-      boolean onlyShowDraggedFile = true;
-
-      String fileName = file.getName();
-      if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION) ||
-              fileName.endsWith(RATIO_EXTENSION) || fileName.endsWith(HSI_EXTENSION) ||
-              fileName.endsWith(SUM_EXTENSION) || fileName.endsWith(ROIS_EXTENSION) ||
-              fileName.endsWith(ROI_EXTENSION)) {
-      } else {
-         String fileType;
-         int lastIndexOf = fileName.lastIndexOf(".");
-         if (lastIndexOf >= 0)
-            fileType = fileName.substring(fileName.lastIndexOf("."));
-          else
-            fileType = fileName;
-         IJ.error("Unable to open files of type: " + fileType);
-         return false;
-      }
-
-
-      lastFolder = file.getParent();
-      setIJDefaultDir(lastFolder);
-
-      try {
-         if (file.getAbsolutePath().endsWith(NRRD_EXTENSION) ||
-                 file.getAbsolutePath().endsWith(MIMS_EXTENSION)) {
-            onlyShowDraggedFile = false;
-            loadMIMSFile(file);
-         } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
-            FileInputStream f_in = new FileInputStream(file);
-            ObjectInputStream obj_in = new ObjectInputStream(f_in);
-            Object obj = obj_in.readObject();
-            if (obj instanceof RatioProps) {
-               RatioProps ratioprops = (RatioProps) obj;
-               String dataFileString = ratioprops.getDataFileName();
-               File dataFile = new File(file.getParent(), dataFileString);
-               loadMIMSFile(dataFile);
-               MimsPlus mp = new MimsPlus(this, ratioprops);
-               mp.showWindow();
-            }
-         } else if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
-            FileInputStream f_in = new FileInputStream(file);
-            ObjectInputStream obj_in = new ObjectInputStream(f_in);
-            Object obj = obj_in.readObject();
-            if (obj instanceof HSIProps) {
-               HSIProps hsiprops = (HSIProps) obj;
-               String dataFileString = hsiprops.getDataFileName();
-               File dataFile = new File(file.getParent(), dataFileString);
-               loadMIMSFile(dataFile);
-               MimsPlus mp = new MimsPlus(this, hsiprops);
-               mp.showWindow();
-            }
-         } else if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
-            FileInputStream f_in = new FileInputStream(file);
-            ObjectInputStream obj_in = new ObjectInputStream(f_in);
-            Object obj = obj_in.readObject();
-            if (obj instanceof SumProps) {
-               SumProps sumprops = (SumProps) obj;
-               String dataFileString = sumprops.getDataFileName();
-               File dataFile = new File(file.getParent(), dataFileString);
-               loadMIMSFile(dataFile);
-               MimsPlus sp = new MimsPlus(this, sumprops, null);
-               sp.showWindow();
-            }
-         } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION) ||
-                 file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
-            onlyShowDraggedFile = false;
-            getRoiManager().open(file.getAbsolutePath(), true);
-            updateAllImages();
-            getRoiManager().showFrame();
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
-         return false;
-      }
-
-       // This 3 lines solves some strange updating issues.
-       // Has to do with syncing images by changing the slice.
-       int startslice = massImages[0].getCurrentSlice();
-       massImages[0].setSlice(getOpener().getNImages());
-       massImages[0].setSlice(startslice);
-
-       if (onlyShowDraggedFile) {
-          MimsPlus[] mps = getOpenMassImages();
-          for (int i = 0; i < mps.length; i++) {
-             mps[i].hide();
-          }
-       }
-
-       return true;
+    public void openFileInBackground(File file) {
+        if (currentlyOpeningImages)
+           return;
+        currentlyOpeningImages = true;
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        stopButton.setEnabled(true);
+        FileOpenTask fileOpenTask = new FileOpenTask(file, this);
+        fileOpenTask.addPropertyChangeListener(this);
+        fileOpenTask.execute();        
    }
 
     /**
-     * Opens an image file in the .im or .nrrd file format.
-     * @param file absolute file path.
-     * @throws java.lang.NullPointerException
-     */
-    public synchronized boolean loadMIMSFile(File file) throws NullPointerException {
-        if (!file.exists()) {
-            throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
-        }
+    * Opens a MIMS file in the background. Do no call this method if your code
+    * does work with the file once opened, instead call openFile.
+    * @param file to be opened.
+    */
+   public boolean openFile(File file) {
+      boolean opened;
+      try {
+         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+         FileOpenTask fileOpenTask = new FileOpenTask(file, this);
+         opened = fileOpenTask.doInBackground();
+      } finally {
+         setCursor(null);
 
-        try {
-            currentlyOpeningImages = true;
-
-            //what is this going to do?
-            closeCurrentImage();
-            
-            // Clear selections in the jlist (prevents exceptions from being thrown).
-            getRoiManager().roijlist.clearSelection();
-
-            try {
-                //need to add checks
-                if (file.getName().endsWith(MIMS_EXTENSION)) {
-                   image = new Mims_Reader(file);
-                } else if (file.getName().endsWith(NRRD_EXTENSION)) {
-                   image = new Nrrd_Reader(file);
-                } else {
-                   return false;
-                }               
-            } catch (Exception e) {
-                IJ.error("Failed to open " + file + "\n");
-                return false;
-            }
-
-            int nMasses = image.getNMasses();
-            int nImages = image.getNImages();
-
-            long memRequired = ((long)nMasses) * ((long)image.getWidth()) * ((long)image.getHeight()) * ((long)2) * ((long)nImages);
-            //added wiggle room to how big a file can be opened
-            //was causing heap size exceptions to be thrown
-            long maxMemory = IJ.maxMemory()-(128000000);
-            
-            for (int i = 0; i < nMasses; i++) {
-                bOpenMass[i] = true;
-            }
-            while (memRequired > maxMemory) {
-                ij.gui.GenericDialog gd = new ij.gui.GenericDialog("File Too Large");
-                long aMem = memRequired;
-                int canOpen = nImages;
-
-                while (aMem > maxMemory) {
-                    canOpen--;
-                    aMem = nMasses * image.getWidth() * image.getHeight() * 2 * canOpen;
-                }
-
-                String[] names = image.getMassNames();
-                for (int i = 0; i < image.getNMasses(); i++) {
-                    String msg = "Open mass " + names[i];
-                    gd.addCheckbox(msg, bOpenMass[i]);
-                }
-                gd.addNumericField("Open only ", (double) canOpen, 0, 5, " of " + image.getNImages() + " Images");
-
-                gd.showDialog();
-                if (gd.wasCanceled()) {
-                    image = null;
-                    return false;
-                }
-
-                nMasses = 0;
-                for (int i = 0; i < image.getNMasses(); i++) {
-                    bOpenMass[i] = gd.getNextBoolean();
-                    if (bOpenMass[i]) {
-                        nMasses++;
-                    }
-                }
-
-                nImages = (int) gd.getNextNumber();
-
-                memRequired = memRequired = ((long)nMasses) * ((long)image.getWidth()) * ((long)image.getHeight()) * ((long)2) * ((long)nImages);
-            }
-
-            try {
-                int n = 0;
-                int t = image.getNMasses() * (nImages + 1);
-                for (int i = 0; i < image.getNMasses(); i++) {
-                    IJ.showProgress(++n, t);
-                    if (bOpenMass[i]) {
-                        MimsPlus mp = new MimsPlus(this, i);
-                        mp.setAllowClose(false);
-                        massImages[i] = mp;
-                        if (mp != null) {
-                            massImages[i].getProcessor().setMinAndMax(0, 0);
-                            massImages[i].getProcessor().setPixels(image.getPixels(i));
-                        }
-                    }
-                }
-
-                if (nImages > 1) {
-                    // TODO why are we starting from 1 here?
-                    for (int i = 1; i < nImages; i++) {
-                        image.setStackIndex(i);
-                        for (int mass = 0; mass < image.getNMasses(); mass++) {
-                            IJ.showProgress(++n, t);
-                            if (bOpenMass[mass]) {
-                                massImages[mass].appendImage(i);
-                            }
-                        }
-                        updateStatus(i + " of " + nImages);
-                    }
-                }
-
-                for (int i = 0; i < image.getNMasses(); i++) {
-                    if (bOpenMass[i]) {
-                        if (image.getNImages() > 1) {
-                            massImages[i].setIsStack(true);
-                            massImages[i].setSlice(1);
-                        }
-                        if (isSilentMode() == false)
-                           massImages[i].show();
-                    }
-                }
-
-                if (isSilentMode() == false) {
-                if (this.windowPositions != null) {
-                    applyWindowPositions(windowPositions);
-                } else {
-                    ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
-                    wo.run("tile");
-                }
-                if (this.windowZooms != null) {
-                   applyWindowZooms(windowZooms);
-                }
-               }
-
-            } catch (Exception x) {
-                x.printStackTrace();
-            }
-
-            for (int i = 0; i < image.getNMasses(); i++) {
-                if (bOpenMass[i]) {
-                   massImages[i].addListener(this);
-                } else {
-                    massImages[i] = null;
-                }
-            }
-
-            if (mimsData == null) {
-                initializeViewMenu();
-                mimsData = new com.nrims.MimsData(this, image);
-                hsiControl = new MimsHSIView(this);
-                mimsLog = new MimsLog();
-                mimsStackEditing = new MimsStackEditor(this, image);
-                mimsTomography = new MimsTomography(this);
-                mimsAction = new MimsAction(image);
-                //TODO: throws an exception when opening an image with 2 masses
-                segmentation = new SegmentationForm(this);
-
-                jTabbedPane1.setComponentAt(0, mimsData);
-                jTabbedPane1.setTitleAt(0, "MIMS Data");
-                jTabbedPane1.add("Process", hsiControl);
-                jTabbedPane1.add("Contrast", cbControl);
-                jTabbedPane1.add("Stack Editing", mimsStackEditing);
-                jTabbedPane1.add("Tomography", mimsTomography);
-                jTabbedPane1.add("Segmentation", segmentation);
-                jTabbedPane1.add("MIMS Log", mimsLog);
-
-            } else {
-                resetViewMenu();
-                mimsData = new com.nrims.MimsData(this, image);
-                cbControl = new MimsCBControl(this);
-                mimsStackEditing = new MimsStackEditor(this, image);
-                int[] indices = mimsTomography.getSelectedStatIndices();
-                mimsTomography = new MimsTomography(this);
-                mimsTomography.setSelectedStatIndices(indices);
-                mimsAction = new MimsAction(image);                
-                segmentation = new SegmentationForm(this);
-
-                jTabbedPane1.setComponentAt(0, mimsData);
-                jTabbedPane1.setTitleAt(0, "MIMS Data");
-                jTabbedPane1.setComponentAt(1, hsiControl);
-                jTabbedPane1.setComponentAt(2, cbControl);
-                jTabbedPane1.setComponentAt(3, mimsStackEditing);
-                jTabbedPane1.setComponentAt(4, mimsTomography);
-                jTabbedPane1.setComponentAt(5, segmentation);
-
-                mimsData.setMimsImage(image);
-                hsiControl.updateImage();              
-            }
-
-            jTabbedPane1.addChangeListener(new ChangeListener() {
-               public void stateChanged(ChangeEvent e){
-                  int selected = jTabbedPane1.getSelectedIndex();
-                  if (selected == 2) {
-                     //cbControl.updateHistogram();
-                  } 
-               }
-            });
-
-            this.mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
-            this.mimsTomography.resetImageNamesList();
-            this.mimsStackEditing.resetSpinners();         
-            
-            openers.clear();
-            String fName = file.getName();
-            openers.put(fName, image);
-
-            // Add the windows to the combobox in CBControl.            
-            MimsPlus[] mp = getOpenMassImages();
-            for(int i = 0; i < mp.length; i++) {
-               cbControl.addWindowtoList(mp[i]);
-            }
-
-            //hide mass images if needed
-            if (this.hiddenWindows != null) {
-                applyHiddenWindows(hiddenWindows);
-            }
-
-        } finally {
-            currentlyOpeningImages = false;
-        }
-
-        return true;
-    }
+      }
+      return opened;
+   }
 
     /**
      * Returns the mass images window positions as an array of Points.
@@ -1404,7 +1116,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       jPopupMenu1 = new javax.swing.JPopupMenu();
       jTabbedPane1 = new javax.swing.JTabbedPane();
       jPanel1 = new javax.swing.JPanel();
-      mainTextField = new javax.swing.JTextField();
+      stopButton = new javax.swing.JButton();
+      jProgressBar1 = new javax.swing.JProgressBar();
       jMenuBar1 = new javax.swing.JMenuBar();
       fileMenu = new javax.swing.JMenu();
       openNewMenuItem = new javax.swing.JMenuItem();
@@ -1467,14 +1180,26 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       );
       jPanel1Layout.setVerticalGroup(
          jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-         .add(0, 427, Short.MAX_VALUE)
+         .add(0, 424, Short.MAX_VALUE)
       );
 
       jTabbedPane1.addTab("Images", jPanel1);
 
-      mainTextField.setEditable(false);
-      mainTextField.setText("Ready");
-      mainTextField.setToolTipText("Status");
+      stopButton.setIcon(new javax.swing.ImageIcon("/nrims/home3/zkaufman/NRIMS2/trunk/pngs/stopsign.png")); // NOI18N
+      stopButton.setEnabled(false);
+      stopButton.setIconTextGap(0);
+      stopButton.setMaximumSize(new java.awt.Dimension(27, 27));
+      stopButton.setMinimumSize(new java.awt.Dimension(27, 27));
+      stopButton.setPreferredSize(new java.awt.Dimension(27, 27));
+      stopButton.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            stopButtonActionPerformed(evt);
+         }
+      });
+
+      jProgressBar1.setBackground(new java.awt.Color(211, 215, 207));
+      jProgressBar1.setString("");
+      jProgressBar1.setStringPainted(true);
 
       fileMenu.setText("File");
 
@@ -1715,16 +1440,21 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             .addContainerGap()
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
-               .add(org.jdesktop.layout.GroupLayout.TRAILING, mainTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE))
+               .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                  .add(jProgressBar1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 698, Short.MAX_VALUE)
+                  .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                  .add(stopButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
             .addContainerGap())
       );
       layout.setVerticalGroup(
          layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
          .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-            .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 463, Short.MAX_VALUE)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-            .add(mainTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-            .addContainerGap())
+            .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE)
+            .add(5, 5, 5)
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+               .add(jProgressBar1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+               .add(stopButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .add(16, 16, 16))
       );
 
       getAccessibleContext().setAccessibleDescription("NRIMS Analyais Module");
@@ -2081,79 +1811,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * Action method for File>Open Mims Image menu item. If opening
      */
-    private void openMIMSImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                      
-       openImage(null);
-    }
+    private void openMIMSImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
+      // Bring up file chooser.
+      MimsJFileChooser fc = new MimsJFileChooser(this);
+      fc.setMultiSelectionEnabled(false);
+      fc.setPreferredSize(new java.awt.Dimension(650, 500));
+      int returnVal = fc.showOpenDialog(this);
 
-    /**
-     * The first method one should call when attempting to open a file.
-     * If <code>file</code> is null then the user will be prompted
-     * with a file chooser. Otherwise an attempt will be made to open
-     * the file passed.
-     *
-     * @param file the file to be opened.
-     */
-    public void openImage(File file) {
-
-       // Get HSIProps for all open ratio images.
-       RatioProps[] rto_props = getOpenRatioProps();
-
-       // Get HSIProps for all open hsi images.
-       HSIProps[] hsi_props = getOpenHSIProps();
-
-       // Get SumProps for all open sum images.
-       SumProps[] sum_props = getOpenSumProps();
-
-       // Get previous image size.
-       int old_width = 0;
-       int old_height= 0;
-       int old_numMasses = 0;
-       if (image != null) {
-          old_width = image.getWidth();
-          old_height = image.getHeight();
-          old_numMasses = image.getNMasses();
-       }
-       
-       // Load the file.
-       if (file == null) {
-          file = loadMIMSFile();
-          if (file == null)
-             return;
-       } else {
-          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-          boolean opened = openFile(file);
-          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-          if (!opened)
-             return;
-       }
-
-       // Get new image size.
-       int new_width = image.getWidth();
-       int new_height = image.getHeight();
-       boolean same_size = ((old_height == new_height) && (old_width == new_width));
-       int new_numMasses = image.getNMasses();
-
-       // Perform some checks to see if we wanna restore state.
-       boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
-               
-       // Generate all images that were previously open.
-       if (isImageFile) 
-          restoreState(rto_props, hsi_props, sum_props, same_size);
-       
-       MimsRoiManager rm = getRoiManager();
-       if (rm != null) {
-          rm.resetRoiLocationsLength();
-       }
-
-       //Autocontrast mass images.
-       //Should add option to apply settings from previous image?
-       autoContrastImages(getOpenMassImages());
-       autoContrastImages(getOpenSumImages());
-
-        //Update notes gui
-        if(image!=null) {
-            imgNotes.setOutputFormatedText(image.getNotes());
-        }       
+      // Open file or return null.
+      if (returnVal == JFileChooser.APPROVE_OPTION) {
+         File file = fc.getSelectedFile();
+         openFileInBackground(file);
+      }
     }
 
     /**
@@ -2520,7 +2189,7 @@ private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt)
     read = testLoad.openList();
     if (!read) {
         return;
-    }
+   }
 
     testLoad.printList();
     testLoad.simpleIMImport();
@@ -2746,6 +2415,10 @@ private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
    cm.setVisible(true);
    cm.selectFiles();
 }//GEN-LAST:event_jMenuItem7ActionPerformed
+
+private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
+   continueTask=false;
+}//GEN-LAST:event_stopButtonActionPerformed
 
 /**
  * Generates a new MimsPlus image that is a stack. Whereas ratio
@@ -3389,18 +3062,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      *
      * @param msg the message to display.
      */
-    public synchronized void updateStatus(String msg) {
-       //if (isSilentMode())
-       //   return;
-        //if (bUpdating) {
-        //    return;
-        //}
-        //if (!currentlyOpeningImages) {
-            mainTextField.setText(msg);
-        //} else {
-            IJ.showStatus(msg);
-            //IJ.
-        //}
+    public void updateStatus(String msg) {
+       jProgressBar1.setString(msg);
     }
 
     /**
@@ -3524,7 +3187,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     ui_to_run.setVisible(true);
                     files_arr[0] = new File(temp_path);
                     File file_to_open = files_arr[0];
-                    ui_to_run.openFile(file_to_open);
+                    ui_to_run.openFileInBackground(file_to_open);
                     
                 }
             });
@@ -3541,6 +3204,447 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 }
             });
         }
+    }
+    
+    /**
+     * Invoked when task's progress property changes.
+     */
+    public void propertyChange(PropertyChangeEvent evt) {
+        if ("progress" == evt.getPropertyName()) {
+            int progress = (Integer) evt.getNewValue();
+            jProgressBar1.setValue(progress);
+        }
+    }
+
+    /**
+     * The FileOpenTask will open image files either in the background or
+     * inline. To open a file in the background, use the following code sequence:
+     *
+     *   FileOpenTask fileOpenTask = new FileOpenTask(file, ui);
+     *   fileOpenTask.addPropertyChangeListener(this); // for progressbar updates.
+     *   fileOpenTask.execute();
+     *
+     * To open a file inline, use the following code sequence:
+     *
+     *   FileOpenTask fileOpenTask = new FileOpenTask(file, ui);
+     *   fileOpenTask.addPropertyChangeListener(this); // for progressbar updates.
+     *   fileOpenTask.doInBackground();
+     *
+     * It is counter intuitive the the doInBackground() method does NOT launch the
+     * task in the background but that is the result of the naming convention
+     * used by java.
+     */
+    class FileOpenTask extends SwingWorker<Boolean, Void> {
+
+       UI ui;
+       File file;
+       boolean previousFileCanceled;
+
+       public FileOpenTask(File file, UI ui) {
+          this.file = file;
+          this.ui = ui;
+          this.previousFileCanceled = false;
+          continueTask = true;
+       }
+
+        /*
+         * Main task. Executed in background thread.
+         */
+        @Override
+       public Boolean doInBackground() {
+
+          // Get properties for derived images
+          RatioProps[] rto_props = getOpenRatioProps();
+          HSIProps[] hsi_props = getOpenHSIProps();
+          SumProps[] sum_props = getOpenSumProps();
+
+          // Get previous image size.
+          int old_width = 0;
+          int old_height = 0;
+          if (image != null) {
+             old_width = image.getWidth();
+             old_height = image.getHeight();
+          }
+
+          // Open the file.
+          boolean opened = openFile(file);
+          if (!opened) {
+             openProcessFailedOrCanceled();
+             return false;
+          }
+          stopButton.setEnabled(false);
+          doneLoadingFile();
+
+          // Get new image size.
+          int new_width = image.getWidth();
+          int new_height = image.getHeight();
+          boolean same_size = ((old_height == new_height) && (old_width == new_width));
+
+          // Perform some checks to see if we wanna restore state.
+          boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
+          if (isImageFile) restoreState(rto_props, hsi_props, sum_props, same_size);
+          
+          // Set up roi manager.
+          MimsRoiManager rm = getRoiManager();
+          if (rm != null) rm.resetRoiLocationsLength();
+
+          //Autocontrast mass images.          
+          autoContrastImages(getOpenMassImages());
+          autoContrastImages(getOpenSumImages());
+
+          //Update notes gui
+          if (image != null) imgNotes.setOutputFormatedText(image.getNotes());
+
+          return true;
+       }
+
+       /**
+        * Relegates behavior for opening any of the various MimsPlus file types.
+        * @param file to be opened.
+        */
+       public boolean openFile(File file) {
+
+          boolean onlyShowDraggedFile = true;
+
+          String fileName = file.getName();
+          if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)
+                  || fileName.endsWith(RATIO_EXTENSION) || fileName.endsWith(HSI_EXTENSION)
+                  || fileName.endsWith(SUM_EXTENSION) || fileName.endsWith(ROIS_EXTENSION)
+                  || fileName.endsWith(ROI_EXTENSION)) {
+          } else {
+             String fileType;
+             int lastIndexOf = fileName.lastIndexOf(".");
+             if (lastIndexOf >= 0) {
+                fileType = fileName.substring(fileName.lastIndexOf("."));
+             } else {
+                fileType = fileName;
+             }
+             IJ.error("Unable to open files of type: " + fileType);
+             return false;
+          }
+
+          lastFolder = file.getParent();
+          setIJDefaultDir(lastFolder);
+
+          try {
+             if (file.getAbsolutePath().endsWith(NRRD_EXTENSION)
+                     || file.getAbsolutePath().endsWith(MIMS_EXTENSION)) {
+                onlyShowDraggedFile = false;
+                if(!loadMIMSFile(file))
+                   return false;
+             } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
+                FileInputStream f_in = new FileInputStream(file);
+                ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                Object obj = obj_in.readObject();
+                if (obj instanceof RatioProps) {
+                   RatioProps ratioprops = (RatioProps) obj;
+                   String dataFileString = ratioprops.getDataFileName();
+                   File dataFile = new File(file.getParent(), dataFileString);
+                   if(!loadMIMSFile(dataFile))
+                      return false;
+                   MimsPlus mp = new MimsPlus(ui, ratioprops);
+                   mp.showWindow();
+                }
+             } else if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
+                FileInputStream f_in = new FileInputStream(file);
+                ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                Object obj = obj_in.readObject();
+                if (obj instanceof HSIProps) {
+                   HSIProps hsiprops = (HSIProps) obj;
+                   String dataFileString = hsiprops.getDataFileName();
+                   File dataFile = new File(file.getParent(), dataFileString);
+                   if(!loadMIMSFile(dataFile))
+                      return false;
+                   MimsPlus mp = new MimsPlus(ui, hsiprops);
+                   mp.showWindow();
+                }
+             } else if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
+                FileInputStream f_in = new FileInputStream(file);
+                ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                Object obj = obj_in.readObject();
+                if (obj instanceof SumProps) {
+                   SumProps sumprops = (SumProps) obj;
+                   String dataFileString = sumprops.getDataFileName();
+                   File dataFile = new File(file.getParent(), dataFileString);
+                   if(!loadMIMSFile(dataFile))
+                      return false;
+                   MimsPlus sp = new MimsPlus(ui, sumprops, null);
+                   sp.showWindow();
+                }
+             } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION)
+                     || file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
+                onlyShowDraggedFile = false;
+                getRoiManager().open(file.getAbsolutePath(), true);
+                updateAllImages();
+                getRoiManager().showFrame();
+             }
+          } catch (Exception e) {
+             e.printStackTrace();
+             return false;
+          }
+
+          // These 3 lines solves some strange updating issues.
+          // Has to do with syncing images by changing the slice.
+          int startslice = massImages[0].getCurrentSlice();
+          massImages[0].setSlice(getOpener().getNImages());
+          massImages[0].setSlice(startslice);
+
+          if (onlyShowDraggedFile) {
+             MimsPlus[] mps = getOpenMassImages();
+             for (int i = 0; i < mps.length; i++) {
+                mps[i].hide();
+             }
+          }
+
+          return true;
+       }
+
+    /**
+     * Opens an image file in the .im or .nrrd file format.
+     * @param file absolute file path.
+     * @throws java.lang.NullPointerException
+     */
+       public synchronized boolean loadMIMSFile(File file) throws NullPointerException {
+          if (!file.exists()) {
+             throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
+          }
+
+          int progress = 0;            
+             closeCurrentImage();
+             getRoiManager().roijlist.clearSelection();
+
+             try {
+                if (file.getName().endsWith(MIMS_EXTENSION)) {
+                   image = new Mims_Reader(file);
+                } else if (file.getName().endsWith(NRRD_EXTENSION)) {
+                   image = new Nrrd_Reader(file);
+                } else {
+                   return false;
+                }
+             } catch (Exception e) {
+                IJ.error("Failed to open " + file + "\n");
+                return false;
+             }
+
+             int nMasses = image.getNMasses();
+             int nImages = image.getNImages();
+
+             long memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * ((long) 2) * ((long) nImages);
+             long maxMemory = IJ.maxMemory() - (128000000);
+
+             for (int i = 0; i < nMasses; i++) {
+                bOpenMass[i] = true;
+             }
+
+             while (memRequired > maxMemory) {
+                ij.gui.GenericDialog gd = new ij.gui.GenericDialog("File Too Large");
+                long aMem = memRequired;
+                int canOpen = nImages;
+
+                while (aMem > maxMemory) {
+                   canOpen--;
+                   aMem = nMasses * image.getWidth() * image.getHeight() * 2 * canOpen;
+                }
+
+                String[] names = image.getMassNames();
+                for (int i = 0; i < image.getNMasses(); i++) {
+                   String msg = "Open mass " + names[i];
+                   gd.addCheckbox(msg, bOpenMass[i]);
+                }
+                gd.addNumericField("Open only ", (double) canOpen, 0, 5, " of " + image.getNImages() + " Images");
+
+                gd.showDialog();
+                if (gd.wasCanceled()) {
+                   image = null;
+                   return false;
+                }
+
+                nMasses = 0;
+                for (int i = 0; i < image.getNMasses(); i++) {
+                   bOpenMass[i] = gd.getNextBoolean();
+                   if (bOpenMass[i]) {
+                      nMasses++;
+                   }
+                }
+                nImages = (int) gd.getNextNumber();
+                memRequired = memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * ((long) 2) * ((long) nImages);
+             }
+             try {
+                int n = 0;
+                int t = image.getNMasses() * (nImages);
+                for (int i = 0; i < image.getNMasses(); i++) {
+                   if (!continueTask) {
+                      return false;
+                   }
+                   progress = 100 * n++ / t;
+                   setProgress(Math.min(progress, 100));
+                   if (bOpenMass[i]) {
+                      MimsPlus mp = new MimsPlus(ui, i);
+                      mp.setAllowClose(false);
+                      massImages[i] = mp;
+                      if (mp != null) {
+                         massImages[i].getProcessor().setMinAndMax(0, 0);
+                         massImages[i].getProcessor().setPixels(image.getPixels(i));
+                      }
+                   }
+                }
+                if (nImages > 1) {
+                   for (int i = 1; i < nImages; i++) {
+                      if (!continueTask) {
+                         return false;
+                      }
+                      image.setStackIndex(i);
+                      for (int mass = 0; mass < image.getNMasses(); mass++) {
+                         progress = 100 * n++ / t;
+                         setProgress(Math.min(progress, 100));
+                         if (bOpenMass[mass]) {
+                            massImages[mass].appendImage(i);
+                         }
+                      }
+                      updateStatus((i+1) + " of " + nImages);
+                   }
+                }
+             } catch (Exception x) {
+                IJ.error(x.getMessage());
+                return false;
+             }
+          return true;
+       }
+
+    @Override
+    public void done() {
+      setCursor(null); //turn off the wait cursor
+      stopButton.setEnabled(false);
+      setProgress(0);
+      currentlyOpeningImages = false;
+    }
+
+        public void doneLoadingFile() {
+
+            Toolkit.getDefaultToolkit().beep();
+            
+            jProgressBar1.setValue(0);
+
+            for (int i = 0; i < image.getNMasses(); i++) {
+                   if (bOpenMass[i]) {
+                      if (image.getNImages() > 1) {
+                         massImages[i].setIsStack(true);
+                         massImages[i].setSlice(1);
+                      }
+                      if (isSilentMode() == false) {
+                         massImages[i].show();
+                      }
+                   }
+                }
+
+                if (isSilentMode() == false) {
+                   if (windowPositions != null) {
+                      applyWindowPositions(windowPositions);
+                   } else {
+                      ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
+                      wo.run("tile");
+                   }
+                   if (windowZooms != null) {
+                      applyWindowZooms(windowZooms);
+                   }
+                }
+
+             for (int i = 0; i < image.getNMasses(); i++) {
+                if (bOpenMass[i]) {
+                   massImages[i].addListener(ui);
+                } else {
+                   massImages[i] = null;
+                }
+             }
+
+             if (mimsData == null) {
+                initializeViewMenu();
+                mimsData = new com.nrims.MimsData(ui, image);
+                hsiControl = new MimsHSIView(ui);
+                mimsLog = new MimsLog();
+                mimsStackEditing = new MimsStackEditor(ui, image);
+                mimsTomography = new MimsTomography(ui);
+                mimsAction = new MimsAction(image);
+                segmentation = new SegmentationForm(ui);
+
+                jTabbedPane1.setComponentAt(0, mimsData);
+                jTabbedPane1.setTitleAt(0, "MIMS Data");
+                jTabbedPane1.add("Process", hsiControl);
+                jTabbedPane1.add("Contrast", cbControl);
+                jTabbedPane1.add("Stack Editing", mimsStackEditing);
+                jTabbedPane1.add("Tomography", mimsTomography);
+                jTabbedPane1.add("Segmentation", segmentation);
+                jTabbedPane1.add("MIMS Log", mimsLog);
+
+             } else {
+                resetViewMenu();
+                mimsData = new com.nrims.MimsData(ui, image);
+                cbControl = new MimsCBControl(ui);
+                mimsStackEditing = new MimsStackEditor(ui, image);
+                int[] indices = mimsTomography.getSelectedStatIndices();
+                mimsTomography = new MimsTomography(ui);
+                mimsTomography.setSelectedStatIndices(indices);
+                mimsAction = new MimsAction(image);
+                segmentation = new SegmentationForm(ui);
+
+                jTabbedPane1.setComponentAt(0, mimsData);
+                jTabbedPane1.setTitleAt(0, "MIMS Data");
+                jTabbedPane1.setComponentAt(1, hsiControl);
+                jTabbedPane1.setComponentAt(2, cbControl);
+                jTabbedPane1.setComponentAt(3, mimsStackEditing);
+                jTabbedPane1.setComponentAt(4, mimsTomography);
+                jTabbedPane1.setComponentAt(5, segmentation);
+
+                mimsData.setMimsImage(image);
+                hsiControl.updateImage();
+             }
+
+             jTabbedPane1.addChangeListener(new ChangeListener() {
+
+                public void stateChanged(ChangeEvent e) {
+                   int selected = jTabbedPane1.getSelectedIndex();
+                   if (selected == 2) {
+                      //cbControl.updateHistogram();
+                   }
+                }
+             });
+
+             mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
+             mimsTomography.resetImageNamesList();
+             mimsStackEditing.resetSpinners();
+
+             openers.clear();
+             String fName = file.getName();
+             openers.put(fName, image);
+
+             // Add the windows to the combobox in CBControl.
+             MimsPlus[] mp = getOpenMassImages();
+             for (int i = 0; i < mp.length; i++) {
+                cbControl.addWindowtoList(mp[i]);
+             }
+
+             //hide mass images if needed
+             if (hiddenWindows != null) {
+                if (previousFileCanceled == false)
+                  applyHiddenWindows(hiddenWindows);
+             }
+        }
+
+      private void disableTabs() {
+         hsiControl.setEnabled(false);
+         cbControl.setEnabled(false);
+         mimsStackEditing.setEnabled(false);
+         mimsTomography.setEnabled(false);
+         segmentation.setEnabled(false);
+         mimsLog.setEnabled(false);
+      }
+
+      private void openProcessFailedOrCanceled() {
+         disableTabs();
+         closeCurrentImage();
+         previousFileCanceled = true;
+         currentlyOpeningImages = false;
+      }
     }
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -3571,6 +3675,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JMenuItem jMenuItem9;
    private javax.swing.JPanel jPanel1;
    private javax.swing.JPopupMenu jPopupMenu1;
+   private javax.swing.JProgressBar jProgressBar1;
    private javax.swing.JSeparator jSeparator1;
    private javax.swing.JSeparator jSeparator2;
    private javax.swing.JSeparator jSeparator3;
@@ -3579,9 +3684,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JSeparator jSeparator7;
    private javax.swing.JSeparator jSeparator8;
    private javax.swing.JTabbedPane jTabbedPane1;
-   private javax.swing.JTextField mainTextField;
    private javax.swing.JMenuItem openNewMenuItem;
    private javax.swing.JMenuItem saveMIMSjMenuItem;
+   public javax.swing.JButton stopButton;
    private javax.swing.JMenuItem sumAllMenuItem;
    private javax.swing.JMenu testMenu;
    private javax.swing.JMenuItem testMenuItem1;

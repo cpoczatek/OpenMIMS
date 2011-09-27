@@ -96,7 +96,7 @@ public class LoadImageList {
         try {
 
         File file = new File(workingDirectory, imageList.get(0));
-        this.ui.loadMIMSFile(file);
+        this.ui.openFile(file);
         MimsPlus[] massImages = this.ui.getMassImages();
         int nMasses = this.ui.getOpener().getNMasses();
         

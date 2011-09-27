@@ -355,8 +355,8 @@ public class Converter extends SwingWorker<Void, Void> {
       File file = new File(fileString);
 
       if (file.exists() && file.canRead()) {
-         System.out.println("Opening... " + fileString);
-         opened = ui.loadMIMSFile(file);
+         System.out.println("Opening... " + fileString);        
+         opened = ui.openFile(file);
       } else {
          System.out.println("Can not find, or can not read " + fileString);
          opened = false;
