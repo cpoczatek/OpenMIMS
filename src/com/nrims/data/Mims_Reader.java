@@ -3,9 +3,9 @@ package com.nrims.data;
 import java.io.*;
 import java.text.DecimalFormat;
 import com.nrims.common.*;
+import ij.ImagePlus;
 import ij.io.FileInfo;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import ij.io.FileOpener;
 
 /**
  * Class responsible for opening MIMS files.
@@ -21,11 +21,12 @@ public class Mims_Reader implements Opener {
 
     private File file = null;
     private RandomAccessEndianFile in;
+    private MimsFileInfo fi;
     private int verbose = 0;
-    private int width,  height,  nMasses,  nImages;
+    private int nMasses;
     private HeaderImage ihdr;
     private DefAnalysis dhdr;
-    private TabMass[] tabMass;
+    private MaskSampleStageImage maskSampleStageIm;
     private MaskImage maskIm;
     private int currentIndex = 0;
     public static final int IHDR_SIZE = 84;
@@ -38,8 +39,28 @@ public class Mims_Reader implements Opener {
 
     /* file type for MIMS .im images */
     private static final int MIMS_IMAGE_TYPE_INDEX = 27;
+    private static final int MIMS_IMAGE_SAMPLE_STAGE_TYPE_INDEX = 41;
 
     private Mims_Reader() {}
+
+    /**
+     * Opens and reads a SIMS image from an image file.
+     * @param imageFile file of the image to be loaded.
+     * @throws IOException if there is a problem reading the image file
+     * @throws NullPointerException if the imagename is null or empty.
+     */
+    public Mims_Reader(File imageFile) throws IOException, NullPointerException {
+
+        this.file = imageFile;
+        if (!file.exists())
+            throw new NullPointerException("File " + imageFile + " does not exist.");
+
+        // Read the header.
+        try {
+           fi = getHeaderInfo();
+        } catch (IOException io) {System.out.println("Error reading file "+file.getAbsolutePath());}
+
+    }
 
     // The image file which this Opener is interfacing.
     public File getImageFile() {
@@ -63,10 +84,10 @@ public class Mims_Reader implements Opener {
      * @throws IndexOutOfBoundsException if the given image mass index is invalid.
      */
     private void checkMassIndex(int index) {
-        if (nMasses <= 0) {
+        if (fi.nMasses <= 0) {
             throw new IndexOutOfBoundsException("No images loaded, so mass index <" + index + "> is invalid.");
-        } else if (index < 0 || index >= nMasses) {
-            throw new IndexOutOfBoundsException("Given mass index <" + index + "> is out of range of the total number of masses <" + nMasses + ">.");
+        } else if (index < 0 || index >= fi.nMasses) {
+            throw new IndexOutOfBoundsException("Given mass index <" + index + "> is out of range of the total number of masses <" + fi.nMasses + ">.");
         }
     }
 
@@ -76,10 +97,10 @@ public class Mims_Reader implements Opener {
      * @throws IndexOutOfBoundsException if the given image index is invalid.
      */
     private void checkImageIndex(int index) {
-        if (nImages <= 0) {
+        if (fi.nImages <= 0) {
             throw new IndexOutOfBoundsException("No images loaded, so image index <" + index + "> is invalid.");
-        } else if (index < 0 || index >= nImages) {
-            throw new IndexOutOfBoundsException("Given image index <" + index + "> is out of range of the total number of imags <" + nImages + ">.");
+        } else if (index < 0 || index >= fi.nImages) {
+            throw new IndexOutOfBoundsException("Given image index <" + index + "> is out of range of the total number of imags <" + fi.nImages + ">.");
         }
     }
 
@@ -89,57 +110,40 @@ public class Mims_Reader implements Opener {
      * @throws IndexOutOfBoundsException if the given image mass index is invalid.
      * @throws IOException If there is an error reading in the pixel data.
      */
-    public short[] getPixels(int index) throws IndexOutOfBoundsException, IOException {
+    public Object getPixels(int index) throws IndexOutOfBoundsException, IOException {
+      
+       checkMassIndex(index);
+       
+       // Set up a temporary header to read the pixels from the file.
+       MimsFileInfo fi_clone = (MimsFileInfo)fi.clone();
 
-        checkMassIndex(index);
+       int pixelsPerImage = fi_clone.width * fi_clone.height;
+       int bytesPerMass = pixelsPerImage * bytes_per_pixel;
+       
+       // Calculate offset
+       long offset = (long)dhdr.header_size + (long)currentIndex * (long)fi_clone.nMasses * (long)bytesPerMass;
+       if (index > 0)
+          offset += index * bytesPerMass;
+             
+       fi_clone.longOffset = offset;
+       fi_clone.nImages = 1; // only going to read 1 image.
+       FileOpener fo = new FileOpener(fi_clone);
 
-        int i, j, b1, b2, gl;
-        int pixelsPerImage = width * height;
-        int bytesPerMass = pixelsPerImage * bytes_per_pixel;
-        //int bytesPerMass = pixelsPerImage * 2;
-        //should be ???? int bytesPerMass = pixelsPerImage * BITS_PER_PIXEL/8;
+       // Get image from file.
+       ImagePlus imp = fo.open(false);
+       if (imp == null) {
+          throw new IOException();
+       }
 
-        short[] spixels = new short[pixelsPerImage];
+       Object pixels;
+       if (fi_clone.fileType == FileInfo.GRAY16_UNSIGNED)
+          pixels = (short[])imp.getProcessor().getPixels();
+       else if (fi_clone.fileType == FileInfo.GRAY32_UNSIGNED)
+          pixels = (float[])imp.getProcessor().getPixels();
+       else
+          pixels = null;
 
-        long offset = (long)dhdr.header_size + (long)currentIndex * (long)nMasses * (long)bytesPerMass;
-        if (index > 0) {
-            offset += index * bytesPerMass;
-        }
-        in.seek(offset);
-
-        gl = -1;
-        i = index + 1;
-
-        byte[] bArray = new byte[bytesPerMass];
-        in.read(bArray);
-
-        //j increment should be ??? bytes_per_pixel
-        for (i = 0, j=0; i < pixelsPerImage; i++, j += bytes_per_pixel) {
-
-            if ( getBigEndianFlag() )
-            {
-                b1 = bArray[j] & 0xff;
-                b2 = bArray[j + 1] & 0xff;
-            } else {
-                b2 = bArray[j] & 0xff;
-                b1 = bArray[j + 1] & 0xff;
-            }
-
-            gl = (b2 + (b1 << 8));
-            spixels[i] = (short) gl;
-        }
-
-        return spixels;
-    }
-
-    public void setBigEndianFlag(boolean flag)
-    {
-        big_endian_flag = flag;
-    }
-
-    public boolean getBigEndianFlag()
-    {
-        return( big_endian_flag );
+       return pixels;
     }
 
     private void guessEndianOrder()
@@ -158,13 +162,14 @@ public class Mims_Reader implements Opener {
 
         tmp_int = tmp_in.readInt();
 
-        if ( tmp_int == MIMS_IMAGE_TYPE_INDEX )
-        {
-            setBigEndianFlag( true );
-        } else if ( DataUtilities.intReverseByteOrder( tmp_int ) ==
-                MIMS_IMAGE_TYPE_INDEX )
-        {
-            setBigEndianFlag( false );
+        if ( tmp_int == MIMS_IMAGE_TYPE_INDEX ||
+             tmp_int == MIMS_IMAGE_SAMPLE_STAGE_TYPE_INDEX) {
+            fi.intelByteOrder = false;
+            big_endian_flag = true;
+        } else if ( DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_IMAGE_SAMPLE_STAGE_TYPE_INDEX ||
+                    DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_IMAGE_TYPE_INDEX ) {
+            fi.intelByteOrder = true;
+            big_endian_flag = false;
         }
 
         tmp_in.close();
@@ -257,6 +262,56 @@ public class Mims_Reader implements Opener {
     }
 
     /**
+     * Reads and returns a Mask_Iss structure from the SIMS file header.
+     */
+    private void readMaskIss(MaskSampleStageImage mask) throws NullPointerException, IOException {
+        if (mask == null) {
+            throw new NullPointerException("MaskSampleStageImage cannot be null in readMaskIm.");
+        }
+
+        mask.filename = getChar(16);
+        mask.analysis_duration = in.readIntEndian();
+        mask.type = in.readIntEndian();
+        mask.nb_zones = in.readIntEndian();
+        mask.step_unit_x = in.readIntEndian();
+        mask.step_unit_y = in.readIntEndian();
+        mask.step_reel_d = in.readIntEndian();
+        mask.wt_int_zones = in.readDoubleEndian();
+        mask.nNbCycle = in.readIntEndian();
+        mask.beam_blanking = in.readIntEndian();
+        mask.pulverisation = in.readIntEndian();
+        mask.pulve_duration = in.readIntEndian();
+        mask.auto_cal_in_anal = in.readIntEndian();
+        int unused = in.readIntEndian();
+
+        if (this.verbose > 2) {
+            System.out.println(mask.getInfo());
+        }
+
+        mask.autocal = new AutoCal();
+        readAutoCal(mask.autocal);
+
+        mask.hv_sple_control = in.readIntEndian();
+        mask.hvcontrol = new HvControl();
+        readHvControl(mask.hvcontrol);
+
+        mask.sig_reference = in.readIntEndian();
+        mask.sig_ref = new SigRef();
+        readSigRef(mask.sig_ref);
+        nMasses = mask.nb_mass = in.readIntEndian();
+
+
+        int tab_mass_ptr;
+        int n_tabmasses = 20;
+        for (int i = 0; i < n_tabmasses; i++) {
+            tab_mass_ptr = in.readIntEndian();
+        }
+
+        // NOT IN SPEC!
+        unused = in.readIntEndian();
+    }
+
+    /**
      * Reads and returns a Mask_im structure from the SIMS file header.
      */
     private void readMaskIm(MaskImage mask) throws NullPointerException, IOException {
@@ -294,16 +349,13 @@ public class Mims_Reader implements Opener {
 
         mask.autocal = new AutoCal();
         readAutoCal(mask.autocal);
-        int sig_ref_int = in.readIntEndian();
+        mask.sig_reference = in.readIntEndian();
         mask.sig_ref = new SigRef();
         readSigRef(mask.sig_ref);
-        nMasses = in.readIntEndian();
-        if (this.verbose > 2) {
-            System.out.println("mask.nMasses:" + nMasses);//	Read the Tab_mass *tab_mass[10]..
-        }
+        nMasses = mask.nb_mass = in.readIntEndian();
         int tab_mass_ptr;
 
-        //changed from tab_mass[10] to tab_mass[60] in v7 of .im file spec
+        // changed from tab_mass[10] to tab_mass[60] in v7 of .im file spec
         // seems like this coresponds to release=4108
         int n_tabmasses = 10;
         if(this.dhdr.release >=4108) {
@@ -314,6 +366,37 @@ public class Mims_Reader implements Opener {
             if (this.verbose > 2) {
                 System.out.println("mask.tmp:" + tab_mass_ptr);
             }
+        }
+    }
+
+    /**
+     * Reads and returns a HvcControl structure from the SIMS file header.
+     * @throws NullPointerException if the given TabMass is null.
+     * @throws IOException if the TabMass cannot be read in.
+     */
+    private void readHvControl(HvControl hvc) throws NullPointerException, IOException {
+        if (hvc == null) {
+            throw new NullPointerException();
+        }
+        hvc.mass = getChar(64);
+        hvc.debut = in.readIntEndian();
+        hvc.period = in.readIntEndian();
+        hvc.borne_inf = in.readDoubleEndian();
+        hvc.borne_sup = in.readDoubleEndian();
+        hvc.pas = in.readDoubleEndian();
+        hvc.largeur_bp = in.readIntEndian();
+        hvc.count_time = in.readDoubleEndian();
+
+        // Debug output.
+        if (this.verbose > 2) {
+            System.out.println("HvcControl.mass:" + hvc.mass);
+            System.out.println("HvcControl.debut:" + hvc.debut);
+            System.out.println("HvcControl.period:" + hvc.period);
+            System.out.println("HvcControl.borne_inf:" + hvc.borne_inf);
+            System.out.println("HvcControl.borne_sup:" + hvc.borne_sup);
+            System.out.println("HvcControl.pas:" + hvc.pas);
+            System.out.println("HvcControl.largeur_bp:" + hvc.largeur_bp);
+            System.out.println("HvcControl.count_time:" + hvc.count_time);
         }
     }
 
@@ -397,15 +480,17 @@ public class Mims_Reader implements Opener {
         ihdr.size_self = in.readIntEndian();
         ihdr.type = in.readShortEndian();
         ihdr.w = in.readShortEndian();
-        this.width = ihdr.w;
-        ihdr.h = in.readShortEndian();
-        this.height = ihdr.h;
-        ihdr.d = in.readShortEndian();
+        ihdr.h = in.readShortEndian();        
+        bytes_per_pixel = ihdr.d = in.readShortEndian();
+        
+        // Number of masses.
         ihdr.n = in.readShortEndian();
-        nImages = ihdr.z = in.readShortEndian();
-        if (nImages < 1) {
-            nImages = 1;
+        if (ihdr.n < 1) {
+            ihdr.n = 1;
         }
+
+        // Number of planes.
+        ihdr.z = in.readShortEndian();
         ihdr.raster = in.readIntEndian();
         ihdr.nickname = getChar(64);
 
@@ -425,49 +510,59 @@ public class Mims_Reader implements Opener {
      * @throws NullPointerExeption rethrown from sub-readers.
      * @throws IOException if there is an error reading in the header.
      */
-    private void readHeader() throws NullPointerException, IOException {
+    private MimsFileInfo getHeaderInfo() throws NullPointerException, IOException {
 
-        this.dhdr = new DefAnalysis();
-        readDefAnalysis(dhdr);
-        this.maskIm = new MaskImage();
-        readMaskIm(this.maskIm);
+       // Setup file header.
+       fi = new MimsFileInfo();
+	    fi.directory=file.getParent(); fi.fileName=file.getName();
+       fi.fileFormat = FileInfo.RAW;
+       guessEndianOrder();
 
-        if (this.nMasses <= 0) {
-            throw new IOException("Error reading MIMS file.  Zero image masses read in.");
-        }
+       // Set the connection to the image file.
+       in = new RandomAccessEndianFile(file, "r");
+       in.setBigEndianFlag(big_endian_flag);
 
-        massNames = new String[nMasses];
-        for (int i = 0; i < nMasses; i++) {
-            TabMass tm = new TabMass();
-            readTabMass(tm);
-            massNames[i] = DecimalToStr(tm.mass_amu, 2);
-        }
+       // Read the Def_Analysis structure.
+       this.dhdr = new DefAnalysis();
+       readDefAnalysis(dhdr);
 
-        long offset = dhdr.header_size - IHDR_SIZE;
-        in.seek(offset);
+       // Read the Mask_* data structure.
+       if (dhdr.analysis_type == 41) {
+          maskSampleStageIm = new MaskSampleStageImage();
+          readMaskIss(this.maskSampleStageIm);
+       } else {
+          maskIm = new MaskImage();
+          readMaskIm(this.maskIm);
+       }
+       if (nMasses <= 0) {
+          throw new IOException("Error reading MIMS file.  Zero image masses read in.");
+       }
 
-        this.ihdr = new HeaderImage();
-        readHeaderImage(ihdr);
+       // Read the Tab_Mass structure and set mass names.
+       massNames = new String[nMasses];
+       for (int i = 0; i < nMasses; i++) {
+          TabMass tm = new TabMass();
+          readTabMass(tm);
+          massNames[i] = DecimalToStr(tm.mass_amu, 2);
+       }
 
-    }
+       // Reader the Header_Image structure
+       long offset = dhdr.header_size - IHDR_SIZE;
+       in.seek(offset);
+       this.ihdr = new HeaderImage();
+       readHeaderImage(ihdr);
+       fi.width = ihdr.w;
+       fi.height = ihdr.h;
+       fi.nImages = ihdr.z;
+       fi.nMasses = ihdr.n;
+       if (ihdr.d == 2) {
+          fi.fileType = FileInfo.GRAY16_UNSIGNED;
+       } else if (ihdr.d == 4) {
+          fi.fileType = FileInfo.GRAY32_UNSIGNED;
+       }
 
-    /**
-     * Opens and reads a SIMS image from an image file.
-     * @param imageFile file of the image to be loaded.
-     * @throws IOException if there is a problem reading the image file
-     * @throws NullPointerException if the imagename is null or empty.
-     */
-    public Mims_Reader(File imageFile) throws IOException, NullPointerException {
-
-        this.file = imageFile;
-        guessEndianOrder();
-        in = new RandomAccessEndianFile(file, "r");
-        in.setBigEndianFlag( this.getBigEndianFlag() );
-
-        readHeader();
-        currentIndex = 0;
-        getPixels(0);
-    }
+       return fi;
+   }
 
     /**
      * @return the name of the SIMS image file
@@ -482,49 +577,40 @@ public class Mims_Reader implements Opener {
      * @return the number of "masses" in this SIMS image file.
      */
     public int getNImages() {
-        return this.nImages;
+        return fi.nImages;
     }
 
     /**
      * @return the total number of image masses.
      */
     public int getNMasses() {
-        return this.nMasses;
+        return fi.nMasses;
     }
 
     /**
      * @return the width of the images in pixels.
      */
     public int getWidth() {
-        return this.width;
+        return fi.width;
     }
 
     /**
      * @return the height of the images in pixels.
      */
     public int getHeight() {
-        return this.height;
+        return fi.height;
     }
 
     /**
-     * @return the file's data type (always 16-bit unsigned int for MIMS images);
+     * @return the file's data type;
      */
     public int getFileType() {
-        return FileInfo.GRAY16_UNSIGNED;
-    }
-
-    /**
-     * @param index index of image.
-     * @return the mass in AMU for image at the given index.
-     * @throws IndexOutOfBoundsException if the index is out of range of valid indices.
-     */
-    public double getMass(int index) {
-        if (nMasses <= 0) {
-            throw new IndexOutOfBoundsException("No images loaded, so index <" + index + "> is invalid.");
-        } else if (index < 0 || index > nMasses) {
-            throw new IndexOutOfBoundsException("Given index <" + index + "> is out of range of the total number of masses <" + nMasses + ">.");
-        }
-        return this.tabMass[index].mass_amu;
+       if (bytes_per_pixel == 2)
+          return FileInfo.GRAY16_UNSIGNED;
+       else if(bytes_per_pixel == 4)
+          return FileInfo.GRAY32_UNSIGNED;
+       else
+          return FileInfo.GRAY16_UNSIGNED;
     }
 
     /**
@@ -772,4 +858,6 @@ public class Mims_Reader implements Opener {
     */
 }
 
-    
+class MimsFileInfo extends FileInfo {
+   public int nMasses;
+}

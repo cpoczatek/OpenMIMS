@@ -112,6 +112,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         } else if (op.getFileType() == FileInfo.GRAY32_FLOAT) {
            float[] pixels = new float[w * h];
            ipp = new ij.process.FloatProcessor(w, h, pixels, null);
+        } else if (op.getFileType() == FileInfo.GRAY32_UNSIGNED) {
+           int[] pixels = new int[w * h];
+           ipp = new ij.process.FloatProcessor(w, h, pixels);
         }
 
         String massValueString = op.getMassNames()[index];

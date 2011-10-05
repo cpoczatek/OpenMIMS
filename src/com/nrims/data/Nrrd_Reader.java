@@ -62,20 +62,15 @@ public class Nrrd_Reader implements Opener {
             return;
         }
 
-        try {
-           getPixels(0);
-        } catch (Exception e) {
-           throw new IOException();
-        }
     }
 
     // Reads header and gets metadata.
-	public NrrdFileInfo getHeaderInfo() throws IOException {
+	 private NrrdFileInfo getHeaderInfo() throws IOException {
 
       if (IJ.debugMode) IJ.log("Entering Nrrd_Reader.readHeader():");
 
       // Setup file header.
-      NrrdFileInfo fi = new NrrdFileInfo();
+      fi = new NrrdFileInfo();
 	   fi.directory=file.getParent(); fi.fileName=file.getName();
 
 		// Need RAF in order to ensure that we know file offset.

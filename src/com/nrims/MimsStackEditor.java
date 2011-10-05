@@ -191,9 +191,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
             ImageProcessor ip = null;
             if (op.getFileType() == FileInfo.GRAY16_UNSIGNED) {
                ip = new ShortProcessor(images[0].getWidth(), images[0].getHeight());//, (short[])pixels[k][i], null);
-            } else if (op.getFileType() == FileInfo.GRAY32_FLOAT) {
+            } else if (op.getFileType() == FileInfo.GRAY32_FLOAT || op.getFileType() == FileInfo.GRAY32_UNSIGNED) {
                ip = new FloatProcessor(images[0].getWidth(), images[0].getHeight());//, (float[])pixels[k][i], null);
-            }
+            } 
             ip.setPixels(pixels[k][i]);
             double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i] - 1)[0];
             double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i] - 1)[1];
@@ -280,7 +280,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
             ImageProcessor ip = null;
             if (op.getFileType() == FileInfo.GRAY16_UNSIGNED) {
                ip = new ShortProcessor(images[0].getWidth(), images[0].getHeight());
-            } else if (op.getFileType() == FileInfo.GRAY32_FLOAT) {
+            } else if (op.getFileType() == FileInfo.GRAY32_FLOAT || op.getFileType() == FileInfo.GRAY32_UNSIGNED) {
                ip = new FloatProcessor(images[0].getWidth(), images[0].getHeight());
             }
             ip.setPixels(pixels[k][i]);
@@ -780,7 +780,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
             try {
                if (ui.getOpener().getFileType() == FileInfo.GRAY16_UNSIGNED) {
                   ip = new ShortProcessor(image.getWidth(), image.getHeight());
-               } else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT) {
+               } else if (ui.getOpener().getFileType() == FileInfo.GRAY32_FLOAT || ui.getOpener().getFileType() == FileInfo.GRAY32_UNSIGNED) {
                   ip = new FloatProcessor(image.getWidth(), image.getHeight());
                }
                ip.setPixels(op.getPixels(i));

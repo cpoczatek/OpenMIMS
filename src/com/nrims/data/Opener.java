@@ -268,6 +268,81 @@ public interface Opener {
     }
 
     /**
+     * defines a structure for saving the Mask_ls data
+     */
+    class MaskSampleStageImage {
+
+       String filename;            // File name
+       int analysis_duration;      // Analysis duration in mn
+       int type;                   // (0=Sample scan/1=Beam Scan/2=Image Scan)
+       int nb_zones;               // Number of step
+       int step_unit_x;            // X step unit
+       int step_unit_y;            // Y step unit
+       int step_reel_d;            // Distance between two points
+       double wt_int_zones;        // Waiting time between two points
+       int nNbCycle;               // Number of cycles
+       int beam_blanking;          // Beam blanking (0=No/1=Yes)
+       int pulverisation;          // Pulverisation (0=No/1=Yes)
+       int pulve_duration;         // Pulverisation duration in s
+       int auto_cal_in_anal;       // (0=No/1=Yes)
+       AutoCal autocal;            // Param mass calibration
+       int hv_sple_control;        // (0=No/1=Yes)
+       HvControl hvcontrol;           // Param Hv Control
+       int sig_reference;          // (0=No/1=Yes)
+       SigRef sig_ref;             // Param signal reference
+       int nb_mass;                // Number of masses
+
+      public String getInfo() {
+
+         String info = "";
+         info += "MaskImage.Filename=" + filename + "\n";
+         info += "MaskImage.Duration=" + analysis_duration + "\n";
+         info += "MaskImage.NumberSteps=" + nb_zones + "\n";
+         info += "MaskImage.StepX=" + step_unit_x + "\n";
+         info += "MaskImage.StepY=" + step_unit_y + "\n";
+         info += "MaskImage.StepDistance=" + step_reel_d + "\n";
+         info += "MaskImage.WaitTime=" + wt_int_zones + "\n";
+         info += "MaskImage.NumCycles=" + nNbCycle + "\n";
+         info += "MaskImage.BeamBlanking=" + beam_blanking + "\n";
+         info += "MaskImage.Sputtering=" + pulverisation + "\n";
+         info += "MaskImage.SputteringDuration=" + pulve_duration + "\n";
+         info += "MaskImage.AutoCalibration=" + auto_cal_in_anal + "\n";
+         info += "MaskImage.HvControl=" + hv_sple_control + "\n";
+         info += "MaskImage.SigReference=" + sig_reference + "\n";
+         info += "MaskImage.NumMasses=" + nb_mass + "\n";
+
+         if (autocal != null) {
+            String aInfo = autocal.getInfo();
+            if (aInfo.length() > 0) {
+               info += "MasImage.AutoCal={\n";
+               info += aInfo;
+               info += "}\n";
+            }
+         }
+
+         if (hvcontrol != null) {
+            String hInfo = hvcontrol.getInfo();
+            if (hInfo.length() > 0) {
+               info += "MaskImage.HvControl={\n";
+               info += hInfo;
+               info += "}\n";
+            }
+         }
+
+         if (sig_ref != null) {
+            String sInfo = sig_ref.getInfo();
+            if (sInfo.length() > 0) {
+               info += "MaskImage.SigRef={\n";
+               info += sInfo;
+               info += "}\n";
+            }
+         }
+
+         return info;
+      }
+   }
+
+    /**
      * defines a structure for saving the Mask_im data
      */
     class MaskImage {
@@ -283,6 +358,7 @@ public interface Opener {
         int sputtering;
         int sputtering_duration;
         int auto_calib_in_analysis;
+        int sig_reference;
         SigRef sig_ref;
         int nb_mass;
         AutoCal autocal;
@@ -392,6 +468,32 @@ public interface Opener {
             }
             return info;
         }
+    }
+
+    class HvControl {
+
+        String	mass;       /* mass reference included in tab_mass*/
+        int	debut;         /* control start - in cycle */
+        int	period;        /* control period - in cycle */
+        double	borne_inf;	/* low limit - in volt */
+        double	borne_sup;	/* high limit - in volt */
+        double	pas;        /* step - in volt */
+        int largeur_bp;    /* width bande passante - en eV */
+        double	count_time;	/* sec */
+
+        public String getInfo() {
+            String info = "";
+                info += "HvCont.Mass=" + mass + "\n";
+                info += "HvCont.Start=" + debut + "\n";
+                info += "HvCont.Period=" + period + "\n";
+                info += "HvCont.VoltHigh=" + borne_inf + "\n";
+                info += "HvCont.VoltLow=" + borne_sup + "\n";
+                info += "HvCont.Step=" + pas + "\n";
+                info += "HvCont.WidthBandPass=" + largeur_bp + "\n";
+                info += "HvCont.CountTime=" + count_time + "\n";
+            return info;
+        }
+
     }
 
     class CalCond {
