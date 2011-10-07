@@ -23,7 +23,7 @@ public class Mims_Reader implements Opener {
     private RandomAccessEndianFile in;
     private MimsFileInfo fi;
     private int verbose = 0;
-    private int nMasses;
+    private int nMasses = 0;
     private HeaderImage ihdr;
     private DefAnalysis dhdr;
     private MaskSampleStageImage maskSampleStageIm;
@@ -38,8 +38,9 @@ public class Mims_Reader implements Opener {
     private boolean big_endian_flag = true;
 
     /* file type for MIMS .im images */
-    private static final int MIMS_IMAGE_TYPE_INDEX = 27;
-    private static final int MIMS_IMAGE_SAMPLE_STAGE_TYPE_INDEX = 41;
+    private static final int MIMS_IMAGE = 27;
+    private static final int MIMS_LINE_SCAN_IMAGE = 39;
+    private static final int MIMS_SAMPLE_STAGE_IMAGE = 41;
 
     private Mims_Reader() {}
 
@@ -58,7 +59,9 @@ public class Mims_Reader implements Opener {
         // Read the header.
         try {
            fi = getHeaderInfo();
-        } catch (IOException io) {System.out.println("Error reading file "+file.getAbsolutePath());}
+        } catch (IOException io) {
+           io.printStackTrace();
+        }
 
     }
 
@@ -162,12 +165,14 @@ public class Mims_Reader implements Opener {
 
         tmp_int = tmp_in.readInt();
 
-        if ( tmp_int == MIMS_IMAGE_TYPE_INDEX ||
-             tmp_int == MIMS_IMAGE_SAMPLE_STAGE_TYPE_INDEX) {
+        if ( tmp_int == MIMS_IMAGE ||
+             tmp_int == MIMS_LINE_SCAN_IMAGE ||
+             tmp_int == MIMS_SAMPLE_STAGE_IMAGE ) {
             fi.intelByteOrder = false;
             big_endian_flag = true;
-        } else if ( DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_IMAGE_SAMPLE_STAGE_TYPE_INDEX ||
-                    DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_IMAGE_TYPE_INDEX ) {
+        } else if ( DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_IMAGE ||
+                    DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_LINE_SCAN_IMAGE ||
+                    DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_SAMPLE_STAGE_IMAGE ) {
             fi.intelByteOrder = true;
             big_endian_flag = false;
         }
@@ -228,6 +233,10 @@ public class Mims_Reader implements Opener {
      * Reads a Table element structure from the SIMS file header.
      */
     private void readTabelts(Tabelts te) throws IOException {
+
+       // It appears that this structure does not follow
+       // the endian-ness of the other structures in the file.
+       // Keeping code as is because values not important for now.
         te.num_elt = in.readIntEndian();
         te.num_isotop = in.readIntEndian();
         te.quantity = in.readIntEndian();
@@ -241,13 +250,15 @@ public class Mims_Reader implements Opener {
         pa.numeric_value = in.readIntEndian();
         pa.nb_elts = in.readIntEndian();
         pa.nb_charges = in.readIntEndian();
-        pa.charge = in.readIntEndian();
-        String unused = getChar(64);
+        pa.charge = getChar(1);
+        pa.massLabel = getChar(64);
         pa.tabelts = new Tabelts[5];
         for (int i = 0; i < 5; i++) {
             pa.tabelts[i] = new Tabelts();
             readTabelts(pa.tabelts[i]);
         }
+        // NOT IN SPEC!!!
+        String unused = getChar(3);
     }
 
     /**
@@ -409,6 +420,9 @@ public class Mims_Reader implements Opener {
         if (tab == null) {
             throw new NullPointerException();
         }
+
+        // One of these unused ints is NOT IN SPEC.
+        // The other should be type_mass.
         int unused = in.readIntEndian();
         int unuseds2 = in.readIntEndian();
         tab.mass_amu = in.readDoubleEndian();
@@ -527,12 +541,12 @@ public class Mims_Reader implements Opener {
        readDefAnalysis(dhdr);
 
        // Read the Mask_* data structure.
-       if (dhdr.analysis_type == 41) {
-          maskSampleStageIm = new MaskSampleStageImage();
-          readMaskIss(this.maskSampleStageIm);
-       } else {
+       if (dhdr.analysis_type == MIMS_IMAGE || dhdr.analysis_type == MIMS_LINE_SCAN_IMAGE) {
           maskIm = new MaskImage();
           readMaskIm(this.maskIm);
+       } else if (dhdr.analysis_type == MIMS_SAMPLE_STAGE_IMAGE ) {
+          maskSampleStageIm = new MaskSampleStageImage();
+          readMaskIss(this.maskSampleStageIm);
        }
        if (nMasses <= 0) {
           throw new IOException("Error reading MIMS file.  Zero image masses read in.");

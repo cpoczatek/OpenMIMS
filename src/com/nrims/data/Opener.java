@@ -176,7 +176,8 @@ public interface Opener {
         int numeric_value;
         int nb_elts;
         int nb_charges;
-        int charge;
+        String charge;
+        String massLabel;
         Tabelts tabelts[];
 
         public String getInfo() {
@@ -193,9 +194,9 @@ public interface Opener {
             if (nb_charges != 0) {
                 info += "PolyAtomic.nb_charges=" + nb_charges + "\n";
             }
-            if (charge != 0) {
-                info += "PolyAtomic.charge=" + charge + "\n";
-            }
+            //if (charge != 0) {
+            //    info += "PolyAtomic.charge=" + charge + "\n";
+            //}
             if (tabelts != null) {
                 for (int i = 0; i < tabelts.length; i++) {
                     if (tabelts[i] != null) {
