@@ -1185,7 +1185,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       jTabbedPane1.addTab("Images", jPanel1);
 
-      stopButton.setIcon(new javax.swing.ImageIcon("/nrims/home3/zkaufman/NRIMS2/trunk/pngs/stopsign.png")); // NOI18N
+      stopButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nrims/stopsign.png"))); // NOI18N
       stopButton.setEnabled(false);
       stopButton.setIconTextGap(0);
       stopButton.setMaximumSize(new java.awt.Dimension(27, 27));
