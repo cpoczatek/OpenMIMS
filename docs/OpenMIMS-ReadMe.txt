@@ -4,7 +4,7 @@
 PRODUCT DESCRIPTION
 ==================================
 
- OpenMIMS version 1.4 (March 2011)
+ OpenMIMS version 1.4x (Oct 2011)
 
  OpenMIMS is an ImageJ plugin designed to open, process and analyze 
  images captured with NanoSIMS 50 & 50L secondary ion mass 
@@ -19,6 +19,20 @@ PRODUCT DESCRIPTION
  maps of any combination of isotopes can be displayed and data from 
  any number of Regions of Interest (ROIs) extracted, analyzed and 
  tabulated for single images or entire stacks.
+ 
+==================================
+ACKNOWLEDGEMENT
+==================================
+ 
+ OpenMIMS is an Open Source software project that is funded through 
+ the NIH/NIBIB National Resource for Imaging Mass Spectrometry. 
+ Please use the following acknowledgment and send us references to 
+ any publications, presentations, or successful funding applications 
+ that make use of OpenMIMS software:
+
+ 	"This work was made possible in part by the OpenMIMS software 
+ 	whose development is funded by the NIH/NIBIB National Resource 
+ 	for Imaging Mass Spectrometry, NIH/NIBIB 5P41 EB001974-10."
 
 ==================================
 HARDWARE AND SOFTWARE REQUIREMENTS
@@ -74,6 +88,19 @@ CONTENTS AND INSTALLATION
 ==================================
 RELEASE NOTES
 ==================================
+ October 2011 (v1.4x):
+ - Various UI improvements and code cleanup.
+ - Filter +/1 infinity from plots.
+ - Better behavior for generating tables.
+ - Allow hsi to show up in tomography tab.
+ - Allow users to generate reports.
+ - Added terminal usage capability to plugin for batch jobs.
+ - Allow user to delete columns from table.
+ - Make opening file a background/cancelable task.
+ - Read stage scan .im files.
+ - Read line scan .im files.
+ - Read 32 bit files,
+ 
  March 2011 (v1.4):
  - Added feature in RoManager allowing user to get pixel values for Rois.
  - Added a file filter to the open file dialog.
@@ -111,16 +138,16 @@ LICENSE INFORMATION
  purposes subject to the following conditions:
  
  The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
+ included in all copies or substantial portions of the Software. 
  
  The copyright holders of other software modified and included in
  the Software retain their rights and the licenses on that software
  should not be removed.
  
- Cite NRIMS in any publication that relies on the Software.
- Also cite those projects on which the Software relies when
- applicable. See the "About OpenMIMS" menu for the most up to
- date list.
+ Cite the NRIMS acknowledgement (above) in any publication that 
+ relies on the Software. Also cite those projects on which the 
+ Software relies when applicable. See the "About OpenMIMS" menu 
+ for the most up to date list.
  
  If you would like to use or modify the Software for commercial
  purposes contact us.
