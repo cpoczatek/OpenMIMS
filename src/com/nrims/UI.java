@@ -2053,26 +2053,37 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 /** Action method for File>About menu item. Displays basic information about the Open Mims plugins. */
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
-    String message = "OpenMIMS v1.4x " + this.revisionNumber + "\n\n";
-    message += "OpenMIMS was developed at NRIMS, the National Resource \n";
-    message += "for Imaging Mass Spectrometry. \n";
-    message += "http://www.nrims.hms.harvard.edu/ \n";
-    message += "\nDeveloped by:\n Doug Benson, Collin Poczatek \n ";
+    String message = "OpenMIMS v1.4x " + this.revisionNumber;
+    message += "\n\n";
+    message += "http://www.nrims.hms.harvard.edu/";
+    message += "\n\n";
+    message += "OpenMIMS is an Open Source software project that is funded through \n";
+    message += "the NIH/NIBIB National Resource for Imaging Mass Spectrometry. \n";
+    message += "Please use the following acknowledgment and send us references to \n";
+    message += "any publications, presentations, or successful funding applications \n";
+    message += "that make use of OpenMIMS software:";
+    message += "\n\n";
+ 	 message += "    \"This work was made possible in part by the OpenMIMS software \n";
+ 	 message += "    whose development is funded by the NIH/NIBIB National Resource \n";
+ 	 message += "    for Imaging Mass Spectrometry, NIH/NIBIB 5P41 EB001974-10.\"";
+    message += "\n\n";
+    message += "Developed by:\n Doug Benson, Collin Poczatek \n ";
     message += "Boris Epstein, Philipp Gormanns\n Stefan Reckow, ";
     message += "Rob Gonzales,\n Zeke Kaufman.";
-    message += "\n\nOpenMIMS has modified, uses, or depends upon: \n";
+    message += "\n\n";
+    message += "OpenMIMS has modified, uses, or depends upon: \n";
     message += "    TurboReg:  http://bigwww.epfl.ch/thevenaz/turboreg/ \n";
     message += "    libSVM: http://www.csie.ntu.edu.tw/~cjlin/libsvm/ \n";
     message += "    NRRD file format: http://teem.sourceforge.net/nrrd/ \n";
     message += "    nrrd plugins: http://flybrain.stanford.edu/nrrd \n";
     message += "    jFreeChart:  http://www.jfree.org/jfreechart/ \n";
     message += "    FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ \n";
-    message += "    jRTF:  http://code.google.com/p/jrtf/ \n";
-    message += "\nPlease cite OpenMIMS or any of the \n";
-    message += "above projects when applicable. \n";
+    message += "    jRTF:  http://code.google.com/p/jrtf/";
+    message += "\n\n";
+    message += "Please cite OpenMIMS or any of the above projects when applicable.";
     
     javax.swing.JFrame frame = new javax.swing.JFrame("About OpenMIMS");
-    frame.setSize(450, 390);
+    frame.setSize(500, 550);
 
     javax.swing.JScrollPane scroll = new javax.swing.JScrollPane();
     frame.add(scroll);
