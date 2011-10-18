@@ -191,7 +191,7 @@ public class MimsJTable {
          data[i][2] = name;
          data[i][3] = (Double)values.get(i);
       }
-      String[] columnNames = {"File", "Roi Group", "Roi Name", "Pixel value"};
+      String[] columnNames = {FILENAME, ROIGROUP, ROINAME, "Pixel value"};
 
       displayTable(data, columnNames);
    }
@@ -323,8 +323,6 @@ public class MimsJTable {
       Object data[][] = new Object[nRows][nCols];
       int plane = (Integer) planes.get(0);
       MimsPlus image = images[0];
-      if (image.getMimsType() == MimsPlus.HSI_IMAGE)
-         image = image.internalRatio;
       Roi roi;
       String stat;
 
@@ -737,15 +735,8 @@ public class MimsJTable {
     *
     * @param images a set of MimsPlus images.
     */
-   public void setImages(MimsPlus[] images){
-      ArrayList<MimsPlus> mpa = new ArrayList<MimsPlus>();
-      for (MimsPlus mp : images) {
-         if (mp.getMimsType() == MimsPlus.HSI_IMAGE)
-            mp = mp.internalRatio;
-         mpa.add(mp);
-      }
-      this.images = new MimsPlus[mpa.size()];
-      mpa.toArray(this.images);
+   public void setImages(MimsPlus[] images){      
+      this.images = images;
    }
 
    /**

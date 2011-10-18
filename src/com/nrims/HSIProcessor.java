@@ -141,7 +141,7 @@ public class HSIProcessor implements Runnable {
                 return ;
             }
 
-            ratio = hsiImage.internalRatio;
+            ratio = hsiImage.internalRatio_filtered;
 
             // More threading stuff...
             while( numerator.lockSilently() == false ){

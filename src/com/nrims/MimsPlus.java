@@ -42,6 +42,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     static final public int COMPOSITE_IMAGE = 5 ;
 
     // Internal images for test data display.
+    public MimsPlus internalRatio_filtered;
     public MimsPlus internalRatio;
     public MimsPlus internalNumerator;
     public MimsPlus internalDenominator;
@@ -220,9 +221,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     * Constructor for ratio images.
     * @param ui
     * @param props
-    * @param forHSI
+    * @param forInternalRatio
     */
-   public MimsPlus(UI ui, RatioProps props, boolean forHSI) {
+   public MimsPlus(UI ui, RatioProps props, boolean forInternalRatio) {
       super();
       this.ui = ui;
       this.ratioProps = props;
@@ -254,7 +255,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       addListener(ui);
 
       // Compute pixel values.
-      computeRatio(forHSI);
+      computeRatio(forInternalRatio);
     }
 
 
@@ -374,9 +375,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         rProps.setRatioScaleFactor(hsiProps.getRatioScaleFactor());
         rProps.setNumThreshold(hsiProps.getNumThreshold());
         rProps.setDenThreshold(hsiProps.getDenThreshold());
-        internalRatio = new MimsPlus(ui, rProps, true);
-        internalNumerator = internalRatio.internalNumerator;
-        internalDenominator = internalRatio.internalDenominator;
+        MimsPlus mp_filtered = new MimsPlus(ui, rProps, false);
+        MimsPlus mp_raw = new MimsPlus(ui, rProps, true);
+        internalRatio_filtered = mp_filtered;
+        internalRatio = mp_raw;
+        internalNumerator = mp_raw.internalNumerator;
+        internalDenominator = mp_raw.internalDenominator;
         setHSIProcessor(new HSIProcessor(this));
         try {
          getHSIProcessor().setProps(hsiProps);
@@ -397,7 +401,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     * Computes ratios values.
     * @param forHSI
     */
-    private synchronized void computeRatio(boolean forHSI) {
+    private synchronized void computeRatio(boolean forInternalRatio) {
 
        // Get numerator and denominator mass indexes.
        int numIndex = ratioProps.getNumMassIdx();
@@ -466,7 +470,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        }
        }
 
-       if (ui.getIsPercentTurnover() && forHSI) {
+       if (ui.getIsPercentTurnover() && forInternalRatio) {
           float reference = ui.getPreferences().getReferenceRatio();
           float background = ui.getPreferences().getBackgroundRatio();
           rPixels = HSIProcessor.turnoverTransform(rPixels, reference, background, (float)(ratioProps.getRatioScaleFactor()));
@@ -476,10 +480,13 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        ImageProcessor ipp = new FloatProcessor(getWidth(), getHeight(), rPixels, getProcessor().getColorModel());
        ipp.setMinAndMax(ratioProps.getMinLUT(), ratioProps.getMaxLUT());
        setProcessor(title, ipp);
-       internalRatio = this;
+       if (forInternalRatio)
+          internalRatio = null;
+       else
+          internalRatio = new MimsPlus(ui, ratioProps, true);
 
        // Do median filter if set to true.
-       if (ui.getMedianFilterRatios()) {
+       if (ui.getMedianFilterRatios() && !forInternalRatio) {
           Roi temproi = getRoi();
           killRoi();
           RankFilters rfilter = new RankFilters();
@@ -998,11 +1005,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if(bStateChanging) return;
 
          float[] pix;
-         if (this.nType == HSI_IMAGE ) {
+         if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
             internalRatio.setRoi(getRoi());
             pix = (float[])internalRatio.getProcessor().getPixels();
             internalRatio.killRoi();
-         } else if(this.nType == RATIO_IMAGE || this.nType == SUM_IMAGE) {
+         } else if(this.nType == SUM_IMAGE) {
              pix = (float[])getProcessor().getPixels();
          } else if( (this.nType == SEG_IMAGE) || (this.nType == COMPOSITE_IMAGE)) {
              return;
@@ -1024,7 +1031,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             ui.getmimsTomography().updateHistogram(dpix, getShortTitle(), true);
 
             //TODO: this should be somewhere else
-             if (this.nType == HSI_IMAGE) {
+             if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
                  String stats = "";
                  stats += this.getShortTitle() + ": ";
                  stats += "mean = " + IJ.d2s(this.internalRatio.getStatistics().mean, 2) + " ";
@@ -1149,9 +1156,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
             float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
             double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
-            String opstring = "";
-            if(ui.getMedianFilterRatios()) { opstring = "-med->"; } else { opstring = "=";}
-            msg += "S (" + (int)ngl + " / " + (int)dgl + ") " + opstring + " " + IJ.d2s(ratio, 4);
+            msg += "S (" + (int)ngl + " / " + (int)dgl + ") = " + IJ.d2s(ratio, 2);
+            if(ui.getMedianFilterRatios())
+               msg += " -med-> " + IJ.d2s(getProcessor().getPixelValue(mX, mY));
         } else if(this.nType == SUM_IMAGE) {
             float ngl, dgl;
             if (internalNumerator != null && internalDenominator != null) {
@@ -1204,7 +1211,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
             if(loopRoi.contains(mX, mY) || linecheck) {
 
-                  if (this.getMimsType()==HSI_IMAGE && internalRatio!=null) {
+                  if ((this.getMimsType()==RATIO_IMAGE || this.getMimsType()==HSI_IMAGE) && internalRatio!=null) {
                       internalRatio.setRoi(loopRoi);
                       stats = internalRatio.getStatistics();
                       internalRatio.killRoi();
@@ -1396,8 +1403,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
           ij.process.ImageStatistics numeratorStats = null;
           ij.process.ImageStatistics denominatorStats = null;
 
-         if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
-            this.internalRatio.setRoi(lroi);
+         if (this.getMimsType() == MimsPlus.HSI_IMAGE || this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+             this.internalRatio.setRoi(lroi);
              stats =  this.internalRatio.getStatistics();
             msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
          } else {
@@ -1448,7 +1455,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             mp = ui.getMassImage(this.getRatioProps().getNumMassIdx());
             plane = mp.getSlice();
             size = mp.getStackSize();
-        }else if( this.nType == MimsPlus.SUM_IMAGE ){ return; }
+        } else if( this.nType == MimsPlus.SUM_IMAGE ){ return; }
         if(mp==null) return;
 
         int d = e.getWheelRotation();
@@ -1471,7 +1478,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             int imageLabel = ui.getRoiManager().getIndex(roi.getName()) + 1;
             String label = getShortTitle() + " Roi: (" + imageLabel + ")";
             double[] roiPix;
-            if (this.nType == HSI_IMAGE) {
+            if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
                 internalRatio.setRoi(getRoi());
                 roiPix = internalRatio.getRoiPixels();
                 internalRatio.killRoi();
@@ -1497,7 +1504,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
          return;
 
       // Line profiles for ratio images and HSI images should be identical.
-      if (this.nType == HSI_IMAGE) {
+      if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
          internalRatio.setRoi(getRoi());
          ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(internalRatio);
          internalRatio.killRoi();

@@ -1078,7 +1078,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             return;
         }
         Roi originalroi = mp.getRoi();
-        if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+        if (mp.getMimsType() == MimsPlus.HSI_IMAGE || mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
             mp = mp.internalRatio;
         }
         if (mp == null) {
@@ -2771,8 +2771,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     public void roiPixelvalues(MimsPlus img) {
 
        // Make sure we have an image.
-       ImagePlus imp = getImage();
-       if (imp == null) {
+       if (img == null) {
           IJ.error("No image has been selected.");
           return;
        }
@@ -2789,9 +2788,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        }
 
        // HSIs pixel data is stored in the internal ratio image.
-        if(img.getMimsType()==MimsPlus.HSI_IMAGE) {
-            roiPixelvalues(img.internalRatio);
-            return;
+        if(img.getMimsType()==MimsPlus.HSI_IMAGE || img.getMimsType()==MimsPlus.RATIO_IMAGE) {
+            img = img.internalRatio;
         }
 
         // Collect all the pixels within the highlighted rois.
@@ -2824,68 +2822,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        tbl.setImages(imgs);
        tbl.createPixelTable(ui.getImageFilePrefix(), names, lgroups, values);
        tbl.showFrame();
-    }
-
-    /**
-     * Generates a table of pixel values for a
-     * ROI for the passed image and current plane.
-     *
-     * @param img the image.
-     */
-    public void roiPixelvalues2(MimsPlus img) {
-        if(img.getMimsType()==MimsPlus.HSI_IMAGE) {
-            roiPixelvalues(img.internalRatio);
-            return;
-        }
-
-        img.killRoi();
-        Roi[] lrois = this.getSelectedROIs();
-        if(lrois==null) return;
-        if(lrois.length == 0) return;
-
-        // Collect all the pixels within the highlighted rois.
-        ArrayList<Double> values = new ArrayList<Double>();
-        ArrayList<String> lgroups = new ArrayList<String>();
-        for (Roi roi : lrois) {
-            img.setRoi(roi);
-            double[] roipixels = img.getRoiPixels();
-            String group = getRoiGroup(roi.getName());
-            for (double pixel : roipixels) {
-                values.add(pixel);
-                lgroups.add(group);
-            }
-            img.killRoi();
-        }
-
-        // Setup table.
-        ij.measure.ResultsTable rTable = new ij.measure.ResultsTable();
-        rTable.addColumns();
-        rTable.setHeading(0, "Value");
-
-        // Fill in the table.
-        for(int i = 0; i<values.size(); i++) {
-            rTable.incrementCounter();
-            String group = lgroups.get(i);
-            if (group == null)
-               group = "null";
-            rTable.setLabel(group, i);
-            rTable.addValue(0, values.get(i));
-        }
-
-        // Set some parameters in case user wants to save table.
-        Prefs.set("options.ext", ".txt");
-        ui.setIJDefaultDir(ui.getImageDir());
-
-        // Set title and show table.
-        String ltitle = "";
-        if (img.getMimsType() == MimsPlus.MASS_IMAGE)
-           ltitle = ui.getImageFilePrefix() + "_m"+img.getRoundedTitle();
-        if (img.getMimsType() == MimsPlus.RATIO_IMAGE)
-           ltitle = ui.getImageFilePrefix() + "_m"+img.getNumeratorImage().getRoundedTitle()+"_m"+img.getDenominatorImage().getRoundedTitle();
-        if (lrois.length == 1)
-           ltitle += "_roi"+lrois[0].getName();
-        rTable.show(ltitle);
-        
     }
 
     /** Gets the current image. */
@@ -3406,7 +3342,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
                     for (int r = 0; r < rois.length; r++) {
                         String grpname = rm.getRoiGroup(rois[r].getName())+",roi-"+rois[r].getName()+",part";
-                        if (img.getMimsType() == MimsPlus.HSI_IMAGE && img.internalRatio != null) {
+                        if ((img.getMimsType() == MimsPlus.HSI_IMAGE || img.getMimsType() == MimsPlus.RATIO_IMAGE) && img.internalRatio != null) {
                             if(makeGroups.isSelected()) {
                                 rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), grpname);
                             } else {
@@ -3637,7 +3573,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
                     MimsPlus img = (MimsPlus)getImage();
 
-                    if(img.getMimsType()==MimsPlus.HSI_IMAGE && img.internalRatio!=null) {
+                    if((img.getMimsType()==MimsPlus.HSI_IMAGE || img.getMimsType()==MimsPlus.RATIO_IMAGE) && img.internalRatio!=null) {
                         rm.add(roiSquaresZ(rois, img.internalRatio, params));
                     } else {
                         rm.add(roiSquaresZ(rois, img, params));

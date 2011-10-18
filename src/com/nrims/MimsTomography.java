@@ -339,7 +339,14 @@ public class MimsTomography extends javax.swing.JPanel {
        // images
        MimsPlus[] images = getImages();
        if (images.length >= 1) {
-          tomoChart.setImages(images);
+          MimsPlus[] imagesToSend = new MimsPlus[images.length];
+          for (int i = 0; i < images.length; i++) {
+             if (images[i].getMimsType() == MimsPlus.HSI_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE)
+                imagesToSend[i] = images[i].internalRatio;
+             else
+                imagesToSend[i] = images[i];
+          }
+          tomoChart.setImages(imagesToSend);
        } else {
           System.out.println("No images selected");
           return;
@@ -404,7 +411,14 @@ public class MimsTomography extends javax.swing.JPanel {
        // Get selected images.
        MimsPlus[] images = getImages();
        if (images.length >= 1) {
-          table.setImages(images);
+          MimsPlus[] imagesToSend = new MimsPlus[images.length];
+          for (int i = 0; i < images.length; i++) {
+             if (images[i].getMimsType() == MimsPlus.HSI_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE)
+                imagesToSend[i] = images[i].internalRatio;
+             else
+                imagesToSend[i] = images[i];
+          }
+          table.setImages(imagesToSend);
        } else {
           System.out.println("No images selected");
           return;
