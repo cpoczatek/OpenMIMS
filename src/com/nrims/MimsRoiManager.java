@@ -34,10 +34,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
 
 
 /**
@@ -93,8 +99,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     */
     public MimsRoiManager(UI ui) {
         super("MIMS ROI Manager");
-
         this.ui = ui;
+        Dimension d = new Dimension(200, 380);
 
         if (instance != null) {
             instance.toFront();
@@ -103,7 +109,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         instance = this;
         ImageJ ij = IJ.getInstance();
         addKeyListener(ij);
-        //addMouseListener(this);
         WindowManager.addWindow(this);
         setLayout(new FlowLayout());
 
@@ -143,16 +148,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         groupjlist.addListSelectionListener(groupSelectionListener);
 
         // Group scrollpane.
-        Dimension d2 = new Dimension(230, 450);
         JScrollPane groupscrollpane = new JScrollPane(groupjlist);
-        groupscrollpane.setPreferredSize(d2);
-        groupscrollpane.setMinimumSize(d2);
         groupscrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         // Roi scrollpane.
         JScrollPane roiscrollpane = new JScrollPane(roijlist);
-        roiscrollpane.setPreferredSize(d2);
-        roiscrollpane.setMinimumSize(d2);
         roiscrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         // Create, Delete Button.
@@ -175,7 +175,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             renameActionPerformed(evt);
          }});
 
-
         // Assign, Deassign Button.
         JButton assign = new JButton("Assign");
         assign.setMargin( new Insets(0, 0, 0, 0) );
@@ -189,57 +188,47 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
          public void actionPerformed(ActionEvent evt) {
             deassignActionPerformed(evt);
          }});
+        JButton rename_roi = new JButton("Rename");
+        rename_roi.setMargin( new Insets(0, 0, 0, 0) );
+        rename_roi.addActionListener(this);
 
-        // Assemble
-        Dimension d1 = new Dimension(200, 350);
-        JPanel leftPanel    = new JPanel(new BorderLayout());
-        JPanel rightPanel   = new JPanel(new BorderLayout());
-        JPanel centerPanel1 = new JPanel();
-        JPanel eastPanel1   = new JPanel();
-        JPanel westPanel1   = new JPanel();
+        // Group buttons.
         JPanel southPanel1  = new JPanel();
-        JPanel northPanel1  = new JPanel();
-        JPanel centerPanel2 = new JPanel();
-        JPanel westPanel2   = new JPanel();
-        JPanel southPanel2  = new JPanel();
-        JPanel northPanel2  = new JPanel();
-
-        // Left pane - south panel
         southPanel1.setLayout(new GridLayout(2,2));
         southPanel1.add(create);
         southPanel1.add(deleteButton);
         southPanel1.add(rename);
 
-        // Left pane - north panel
+        // Group label.
+        JPanel northPanel1  = new JPanel();
         northPanel1.add(new JLabel("Groups"));
-
-        // Left pane
-        Dimension dLeft = new Dimension(165, 350);
-        leftPanel.setPreferredSize(dLeft);
+        
+        // Group JPanel.
+        JPanel leftPanel    = new JPanel(new BorderLayout());
+        leftPanel.setPreferredSize(d);
         leftPanel.add(groupscrollpane, BorderLayout.CENTER);
         leftPanel.add(southPanel1, BorderLayout.SOUTH);
         leftPanel.add(northPanel1, BorderLayout.NORTH);
+        leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // Right pane - south panel
+        // Roi Buttons.
+        JPanel southPanel2  = new JPanel();
         southPanel2.setLayout(new GridLayout(2,2));
         southPanel2.add(assign);
         southPanel2.add(dassign);
-        southPanel2.add(new JLabel(""));
+        southPanel2.add(rename_roi);
 
-        // Right pane - north panel
+        // Roi label.
+        JPanel northPanel2  = new JPanel();
         northPanel2.add(new JLabel("Rois"));
 
-        // Right pane - center panel
-        Dimension dRight = new Dimension(165, 350);
-        rightPanel.setPreferredSize(dRight);
-        rightPanel.setMaximumSize(dRight);
-        rightPanel.setMinimumSize(dRight);
-
-        //Right pane - east panel
-        panel = new JPanel();
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        panel.setPreferredSize(new Dimension(200, 350));
+        // Roi JPanel.
+        JPanel rightPanel   = new JPanel(new BorderLayout());
+        rightPanel.setPreferredSize(leftPanel.getPreferredSize());
+        rightPanel.add(roiscrollpane, BorderLayout.CENTER);
+        rightPanel.add(southPanel2, BorderLayout.SOUTH);
+        rightPanel.add(northPanel2, BorderLayout.NORTH);
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         // Placeholders.
         JLabel emptySpace1 = new JLabel("");
@@ -251,37 +240,31 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         JLabel emptySpace4 = new JLabel("");
         emptySpace4.setBorder(BorderFactory.createEmptyBorder(5, 70, 5, 70));
 
+        // Button JPanel.
+        panel = new JPanel();
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        panel.setPreferredSize(d);
         panel.add(emptySpace1);
-        addButton("Delete");
-        addButton("Rename");
-        addButton("Open");
         addButton("Save");
+        addButton("Open");
+        addButton("Delete");
         addButton("Measure");
+        addButton("Pixel values");
         addButton("More>>");
         addPopupMenu();
-        
-        //order of these calls determines position...
         panel.add(emptySpace2);
         setupPosLabels();
         setupPosSpinners();
         panel.add(emptySpace3);
         setupSizeLabels();
         setupSizeSpinners();
-        
-        // Add checkboxes.
         panel.add(emptySpace4);
         addCheckbox(moveAllRois, true);
         addCheckbox(hideAllRois, false);
         addCheckbox(hideAllLabels, false);
-        
-        //rightPanel.add(panel, BorderLayout.EAST);
-        rightPanel.add(roiscrollpane, BorderLayout.CENTER);
-        rightPanel.add(southPanel2, BorderLayout.SOUTH);
-        rightPanel.add(northPanel2, BorderLayout.NORTH);
 
-        rightPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
+        // Assemble the lot.
         add(leftPanel);
         add(rightPanel);
         add(panel);
@@ -844,7 +827,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         addPopupItem("Split");
         addPopupItem("Particles");
         addPopupItem("Squares");
-        addPopupItem("Pixel values");
         addPopupItem("Add [t]");
         addPopupItem("Reorder all");
         add(pm);
@@ -3160,24 +3142,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
          // Prepend label of Roi on the image into the name in the jlist.
          String label = (String) value;
-         int idx = index + 1;
-
-         // My attempt at creating a numbered list...
-         /*
-         Color bg = rm.getBackground();        
-         String hexStr = Integer.toHexString( bg.getRGB() );
-         hexStr = hexStr.substring(2, hexStr.length());
-         
-         System.out.println(hexStr);
-         String idxStr = Integer.toString(idx);
-         if (idxStr.length()==1)
-            idxStr = "0"+idxStr;
-         setText("<html> <BGCOLOR="+"#"+hexStr+"> <font color=gray>"+idxStr+"</font> <font color=black>"+" "+label+"</font></html>");
-         */
-         // Attempt failed.
-         //setText("<html> <font color=gray>"+"("+idx+")"+"</font> <font color=black>"+" "+label+"</font></html>");
          setText(label);
-
 
          if (isSelected) {
             setBackground(list.getSelectionBackground());
@@ -3201,20 +3166,18 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         MimsPlus workingimage;
         MimsRoiManager rm;
 
-        JLabel label;
-        JTextField threshMinField = new JTextField();
-        JTextField threshMaxField = new JTextField();
-        JTextField sizeMinField = new JTextField();
-        JTextField sizeMaxField = new JTextField();
-        JCheckBox allowDiagonal = new JCheckBox("Allow Diagonal Connections", false);
-        JCheckBox makeGroups = new JCheckBox("Make Groups", true);
+        JTextField threshMinField = new JTextField(10);
+        JTextField threshMaxField = new JTextField(10);
+        JTextField sizeMinField = new JTextField(10);
+        JTextField sizeMaxField = new JTextField(10);
+        GroupAssignmentPanel groupAssignmentPanel;
         JButton cancelButton;
         JButton okButton;
 
-
         public ParticlesManager(MimsRoiManager rm) {
-            super("Particles Manager");
+            super(null);
             this.rm = rm;
+            Dimension d = new Dimension(180, 15);
 
             if (instance != null) {
                 instance.toFront();
@@ -3222,57 +3185,62 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             }
             instance = this;
 
+            try{
+                workingimage = (MimsPlus)getImage();
+            } catch(Exception e){
+               return;
+            }
+
+            if (workingimage == null)
+               return;
+
+            setTitle(workingimage.getTitle());
+
             // Setup panel.
             JPanel jPanel = new JPanel();
             jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.PAGE_AXIS));
 
-            try{
-                workingimage = (MimsPlus)getImage();
-            } catch(Exception e){ return; }
-
-            String imagename = workingimage.getTitle();
-            label = new JLabel("Image:   " + imagename);
-            jPanel.add(label);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-
-            //add textfields
+            // Threshold Min text field.
             JLabel label2 = new JLabel("Threshold min");
+            label2.setAlignmentX(LEFT_ALIGNMENT);
             jPanel.add(label2);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            threshMinField.setAlignmentX(LEFT_ALIGNMENT);
+            threshMinField.setMaximumSize(d);
             jPanel.add(threshMinField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+            // Threshold Max text field
             JLabel label3 = new JLabel("Threshold max");
+            label3.setAlignmentX(LEFT_ALIGNMENT);
             jPanel.add(label3);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-            jPanel.add(threshMaxField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            threshMaxField.setAlignmentX(LEFT_ALIGNMENT);
+            threshMaxField.setMaximumSize(d);
+            jPanel.add(threshMaxField);            
+            jPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+            // Min Size text field.
             JLabel label4 = new JLabel("Size min");
+            label4.setAlignmentX(LEFT_ALIGNMENT);
             jPanel.add(label4);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-            jPanel.add(sizeMinField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            sizeMinField.setAlignmentX(LEFT_ALIGNMENT);
+            sizeMinField.setMaximumSize(d);
+            jPanel.add(sizeMinField);            
+            jPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+            // Max size text field.
             JLabel label5 = new JLabel("Size max");
+            label5.setAlignmentX(LEFT_ALIGNMENT);
             jPanel.add(label5);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            sizeMaxField.setAlignmentX(LEFT_ALIGNMENT);
+            sizeMaxField.setMaximumSize(d);
             jPanel.add(sizeMaxField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-            //removed until NrimsParticleAnalyzer can be made to work with different
-            //wand types
-            //jPanel.add(allowDiagonal);
-            //jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            //jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-
-            jPanel.add(makeGroups);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            // Group Assignment Panel.
+            groupAssignmentPanel = new GroupAssignmentPanel(groupListModel.toArray());
+            groupAssignmentPanel.setAlignmentX(LEFT_ALIGNMENT);
+            jPanel.add(groupAssignmentPanel);
+            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
             // Set up "OK" and "Cancel" buttons.
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -3289,7 +3257,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             setLayout(new BorderLayout());
             add(jPanel, BorderLayout.PAGE_START);
             add(buttonPanel, BorderLayout.PAGE_END);
-            setSize(new Dimension(300, 375));
+            setSize(new Dimension(480, 660));
 
         }
 
@@ -3298,24 +3266,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             if (e.getActionCommand().equals("Cancel")) {
                 closeWindow();
             } else if (e.getActionCommand().equals("OK")) {
-                //
+
+               //
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
                     Roi[] rois = getSelectedROIs();
-                    //better fix? to current image not castable to MimsPlus?
-                    MimsPlus img;
-                    if(workingimage == null) {
-                        img = (MimsPlus)getImage();
-                    } else {
-                        img = workingimage;
-                    }
-                    img.killRoi();
-                    double mint = img.getProcessor().getStatistics().min;
-                    double maxt = img.getProcessor().getStatistics().max;
-                    double mins = 0;
-                    double maxs = img.getProcessor().getPixelCount();
+                    
+                    double mint = 0, maxt = 0, mins = 0, maxs = 0.0;
                     double diag = 0;
-
                     if (!threshMinField.getText().isEmpty()) {
                         mint = Double.parseDouble(threshMinField.getText());
                     }
@@ -3329,59 +3287,46 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                         maxs = Double.parseDouble(sizeMaxField.getText());
                     }
 
-                    //set the text fields to what was actually used in case
-                    //the user goes back to change paramters
-                    threshMinField.setText(Double.toString(mint));
-                    threshMaxField.setText(Double.toString(maxt));
-                    sizeMinField.setText(Double.toString(mins));
-                    sizeMaxField.setText(Double.toString(maxs));
-
-                    //if(allowDiagonal.isSelected()){ diag = 0; } else { diag = ij.plugin.filter.ParticleAnalyzer.FOUR_CONNECTED; }
-
                     double[] params = {mint, maxt, mins, maxs, diag};
 
+                    MimsPlus img = workingimage;
+                    if ((img.getMimsType() == MimsPlus.HSI_IMAGE || img.getMimsType() == MimsPlus.RATIO_IMAGE) && img.internalRatio != null)
+                       img = img.internalRatio;
                     for (int r = 0; r < rois.length; r++) {
-                        String grpname = rm.getRoiGroup(rois[r].getName())+",roi-"+rois[r].getName()+",part";
-                        if ((img.getMimsType() == MimsPlus.HSI_IMAGE || img.getMimsType() == MimsPlus.RATIO_IMAGE) && img.internalRatio != null) {
-                            if(makeGroups.isSelected()) {
-                                rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), grpname);
-                            } else {
-                                rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), rm.getRoiGroup(rois[r].getName()));
-                            }
-                        } else {
-                            if(makeGroups.isSelected()) {
-                                rm.addToGroup(roiThreshold(rois, img, params), grpname);
-                            } else {
-                                rm.addToGroup(roiThreshold(rois, img, params),rm.getRoiGroup(rois[r].getName()));
-                            }
-                        }
+                       rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), groupAssignmentPanel.getGroupName());
                     }
                 } catch(Exception x) {
                     ij.IJ.error("Error", "Not a number.");
-                    x.printStackTrace();
-                      return;
+                    return;
                 } finally {
                     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
-
                 ui.updateAllImages();
                 closeWindow();
             }
-
         }
 
-        public void resetImage() {
-            try{
-                workingimage = (MimsPlus)getImage();
-            } catch(Exception e){ return; }
+       /**
+        * Sets the image to perform the calculation.
+        */
+       public void resetImage() {
+          try {
+             MimsPlus mp = (MimsPlus) getImage();
+             resetImage(mp);
+          } catch (Exception e) {
+             return;
+          }
+       }
 
-            label.setText(workingimage.getTitle());
-        }
-
-        public void resetImage(MimsPlus img) {
-            workingimage = img;
-            label.setText(workingimage.getTitle());
-        }
+       /**
+        * Sets the image to perform the calculation.
+        *
+        * @param img the image.
+        */
+       public void resetImage(MimsPlus img) {
+          workingimage = img;
+          setTitle(workingimage.getTitle());
+       }
 
         // Show the frame.
         public void showFrame() {
@@ -3406,222 +3351,174 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         MimsRoiManager rm;
 
         MimsPlus workingimage;
-        JLabel label;
-        JTextField sizeField = new JTextField();
-        JTextField numberField = new JTextField();
-        JTextField rangeField = new JTextField();
+        JTextField sizeField = new JTextField(10);
+        JTextField numberField = new JTextField(10);
+        JTextField rangeField = new JTextField(10);
         JCheckBox allowOverlap = new JCheckBox("Allow Overlap", false);
-        JCheckBox makeGroups = new JCheckBox("Make Groups", true);
+        GroupAssignmentPanel groupAssignmentPanel;
 
         JButton cancelButton;
         JButton SButton;
         JButton ZButton;
 
         public SquaresManager(MimsRoiManager rm) {
-            super("Squares Manager");
+            super(null);
             this.rm = rm;
-            
+            Dimension d = new Dimension(180, 15);
             if (instance != null) {
                 instance.toFront();
                 return;
             }
+
             instance = this;
+
+            try{
+                workingimage = (MimsPlus)getImage();
+            } catch(Exception e){
+               return;
+            }
+            
+            if (workingimage == null)
+               return;
+
+            setTitle(workingimage.getTitle());
 
             // Setup panel.
             JPanel jPanel = new JPanel();
             jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.PAGE_AXIS));
 
-            try{
-                workingimage = (MimsPlus)getImage();
-            } catch(Exception e){ return; }
-
-            String imagename = workingimage.getTitle();
-            label = new JLabel("Image:   " + imagename);
-            jPanel.add(label);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-
-            //add textfields
+            // Square Size text field.
             JLabel label2 = new JLabel("Square size (n x n pixels)");
+            label2.setAlignmentX(LEFT_ALIGNMENT);
             jPanel.add(label2);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            sizeField.setAlignmentX(LEFT_ALIGNMENT);            
+            sizeField.setMaximumSize(d);
             jPanel.add(sizeField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+            // Number of Squares text field.
             JLabel label3 = new JLabel("Number of squares");
-            jPanel.add(label3);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            label3.setAlignmentX(LEFT_ALIGNMENT);
+            jPanel.add(label3);            
+            numberField.setAlignmentX(LEFT_ALIGNMENT);
+            numberField.setMaximumSize(d);
             jPanel.add(numberField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+            // Overlap checkbox.
+            allowOverlap.setAlignmentX(LEFT_ALIGNMENT);
             jPanel.add(allowOverlap);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            jPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-            jPanel.add(makeGroups);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            // Group Assignment Panel.
+            groupAssignmentPanel = new GroupAssignmentPanel(groupListModel.toArray());
+            groupAssignmentPanel.setAlignmentX(LEFT_ALIGNMENT);
+            jPanel.add(groupAssignmentPanel);
+            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-            /*
-            JLabel label4 = new JLabel("Range:");
-            jPanel.add(label4);
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-            jPanel.add(rangeField);
-            jPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-            */
-
-            // Set up "OK" and "Cancel" buttons.
+            // Button Panel
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
             cancelButton = new JButton("Cancel");
             cancelButton.setActionCommand("Cancel");
-            cancelButton.addActionListener(this);
-            
+            cancelButton.addActionListener(this);            
             SButton = new JButton("Squares");
             SButton.setActionCommand("Squares");
             SButton.addActionListener(this);
-
             ZButton = new JButton("SquaresZ");
             ZButton.setActionCommand("SquaresZ");
             ZButton.addActionListener(this);
-
+            ZButton.setEnabled(false);
             buttonPanel.add(cancelButton);
             buttonPanel.add(SButton);
             buttonPanel.add(ZButton);
-            //disabled till it actually works
-            ZButton.setEnabled(false);
-
-            // Add elements.
+            
+            // Assemble.
             setLayout(new BorderLayout());
-            add(jPanel, BorderLayout.PAGE_START);
+            add(jPanel, BorderLayout.CENTER);
             add(buttonPanel, BorderLayout.PAGE_END);
-            setSize(new Dimension(300, 350));
-
+            setSize(new Dimension(480, 590));
         }
 
         
-        public void actionPerformed(ActionEvent e) {
+         public void actionPerformed(ActionEvent e) {
+
+            // Cancel
             if (e.getActionCommand().equals("Cancel")) {
-                closeWindow();
+               closeWindow();
+
+            // Squares
             } else if (e.getActionCommand().equals("Squares")) {
-                //
-                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                try {
-                    double size = Double.parseDouble(sizeField.getText());
-                    double num = Double.parseDouble(numberField.getText());
-                    double overlap = 0.0;
-                    if(allowOverlap.isSelected()) { overlap = 1.0; }
+               setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+               try {
+                  double size = Double.parseDouble(sizeField.getText());
+                  double num = Double.parseDouble(numberField.getText());
+                  double overlap = 0.0;
+                  if (allowOverlap.isSelected()) {
+                     overlap = 1.0;
+                  }
+                  double[] params = {size, num, overlap};
+                  Roi[] rois = rm.getSelectedROIs();
+                  if (rois.length == 0) {
+                     ij.IJ.error("Error", "No rois selected.");
+                     return;
+                  }
+                  MimsPlus img = workingimage;
+                  if ((img.getMimsType() == MimsPlus.HSI_IMAGE || img.getMimsType() == MimsPlus.RATIO_IMAGE) && img.internalRatio != null)
+                     img = img.internalRatio;
+                  for (int r = 0; r < rois.length; r++) {
+                     rm.addToGroup(roiSquares(rois[r], img, params), groupAssignmentPanel.getGroupName());
+                  }
+               } catch (Exception x) {
+                  ij.IJ.error("Error", "Not a number.");
+                  return;
+               } finally {
+                  setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+               }
 
-                    double[] params = {size, num, overlap};
+               ui.updateAllImages();
+               closeWindow();
 
-                    Roi[] rois = rm.getSelectedROIs();
-
-                    if(rois.length==0) {
-                        ij.IJ.error("Error", "No rois selected.");
-                        return;
-                    }
-
-                    MimsPlus img = (MimsPlus)getImage();
-
-                    for (int r = 0; r < rois.length; r++) {
-                        String grpname = rm.getRoiGroup(rois[r].getName())+",roi-"+rois[r].getName()+",sq";
-                        if (img.getMimsType() == MimsPlus.HSI_IMAGE && img.internalRatio != null) {
-                            if(makeGroups.isSelected()) {
-                                rm.addToGroup(roiSquares(rois[r], img.internalRatio, params), grpname);
-                            } else {
-                                rm.addToGroup(roiSquares(rois[r], img.internalRatio, params), rm.getRoiGroup(rois[r].getName()));
-                            }
-                        } else {
-                            if(makeGroups.isSelected()) {
-                                rm.addToGroup(roiSquares(rois[r], img, params), grpname);
-                            } else {
-                                rm.addToGroup(roiSquares(rois[r], img, params),rm.getRoiGroup(rois[r].getName()));
-                            }
-                        }
-                    }
-
-                } catch(Exception x) {
-                    //x.printStackTrace();
-                    ij.IJ.error("Error", "Not a number.");
-                    return;
-                } finally {
-                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                }
-
-                ui.updateAllImages();
-                closeWindow();
-            } else if (e.getActionCommand().equals("SquaresZ")) {
-
-                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                try {
-                    double size = Double.parseDouble(sizeField.getText());
-                    double num = Double.parseDouble(numberField.getText());
-                    double overlap = 0.0;
-                    if(allowOverlap.isSelected()) { overlap = 1.0; }
-
-
-                    double[] params = {size, num, overlap};
-
-                    Roi[] rois = rm.getSelectedROIs();
-
-                    if(rois.length==0) {
-                        ij.IJ.error("Error", "No rois selected.");
-                        return;
-                    }
-
-                    MimsPlus img = (MimsPlus)getImage();
-
-                    if((img.getMimsType()==MimsPlus.HSI_IMAGE || img.getMimsType()==MimsPlus.RATIO_IMAGE) && img.internalRatio!=null) {
-                        rm.add(roiSquaresZ(rois, img.internalRatio, params));
-                    } else {
-                        rm.add(roiSquaresZ(rois, img, params));
-                    }
-
-                } catch(Exception x) {
-                    x.printStackTrace();
-                    ij.IJ.error("Error", "Not a number.");
-                    return;
-                } finally {
-                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                }
-
-                ui.updateAllImages();
-                closeWindow();
-
+            // SquaresZ
             }
+      }
 
-        }
+    /**
+     * Sets the image to perform the calculation.
+     */
+      public void resetImage() {
+         try {
+            MimsPlus mp = (MimsPlus) getImage();
+            resetImage(mp);
+         } catch (Exception e) {
+            return;
+         }
+      }
 
-        public void resetImage() {
-            try{
-                workingimage = (MimsPlus)getImage();
-            } catch(Exception e){ return; }
+    /**
+     * Sets the image to perform the calculation.
+     *
+     * @param img the image.
+     */
+      public void resetImage(MimsPlus img) {
+         workingimage = img;
+         setTitle(workingimage.getTitle());
+      }
 
-            label.setText(workingimage.getTitle());
-        }
+      // Show the frame.
+      public void showFrame() {
+         setLocation(400, 400);
+         resetImage();
+         setVisible(true);
+         toFront();
+         setExtendedState(NORMAL);
+      }
 
-        public void resetImage(MimsPlus img) {
-            workingimage = img;
-            label.setText(workingimage.getTitle());
-        }
-
-        // Show the frame.
-        public void showFrame() {
-            setLocation(400, 400);
-            resetImage();
-            setVisible(true);
-            toFront();
-            setExtendedState(NORMAL);
-        }
-
-        public void closeWindow() {
-            super.close();
-            instance = null;
-            this.setVisible(false);
-        }
-    }
+      public void closeWindow() {
+         super.close();
+         instance = null;
+         this.setVisible(false);
+      }
+   }
 
 
     //Various methods to deal with transitionsing to
@@ -3740,5 +3637,115 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         return roiFile;
     }
 
+    /** 
+     * Creates a JPanel that can be used for frames that do some work
+     * with ROIS that results in the creation of multiple Rois. This 
+     * panel allows the user to select from the list of already created
+     * groups or a rtextfield to create a new one.
+     */
+    public class GroupAssignmentPanel extends JPanel implements ActionListener {
+
+       static final String ASSIGN_GROUP = "Assign to existing group";
+       static final String CREATE_GROUP = "Create new group";
+
+       public JRadioButton assignGroupButton = null;
+       public JRadioButton createGroupButton = null;
+       JTextField createGroupTextField;
+       JList groupList;
+
+      public GroupAssignmentPanel(Object[] elements) {
+
+         // ScrollPane
+         groupList = new JList(elements);
+         groupList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+         groupList.setSelectedValue(DEFAULT_GROUP, true);
+         Dimension d2 = new Dimension(230, 320);
+         JScrollPane groupscrollpane = new JScrollPane(this.groupList);
+         groupscrollpane.setPreferredSize(d2);
+         groupscrollpane.setMinimumSize(d2);
+         groupscrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+         // Create the radio buttons.
+         assignGroupButton = new JRadioButton(ASSIGN_GROUP);
+         assignGroupButton.setActionCommand(ASSIGN_GROUP);
+         assignGroupButton.addActionListener(this);
+         assignGroupButton.setSelected(true);
+
+         createGroupButton = new JRadioButton(CREATE_GROUP);
+         createGroupButton.setActionCommand(CREATE_GROUP);
+         createGroupButton.addActionListener(this);
+
+         // Group the radio buttons.
+         ButtonGroup group = new ButtonGroup();
+         group.add(assignGroupButton);
+         group.add(createGroupButton);
+
+         // Textfield to allow user to create group.
+         createGroupTextField = new JTextField(15);
+         createGroupTextField.setEnabled(false);
+         JPanel createGroupTextFieldJPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+         createGroupTextFieldJPanel.add(createGroupTextField);
+
+         // Left Panel
+         Dimension dl = d2;
+         JPanel leftPanel = new JPanel(new BorderLayout());
+         leftPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+         leftPanel.setPreferredSize(dl);
+         leftPanel.setMinimumSize(dl);
+         leftPanel.add(assignGroupButton, BorderLayout.NORTH);
+         leftPanel.add(groupscrollpane, BorderLayout.CENTER);         
+
+         // Right Panel
+         Dimension dr = new Dimension(180, 320);
+         JPanel rightPanel = new JPanel(new BorderLayout());
+         rightPanel.setPreferredSize(dr);
+         rightPanel.setMinimumSize(dr);
+         rightPanel.add(createGroupButton, BorderLayout.NORTH);
+         rightPanel.add(createGroupTextFieldJPanel, BorderLayout.CENTER);
+
+         setLayout(new FlowLayout(FlowLayout.LEFT));
+         add(leftPanel);
+         add(rightPanel);
+
+         //setBorder(BorderFactory.createRaisedBevelBorder());
+         setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+      }
+
+    /**
+     * Action methods for radio button clicks.
+     *
+     * @param e Action Event
+     */
+      public void actionPerformed(ActionEvent e) {
+         // Assign Group
+         if (e.getActionCommand().equals(ASSIGN_GROUP)) {
+            createGroupTextField.setEnabled(false);
+            groupList.setEnabled(true);
+
+         // Create Group
+         } else if (e.getActionCommand().equals(CREATE_GROUP)) {
+            createGroupTextField.setEnabled(true);
+            groupList.setEnabled(false);
+         }
+      }
+
+    /**
+     * Sets the image to perform the calculation.
+     *
+     * @return the group the be used for the assignment.
+     */
+      public String getGroupName() {
+         String returnVal = DEFAULT_GROUP;
+         if (assignGroupButton.isSelected()) {
+            returnVal = (String) groupList.getSelectedValue();
+         } else if (createGroupButton.isSelected()) {
+            String field = createGroupTextField.getText().trim();
+            if (field.length() != 0)
+               returnVal = field;
+         }
+         return returnVal;
+      }
+
+   }
 }
 

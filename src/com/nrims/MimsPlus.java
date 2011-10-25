@@ -1158,7 +1158,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
             msg += "S (" + (int)ngl + " / " + (int)dgl + ") = " + IJ.d2s(ratio, 2);
             if(ui.getMedianFilterRatios())
-               msg += " -med-> " + IJ.d2s(getProcessor().getPixelValue(mX, mY));
+               msg += " -med-> " + IJ.d2s(internalRatio_filtered.getProcessor().getPixelValue(mX, mY));
         } else if(this.nType == SUM_IMAGE) {
             float ngl, dgl;
             if (internalNumerator != null && internalDenominator != null) {
@@ -1503,16 +1503,16 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       if (!roi.isLine())
          return;
 
+      ij.gui.ProfilePlot profileP = null;
       // Line profiles for ratio images and HSI images should be identical.
       if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
          internalRatio.setRoi(getRoi());
-         ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(internalRatio);
+         profileP = new ij.gui.ProfilePlot(internalRatio);
          internalRatio.killRoi();
-         ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
       } else {
-         ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(this);
-         ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
+         profileP = new ij.gui.ProfilePlot(this);         
       }
+      ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
 
    }
 
