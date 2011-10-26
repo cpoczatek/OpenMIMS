@@ -31,6 +31,7 @@ public class Mims_Reader implements Opener {
     private int currentIndex = 0;
     public static final int IHDR_SIZE = 84;
     private String[] massNames;
+    private String[] massSymbols;
     private double counting_time;
     private String notes = "";
 
@@ -251,7 +252,7 @@ public class Mims_Reader implements Opener {
         pa.nb_elts = in.readIntEndian();
         pa.nb_charges = in.readIntEndian();
         pa.charge = getChar(1);
-        pa.massLabel = getChar(64);
+        pa.massLabel = getChar(64); //this is the string name of the mass
         pa.tabelts = new Tabelts[5];
         for (int i = 0; i < 5; i++) {
             pa.tabelts[i] = new Tabelts();
@@ -554,10 +555,12 @@ public class Mims_Reader implements Opener {
 
        // Read the Tab_Mass structure and set mass names.
        massNames = new String[nMasses];
+       massSymbols = new String[nMasses];
        for (int i = 0; i < nMasses; i++) {
           TabMass tm = new TabMass();
           readTabMass(tm);
           massNames[i] = DecimalToStr(tm.mass_amu, 2);
+          massSymbols[i] = tm.polyatomic.massLabel.replaceAll(" ", "");
        }
 
        // Reader the Header_Image structure
@@ -637,6 +640,18 @@ public class Mims_Reader implements Opener {
 
     public String[] getMassNames() {        
         return massNames;
+    }
+
+    /**
+     * @param index image mass index.
+     * @return a String of the mass symbol (eg 12C14N) for image at the given index.
+     */
+    public String getMassSymbol(int index) {
+        return massSymbols[index];
+    }
+
+    public String[] getMassSymbols() {
+        return massSymbols;
     }
 
     public void setDebug(int nLevel) {
@@ -831,7 +846,7 @@ public class Mims_Reader implements Opener {
          ex.printStackTrace();
       }
     }
-    
+
     /*
     public String getInfo() {
         String info = "";

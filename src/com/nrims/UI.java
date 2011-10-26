@@ -797,13 +797,20 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         // WE HAVE TO DECIDE WHAT WE WANT.
         String[] names = im.getMassNames();
-
+        String[] symbols = im.getMassSymbols();
 
         String str = "\nHeader: \n";
         str += "Path: " + im.getImageFile().getAbsolutePath() + "\n";
         str += "Masses: ";
         for (int i = 0; i < im.getNMasses(); i++) {str += names[i] + " ";}
         str += "\n";
+
+        str += "Symbols: ";
+        if(symbols!=null) {
+            for (int i = 0; i < im.getNMasses(); i++) {str += symbols[i] + " ";}
+        }
+        str += "\n";
+
         str += "Pixels: " + im.getWidth() + "x" + im.getHeight() + "\n";
         
         str += "Raster (nm): " + im.getRaster() + "\n";
@@ -3434,6 +3441,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 }
              } catch (Exception e) {
                 IJ.error("Failed to open " + file + "\n");
+                e.printStackTrace();
                 return false;
              }
 
@@ -3615,7 +3623,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 public void stateChanged(ChangeEvent e) {
                    int selected = jTabbedPane1.getSelectedIndex();
                    if (selected == 2) {
-                      //cbControl.updateHistogram();
+                      cbControl.updateHistogram();
                    }
                 }
              });

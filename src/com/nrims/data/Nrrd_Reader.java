@@ -62,7 +62,7 @@ public class Nrrd_Reader implements Opener {
             return;
         }
 
-    }
+        }
 
     // Reads header and gets metadata.
 	 private NrrdFileInfo getHeaderInfo() throws IOException {
@@ -206,6 +206,11 @@ public class Nrrd_Reader implements Opener {
 
             if (thisLine.startsWith(Opener.Mims_mass_numbers)) {               
                 fi.massNames=noteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
+            }
+
+            if (thisLine.startsWith(Opener.Mims_mass_symbols)) {
+                //Mass symbols are case sensitive, eg 12C and 77Se
+                fi.massSymbols=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
             }
 
             if (thisLine.startsWith(Opener.Mims_count_time))
@@ -377,6 +382,10 @@ public class Nrrd_Reader implements Opener {
         return fi.massNames;
     }
 
+    public String[] getMassSymbols() {
+        return fi.massSymbols;
+    }
+    
     public float getPixelWidth() {
         return fi.pixel_width;
     }

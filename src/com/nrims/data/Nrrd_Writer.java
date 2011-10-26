@@ -190,6 +190,15 @@ public class Nrrd_Writer {
           line += op.getMassNames()[i]+" ";
        out.write(line+"\n");
 
+        // Mass symbols
+        if (op.getMassSymbols() != null) {
+            line = Opener.Mims_mass_symbols + Opener.Nrrd_seperator;
+            for (int i = 0; i < op.getNMasses(); i++) {
+                line += op.getMassSymbols()[i] + " ";
+            }
+            out.write(line + "\n");
+        }
+       
        // Position
        out.write(Opener.Mims_position+Opener.Nrrd_seperator+op.getPosition()+"\n");
 
@@ -302,7 +311,7 @@ class NrrdFileInfo extends FileInfo {
 	public int[] sizes;
 	public String encoding="";
 	public String[] centers=null;
-   public String[] massNames;
+   public String[] massNames, massSymbols;
    public String duration, position,  sampleDate, sampleHour,
                   userName, dwellTime, countTime,  sampleName;
    public String notes = "";
