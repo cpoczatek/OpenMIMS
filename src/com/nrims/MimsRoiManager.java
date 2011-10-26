@@ -984,7 +984,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // DO NOTHING!!  Wait till we are done switching        
         if (!e.getValueIsAdjusting()) return;
 
-        holdUpdate = true;
+            holdUpdate = true;
 
         int[] indices = roijlist.getSelectedIndices();
         if (indices.length == 0) return;
@@ -1560,6 +1560,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             this.resetTitle();
         }
 
+        //remove listener to avoid unneeded events
+        roijlist.removeListSelectionListener(roiSelectionListener);
         for (int i = count - 1; i >= 0; i--) {
             boolean delete = false;
             for (int j = 0; j < index.length; j++) {
@@ -1574,6 +1576,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 roiListModel.remove(i);
             }
         }
+        //add listener back
+        roijlist.addListSelectionListener(roiSelectionListener);
+
         if (Recorder.record) {
             Recorder.record("mimsRoiManager", "Delete");
         }        

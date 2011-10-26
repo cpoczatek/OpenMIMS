@@ -115,7 +115,7 @@ public class StartupScript extends Thread {
          sum_props = ui.getOpenSumProps();
          
          // Open.
-         ui.loadMIMSFile(imFile);               
+         ui.openFile(imFile);
          
          // Track.
          boolean track = false;
