@@ -244,9 +244,9 @@ public class Converter extends SwingWorker<Void, Void> {
       FileSaver saver;
       File saveName;
       for (String hsi : HSIs) {
-         numerator = hsi.substring(0, hsi.indexOf("/"));
-         denominator = hsi.substring(hsi.indexOf("/")+1, hsi.length());
          try {
+            numerator = hsi.substring(0, hsi.indexOf("/"));
+            denominator = hsi.substring(hsi.indexOf("/")+1, hsi.length());
             numMass = (new Double(numerator)).doubleValue();
             denMass = (new Double(denominator)).doubleValue();
             numIdx = ui.getClosestMassIndices(numMass, 0.49);
