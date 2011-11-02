@@ -14,8 +14,12 @@ import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
-
 import ij.io.FileSaver;
+
+import it.sauronsoftware.junique.AlreadyLockedException;
+import it.sauronsoftware.junique.JUnique;
+import it.sauronsoftware.junique.MessageHandler;
+
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
@@ -85,7 +89,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private boolean[] bOpenMass = new boolean[maxMasses];
     private static boolean isTesting = false;
     private boolean silentMode = false;
-            
+
     private String lastFolder = null;      
     public  File   tempActionFile;                        
     private HashMap openers = new HashMap();
@@ -119,10 +123,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private PrefFrame prefs;
     private String revisionNumber = "$Rev$";
     private static String im_file_path = null;
+    private static Boolean single_instance_mode = false;
+    private static UI ui = null;
     /*
      * Private stings for option parsing
      */
     private static final String IMFILE_OPTION = "-imfile";
+    private static final String SINGLE_INSTANCE_OPTION = "-single_instance";
     public boolean continueTask = true;
 
     public UI() {
@@ -164,11 +171,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          if (silentMode)
             ijapp = new ij.ImageJ(ij.ImageJ.NO_SHOW);
          else
-            ijapp = new ij.ImageJ();
+            ijapp = new ij.ImageJ();         
 
          setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       }
-
+      
       if (image == null) {
          for (int i = 0; i < maxMasses; i++) {
             massImages[i] = null;
@@ -2021,8 +2028,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Action method File>Exit menu item. Closes the application. */
 private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-   closeCurrentImage();
-   this.close();
+   WindowEvent wev = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
+   Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
 }//GEN-LAST:event_exitMenuItemActionPerformed
 
    /** Action method for Utilities>Sum all Open menu item. Generates sum images
@@ -3181,48 +3188,82 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     //Prefs.setHomeDir(args[i+1]);
                     skip_next = true;
                 }
-                
-                if ( (args[i].equals(IMFILE_OPTION)) &&
-                       i + 1 < args.length )
+
+                if ( (args[i].equals(IMFILE_OPTION)) && i + 1 < args.length )
                 {
                     im_file_path = args[i+1];
                     skip_next = true;
+                }
+
+                if ( (args[i].equals(SINGLE_INSTANCE_OPTION)) )
+                {
+                    single_instance_mode = true;
+                }
+
+                if ( im_file_path == null && (new File(args[i])).exists() )
+                {
+                   im_file_path = args[i];
                 }
 
             } else
                 skip_next = false;
         }
 
-        if (im_file_path != null) {
+        String id = UI.class.getName();
+
+        boolean already_open = false;
+        if (single_instance_mode) {
+          try {
+             JUnique.acquireLock(id, new MessageHandler() {
+                public String handle(String message) {
+                   if (ui != null) {
+                      UI thisui = ui;
+                      thisui.setVisible(true);
+                      thisui.toFront();
+                      thisui.openFileInBackground(new File(message));
+                   }
+                   return null;
+                }
+             });
+          } catch (AlreadyLockedException e) {
+             already_open = true;
+          }
+       }
+
+
+      if (single_instance_mode && already_open) {
+         JUnique.sendMessage(id, im_file_path);
+      } else {
+         System.out.println("im_file_path = " + im_file_path);
+         if (im_file_path != null) {
             EventQueue.invokeLater(new Runnable() {
 
-                @Override
-                public void run() {
-                    System.out.println("Ui.run called");
-                    String temp_path = im_file_path;
-                    File[] files_arr = new File[1];
-                    UI ui_to_run = new UI();
-                    ui_to_run.setVisible(true);
-                    files_arr[0] = new File(temp_path);
-                    File file_to_open = files_arr[0];
-                    ui_to_run.openFileInBackground(file_to_open);
-                    
-                }
+               @Override
+               public void run() {
+                  String temp_path = im_file_path;
+                  File[] files_arr = new File[1];
+                  ui = new UI();
+                  ui.setVisible(true);
+                  files_arr[0] = new File(temp_path);
+                  File file_to_open = files_arr[0];
+                  ui.openFileInBackground(file_to_open);
+               }
             });
-        } else {
+         } else {
             EventQueue.invokeLater(new Runnable() {
 
-                @Override
-                public void run() {
-                    System.out.println("Ui.run called");
-                    UI ui_to_run = new UI();
-                    if(isTesting) 
-                        ui_to_run.initComponentsTesting();
-                    ui_to_run.setVisible(true);
-                }
+               @Override
+               public void run() {
+                  ui = new UI();
+                  if (isTesting) {
+                     ui.initComponentsTesting();
+                  }
+                  ui.setVisible(true);
+               }
             });
-        }
-    }
+         }
+      }
+   }
     
     /**
      * Invoked when task's progress property changes.
