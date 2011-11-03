@@ -275,3 +275,83 @@ public class coreyEdge {
         }
     }
 }
+
+/*
+ * These ROI location methods were needed to set things up for the code in this class...
+ * All from UI.
+ * LOOK AT MimsRoiManager.java.bak in experimental!
+ *
+ * private void copyLocMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
+
+    Roi[] rois = roiManager.getSelectedROIs();
+
+    System.out.println("-----------------------------");
+    for(int i=0; i< rois.length; i++) {
+        System.out.println("roi: "+rois[i].getName());
+    }
+    System.out.println("-----------------------------");
+
+    String from = "";
+    String to = "";
+    ij.gui.GenericDialog gd = new ij.gui.GenericDialog("Copy Roi Locations");
+    gd.addStringField("From Roi:", "", 20);
+    gd.addStringField("To Roi:", "", 20);
+    gd.showDialog();
+    if (gd.wasCanceled()) {
+        return;
+    }
+    from = gd.getNextString();
+    to = gd.getNextString();
+
+    //check for input
+    if(from.equals("") || to.equals("")) {
+        ij.IJ.error("Roi not entered");
+        return;
+    }
+
+    Roi fromRoi = roiManager.getRoiByName(from);
+    Roi toRoi = roiManager.getRoiByName(to);
+
+    //check if rois found
+    if( (fromRoi == null) || (toRoi == null)) {
+        ij.IJ.error("Roi not found");
+        return;
+    }
+
+    roiManager.copyROILocation(fromRoi, toRoi);
+
+}
+
+private void shiftLocMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
+    // TODO add your handling code here:
+
+    Roi roi =roiManager.getRoi();
+    if(roi==null) return;
+    String Xstring = "";
+    String Ystring = "";
+    ij.gui.GenericDialog gd = new ij.gui.GenericDialog("Shift Roi Locations");
+    gd.addMessage("Roi: " + roi.getName());
+    gd.addStringField("delta X:", "", 20);
+    gd.addStringField("delta Y:", "", 20);
+    gd.showDialog();
+    if (gd.wasCanceled()) {
+        return;
+    }
+    Xstring = gd.getNextString();
+    Ystring = gd.getNextString();
+
+    int xshift = Integer.parseInt(Xstring);
+    int yshift = Integer.parseInt(Ystring);
+
+    roiManager.shiftRoiLocations(roi, xshift, yshift);
+
+}
+
+
+ private void coreyEdgeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
+
+    com.nrims.experimental.coreyEdge ce = new com.nrims.experimental.coreyEdge(this);
+    //ce.gentable();
+    ce.test2();
+}
+*/

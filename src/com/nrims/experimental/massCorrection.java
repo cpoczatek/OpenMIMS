@@ -240,3 +240,77 @@ public class massCorrection {
         }
     }
 }
+
+
+/*
+ * Example menuitem action methods:
+ *
+ *
+private void dtMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
+
+    com.nrims.experimental.massCorrection masscor = new com.nrims.experimental.massCorrection(this);
+    float dwell = 0;
+    try {
+        //dwell time in sec. (stored as ms in file)
+        dwell = Float.parseFloat(this.getOpener().getDwellTime()) / 1000;
+    } catch (Exception e) {
+        ij.IJ.error("Error", "Cannot get dwelltime from file header.");
+        return;
+    }
+    masscor.performDeadTimeCorr(this.getOpenMassImages(), dwell);
+    //log what was done
+    this.getmimsLog().Log("DT correction dwelltime (s) = "+dwell);
+}
+
+private void qsaMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
+
+    //generate a simple dialog to pass parrameters: beta[], FCO
+    String betastring = "";
+    String FCObjstrign = "";
+    ij.gui.GenericDialog gd = new ij.gui.GenericDialog("QSA Correction");
+    gd.addStringField("Betas:", betastring, 20);
+    gd.addStringField("FC Objective (pA):", FCObjstrign, 20);
+    gd.addMessage("Using dwelltime (ms): " + this.getOpener().getDwellTime());
+    gd.showDialog();
+    if (gd.wasCanceled()) {
+        return;
+    }
+    betastring = gd.getNextString();
+    FCObjstrign = gd.getNextString();
+    String[] betasplit = betastring.split(",");
+    if(betasplit.length != this.getOpenMassImages().length) {
+        ij.IJ.error("Error", "Incorrect number of betas defined.");
+        return;
+    }
+
+    //convert to float
+    //and grab dwell time from opener metadata
+    float[] betas = new float[betasplit.length];
+    float FCObj = 0;
+    float dwell = 0;
+    try {
+        for (int i = 0; i < betas.length; i++) {
+            betas[i] = Float.parseFloat(betasplit[i]);
+        }
+
+        dwell = Float.parseFloat(this.getOpener().getDwellTime())/1000;
+        FCObj = Float.parseFloat(FCObjstrign);
+
+    } catch (Exception e) {
+        ij.IJ.error("Error", "Mal-formed parameters (eg not a number).");
+        return;
+    }
+
+    com.nrims.experimental.massCorrection masscor = new com.nrims.experimental.massCorrection(this);
+    masscor.performQSACorr(this.getOpenMassImages(), betas, dwell, FCObj);
+
+    //log what was done
+    this.getmimsLog().Log("QSA correction \ndwelltime (s) = " + dwell +"\nbetas = " + betastring + "\nFCObj (pA) = " + FCObj + "\n");
+}
+ *
+ *
+ *
+ *
+ *
+ *
+ */
