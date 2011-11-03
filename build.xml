@@ -11,6 +11,20 @@
     <description>Builds, tests, and runs the project NRIMS.</description>
     <import file="nbproject/build-impl.xml"/>
 
+<!-- Added to create svn revision number in file    -->
+    <target name="-pre-jar">
+      <exec executable="svn" output="buildnum.txt" >
+        <arg line="info src"/>
+      </exec>
+      <copy file="buildnum.txt" todir="${build.classes.dir}"/>
+<!-- Added to create list of /lib jars in file    -->
+      <exec executable="ls" output="liblist.txt" >
+        <arg line="-1R lib"/>
+      </exec>
+      <copy file="liblist.txt" todir="${build.classes.dir}"/>
+    </target>
+<!--  end addition  -->
+
     <import file="nbproject/profiler-build-impl.xml"/>    <!--
 
     There exist several targets which are by default empty and which can be 

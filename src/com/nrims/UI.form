@@ -278,10 +278,10 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem6">
               <Properties>
-                <Property name="text" type="java.lang.String" value="exception"/>
+                <Property name="text" type="java.lang.String" value="test"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem6ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem6ActionPerformed1"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -291,7 +291,7 @@
   </NonVisualComponents>
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="2"/>
-    <Property name="title" type="java.lang.String" value="NRIMS Analysis Module"/>
+    <Property name="title" type="java.lang.String" value="OpenMIMS"/>
     <Property name="name" type="java.lang.String" value="NRIMSUI" noResource="true"/>
   </Properties>
   <AccessibilityProperties>
@@ -370,12 +370,12 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <EmptySpace min="0" pref="723" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="719" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <EmptySpace min="0" pref="424" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="416" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
