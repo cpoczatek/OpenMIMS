@@ -9,7 +9,10 @@ import com.nrims.HSIProcessor;
 import com.nrims.HSIProps;
 import com.nrims.MimsPlus;
 import com.nrims.UI;
+import com.nrims.MimsJFileChooser;
 import java.io.FileNotFoundException;
+import java.io.File;
+
 
 /**
  *
@@ -17,8 +20,16 @@ import java.io.FileNotFoundException;
  */
 public class exportQVis {
 
-    public static void exportHSI_RGBA(com.nrims.UI ui) {
+    /**
+     * Write a QVis RGBA version of an HSI image
+     * 
+     * @param ui
+     * @param minA
+     * @param maxA
+     */
+    public static void exportHSI_RGBA(com.nrims.UI ui, int minA, int maxA, String name) {
         // Testing, to be moved to a manager class???
+        //this should be passed something else
 
         MimsPlus img;
 
@@ -31,6 +42,8 @@ public class exportQVis {
         if (img.getMimsType() != MimsPlus.HSI_IMAGE) {
             return;
         }
+
+        
 
         HSIProps props = img.getHSIProps();
         MimsPlus denimg = ui.getMassImage(props.getDenMassIdx());
@@ -51,9 +64,17 @@ public class exportQVis {
         int denMass = Math.round(new Float(ui.getOpener().getMassNames()[denIndex]));
 
         java.io.FileOutputStream out = null;
+        //testing each channel
+        /*
+        java.io.FileOutputStream outr = null;
+        java.io.FileOutputStream outg = null;
+        java.io.FileOutputStream outb = null;
+        java.io.FileOutputStream outa = null;
+        */
         String dir = ui.getImageDir();
-        String fileprefix = ui.getImageFilePrefix();
-        fileprefix += "_m" + numMass + "m" + denMass + "_rgba";
+        
+
+        String fileprefix = name + "_m" + numMass + "m" + denMass + "_rgba";
 
         //stupid rgb max min crap
         //needs to change to not be unitless
@@ -68,12 +89,20 @@ public class exportQVis {
         try {
             //write rgba data
             out = new java.io.FileOutputStream(dir + java.io.File.separator + fileprefix + ".raw");
+
+            //testing each channel
+            /*
+            outr = new java.io.FileOutputStream(dir + java.io.File.separator + "r.raw");
+            outg = new java.io.FileOutputStream(dir + java.io.File.separator + "g.raw");
+            outb = new java.io.FileOutputStream(dir + java.io.File.separator + "b.raw");
+            outa = new java.io.FileOutputStream(dir + java.io.File.separator + "a.raw");
+            */
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
         }
 
-        for (int j = 1; j < denimg.getStackSize(); j++) {
+        for (int j = 1; j <= denimg.getStackSize(); j++) {
 
             img.setSlice(j, img);
             //don't call on internal images?
@@ -118,46 +147,46 @@ public class exportQVis {
                 plane_rgba[i][0] = (byte) (hsitables[0][iratio] * 255);
                 plane_rgba[i][1] = (byte) (hsitables[1][iratio] * 255);
                 plane_rgba[i][2] = (byte) (hsitables[2][iratio] * 255);
+                if((plane_rgba[i][0]>255) || (plane_rgba[i][1]>255) ||(plane_rgba[i][2]>255)) {
+                    System.out.println("Error: "+r+","+g+","+b);
+                }
 
                 //alpha should be better...
                 //testing hard coded min=800 max=8000;
+                //int min = 800;
+                //int max = 8000;
 
-                int min = 400;
-                int max = 4000;
+                int min = minA;
+                int max = maxA;
+
                 double alpha = java.lang.Math.max(denpix[i], min);
                 alpha = java.lang.Math.min(alpha, max);
-                alpha = alpha / (max - min);
+                alpha = (alpha-min) / (max - min);
                 plane_rgba[i][3] = (byte) (255 * alpha);
-                 
 
-
-                //double scaled = (denpix[i] - denMin)/denSpan;
-                //System.out.println(denOut+ " ");
-                //int outValue = (int) ((double) scaled* rgbGain);
-
-                /*
-                double a = (ratioval - props.getMinRatio()) / (props.getMaxRatio() - props.getMinRatio());
-                a = 255 * a;
-                int outValue = (int) java.lang.Math.round(a);
-
-                //System.out.println("rgbgain: "+rgbGain);
-                //System.out.println(outValue+ " ");
-                if (outValue < 0) {
-                    outValue = 0;
-                } else if (outValue > 255) {
-                    outValue = 255;
-                }
-
-                plane_rgba[i][3] = (byte) (outValue);
-                 *
-                 */
             }
 
             try {
                 for (int i = 0; i < plane_rgba.length; i++) {
                     out.write(plane_rgba[i]);
+
+                    //testing each channel
+                    /*
+                    outr.write(plane_rgba[i][0]);
+                    outg.write(plane_rgba[i][1]);
+                    outb.write(plane_rgba[i][2]);
+                    outa.write(plane_rgba[i][3]);
+                    */
                 }
                 out.flush();
+
+                //testing each channel
+                /*
+                outr.flush();
+                outg.flush();
+                outb.flush();
+                outa.flush();
+                */
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -167,6 +196,14 @@ public class exportQVis {
         }
         try {
             out.close();
+
+            //testing each channel
+            /*
+            outr.close();
+            outg.close();
+            outb.close();
+            outa.close();
+            */
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -187,13 +224,15 @@ public class exportQVis {
             ObjectType: TEXTURE_VOLUME_OBJECT
             ObjectModel: RGBA
             GridType: EQUIDISTANT
+            # some comment
+            # some other comment
              */
             int x = denimg.getWidth();
             int y = denimg.getHeight();
             int z = denimg.getStackSize();
-            String name = fileprefix + ".raw";
+            String rname = fileprefix + ".raw";
 
-            bw.write("ObjectFileName: " + name + "\n");
+            bw.write("ObjectFileName: " + rname + "\n");
             bw.write("TaggedFileName: ---" + "\n");
             bw.write("Resolution: " + x + " " + y + " " + z + "\n");
             bw.write("SliceThickness: 1 1 1" + "\n");
@@ -203,14 +242,20 @@ public class exportQVis {
             bw.write("ObjectModel: RGBA\n");
             bw.write("GridType: EQUIDISTANT\n");
 
+            //write some metadata as comments
+            bw.write("# data_file: " + ui.getOpener().getImageFile().getName() + "\n");
+            bw.write("# ratio_min: " + props.getMinRatio() + "\n");
+            bw.write("# ratio_max: " + props.getMaxRatio() + "\n");
+            bw.write("# alpha_min: " + minA + "\n");
+            bw.write("# alpha_max: " + maxA + "\n");
+            bw.write("# medianized: " + ui.getMedianFilterRatios() + "\n");
+            bw.write("# med_radius: " + ui.getHSIView().getMedianRadius() + "\n");
+            
             bw.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
-        //ImagePlus iplus = new ImagePlus("test", new ColorProcessor(256, 256, foo));
-        //iplus.show();
     }
 
 
