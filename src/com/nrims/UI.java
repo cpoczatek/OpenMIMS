@@ -1761,13 +1761,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         mimsAction = new MimsAction(image);
 
         // Update the Data tab
-        mimsData = new MimsData(ui, image);
+        mimsData = new MimsData(this, image);
         jTabbedPane1.setComponentAt(0, mimsData);
 
         // Update the image titles.
         for (int i = 0; i < imp.length; i++) {
-           imp[i].setTitle((new MimsPlus(ui, i)).getTitle());
-        }        
+           imp[i].setTitle((new MimsPlus(this, i)).getTitle());
+        }
 
         if (saveImageOnly)
            return true;
