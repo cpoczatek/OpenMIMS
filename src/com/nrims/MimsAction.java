@@ -447,4 +447,25 @@ public class MimsAction implements Cloneable {
       DecimalFormat twoDForm = new DecimalFormat("#.##");
 		return Double.valueOf(twoDForm.format(d));
    }
+
+   /**
+    * Returns true if the Action has been modified.
+    *
+    * @return <code>true</code> if the Action has been modified, otherwise <code>false</code>
+    */
+   public boolean isImageModified() {
+
+      // Check if any translation was applied.
+      String originalImage = imageList.get(0);
+      for (int i = 0; i < xyTranslationList.size(); i++) {
+         if (xyTranslationList.get(i)[0] > 0 || xyTranslationList.get(i)[1] > 0)
+            return true;
+         if (droppedList.get(i) != 0)
+            return true;
+         if (!imageList.get(i).matches(originalImage))
+            return true;
+      }
+
+      return false;
+   }
 }
