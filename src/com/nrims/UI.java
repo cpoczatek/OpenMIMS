@@ -417,9 +417,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         fileOpenTask.execute();        
    }
 
-    /**
-    * Opens a MIMS file in the background. Do no call this method if your code
-    * does work with the file once opened, instead call openFile.
+   /**
+    * Opens file in a non-cancelable thread.
+    *
     * @param file to be opened.
     */
    public boolean openFile(File file) {
@@ -1882,7 +1882,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @param sum_props array of <code>SumProps</code> objects.
      * @param same_size <code>true</code> restores magnification.
      */
-    public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props, boolean same_size){
+    public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props, boolean same_size, boolean roiManagerVisible){
 
        if (rto_props == null)
           rto_props = new RatioProps[0];
@@ -1956,7 +1956,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 mp.showWindow();
                 mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());             
           }
-       }       
+       }
+
+       getRoiManager().setVisible(roiManagerVisible);
     }
 
     /**
@@ -3422,6 +3424,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              old_height = image.getHeight();
           }
 
+          // Roi Manager visible.
+          boolean roiManagerVisible = getRoiManager().isVisible();
+
           // Open the file.
           boolean opened = openFile(file);
           if (!opened) {
@@ -3430,16 +3435,16 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           }
           stopButton.setEnabled(false);
           doneLoadingFile();
-
+          
           // Get new image size.
           int new_width = image.getWidth();
           int new_height = image.getHeight();
-          boolean same_size = ((old_height == new_height) && (old_width == new_width));
+          boolean same_size = ((old_height == new_height) && (old_width == new_width)); 
 
           // Perform some checks to see if we wanna restore state.
           boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
-          if (isImageFile) restoreState(rto_props, hsi_props, sum_props, same_size);
-          
+          if (isImageFile) restoreState(rto_props, hsi_props, sum_props, same_size, roiManagerVisible);
+
           // Set up roi manager.
           MimsRoiManager rm = getRoiManager();
           if (rm != null) rm.resetRoiLocationsLength();
