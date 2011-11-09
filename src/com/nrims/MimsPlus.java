@@ -1208,30 +1208,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 if(c != -1)
                    linecheck=true;
                 
-                //ugly check for being near freeline rois
-                //look like it's due to a bug in polygonroi.ishandle to the actual
-                //check is never hit
-                if(loopRoi.getType()==Roi.FREELINE) {
-                    java.awt.Polygon poly = loopRoi.getPolygon();
-
-                    int size = Roi.HANDLE_SIZE + 5;
-                    int halfSize = size / 2;
-                    int handle = -1;
-                    int sx2, sy2;
-                    for (int i = 0; i < poly.npoints; i++) {
-                        sx2 = poly.xpoints[i] - halfSize;
-                        sy2 = poly.ypoints[i] - halfSize;
-                        if (mX >= sx2 && mX <= sx2 + size && mY >= sy2 && mY <= sy2 + size) {
-                            handle = i;
-                            break;
-                        }
-                    }
-
-                    if (handle != -1) {
-                        linecheck = true;
-                    }
+                if(loopRoi.getType()==Roi.FREELINE && loopRoi.contains(mX,mY)) {
+                    linecheck = true;
                 }
-
             }
 
             if(loopRoi.contains(mX, mY) || linecheck) {
