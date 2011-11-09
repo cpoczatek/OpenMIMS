@@ -1211,6 +1211,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
             if(loopRoi.contains(mX, mY) || linecheck) {
 
+               if (linecheck){
+                  loopRoi.setStrokeWidth(this.getProcessor().getLineWidth());
+               }
+
                   if ((this.getMimsType()==RATIO_IMAGE || this.getMimsType()==HSI_IMAGE) && internalRatio!=null) {
                       internalRatio.setRoi(loopRoi);
                       stats = internalRatio.getStatistics();
