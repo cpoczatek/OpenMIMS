@@ -1209,9 +1209,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                    linecheck=true;
                 
                 if(loopRoi.getType()==Roi.FREELINE && loopRoi.contains(mX,mY)) {
-                    linecheck = true;
-                }
-            }
+                                linecheck = true;
+                            }
+                        }
 
             if(loopRoi.contains(mX, mY) || linecheck) {
 
@@ -1248,13 +1248,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
        //get numerator and denominator stats
        if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE)
-                && internalNumerator != null && internalDenominator != null && smallestRoi != null) {
+                && internalNumerator != null && internalDenominator != null ) {
           internalNumerator.setRoi(smallestRoi);
-          numeratorStats = internalNumerator.getStatistics();
-          internalNumerator.killRoi();
-
           internalDenominator.setRoi(smallestRoi);
-          denominatorStats = internalDenominator.getStatistics();
+          if(smallestRoi != null) {
+            numeratorStats = internalNumerator.getStatistics();
+            denominatorStats = internalDenominator.getStatistics();
+           }
+          internalNumerator.killRoi();
           internalDenominator.killRoi();
        }
 
@@ -1265,12 +1266,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if(this.getMimsType()==RATIO_IMAGE) {
             sf=this.getRatioProps().getRatioScaleFactor();
         }
-        // Highlight the "inner most" Roi.
-        if(smallestRoi!=null) {
-            smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
-        }
+        
         //set image roi for vizualization
         if (smallestRoi != null) {
+           smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
            setRoi(smallestRoi);
            if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE)
               msg += "\t ROI " + roi.getName() + ": L=" + IJ.d2s(roi.getLength(), 0);
