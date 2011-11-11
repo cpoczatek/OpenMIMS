@@ -3434,6 +3434,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              return false;
           }
           stopButton.setEnabled(false);
+
+          boolean isRoiFile = (file.getAbsolutePath().endsWith(ROI_EXTENSION) || file.getAbsolutePath().endsWith(ROIS_EXTENSION));
+          if (isRoiFile)
+             return true;
+
           doneLoadingFile();
           
           // Get new image size.
@@ -3441,7 +3446,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           int new_height = image.getHeight();
           boolean same_size = ((old_height == new_height) && (old_width == new_width)); 
 
-          // Perform some checks to see if we wanna restore state.
+          // Perform some checks to see if we wanna restore state.          
           boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
           if (isImageFile) restoreState(rto_props, hsi_props, sum_props, same_size, roiManagerVisible);
 

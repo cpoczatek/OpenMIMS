@@ -1219,36 +1219,36 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                   loopRoi.setStrokeWidth(this.getProcessor().getLineWidth());
                }
 
-                  if ((this.getMimsType()==RATIO_IMAGE || this.getMimsType()==HSI_IMAGE) && internalRatio!=null) {
-                      internalRatio.setRoi(loopRoi);
-                      stats = internalRatio.getStatistics();
-                      internalRatio.killRoi();
-                  } else {
-                      setRoi(loopRoi);
-                      stats = this.getStatistics();
-                      killRoi();
-                  }
+               if ((this.getMimsType()==RATIO_IMAGE || this.getMimsType()==HSI_IMAGE) && internalRatio!=null) {
+                   internalRatio.setRoi(loopRoi);
+                   stats = internalRatio.getStatistics();
+                   internalRatio.killRoi();
+               } else {
+                   setRoi(loopRoi);
+                   stats = this.getStatistics();
+                   killRoi();
+               }
 
-                  // Set as smallest Roi that the mouse is within and save stats
-                  if (smallestRoi == null) {
+               // Set as smallest Roi that the mouse is within and save stats
+               if (smallestRoi == null) {
+                  smallestRoi = loopRoi;
+                  smallestRoiStats = stats;
+                  smallestRoiArea = smallestRoiStats.area;
+                  if (linecheck)
+                     smallestRoiArea = 0;
+               } else {
+                  if (stats.area < smallestRoiArea || linecheck) {
                      smallestRoi = loopRoi;
+                     smallestRoiArea = stats.area;
                      smallestRoiStats = stats;
-                     smallestRoiArea = smallestRoiStats.area;
-                     if (linecheck)
-                        smallestRoiArea = 0;
-                  } else {
-                     if (stats.area < smallestRoiArea || linecheck) {
-                        smallestRoi = loopRoi;
-                        smallestRoiArea = stats.area;
-                        smallestRoiStats = stats;
-                     }
                   }
+               }
             }
         }
 
        //get numerator and denominator stats
        if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE)
-                && internalNumerator != null && internalDenominator != null) {
+                && internalNumerator != null && internalDenominator != null && smallestRoi != null) {
           internalNumerator.setRoi(smallestRoi);
           numeratorStats = internalNumerator.getStatistics();
           internalNumerator.killRoi();
