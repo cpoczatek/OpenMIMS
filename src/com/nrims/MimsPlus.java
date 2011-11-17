@@ -1262,6 +1262,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             } 
         }
 
+        setRoi(smallestRoi);
         if (smallestRoi != null) {
 
           //get numerator and denominator stats
@@ -1285,7 +1286,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
           //set image roi for vizualization
           smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
-          setRoi(smallestRoi);
           if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
              msg += "\t ROI " + roi.getName() + ": L = " + IJ.d2s(roi.getLength(), 0);
           } else {
@@ -1303,8 +1303,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
              }
              msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
           }
-       } else {
-          killRoi();
        }
        ui.updateStatus(msg);
     }
