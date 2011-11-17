@@ -377,10 +377,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         rProps.setDenThreshold(hsiProps.getDenThreshold());
         MimsPlus mp_filtered = new MimsPlus(ui, rProps, false);
         MimsPlus mp_raw = new MimsPlus(ui, rProps, true);
-        internalRatio_filtered = mp_filtered;
         internalRatio = mp_raw;
-        internalNumerator = mp_raw.internalNumerator;
-        internalDenominator = mp_raw.internalDenominator;
+        internalRatio_filtered = mp_filtered;
+        internalNumerator = mp_filtered.internalNumerator;
+        internalDenominator = mp_filtered.internalDenominator;
         setHSIProcessor(new HSIProcessor(this));
         try {
          getHSIProcessor().setProps(hsiProps);
@@ -435,12 +435,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         // Compute the sum of the numerator and denominator mass images.
         SumProps numProps = new SumProps(numIndex);
         SumProps denProps = new SumProps(denIndex);
-        internalNumerator = new MimsPlus(ui, numProps, list);
-        internalDenominator = new MimsPlus(ui, denProps, list);
+        MimsPlus numerator = new MimsPlus(ui, numProps, list);
+        MimsPlus denominator = new MimsPlus(ui, denProps, list);
 
         // Fill in the data.
-        float[] nPixels = (float[]) internalNumerator.getProcessor().getPixels();
-        float[] dPixels = (float[]) internalDenominator.getProcessor().getPixels();
+        float[] nPixels = (float[]) numerator.getProcessor().getPixels();
+        float[] dPixels = (float[]) denominator.getProcessor().getPixels();
         float[] rPixels = new float[getWidth() * getHeight()];
         float rMax = 0.0f;
         float rMin = 1000000.0f;
@@ -480,10 +480,16 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        ImageProcessor ipp = new FloatProcessor(getWidth(), getHeight(), rPixels, getProcessor().getColorModel());
        ipp.setMinAndMax(ratioProps.getMinLUT(), ratioProps.getMaxLUT());
        setProcessor(title, ipp);
-       if (forInternalRatio)
+       if (forInternalRatio) {
+          internalNumerator = null;
+          internalDenominator = null;
           internalRatio = null;
-       else
-          internalRatio = new MimsPlus(ui, ratioProps, true);
+       }  else {
+          internalNumerator = numerator;
+          internalDenominator = denominator;
+          MimsPlus mp_raw = new MimsPlus(ui, ratioProps, true);
+          internalRatio = mp_raw;
+       }
 
        // Do median filter if set to true.
        if (ui.getMedianFilterRatios() && !forInternalRatio) {
@@ -969,9 +975,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
          int roiState = getRoi().getState();
          int roiType = getRoi().getType();
 
-         if (roiState == Roi.MOVING) bMoving = true;
-         else if (roiType == Roi.LINE && roiState == Roi.MOVING_HANDLE) bMoving = true;
-         else bMoving = false;
+         if (roiState == Roi.MOVING)
+            bMoving = true;
+         else if (roiType == Roi.LINE && roiState == Roi.MOVING_HANDLE)
+            bMoving = true;
+         else
+            bMoving = false;
 
          // Highlight the roi in the jlist that the user is selecting
           if (roi.getName() != null) {
@@ -1157,8 +1166,15 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
             double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
             msg += "S (" + (int)ngl + " / " + (int)dgl + ") = " + IJ.d2s(ratio, 2);
-            if(ui.getMedianFilterRatios())
-               msg += " -med-> " + IJ.d2s(internalRatio_filtered.getProcessor().getPixelValue(mX, mY));
+            if(ui.getMedianFilterRatios()) {
+               double medianizedValue;
+               if (this.nType == HSI_IMAGE) {
+                  medianizedValue = internalRatio_filtered.getProcessor().getPixelValue(mX, mY);
+               } else {
+                  medianizedValue = getProcessor().getPixelValue(mX, mY);
+               }
+               msg += " -med-> " + IJ.d2s(medianizedValue);
+            }
         } else if(this.nType == SUM_IMAGE) {
             float ngl, dgl;
             if (internalNumerator != null && internalDenominator != null) {
@@ -1243,52 +1259,54 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                      smallestRoiStats = stats;
                   }
                }
-            }
+            } 
         }
 
-       //get numerator and denominator stats
-       if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE)
-                && internalNumerator != null && internalDenominator != null ) {
-          internalNumerator.setRoi(smallestRoi);
-          internalDenominator.setRoi(smallestRoi);
-          if(smallestRoi != null) {
-            numeratorStats = internalNumerator.getStatistics();
-            denominatorStats = internalDenominator.getStatistics();
-           }
-          internalNumerator.killRoi();
-          internalDenominator.killRoi();
-       }
-
-        double sf=1.0;
-        if(this.getMimsType()==HSI_IMAGE) {
-            sf=this.getHSIProps().getRatioScaleFactor();
-        }
-        if(this.getMimsType()==RATIO_IMAGE) {
-            sf=this.getRatioProps().getRatioScaleFactor();
-        }
-        
-        //set image roi for vizualization
         if (smallestRoi != null) {
-           smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
-           setRoi(smallestRoi);
-           if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE)
-              msg += "\t ROI " + roi.getName() + ": L=" + IJ.d2s(roi.getLength(), 0);
-           else
-              msg += "\t ROI " + roi.getName() + ": A=" + IJ.d2s(smallestRoiStats.area, 0) + ", M=" + IJ.d2s(smallestRoiStats.mean, displayDigits) + ", Sd=" + IJ.d2s(smallestRoiStats.stdDev, displayDigits);
-           updateHistogram(true);
-           updateLineProfile();
-           if((this.getMimsType()==HSI_IMAGE || this.getMimsType()==RATIO_IMAGE) && numeratorStats!=null && denominatorStats!=null) {
-               double ratio_means = sf*(numeratorStats.mean/denominatorStats.mean);
-               if (this.getMimsType()==HSI_IMAGE && ui.getIsPercentTurnover()) {
-                  float reference = ui.getPreferences().getReferenceRatio();
-                  float background = ui.getPreferences().getBackgroundRatio();
-                  float ratio_means_fl = HSIProcessor.turnoverTransform((float)ratio_means, reference, background, (float)sf);
-                  ratio_means = (double)ratio_means_fl;
-               }
-               msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
-           }
-        }
-        ui.updateStatus(msg);
+
+          //get numerator and denominator stats
+          if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE)
+                  && internalNumerator != null && internalDenominator != null) {
+             internalNumerator.setRoi(smallestRoi);
+             internalDenominator.setRoi(smallestRoi);
+             numeratorStats = internalNumerator.getStatistics();
+             denominatorStats = internalDenominator.getStatistics();
+             internalNumerator.killRoi();
+             internalDenominator.killRoi();
+          }
+
+          double sf = 1.0;
+          if (this.getMimsType() == HSI_IMAGE) {
+             sf = this.getHSIProps().getRatioScaleFactor();
+          }
+          if (this.getMimsType() == RATIO_IMAGE) {
+             sf = this.getRatioProps().getRatioScaleFactor();
+          }
+
+          //set image roi for vizualization
+          smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
+          setRoi(smallestRoi);
+          if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
+             msg += "\t ROI " + roi.getName() + ": L = " + IJ.d2s(roi.getLength(), 0);
+          } else {
+             msg += "\t ROI " + roi.getName() + ": A = " + IJ.d2s(smallestRoiStats.area, 0) + ", M=" + IJ.d2s(smallestRoiStats.mean, displayDigits) + ", Sd=" + IJ.d2s(smallestRoiStats.stdDev, displayDigits);
+          }
+          updateHistogram(true);
+          updateLineProfile();
+          if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE) && numeratorStats != null && denominatorStats != null) {
+             double ratio_means = sf * (numeratorStats.mean / denominatorStats.mean);
+             if (this.getMimsType() == HSI_IMAGE && ui.getIsPercentTurnover()) {
+                float reference = ui.getPreferences().getReferenceRatio();
+                float background = ui.getPreferences().getBackgroundRatio();
+                float ratio_means_fl = HSIProcessor.turnoverTransform((float) ratio_means, reference, background, (float) sf);
+                ratio_means = (double) ratio_means_fl;
+             }
+             msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
+          }
+       } else {
+          killRoi();
+       }
+       ui.updateStatus(msg);
     }
 
     private String getValueAsString(int x, int y) {
