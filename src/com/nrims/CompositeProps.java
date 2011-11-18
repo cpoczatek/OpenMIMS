@@ -47,8 +47,15 @@ public class CompositeProps {
        // then the two objects are considered different, even if the
        // contents are the same, but in a different order.
        for (int i = 0; i < images.length; i++){
-          if (!cps[i].equals(images[i]))
-             return false;
+           //if neither is null, check if images are equal
+           if (cps[i] != null && images[i] != null) {
+               if (!cps[i].equals(images[i])) {
+                   return false;
+               }
+           }
+           //if one is null and the other not they are unequal
+           if( (cps[i] != null && images[i] == null) || (cps[i] == null && images[i] != null))
+            return false;
        }
 
        return true;
