@@ -561,6 +561,9 @@ public class Mims_Reader implements Opener {
           readTabMass(tm);
           massNames[i] = DecimalToStr(tm.mass_amu, 2);
           massSymbols[i] = tm.polyatomic.massLabel.replaceAll(" ", "");
+          if (massSymbols[i] == null || massSymbols[i].equals("")) {
+             massSymbols[i] = "-";
+          }
        }
 
        // Reader the Header_Image structure
