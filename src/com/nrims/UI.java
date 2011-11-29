@@ -131,7 +131,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     private static final String IMFILE_OPTION = "-imfile";
     private static final String SINGLE_INSTANCE_OPTION = "-single_instance";
-    public boolean continueTask = true;
+
+    // Task related variables.
+    public SwingWorker task;
+    boolean previousFileCanceled = true;
 
     public UI() {
        this(false);
@@ -307,9 +310,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            if (getRoiManager().isVisible())
               getRoiManager().close();
         }
-        this.windowPositions = gatherWindowPosistions();
-        this.hiddenWindows = gatherHiddenWindows();
-        this.windowZooms = this.gatherWindowZooms();
+           this.windowPositions = gatherWindowPosistions();
+           this.hiddenWindows = gatherHiddenWindows();
+           this.windowZooms = this.gatherWindowZooms();
         for (int i = 0; i < maxMasses; i++) {
             if (segImages[i] != null) {
                 segImages[i].removeListener(this);
@@ -412,9 +415,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         currentlyOpeningImages = true;
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         stopButton.setEnabled(true);
-        FileOpenTask fileOpenTask = new FileOpenTask(file, this);
-        fileOpenTask.addPropertyChangeListener(this);
-        fileOpenTask.execute();        
+        task = new FileOpenTask(file, this);
+        task.addPropertyChangeListener(this);
+        task.execute();
    }
 
    /**
@@ -2507,7 +2510,7 @@ private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
 }//GEN-LAST:event_jMenuItem7ActionPerformed
 
 private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
-   continueTask=false;
+   task.cancel(true);
 }//GEN-LAST:event_stopButtonActionPerformed
 
 private void jMenuItem6ActionPerformed1(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed1
@@ -3396,13 +3399,10 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
        UI ui;
        File file;
-       boolean previousFileCanceled;
 
        public FileOpenTask(File file, UI ui) {
           this.file = file;
           this.ui = ui;
-          this.previousFileCanceled = false;
-          continueTask = true;
        }
 
         /*
@@ -3640,7 +3640,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 int n = 0;
                 int t = image.getNMasses() * (nImages);
                 for (int i = 0; i < image.getNMasses(); i++) {
-                   if (!continueTask) {
+                   if (isCancelled()) {
                       return false;
                    }
                    progress = 100 * n++ / t;
@@ -3653,11 +3653,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                          massImages[i].getProcessor().setMinAndMax(0, 0);
                          massImages[i].getProcessor().setPixels(image.getPixels(i));
                       }
-                   }
+                   }                   
                 }
+                updateStatus("1 of " + nImages);
                 if (nImages > 1) {
                    for (int i = 1; i < nImages; i++) {
-                      if (!continueTask) {
+                      if (isCancelled()) {
                          return false;
                       }
                       image.setStackIndex(i);
@@ -3684,6 +3685,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
       stopButton.setEnabled(false);
       setProgress(0);
       currentlyOpeningImages = false;
+      previousFileCanceled = false;
     }
 
         public void doneLoadingFile() {
@@ -3724,6 +3726,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 }
              }
 
+             jTabbedPane1.setEnabled(true);
              if (mimsData == null) {
                 initializeViewMenu();
                 mimsData = new com.nrims.MimsData(ui, image);
@@ -3792,25 +3795,16 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
              //hide mass images if needed
              if (hiddenWindows != null) {
-                if (previousFileCanceled == false)
-                  applyHiddenWindows(hiddenWindows);
+                applyHiddenWindows(hiddenWindows);
              }
         }
 
-      private void disableTabs() {
-         hsiControl.setEnabled(false);
-         cbControl.setEnabled(false);
-         mimsStackEditing.setEnabled(false);
-         mimsTomography.setEnabled(false);
-         segmentation.setEnabled(false);
-         mimsLog.setEnabled(false);
-      }
-
-      private void openProcessFailedOrCanceled() {
-         disableTabs();
+      private void openProcessFailedOrCanceled() {         
          closeCurrentImage();
+         jTabbedPane1.setEnabled(false);
          previousFileCanceled = true;
          currentlyOpeningImages = false;
+         hiddenWindows = null;
       }
     }
 
