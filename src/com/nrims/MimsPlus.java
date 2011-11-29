@@ -378,9 +378,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         MimsPlus mp_filtered = new MimsPlus(ui, rProps, false);
         MimsPlus mp_raw = new MimsPlus(ui, rProps, true);
         internalRatio = mp_raw;
+        internalNumerator = internalRatio.internalNumerator;
+        internalDenominator = internalRatio.internalDenominator;
         internalRatio_filtered = mp_filtered;
-        internalNumerator = mp_filtered.internalNumerator;
-        internalDenominator = mp_filtered.internalDenominator;
         setHSIProcessor(new HSIProcessor(this));
         try {
          getHSIProcessor().setProps(hsiProps);
@@ -435,12 +435,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         // Compute the sum of the numerator and denominator mass images.
         SumProps numProps = new SumProps(numIndex);
         SumProps denProps = new SumProps(denIndex);
-        MimsPlus numerator = new MimsPlus(ui, numProps, list);
-        MimsPlus denominator = new MimsPlus(ui, denProps, list);
+        internalNumerator = new MimsPlus(ui, numProps, list);
+        internalDenominator = new MimsPlus(ui, denProps, list);
 
         // Fill in the data.
-        float[] nPixels = (float[]) numerator.getProcessor().getPixels();
-        float[] dPixels = (float[]) denominator.getProcessor().getPixels();
+        float[] nPixels = (float[]) internalNumerator.getProcessor().getPixels();
+        float[] dPixels = (float[]) internalDenominator.getProcessor().getPixels();
         float[] rPixels = new float[getWidth() * getHeight()];
         float rMax = 0.0f;
         float rMin = 1000000.0f;
@@ -481,12 +481,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        ipp.setMinAndMax(ratioProps.getMinLUT(), ratioProps.getMaxLUT());
        setProcessor(title, ipp);
        if (forInternalRatio) {
-          internalNumerator = null;
-          internalDenominator = null;
           internalRatio = null;
        }  else {
-          internalNumerator = numerator;
-          internalDenominator = denominator;
           MimsPlus mp_raw = new MimsPlus(ui, ratioProps, true);
           internalRatio = mp_raw;
        }
