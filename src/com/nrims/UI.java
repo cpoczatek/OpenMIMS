@@ -2104,7 +2104,7 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 /** Action method for File>About menu item. Displays basic information about the Open Mims plugins. */
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
-    String message = "OpenMIMS v1.4x (rev: " + revisionNumber+")";
+    String message = "OpenMIMS v2.0 (rev: " + revisionNumber+")";
     message += "\n\n";
     message += "http://www.nrims.hms.harvard.edu/";
     message += "\n\n";
@@ -2129,7 +2129,9 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     message += "    nrrd plugins: http://flybrain.stanford.edu/nrrd \n";
     message += "    jFreeChart:  http://www.jfree.org/jfreechart/ \n";
     message += "    FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ \n";
+    message += "    Apache Commons: http://commons.apache.org/io/ \n";
     message += "    jRTF:  http://code.google.com/p/jrtf/";
+    message += "    jUnique: http://www.sauronsoftware.it/projects/junique/ \n";
     message += "\n\n";
     message += "Please cite OpenMIMS or any of the above projects when applicable.";
     
