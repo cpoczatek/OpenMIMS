@@ -4,7 +4,7 @@
 PRODUCT DESCRIPTION
 ==================================
 
- OpenMIMS version 1.4x (Oct 2011)
+ OpenMIMS version 2.0 (Dec 2011)
 
  OpenMIMS is an ImageJ plugin designed to open, process and analyze 
  images captured with NanoSIMS 50 & 50L secondary ion mass 
@@ -57,6 +57,12 @@ HARDWARE AND SOFTWARE REQUIREMENTS
 CONTENTS AND INSTALLATION
 ==================================
 
+ To install the OpenMIMS plugin, extract the contents of the 
+ Open_MIMS.zip file into the "plugins" directory under ImageJ. Only 
+ the .jar files need to be the placed in the "plugins" directory. 
+ The files README_OpenMIMS.txt and MimsManual.pdf are documentation 
+ files and are not required by the OpenMIMS plugin.
+
  The contents of the Open_MIMS.zip file includes the following files:
 
    * jcommon-1.0.16.jar
@@ -66,14 +72,11 @@ CONTENTS AND INSTALLATION
    * swing-layout-1.0.3.jar
    * Turbo_Reg.jar
    * commons-io-2.0.jar
+   * jRtf-0.3.jar
+   * beansbinding-1.2.1.jar
+   * junique-1.0.4.jar
    * README_OpenMIMS.txt
    * MimsManual.pdf
-
- To install the OpenMIMS plugin, extract the contents of the 
- Open_MIMS.zip file into the "plugins" directory under ImageJ. Only 
- the .jar files need to be the placed in the "plugins" directory. 
- The files README_OpenMIMS.txt and MimsManual.pdf are documentation 
- files and are not required by the OpenMIMS plugin.
  
  **IMPORTANT** Please delete any jar files that may already exist in 
  your "plugins" directory from any older versions of the OpenMIMS plugin.
@@ -88,9 +91,18 @@ CONTENTS AND INSTALLATION
 ==================================
 RELEASE NOTES
 ==================================
+ December 2011 (v2.0):
+ - All data product report raw data only (not medianized).
+ - Performance increases and in the Roi Manager (and better behavior of brush tool).
+ - Mass symbols from .im file displayed on Mims Data tab.
+ - Able to open plugin as a single instance. 
+ - Check for changes before opening new files.
+ - Various performace improvements.
+ - Changes to facilitate the api for scripting.
+
  October 2011 (v1.4x):
  - Various UI improvements and code cleanup.
- - Filter +/1 infinity from plots.
+ - Filter +/- infinity from plots.
  - Better behavior for generating tables.
  - Allow hsi to show up in tomography tab.
  - Allow users to generate reports.
@@ -118,9 +130,6 @@ RELEASE NOTES
  
  November 2010 (v1.0):
    The official version 1.0 release of the OpenMIMS plugin. 
-   All previously released versions are to be regarded as pre-release 
-   versions for beta testing only. New features and bug fixes for future 
-   releases will be noted here.
 
 ==================================
 LICENSE INFORMATION
@@ -168,6 +177,9 @@ LICENSE INFORMATION
    * nrrd plugins: http://flybrain.stanford.edu/nrrd 
    * jFreeChart:  http://www.jfree.org/jfreechart/ 
    * FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ 
+   * Apache Commons: http://commons.apache.org/io/
+   * jRTF: http://code.google.com/p/jrtf/
+	* jUnique: http://www.sauronsoftware.it/projects/junique/
 
  Please cite OpenMIMS or any of the above projects when applicable.
  
