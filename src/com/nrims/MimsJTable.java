@@ -55,7 +55,7 @@ public class MimsJTable {
    JPopupMenu popupMenu;
    int selectedColumn;
 
-   static String DEFAULT_TABLE_NAME = "_data.txt";
+   static String DEFAULT_TABLE_NAME = "_data.csv";
    static String DELETE_COLUMN_CMD = "Delete Column";
    static String AREA = "area";
    static String GROUP = "group";
@@ -665,7 +665,7 @@ public class MimsJTable {
    /**
     * Writes the actual data.
     */
-   private void writeData(File file) {
+   public void writeData(File file) {
       try {
          PrintWriter out = new PrintWriter(new FileWriter(file));
 

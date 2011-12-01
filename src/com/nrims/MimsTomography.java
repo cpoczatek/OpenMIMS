@@ -580,7 +580,7 @@ public class MimsTomography extends javax.swing.JPanel {
     *
     * @return an array list of plane numbers (all by default).
     */
-   private ArrayList<Integer> getPlanes() {
+   public ArrayList<Integer> getPlanes() {
 
       // initialize
       ArrayList planes = new ArrayList<Integer>();
