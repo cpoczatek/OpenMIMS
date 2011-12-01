@@ -2130,7 +2130,7 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     message += "    jFreeChart:  http://www.jfree.org/jfreechart/ \n";
     message += "    FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ \n";
     message += "    Apache Commons: http://commons.apache.org/io/ \n";
-    message += "    jRTF:  http://code.google.com/p/jrtf/";
+    message += "    jRTF:  http://code.google.com/p/jrtf/ \n";
     message += "    jUnique: http://www.sauronsoftware.it/projects/junique/ \n";
     message += "\n\n";
     message += "Please cite OpenMIMS or any of the above projects when applicable.";
