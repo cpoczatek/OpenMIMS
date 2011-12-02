@@ -781,7 +781,7 @@ public class MimsJTable {
     *
     * @param planes an arraylist of planes.
     */
-   void setPlanes(ArrayList planes) {
+   public void setPlanes(ArrayList planes) {
       this.planes = planes;
    }
 
