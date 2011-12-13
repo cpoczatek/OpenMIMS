@@ -1,6 +1,7 @@
 package com.nrims;
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.io.FileSaver;
 import java.io.File;
 import java.io.FileInputStream;
@@ -333,12 +334,26 @@ public class Converter extends SwingWorker<Void, Void> {
 
       try {
          System.out.println("   Tracking... (using index " + trackIndex + ")");
-         ImagePlus mp = (ImagePlus)ui.getMassImage(trackIndex).clone();
-         AutoTrack autoTrack = new AutoTrack(ui, mp);
+         
+         // Get the image to track.
+         ImagePlus img = (ImagePlus)ui.getMassImage(trackIndex);
+
+         // Build the include list
          ArrayList<Integer> includeList = new ArrayList<Integer>();
-         for (int i = 0; i < mp.getNSlices(); i++) {
+         for (int i = 0; i < img.getNSlices(); i++) {
             includeList.add(i, i + 1);
          }
+         
+         // Build a copy of the image.
+         ImageStack imgStack = img.getImageStack();
+         ImageStack tempStack = new ImageStack(img.getHeight(), img.getWidth());
+         for (int i = 0; i < imgStack.getSize(); i++) {
+               tempStack.addSlice(Integer.toString(i + 1), imgStack.getProcessor(i + 1));
+         }
+         ImagePlus mp = new ImagePlus("img", tempStack);
+         
+         // Auto track on the copy.
+         AutoTrack autoTrack = new AutoTrack(ui, mp);
          autoTrack.setIncludeList(includeList);
          double[][] trans = autoTrack.track(mp);
          ui.getmimsStackEditing().applyTranslations(trans, includeList);
