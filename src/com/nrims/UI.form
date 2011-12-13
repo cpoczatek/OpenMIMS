@@ -275,6 +275,7 @@
             <MenuItem class="javax.swing.JMenuItem" name="testMenuItem1">
               <Properties>
                 <Property name="text" type="java.lang.String" value="export QVis"/>
+                <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="testMenuItem1ActionPerformed"/>
@@ -283,17 +284,19 @@
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem6">
               <Properties>
                 <Property name="text" type="java.lang.String" value="test"/>
+                <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem6ActionPerformed1"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="dtcorrMenuItem">
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="DTCorrectionMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="dt correction"/>
+                <Property name="text" type="java.lang.String" value="Apply dead time correction"/>
+                <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="dtcorrMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="DTCorrectionMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="qsacorrMenuItem">

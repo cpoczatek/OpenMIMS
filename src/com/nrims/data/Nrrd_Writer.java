@@ -232,6 +232,9 @@ public class Nrrd_Writer {
        // Pixel height
        out.write(Opener.Mims_pixel_height+Opener.Nrrd_seperator+op.getPixelHeight()+"\n");
 
+       // Deadtime correction
+       out.write(Opener.Mims_dt_correction_applied+Opener.Nrrd_seperator+op.isDTCorrected()+"\n");
+
        // Image Notes
        String notes = op.getNotes();
        //this is redundant but
@@ -318,6 +321,7 @@ class NrrdFileInfo extends FileInfo {
    public int raster, dimension, nMasses;
    public float pixel_width;
    public float pixel_height;
+   public boolean dt_correction_applied = false;
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;

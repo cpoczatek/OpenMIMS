@@ -257,6 +257,13 @@ public class Nrrd_Reader implements Opener {
                    fi.pixel_width=fl.floatValue();
                 } catch (Exception e) {fi.pixelWidth = (new Float(-1.0)).floatValue();}
             }
+
+            if (thisLine.startsWith(Opener.Mims_dt_correction_applied)) {
+                try {                   
+                   fi.dt_correction_applied = Boolean.parseBoolean(value);
+                } catch (Exception e) {fi.dt_correction_applied = false;}
+            }
+
             //case sensitive text
             if (thisLine.startsWith(Opener.Mims_notes)) {
                 fi.notes = originalvalue;
@@ -440,5 +447,13 @@ public class Nrrd_Reader implements Opener {
 
     public int getFileType() {
         return fi.fileType;
+    }
+
+    public boolean isDTCorrected() {
+        return fi.dt_correction_applied;
+    }
+
+    public void setIsDTCorrected(boolean isCorrected) {
+       fi.dt_correction_applied = isCorrected;
     }
 }

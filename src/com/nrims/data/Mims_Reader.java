@@ -34,6 +34,7 @@ public class Mims_Reader implements Opener {
     private String[] massSymbols;
     private double counting_time;
     private String notes = "";
+    private boolean isDTCorrected = false;
 
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
@@ -849,6 +850,24 @@ public class Mims_Reader implements Opener {
          ex.printStackTrace();
       }
     }
+
+   /**
+    * .IM files by default not corrected for deadtime.
+    *
+    * @return false
+    */
+   public boolean isDTCorrected() {
+      return this.isDTCorrected;
+   }
+
+   /**
+    * Set to true if dead time correction applied.
+    *
+    * @param isCorrected
+    */
+   public void setIsDTCorrected(boolean isDTCorrected) {
+      this.isDTCorrected = isDTCorrected;
+   }
 
     /*
     public String getInfo() {

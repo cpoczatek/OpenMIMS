@@ -2,6 +2,7 @@ package com.nrims;
 
 import com.nrims.data.MIMSFileFilter;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -22,6 +23,7 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
 
    UI ui;
    FilterAccessory fa;
+   private static final Dimension FILE_CHOOSER_DIMENSION = new Dimension(650, 500);
 
    /**
     * MimsJFileChooser.java
@@ -48,6 +50,8 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
                setCurrentDirectory(ijDefDir);
          }
       }
+
+      setPreferredSize(FILE_CHOOSER_DIMENSION);
            
       MIMSFileFilter mff_nrrd = new MIMSFileFilter("nrrd");
       mff_nrrd.setDescription("Mims image");

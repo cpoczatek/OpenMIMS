@@ -24,6 +24,7 @@ public interface Opener {
     public static final String Mims_pixel_width = "Mims_pixel_width";
     public static final String Mims_pixel_height = "Mims_pixel_height";
     public static final String Mims_notes = "Mims_notes";
+    public static final String Mims_dt_correction_applied = "Mims_deadtime_correction_applied";
 
     // Worker functions.
     public File getImageFile();
@@ -51,9 +52,11 @@ public interface Opener {
     public int getRaster();
     public String getNotes();
     public int getFileType();
+    public boolean isDTCorrected();
 
     //Setable metadata
     public void setNotes(String notes);
+    public void setIsDTCorrected(boolean isDTCorrected);
 
     /**
      * defines a structure for saving the HeaderImage data
