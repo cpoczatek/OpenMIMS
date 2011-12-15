@@ -264,6 +264,30 @@ public class Nrrd_Reader implements Opener {
                 } catch (Exception e) {fi.dt_correction_applied = false;}
             }
 
+            if (thisLine.startsWith(Opener.Mims_QSA_correction_applied)) {
+                try {
+                   fi.QSA_correction_applied = Boolean.parseBoolean(value);
+                } catch (Exception e) {fi.QSA_correction_applied = false;}
+            }
+
+            if (fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_FC_Obj)) {
+                try {
+                   Float fl = new Float(value);
+                   fi.fc_objective=fl.floatValue();
+                } catch (Exception e) {}
+            }
+
+            if (fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_betas)) {
+                try {
+                   String[] qsa_string_vals = value.split(",");
+                   float[] qsa_vals = new float[qsa_string_vals.length];
+                   for (int ii = 0; ii < qsa_string_vals.length; ii++) {
+                      qsa_vals[ii] = new Float(qsa_string_vals[ii]);
+                   }
+                   fi.betas = qsa_vals;
+                } catch (Exception e) {}
+            }
+
             //case sensitive text
             if (thisLine.startsWith(Opener.Mims_notes)) {
                 fi.notes = originalvalue;
@@ -455,5 +479,29 @@ public class Nrrd_Reader implements Opener {
 
     public void setIsDTCorrected(boolean isCorrected) {
        fi.dt_correction_applied = isCorrected;
+    }
+
+    public boolean isQSACorrected() {
+        return fi.QSA_correction_applied;
+    }
+
+    public void setIsQSACorrected(boolean isCorrected) {
+       fi.QSA_correction_applied = isCorrected;
+    }
+
+    public void setBetas(float[] betas) {
+       fi.betas = betas;
+    }
+
+    public void setFCObjective(float fc_objective) {
+       fi.fc_objective = fc_objective;
+    }
+
+    public float[] getBetas() {
+       return fi.betas;
+    }
+
+    public float getFCObjective() {
+       return fi.fc_objective;
     }
 }

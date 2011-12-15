@@ -58,6 +58,8 @@ public class MimsData extends javax.swing.JPanel {
       jLabel26 = new javax.swing.JLabel();
       jLabel27 = new javax.swing.JLabel();
       jLabel28 = new javax.swing.JLabel();
+      jLabel29 = new javax.swing.JLabel();
+      jLabel30 = new javax.swing.JLabel();
 
       jLabel1.setText("File");
 
@@ -124,6 +126,10 @@ public class MimsData extends javax.swing.JPanel {
 
       jLabel28.setText("jLabel27");
 
+      jLabel29.setText("QSA Corrected");
+
+      jLabel30.setText("jLabel30");
+
       org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
       this.setLayout(layout);
       layout.setHorizontalGroup(
@@ -144,9 +150,11 @@ public class MimsData extends javax.swing.JPanel {
                .add(jLabel19)
                .add(jLabel8)
                .add(jLabel21)
-               .add(jLabel27))
-            .add(30, 30, 30)
+               .add(jLabel27)
+               .add(jLabel29))
+            .add(21, 21, 21)
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+               .add(jLabel30)
                .add(jLabel28)
                .add(jLabel24)
                .add(jLabel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 243, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -229,7 +237,11 @@ public class MimsData extends javax.swing.JPanel {
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                .add(jLabel27)
                .add(jLabel28))
-            .addContainerGap(47, Short.MAX_VALUE))
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+               .add(jLabel29)
+               .add(jLabel30))
+            .addContainerGap(25, Short.MAX_VALUE))
       );
    }// </editor-fold>//GEN-END:initComponents
 
@@ -265,7 +277,8 @@ public class MimsData extends javax.swing.JPanel {
             jLabel18.setText("0");
             jLabel26.setText("");
             jLabel22.setText("0");
-            jLabel27.setText("false");
+            jLabel28.setText("false");
+            jLabel30.setText("false");
             syncjCheckBox.setEnabled(false);        
         } else {
             String tempstring = "";
@@ -297,6 +310,8 @@ public class MimsData extends javax.swing.JPanel {
             jLabel20.setText(tempstring);
             
             jLabel28.setText(Boolean.toString(image.isDTCorrected()));
+
+            jLabel30.setText(Boolean.toString(image.isQSACorrected()));
             
             int raster = image.getRaster();
             raster = java.lang.Math.round( ( (float)raster )/1000);
@@ -354,7 +369,9 @@ public class MimsData extends javax.swing.JPanel {
    private javax.swing.JLabel jLabel26;
    private javax.swing.JLabel jLabel27;
    private javax.swing.JLabel jLabel28;
+   private javax.swing.JLabel jLabel29;
    private javax.swing.JLabel jLabel3;
+   private javax.swing.JLabel jLabel30;
    private javax.swing.JLabel jLabel4;
    private javax.swing.JLabel jLabel5;
    private javax.swing.JLabel jLabel6;

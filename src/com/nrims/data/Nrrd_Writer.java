@@ -235,6 +235,26 @@ public class Nrrd_Writer {
        // Deadtime correction
        out.write(Opener.Mims_dt_correction_applied+Opener.Nrrd_seperator+op.isDTCorrected()+"\n");
 
+       // QSA correction
+       out.write(Opener.Mims_QSA_correction_applied+Opener.Nrrd_seperator+op.isQSACorrected()+"\n");
+
+       // QSA correction parameters
+       if (op.isQSACorrected()) {
+      
+          // Beta correction
+          out.write(Opener.Mims_QSA_betas+Opener.Nrrd_seperator);
+              for (int i = 0; i < op.getBetas().length; i++) {
+                 out.write(Float.toString(op.getBetas()[i]));
+                 if (i < op.getBetas().length -1)
+                    out.write(", ");
+              }
+              out.write("\n");
+
+           // FC Objective parameter.
+           out.write(Opener.Mims_QSA_FC_Obj+Opener.Nrrd_seperator+op.getFCObjective() + "\n");
+
+       }
+
        // Image Notes
        String notes = op.getNotes();
        //this is redundant but
@@ -322,6 +342,9 @@ class NrrdFileInfo extends FileInfo {
    public float pixel_width;
    public float pixel_height;
    public boolean dt_correction_applied = false;
+   public boolean QSA_correction_applied = false;
+   public float[] betas;
+   public float fc_objective;
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;

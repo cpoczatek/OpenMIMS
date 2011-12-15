@@ -6,6 +6,7 @@
 package com.nrims;
 
 import com.nrims.data.*;
+import com.nrims.managers.QSAcorrectionManager;
 import com.nrims.managers.convertManager;
 
 import ij.IJ;
@@ -92,6 +93,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private static boolean isTesting = false;
     private boolean silentMode = false;
     private boolean isDTCorrected = false;
+    private boolean isQSACorrected = false;
+    private float[] betas;
+    private float fc_objective;
 
     private String lastFolder = null;      
     public  File   tempActionFile;                        
@@ -112,6 +116,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsTomography mimsTomography = null;        
     private MimsHSIView hsiControl = null;
     private SegmentationForm segmentation = null;
+    private QSAcorrectionManager qsam;
 
     private javax.swing.JRadioButtonMenuItem[] viewMassMenuItems = null;
     private Opener image = null;
@@ -840,6 +845,25 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         str += "Sample hour: " + im.getSampleHour() + "\n";
         str += "Pixel width (nm): " + im.getPixelWidth() + "\n";
         str += "Pixel height (nm): " + im.getPixelHeight() + "\n";
+
+        str += "Dead time Corrected: " + im.isDTCorrected() + "\n";
+        str += "QSA Corrected: " + im.isQSACorrected() + "\n";
+        if (im.isQSACorrected()) {
+           if (im.getBetas() != null) {
+              str += "\tBetas: ";
+              for (int i = 0; i < im.getBetas().length; i++) {
+                 str += im.getBetas()[i];
+                 if (i < im.getBetas().length -1)
+                    str += ", ";
+              }
+              str += "\n";
+           }
+
+           if (im.getFCObjective() > 0)
+              str += "\tFC Objective: " + im.getFCObjective() + "\n";
+           
+        }
+
         
         str += "End header.\n\n";
         return str;
@@ -1128,11 +1152,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
    private void initComponentsCustom() {
        this.imgNotes = new imageNotes();
        this.imgNotes.setVisible(false);
-       this.testMenu.setVisible(false);
    }
 
    private void initComponentsTesting() {
-       this.testMenu.setVisible(true);
+       //this.correctionsMenu.setVisible(true);
    }
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
    private void initComponents() {
@@ -1178,11 +1201,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       jSeparator4 = new javax.swing.JSeparator();
       genStackMenuItem = new javax.swing.JMenuItem();
       compositeMenuItem = new javax.swing.JMenuItem();
-      testMenu = new javax.swing.JMenu();
-      testMenuItem1 = new javax.swing.JMenuItem();
-      jMenuItem6 = new javax.swing.JMenuItem();
+      correctionsMenu = new javax.swing.JMenu();
       DTCorrectionMenuItem = new javax.swing.JCheckBoxMenuItem();
-      qsacorrMenuItem = new javax.swing.JMenuItem();
+      QSACorrectionMenuItem = new javax.swing.JCheckBoxMenuItem();
 
       jMenuItem9.setText("Export all images");
 
@@ -1437,25 +1458,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
       jMenuBar1.add(utilitiesMenu);
 
-      testMenu.setText("Testing");
-
-      testMenuItem1.setText("export QVis");
-      testMenuItem1.setEnabled(false);
-      testMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            testMenuItem1ActionPerformed(evt);
-         }
-      });
-      testMenu.add(testMenuItem1);
-
-      jMenuItem6.setText("test");
-      jMenuItem6.setEnabled(false);
-      jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
-         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            jMenuItem6ActionPerformed1(evt);
-         }
-      });
-      testMenu.add(jMenuItem6);
+      correctionsMenu.setText("Corrections");
 
       DTCorrectionMenuItem.setText("Apply dead time correction");
       DTCorrectionMenuItem.setEnabled(false);
@@ -1464,17 +1467,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             DTCorrectionMenuItemActionPerformed(evt);
          }
       });
-      testMenu.add(DTCorrectionMenuItem);
+      correctionsMenu.add(DTCorrectionMenuItem);
 
-      qsacorrMenuItem.setText("qsa correction");
-      qsacorrMenuItem.addActionListener(new java.awt.event.ActionListener() {
+      QSACorrectionMenuItem.setText("Apply QSA correction");
+      QSACorrectionMenuItem.setEnabled(false);
+      QSACorrectionMenuItem.addActionListener(new java.awt.event.ActionListener() {
          public void actionPerformed(java.awt.event.ActionEvent evt) {
-            qsacorrMenuItemActionPerformed(evt);
+            QSACorrectionMenuItemActionPerformed(evt);
          }
       });
-      testMenu.add(qsacorrMenuItem);
+      correctionsMenu.add(QSACorrectionMenuItem);
 
-      jMenuBar1.add(testMenu);
+      jMenuBar1.add(correctionsMenu);
 
       setJMenuBar(jMenuBar1);
 
@@ -1588,6 +1592,42 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         isSum = set;
     }
 
+    /**
+     * Sets the DTCorrected flag.
+     *
+     * @param isDTCorrected
+     */
+    public void setIsDTCorrected(boolean isDTCorrected) {
+        this.isDTCorrected = isDTCorrected;
+    }
+
+    /**
+     * Sets the QSACorrected flag.
+     *
+     * @param isQSACorrected
+     */
+    public void setIsQSACorrected(boolean isQSACorrected) {
+        this.isQSACorrected = isQSACorrected;
+    }
+
+    /**
+     * Sets the beta QSA correction parameters.
+     *
+     * @param betas
+     */
+    public void setBetas(float[] betas) {
+        this.betas = betas;
+    }
+
+    /**
+     * Sets the FC Objective QSA correction parameter.
+     *
+     * @param fc_objective
+     */
+    public void setFCObjective(float fc_objective) {
+        this.fc_objective = fc_objective;
+    }
+    
     /**
      * Returns <code>true</code> if the application is generating ratio and
      * HSI images as sum images.
@@ -1770,6 +1810,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         // Set DT correction flag.
         getOpener().setIsDTCorrected(isDTCorrected);
+
+        // Set QSA correction flag.
+        getOpener().setIsQSACorrected(isQSACorrected);
+
+        // Set QSA correction parameters.
+        if (isQSACorrected) {
+           getOpener().setBetas(betas);
+           getOpener().setFCObjective(fc_objective);
+        }
 
         // Save the original .im file to a new file of the .nrrd file type.
         String nrrdFileName = name;
@@ -2492,38 +2541,6 @@ private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
    getRoiManager().viewManager();
 }//GEN-LAST:event_jMenuItem5ActionPerformed
 
-private void testMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testMenuItem1ActionPerformed
-//generate dialog to pass alpha min,max values
-    String list = "";
-    ij.gui.GenericDialog gd = new ij.gui.GenericDialog("Alpha min,max");
-    gd.addStringField("Alpha:", list, 20);
-    gd.showDialog();
-    if (gd.wasCanceled()) {
-        return;
-    }
-    list = gd.getNextString();
-
-    String[] valstrings = list.split(",");
-    if(valstrings.length!=2) return;
-
-    int minA = 0;
-    int maxA = 0;
-
-    minA = Integer.parseInt(valstrings[0]);
-    maxA = Integer.parseInt(valstrings[1]);
-
-    File file;
-    MimsJFileChooser fc = new MimsJFileChooser(this);
-    int returnVal = fc.showSaveDialog(this);
-    if (returnVal == MimsJFileChooser.CANCEL_OPTION) {
-        return;
-    }
-    String fileName = fc.getSelectedFile().getName();
-
-    //should it grab the current image here or in method?
-    com.nrims.experimental.exportQVis.exportHSI_RGBA(this, minA, maxA, fileName);
-}//GEN-LAST:event_testMenuItem1ActionPerformed
-
 private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
     ReportGenerator rg = new ReportGenerator(this);
     rg.setVisible(true);
@@ -2539,67 +2556,14 @@ private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
    task.cancel(true);
 }//GEN-LAST:event_stopButtonActionPerformed
 
-private void jMenuItem6ActionPerformed1(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed1
-    // TODO add your handling code here:
-
-    com.nrims.experimental.testJarFiles testjars = new com.nrims.experimental.testJarFiles();
-    testjars.testJarsExist();
-    
-}//GEN-LAST:event_jMenuItem6ActionPerformed1
-
-private void qsacorrMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_qsacorrMenuItemActionPerformed
-    
-    //generate a simple dialog to pass parrameters: beta[], FCO
-    String betastring = "";
-    String FCObjstrign = "";
-    ij.gui.GenericDialog gd = new ij.gui.GenericDialog("QSA Correction");
-    gd.addStringField("Betas:", betastring, 20);
-    gd.addStringField("FC Objective (pA):", FCObjstrign, 20);
-    gd.addMessage("Using dwelltime (ms): " + this.getOpener().getDwellTime());
-    gd.showDialog();
-    if (gd.wasCanceled()) {
-        return;
-    }
-    betastring = gd.getNextString();
-    FCObjstrign = gd.getNextString();
-    String[] betasplit = betastring.split(",");
-    if(betasplit.length != this.getOpenMassImages().length) {
-        ij.IJ.error("Error", "Incorrect number of betas defined.");
-        return;
-    }
-
-    //convert to float
-    //and grab dwell time from opener metadata
-    float[] betas = new float[betasplit.length];
-    float FCObj = 0;
-    float dwell = 0;
-    try {
-        for (int i = 0; i < betas.length; i++) {
-            betas[i] = Float.parseFloat(betasplit[i]);
-        }
-
-        dwell = Float.parseFloat(this.getOpener().getDwellTime())/1000;
-        FCObj = Float.parseFloat(FCObjstrign);
-
-    } catch (Exception e) {
-        ij.IJ.error("Error", "Mal-formed parameters (eg not a number).");
-        return;
-    }
-
-    com.nrims.experimental.massCorrection masscor = new com.nrims.experimental.massCorrection(this);
-    masscor.performQSACorr(this.getOpenMassImages(), betas, dwell, FCObj);
-
-    //log what was done
-    this.getmimsLog().Log("QSA correction \ndwelltime (s) = " + dwell +"\nbetas = " + betastring + "\nFCObj (pA) = " + FCObj + "\n");
-}//GEN-LAST:event_qsacorrMenuItemActionPerformed
-
 private void DTCorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DTCorrectionMenuItemActionPerformed
-   if (image == null) {
+   if (image == null)
       return;
-   }
+
+   int start_slice = getOpenMassImages()[0].getCurrentSlice();
 
    if (image.isDTCorrected())
-      return;
+      return;  
    else {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
       // User sets file prefix name
@@ -2611,14 +2575,27 @@ private void DTCorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt)
       int returnVal = fc.showSaveDialog(jTabbedPane1);
       if (returnVal == JFileChooser.APPROVE_OPTION) {
          String fileName = fc.getSelectedFile().getAbsolutePath();
+         jProgressBar1.setString("Applying dead time correction...");
          applyDeadTimeCorrection(fileName);
          DTCorrectionMenuItem.setEnabled(false);
-         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+         jProgressBar1.setString("Dead time correction complete.");
+         getOpenMassImages()[0].setSlice(start_slice);
+         updateAllImages();
+         ij.IJ.showMessage("Done");
       } else {
-         return;
+         DTCorrectionMenuItem.setSelected(false);
       }
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+
    }
 }//GEN-LAST:event_DTCorrectionMenuItemActionPerformed
+
+private void QSACorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QSACorrectionMenuItemActionPerformed
+   if (qsam == null) {
+      qsam = new QSAcorrectionManager(this);
+   }
+   qsam.setVisible(true);
+}//GEN-LAST:event_QSACorrectionMenuItemActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -3596,10 +3573,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           // Update dt correction flag
           if (image != null) isDTCorrected = image.isDTCorrected();
           DTCorrectionMenuItem.setSelected(isDTCorrected);
-          if (isDTCorrected)
-             DTCorrectionMenuItem.setEnabled(false);
-          else
-             DTCorrectionMenuItem.setEnabled(true);
+          DTCorrectionMenuItem.setEnabled(!isDTCorrected);
+
+          // Update QSA correction flag
+          if (image != null) isQSACorrected = image.isQSACorrected();
+          QSACorrectionMenuItem.setSelected(isQSACorrected);
+          QSACorrectionMenuItem.setEnabled(!isQSACorrected);
 
           return true;
        }
@@ -3949,7 +3928,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
-   private javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
+   public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
+   public javax.swing.JCheckBoxMenuItem QSACorrectionMenuItem;
    private javax.swing.JMenuItem aboutMenuItem;
    private javax.swing.JMenuItem captureImageMenuItem;
    private javax.swing.JMenuItem closeAllHSIMenuItem;
@@ -3957,6 +3937,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JMenuItem closeAllSumMenuItem;
    private javax.swing.JMenu closeMenu;
    private javax.swing.JMenuItem compositeMenuItem;
+   public javax.swing.JMenu correctionsMenu;
    private javax.swing.JMenu editMenu;
    private javax.swing.JMenuItem exitMenuItem;
    private javax.swing.JMenuItem exportPNGjMenuItem;
@@ -3971,7 +3952,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JMenuItem jMenuItem3;
    private javax.swing.JMenuItem jMenuItem4;
    private javax.swing.JMenuItem jMenuItem5;
-   private javax.swing.JMenuItem jMenuItem6;
    private javax.swing.JMenuItem jMenuItem7;
    private javax.swing.JMenuItem jMenuItem8;
    private javax.swing.JMenuItem jMenuItem9;
@@ -3987,12 +3967,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
    private javax.swing.JSeparator jSeparator8;
    private javax.swing.JTabbedPane jTabbedPane1;
    private javax.swing.JMenuItem openNewMenuItem;
-   private javax.swing.JMenuItem qsacorrMenuItem;
    private javax.swing.JMenuItem saveMIMSjMenuItem;
    public javax.swing.JButton stopButton;
    private javax.swing.JMenuItem sumAllMenuItem;
-   private javax.swing.JMenu testMenu;
-   private javax.swing.JMenuItem testMenuItem1;
    private javax.swing.JMenu utilitiesMenu;
    private javax.swing.JMenu viewMenu;
    // End of variables declaration//GEN-END:variables

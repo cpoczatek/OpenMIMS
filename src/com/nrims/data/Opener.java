@@ -25,6 +25,9 @@ public interface Opener {
     public static final String Mims_pixel_height = "Mims_pixel_height";
     public static final String Mims_notes = "Mims_notes";
     public static final String Mims_dt_correction_applied = "Mims_deadtime_correction_applied";
+    public static final String Mims_QSA_correction_applied = "Mims_QSA_correction_applied";
+    public static final String Mims_QSA_betas = "Mims_QSA_betas";
+    public static final String Mims_QSA_FC_Obj = "Mims_QSA_FC_Obj";
 
     // Worker functions.
     public File getImageFile();
@@ -53,10 +56,16 @@ public interface Opener {
     public String getNotes();
     public int getFileType();
     public boolean isDTCorrected();
+    public boolean isQSACorrected();
+    public float[] getBetas();
+    public float getFCObjective();
 
     //Setable metadata
     public void setNotes(String notes);
     public void setIsDTCorrected(boolean isDTCorrected);
+    public void setIsQSACorrected(boolean isQSACorrected);
+    public void setBetas(float[] betas);
+    public void setFCObjective(float fc_objective);
 
     /**
      * defines a structure for saving the HeaderImage data

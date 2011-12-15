@@ -35,6 +35,9 @@ public class Mims_Reader implements Opener {
     private double counting_time;
     private String notes = "";
     private boolean isDTCorrected = false;
+    private boolean isQSACorrected = false;
+    private float[] betas;
+    private float fc_objective;
 
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
@@ -863,11 +866,65 @@ public class Mims_Reader implements Opener {
    /**
     * Set to true if dead time correction applied.
     *
-    * @param isCorrected
+    * @param isDTCorrected
     */
    public void setIsDTCorrected(boolean isDTCorrected) {
       this.isDTCorrected = isDTCorrected;
    }
+
+   /**
+    * .IM files by default not QSA corrected .
+    *
+    * @return false
+    */
+   public boolean isQSACorrected() {
+      return this.isQSACorrected;
+   }
+
+   /**
+    * Set to true if QSA correction applied.
+    *
+    * @param isQSACorrected
+    */
+   public void setIsQSACorrected(boolean isQSACorrected) {
+      this.isQSACorrected = isQSACorrected;
+   }
+
+   /**
+    * Set beta values for QSA correction.
+    *
+    * @param betas
+    */
+   public void setBetas(float[] betas) {
+      this.betas = betas;
+   }
+
+   /**
+    * Set FC Objective value for QSA correction.
+    *
+    * @param betas
+    */
+   public void setFCObjective(float fc_objective) {
+      this.fc_objective = fc_objective;
+   }
+
+   /**
+    * Get beta values for QSA correction.
+    *
+    * @return betas
+    */
+    public float[] getBetas() {
+       return this.betas;
+    }
+
+   /**
+    * Get FC Objective values for QSA correction.
+    *
+    * @return fc_objective
+    */
+    public float getFCObjective() {
+       return this.fc_objective;
+    }
 
     /*
     public String getInfo() {
