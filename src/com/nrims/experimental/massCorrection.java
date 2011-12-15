@@ -98,8 +98,10 @@ public class massCorrection {
         if (!(massCorrection.check32bit(massimgs))) {
             this.forceFloatImages(massimgs);
         }
+
         //Do dt correction
-        this.performDeadTimeCorr(massimgs, dwelltime);
+        if (!ui.getOpener().isDTCorrected())
+           this.performDeadTimeCorr(massimgs, dwelltime);
 
         int nplanes = massimgs[0].getNSlices();
         int nmasses = massimgs.length;
