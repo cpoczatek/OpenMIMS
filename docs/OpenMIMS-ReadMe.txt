@@ -92,13 +92,15 @@ CONTENTS AND INSTALLATION
 RELEASE NOTES
 ==================================
  December 2011 (v2.0):
+ - Implemented QSA and dead time correction.
  - All data product report raw data only (not medianized).
- - Performance increases and in the Roi Manager (and better behavior of brush tool).
+ - Performance increases in the Roi Manager (and better behavior of brush tool).
  - Mass symbols from .im file displayed on Mims Data tab.
  - Able to open plugin as a single instance. 
  - Check for changes before opening new files.
  - Various performace improvements.
  - Changes to facilitate the api for scripting.
+ - Fixed layout for MACs.
 
  October 2011 (v1.4x):
  - Various UI improvements and code cleanup.
