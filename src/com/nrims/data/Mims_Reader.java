@@ -204,7 +204,14 @@ public class Mims_Reader implements Opener {
         dhdr.sple_pos_y = in.readIntEndian();
         dhdr.analysis_name = getChar(32);
         dhdr.username = getChar(16);
+        //this is NOT 16 bytes of chars but 4 ints (4*4 bytes)
         dhdr.sample_name = getChar(16);
+        /* from spec
+         * int nSamplePosz ; / sample position Z en micron /
+         * int nUnused[ 3 ] ;/ libre /
+         */
+
+
         dhdr.date = getChar(16);
         dhdr.hour = getChar(16);
 

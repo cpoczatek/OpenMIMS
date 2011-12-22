@@ -919,6 +919,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         if(pm!=null) pm.resetImage(this);
         if(sm!=null) sm.resetImage(this);
+        //can/should add autotrack manager?
+        //can/should add reports?
     }
 
     @Override
