@@ -18,6 +18,40 @@ import java.io.File;
  *
  * @author cpoczatek
  */
+
+/*
+    //Example dialog to pass alpha min,max values
+    String list = "";
+    ij.gui.GenericDialog gd = new ij.gui.GenericDialog("Alpha min,max");
+    gd.addStringField("Alpha:", list, 20);
+    gd.showDialog();
+    if (gd.wasCanceled()) {
+        return;
+    }
+    list = gd.getNextString();
+
+    String[] valstrings = list.split(",");
+    if(valstrings.length!=2) return;
+
+    int minA = 0;
+    int maxA = 0;
+
+    minA = Integer.parseInt(valstrings[0]);
+    maxA = Integer.parseInt(valstrings[1]);
+
+    File file;
+    MimsJFileChooser fc = new MimsJFileChooser(this);
+    int returnVal = fc.showSaveDialog(this);
+    if (returnVal == MimsJFileChooser.CANCEL_OPTION) {
+        return;
+    }
+    String fileName = fc.getSelectedFile().getName();
+
+    //should it grab the current image here or in method?
+    com.nrims.experimental.exportQVis.exportHSI_RGBA(this, minA, maxA, fileName);
+     */
+
+
 public class exportQVis {
 
     /**
@@ -51,7 +85,12 @@ public class exportQVis {
         int r, g, b;
         double rScale = 65535.0 / (props.getMaxRatio() - props.getMinRatio());
 
-        float[] pix = (float[]) img.internalRatio.getProcessor().getPixels();
+        float[] pix = (float[]) img.internalRatio_filtered.getProcessor().getPixels();
+
+        //hard coded use of denominator pixels for alpha
+        //should be looking at hsiprops for appropriate alpha "channel"
+        //may be dependent on non-unitless (ie actual mass counts) alpha min/max
+
         float[] denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
         //for testing, to delete
         int[] foo = new int[pix.length];
@@ -107,12 +146,12 @@ public class exportQVis {
             img.setSlice(j, img);
             //don't call on internal images?
             //denimg.setSlice(j, true);
-            pix = (float[]) img.internalRatio.getProcessor().getPixels();
+            pix = (float[]) img.internalRatio_filtered.getProcessor().getPixels();
             denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
 
             //stupid rgb
-            double denMax = img.internalRatio.getProcessor().getMax();
-            double denMin = img.internalRatio.getProcessor().getMin();
+            double denMax = img.internalRatio_filtered.getProcessor().getMax();
+            double denMin = img.internalRatio_filtered.getProcessor().getMin();
             //double denSpan = (denMax-denMin);
             //double denGain = denSpan > 0 ? 255.0 / ( denSpan ) : 1.0 ;
             double denSpan = (props.getMaxRatio() - props.getMinRatio());
@@ -250,6 +289,8 @@ public class exportQVis {
             bw.write("# alpha_max: " + maxA + "\n");
             bw.write("# medianized: " + ui.getMedianFilterRatios() + "\n");
             bw.write("# med_radius: " + ui.getHSIView().getMedianRadius() + "\n");
+            bw.write("# window: " + ui.getIsWindow() + "\n");
+            bw.write("# window_radius: " + ui.getWindowRange() + "\n");
             
             bw.close();
         } catch (Exception e) {
