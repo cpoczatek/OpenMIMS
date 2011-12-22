@@ -207,7 +207,7 @@ public class QSAcorrectionManager extends javax.swing.JFrame {
        int start_slice = ui.getOpenMassImages()[0].getCurrentSlice();
        try {
           setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-          com.nrims.experimental.massCorrection masscor = new com.nrims.experimental.massCorrection(ui);
+            com.nrims.data.massCorrection masscor = new com.nrims.data.massCorrection(ui);
           masscor.performQSACorr(ui.getOpenMassImages(), betas, dwellTime, FCObj);
           ui.setIsQSACorrected(true);
           ui.setIsDTCorrected(true);

@@ -2606,7 +2606,7 @@ private void QSACorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt
     */
    public boolean applyDeadTimeCorrection(String fileName) {
 
-      com.nrims.experimental.massCorrection masscor = new com.nrims.experimental.massCorrection(this);
+        com.nrims.data.massCorrection masscor = new com.nrims.data.massCorrection(this);
       
       float dwell = 0f;
       try {
