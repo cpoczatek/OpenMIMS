@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.4.13)  21 APR 2011 16:34
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.4.13)  22 DEC 2011 10:31
 entering extended mode
  %&-line parsing enabled.
 **MimsManual.tex
@@ -181,11 +181,11 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <7> on input line 66.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 66.
- <snapshot_cochlea_m26.png, id=1, 324.412pt x 344.6723pt>
+ <snapshot_cochlea_m26.png, id=1, 304.88907pt x 325.96782pt>
 File: snapshot_cochlea_m26.png Graphic file (type png)
 
 <use snapshot_cochlea_m26.png>
-<snapshot_cochlea_m27.png, id=2, 324.412pt x 344.6723pt>
+<snapshot_cochlea_m27.png, id=2, 304.88907pt x 325.96782pt>
 File: snapshot_cochlea_m27.png Graphic file (type png)
 
 <use snapshot_cochlea_m27.png> [1
@@ -199,23 +199,23 @@ File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 91.
 
-<snapshot_Desktop_3.png, id=15, 1264.725pt x 785.18344pt>
+<snapshot_Desktop_3.png, id=15, 1927.2pt x 1204.5pt>
 File: snapshot_Desktop_3.png Graphic file (type png)
 
 <use snapshot_Desktop_3.png> [2 <./snapshot_Desktop_3.png (PNG copy)>]
-<snapshot_MimsData.png, id=21, 635.976pt x 469.755pt>
+<snapshot_MimsData.png, id=21, 576.65437pt x 420.06938pt>
 File: snapshot_MimsData.png Graphic file (type png)
 
 <use snapshot_MimsData.png> [3 <./snapshot_MimsData.png (PNG copy)>]
-<snapshot_Process.png, id=25, 635.976pt x 469.755pt>
+<snapshot_Process.png, id=25, 576.65437pt x 420.06938pt>
 File: snapshot_Process.png Graphic file (type png)
 
-<use snapshot_Process.png> [4 <./snapshot_Process.png>]
-<snapshot_MimsContrast.png, id=31, 635.976pt x 469.755pt>
+<use snapshot_Process.png> [4 <./snapshot_Process.png (PNG copy)>]
+<snapshot_MimsContrast.png, id=29, 576.65437pt x 420.06938pt>
 File: snapshot_MimsContrast.png Graphic file (type png)
 
 <use snapshot_MimsContrast.png> [5 <./snapshot_MimsContrast.png (PNG copy)>]
-<snapshot_MimsStackEditing.png, id=35, 635.976pt x 451.26732pt>
+<snapshot_MimsStackEditing.png, id=33, 576.65437pt x 420.06938pt>
 File: snapshot_MimsStackEditing.png Graphic file (type png)
 
 <use snapshot_MimsStackEditing.png>
@@ -250,28 +250,29 @@ Missing character: There is no ‚ in font cmr10!
 Missing character: There is no Ä in font cmr10!
 Missing character: There is no ù in font cmr10!
  [6 <./snapshot_MimsStackEditing.png (PNG copy)>] <snapshot_MimsTomography.png,
- id=39, 625.77318pt x 424.37616pt>
+ id=37, 576.65437pt x 420.06938pt>
 File: snapshot_MimsTomography.png Graphic file (type png)
 
 <use snapshot_MimsTomography.png>
-<snapshot_TomographyPlot2.png, id=40, 562.1pt x 273.02pt>
+<snapshot_TomographyPlot2.png, id=38, 421.575pt x 220.57407pt>
 File: snapshot_TomographyPlot2.png Graphic file (type png)
 
 <use snapshot_TomographyPlot2.png> [7 <./snapshot_MimsTomography.png (PNG copy)
-> <./snapshot_TomographyPlot2.png>]
-<snapshot_LineROI.png, id=46, 275.0275pt x 306.14375pt>
+> <./snapshot_TomographyPlot2.png (PNG copy)>]
+<snapshot_LineROI.png, id=43, 208.52907pt x 229.60782pt>
 File: snapshot_LineROI.png Graphic file (type png)
 
 <use snapshot_LineROI.png>
-<snapshot_ProfilePlot.png, id=47, 509.905pt x 306.14375pt>
+<snapshot_ProfilePlot.png, id=44, 384.6872pt x 228.855pt>
 File: snapshot_ProfilePlot.png Graphic file (type png)
 
-<use snapshot_ProfilePlot.png> [8 <./snapshot_LineROI.png> <./snapshot_ProfileP
-lot.png>] <snapshot_MimsSegmentation.png, id=53, 635.976pt x 469.755pt>
+<use snapshot_ProfilePlot.png> [8 <./snapshot_LineROI.png (PNG copy)> <./snapsh
+ot_ProfilePlot.png (PNG copy)>]
+<snapshot_MimsSegmentation.png, id=48, 576.65437pt x 420.06938pt>
 File: snapshot_MimsSegmentation.png Graphic file (type png)
 
 <use snapshot_MimsSegmentation.png>
-<snapshot_Model_Config.png, id=54, 715.89812pt x 305.88698pt>
+<snapshot_Model_Config.png, id=49, 634.62094pt x 273.27094pt>
 File: snapshot_Model_Config.png Graphic file (type png)
 
 <use snapshot_Model_Config.png>
@@ -280,43 +281,43 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 [9
 
- <./snapshot_MimsSegmentation.png>] [10 <./snapshot_Model_Config.png (PNG copy)
->] <snapshot_MimsLog.png, id=62, 635.976pt x 469.755pt>
+ <./snapshot_MimsSegmentation.png (PNG copy)>] [10 <./snapshot_Model_Config.png
+ (PNG copy)>] <snapshot_MimsLog.png, id=56, 576.65437pt x 420.06938pt>
 File: snapshot_MimsLog.png Graphic file (type png)
 
 <use snapshot_MimsLog.png> [11 <./snapshot_MimsLog.png (PNG copy)>]
-<snapshot_m26ROIs.png, id=66, 234.66495pt x 257.14674pt>
+<snapshot_m26ROIs.png, id=60, 208.52907pt x 229.60782pt>
 File: snapshot_m26ROIs.png Graphic file (type png)
 
 <use snapshot_m26ROIs.png>
-<snapshot_ROImanager.png, id=67, 476.13176pt x 327.73605pt>
+<snapshot_ROImanager.png, id=61, 475.7775pt x 313.9228pt>
 File: snapshot_ROImanager.png Graphic file (type png)
 
 <use snapshot_ROImanager.png> [12 <./snapshot_m26ROIs.png (PNG copy)> <./snapsh
 ot_ROImanager.png (PNG copy)>]
-<snapshot_MenuItems.png, id=71, 193.00342pt x 36.97534pt>
+<snapshot_MenuItems.png, id=65, 219.82124pt x 33.87656pt>
 File: snapshot_MenuItems.png Graphic file (type png)
 
 <use snapshot_MenuItems.png> [13 <./snapshot_MenuItems.png (PNG copy)>]
-[14] <snapshot_HSIimage.png, id=79, 452.32518pt x 485.72163pt>
+[14] <snapshot_HSIimage.png, id=73, 452.32518pt x 485.72163pt>
 File: snapshot_HSIimage.png Graphic file (type png)
 
 <use snapshot_HSIimage.png> [15
 
  <./snapshot_HSIimage.png (PNG copy)>]
-<snapshot_ActionFile.png, id=83, 440.64626pt x 607.26875pt>
+<snapshot_ActionFile.png, id=77, 440.64626pt x 607.26875pt>
 File: snapshot_ActionFile.png Graphic file (type png)
 
 <use snapshot_ActionFile.png> [16 <./snapshot_ActionFile.png>]
-<seg_lechene_94p.png, id=88, 769.87625pt x 770.88pt>
+<seg_lechene_94p.png, id=83, 769.87625pt x 770.88pt>
 File: seg_lechene_94p.png Graphic file (type png)
  <use seg_lechene_94p.png>
 [17 <./seg_lechene_94p.png (PNG copy)>]
-<snapshot_ImageList.png, id=92, 491.8375pt x 489.83pt>
+<snapshot_ImageList.png, id=87, 491.8375pt x 489.83pt>
 File: snapshot_ImageList.png Graphic file (type png)
 
 <use snapshot_ImageList.png> [18 <./snapshot_ImageList.png>]
-<snapshot_Table.png, id=97, 573.90883pt x 595.80733pt>
+<snapshot_Table.png, id=92, 573.90883pt x 595.80733pt>
 File: snapshot_Table.png Graphic file (type png)
 
 <use snapshot_Table.png> [19 <./snapshot_Table.png (PNG copy)>]
@@ -324,11 +325,11 @@ File: snapshot_Table.png Graphic file (type png)
 Here is how much of TeX's memory you used:
  1728 strings out of 495061
  24140 string characters out of 1182621
- 77239 words of memory out of 3000000
+ 78239 words of memory out of 3000000
  4902 multiletter control sequences out of 15000+50000
  8895 words of font info for 31 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
- 25i,10n,43p,993b,294s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 25i,10n,43p,993b,296s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cm
 bx10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx12.pfb></
 usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/t
@@ -338,9 +339,9 @@ exmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive
 nts/cm/cmr8.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy10
 .pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/
 share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-Output written on MimsManual.pdf (19 pages, 3382838 bytes).
+Output written on MimsManual.pdf (19 pages, 3799227 bytes).
 PDF statistics:
- 134 PDF objects out of 1000 (max. 8388607)
+ 129 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  111 words of extra memory for PDF output out of 10000 (max. 10000000)
 
