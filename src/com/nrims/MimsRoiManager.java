@@ -3175,6 +3175,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         JTextField threshMaxField = new JTextField(10);
         JTextField sizeMinField = new JTextField(10);
         JTextField sizeMaxField = new JTextField(10);
+        JCheckBox useFilteredCheckbox = new JCheckBox("Use filtered image");
         GroupAssignmentPanel groupAssignmentPanel;
         JButton cancelButton;
         JButton okButton;
@@ -3239,6 +3240,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             sizeMaxField.setAlignmentX(LEFT_ALIGNMENT);
             sizeMaxField.setMaximumSize(d);
             jPanel.add(sizeMaxField);
+            jPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+            //use filtered checkbox
+            useFilteredCheckbox.setAlignmentX(LEFT_ALIGNMENT);
+            jPanel.add(useFilteredCheckbox);
+
             jPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
             // Group Assignment Panel.
@@ -3262,7 +3269,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             setLayout(new BorderLayout());
             add(jPanel, BorderLayout.PAGE_START);
             add(buttonPanel, BorderLayout.PAGE_END);
-            setSize(new Dimension(480, 660));
+            setSize(new Dimension(480, 700));
 
         }
 
@@ -3295,13 +3302,20 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                     double[] params = {mint, maxt, mins, maxs, diag};
 
                     MimsPlus img = workingimage;
-                    if ((img.getMimsType() == MimsPlus.HSI_IMAGE || img.getMimsType() == MimsPlus.RATIO_IMAGE) && img.internalRatio != null)
-                       img = img.internalRatio;
+                    if ((img.getMimsType() == MimsPlus.HSI_IMAGE || img.getMimsType() == MimsPlus.RATIO_IMAGE) && img.internalRatio != null) {
+                        if (useFilteredCheckbox.isSelected() && img.internalRatio_filtered != null) {
+                            img = img.internalRatio_filtered;
+                        } else {
+                            img = img.internalRatio;
+                        }
+
+                    }
                     for (int r = 0; r < rois.length; r++) {
-                       rm.addToGroup(roiThreshold(rois[r], img.internalRatio, params), groupAssignmentPanel.getGroupName());
+                       rm.addToGroup(roiThreshold(rois[r], img, params), groupAssignmentPanel.getGroupName());
                     }
                 } catch(Exception x) {
                     ij.IJ.error("Error", "Not a number.");
+                    x.printStackTrace();
                     return;
                 } finally {
                     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
