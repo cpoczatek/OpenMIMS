@@ -12,6 +12,7 @@ import com.nrims.managers.convertManager;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.WindowManager;
 import ij.gui.Roi;
 import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
@@ -1832,6 +1833,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         File dataFile = nw.save(imp, directory, nrrdFileName);
 
         // Update the Opener object.
+        image.close();
         image = new Nrrd_Reader(dataFile);
 
         // Update the Action object.
@@ -2842,6 +2844,39 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
     /**
+     * Returns all the open Mass, Sum, Ratio, and Hsi
+     *
+     * @return array of images.
+     */
+    public MimsPlus[] getOpenImages() {
+        MimsPlus[] massImages = getOpenMassImages();
+        MimsPlus[] sumImages = getOpenSumImages();
+        MimsPlus[] ratioImages = getOpenRatioImages();
+        MimsPlus[] hsiImages = getOpenHSIImages();
+
+        MimsPlus[] allImages = new MimsPlus[massImages.length + sumImages.length + ratioImages.length + hsiImages.length];
+        int i = 0;
+        for (MimsPlus mp : massImages) {
+           allImages[i] = mp;
+           i++;
+        }
+        for (MimsPlus mp : sumImages) {
+           allImages[i] = mp;
+           i++;
+        }
+        for (MimsPlus mp : ratioImages) {
+           allImages[i] = mp;
+           i++;
+        }
+        for (MimsPlus mp : hsiImages) {
+           allImages[i] = mp;
+           i++;
+        }
+
+        return allImages;
+    }
+
+    /**
      * Returns the open mass images as an array.
      *
      * @return array of images.
@@ -3286,6 +3321,15 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
     /**
+     * Gets the radius of the radius of the median filter.
+     *
+     * @return the radius.
+     */
+    public double getMedianFilterRadius() {
+        return this.medianFilterRadius;
+    }
+
+    /**
      * Returns the directory of the last location used by
      * the user for loading or saving image data.
      *
@@ -3335,6 +3379,108 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        ij.io.OpenDialog temp = new ij.io.OpenDialog("", dir);
        temp.setDefaultDirectory(dir);
        temp = null;
+    }
+
+    /**
+     * This is a copy of imageJ's WindowOrganizer.tileWindows() method.
+     *
+     * @param wList windows to be tiled.
+     */
+    public void tileWindows(int[] wList) {
+        final int XSTART=4, YSTART=80, XOFFSET=8, YOFFSET=24,MAXSTEP=200,GAP=2;
+        int titlebarHeight = IJ.isMacintosh()?40:20;
+
+        Dimension screen = IJ.getScreenSize();
+        int minWidth = Integer.MAX_VALUE;
+        int minHeight = Integer.MAX_VALUE;
+        boolean allSameSize = true;
+        int width=0, height=0;
+        double totalWidth = 0;
+        double totalHeight = 0;
+        for (int i=0; i<wList.length; i++) {
+            //ImageWindow win = getWindow(wList[i]);
+            ImageWindow win = null;
+            ImagePlus imp = WindowManager.getImage(wList[i]);
+            if (imp!=null)
+              win = imp.getWindow();
+            if (win==null)
+                continue;
+            Dimension d = win.getSize();
+            int w = d.width;
+            int h = d.height + titlebarHeight;
+            if (i==0) {
+                width = w;
+                height = h;
+            }
+            if (w!=width || h!=height)
+                allSameSize = false;
+            if (w<minWidth)
+                minWidth = w;
+            if (h<minHeight)
+                minHeight = h;
+            totalWidth += w;
+            totalHeight += h;
+        }
+        int nPics = wList.length;
+        double averageWidth = totalWidth/nPics;
+        double averageHeight = totalHeight/nPics;
+        int tileWidth = (int)averageWidth;
+        int tileHeight = (int)averageHeight;
+        //IJ.write("tileWidth, tileHeight: "+tileWidth+" "+tileHeight);
+        int hspace = screen.width - 2 * GAP;
+        if (tileWidth>hspace)
+            tileWidth = hspace;
+        int vspace = screen.height - YSTART;
+        if (tileHeight>vspace)
+            tileHeight = vspace;
+        int hloc, vloc;
+        boolean theyFit;
+        do {
+            hloc = XSTART;
+            vloc = YSTART;
+            theyFit = true;
+            int i = 0;
+            do {
+                i++;
+                if (hloc+tileWidth>screen.width) {
+                    hloc = XSTART;
+                    vloc = vloc + tileHeight;
+                    if (vloc+tileHeight> screen.height)
+                        theyFit = false;
+                }
+                hloc = hloc + tileWidth + GAP;
+            } while (theyFit && (i<nPics));
+            if (!theyFit) {
+                tileWidth = (int)(tileWidth*0.98 +0.5);
+                tileHeight = (int)(tileHeight*0.98+0.5);
+            }
+        } while (!theyFit);
+        int nColumns = (screen.width-XSTART)/(tileWidth+GAP);
+        int nRows = nPics/nColumns;
+        if ((nPics%nColumns)!=0)
+            nRows++;
+        hloc = XSTART;
+        vloc = YSTART;
+
+        for (int i=0; i<nPics; i++) {
+            if (hloc+tileWidth>screen.width) {
+                hloc = XSTART;
+                vloc = vloc + tileHeight;
+            }
+            ImageWindow win = null;
+            ImagePlus imp = WindowManager.getImage(wList[i]);
+            if (imp!=null)
+              win = imp.getWindow();
+            if (win!=null) {
+                win.setLocation(hloc, vloc);
+                //IJ.write(i+" "+w+" "+tileWidth+" "+mag+" "+IJ.d2s(zoomFactor,2)+" "+zoomCount);
+                ImageCanvas canvas = win.getCanvas();
+                while (win.getSize().width*0.85>=tileWidth && canvas.getMagnification()>0.03125)
+                    canvas.zoomOut(0, 0);
+                win.toFront();
+            }
+            hloc += tileWidth + GAP;
+        }
     }
 
     @Override
@@ -3829,8 +3975,16 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    if (windowPositions != null) {
                       applyWindowPositions(windowPositions);
                    } else {
-                      ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
-                      wo.run("tile");
+                      //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
+                      //wo.run("tile");
+                      MimsPlus[] windows = getOpenImages();
+                      int[] win_ids = new int[windows.length];
+                      int i = 0;
+                      for (MimsPlus mp : windows) {
+                         win_ids[i] = mp.getID();
+                         i++;
+                      }
+                      tileWindows(win_ids);
                    }
                    if (windowZooms != null) {
                       applyWindowZooms(windowZooms);

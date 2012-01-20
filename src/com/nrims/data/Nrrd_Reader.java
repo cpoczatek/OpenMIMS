@@ -237,6 +237,9 @@ public class Nrrd_Reader implements Opener {
             if (thisLine.startsWith(Opener.Mims_user_name))
                 fi.userName=value;
 
+            if (thisLine.startsWith(Opener.Mims_tile_positions))
+                fi.tilePositions=value.split(";");
+
             if (thisLine.startsWith(Opener.Mims_raster)) {
                 try {
                    Integer ras = new Integer(value);
@@ -262,6 +265,12 @@ public class Nrrd_Reader implements Opener {
                 try {                   
                    fi.dt_correction_applied = Boolean.parseBoolean(value);
                 } catch (Exception e) {fi.dt_correction_applied = false;}
+            }
+
+            if (thisLine.startsWith(Opener.Mims_prototype)) {
+                try {
+                   fi.isPrototype = Boolean.parseBoolean(value);
+                } catch (Exception e) {fi.isPrototype = false;}
             }
 
             if (thisLine.startsWith(Opener.Mims_QSA_correction_applied)) {
@@ -503,5 +512,13 @@ public class Nrrd_Reader implements Opener {
 
     public float getFCObjective() {
        return fi.fc_objective;
+    }
+
+    public String[] getTilePositions() {
+       return fi.tilePositions;
+    }
+
+    public boolean isPrototype() {
+       return fi.isPrototype;
     }
 }

@@ -1,6 +1,8 @@
 package com.nrims;
 
+import ij.IJ;
 import java.awt.Graphics;
+import java.awt.event.MouseEvent;
 import java.awt.geom.PathIterator;
 import java.awt.Polygon;
 import java.util.Hashtable;
@@ -8,8 +10,17 @@ import ij.gui.*;
 import ij.io.RoiEncoder;
 import ij.io.RoiDecoder;
 import java.awt.Color;
+import java.awt.MouseInfo;
 import java.awt.Shape;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import javax.swing.AbstractButton;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 /**
  * Extends ij.gui.ImageCanvas with utility to display all ROIs.
@@ -24,7 +35,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
     public MimsCanvas(MimsPlus imp, UI ui) {
         super(imp);
         this.mImp = imp;
-        this.ui = ui;
+        this.ui = ui;      
     }
 
     @Override
@@ -278,6 +289,63 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         }
     }
 
+   @Override
+   protected void handlePopupMenu(MouseEvent e) {
+      String[] tileList = ui.getOpener().getTilePositions();
+      if (ui.getOpener().getTilePositions() == null || tileList.length == 0)
+         super.handlePopupMenu(e);
+      else {
+         int x = e.getX();
+         int y = e.getY();
+         JPopupMenu popup = new JPopupMenu();
+         String tileName = getClosestTileName(x,y);
+         JMenuItem openTile = new JMenuItem("open tile: " + tileName);
+         openTile.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent event) {
+
+             AbstractButton aButton = (AbstractButton) event.getSource();
+             String nrrdFileName = aButton.getActionCommand();
+
+             // Look for nrrd file.
+             final Collection<File> all = new ArrayList<File>();
+             addFilesRecursively(new File(ui.getImageDir()), nrrdFileName, all);
+
+             // If unable to find nrrd file, look for im file.
+             String imFileName = null;
+             if (all.isEmpty()) {
+                imFileName = nrrdFileName.substring(0, nrrdFileName.lastIndexOf(".")) + UI.MIMS_EXTENSION;
+                addFilesRecursively(new File(ui.getImageDir()), imFileName, all);
+             }
+
+             // Open a new instance of the plugin.
+             if (all.isEmpty()) {
+                IJ.error("Unable to locate " + nrrdFileName + " or " + imFileName);
+             } else {
+                UI ui_tile = new UI();
+                ui_tile.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
+                ui_tile.setVisible(true);
+                ui_tile.openFile(((File)all.toArray()[0]));
+                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+                   HSIProps tileProps = mImp.getHSIProps().clone();
+                   tileProps.setNumMassValue(ui.getMassValue(tileProps.getNumMassIdx()));
+                   tileProps.setDenMassValue(ui.getMassValue(tileProps.getDenMassIdx()));
+                   tileProps.setXWindowLocation(MouseInfo.getPointerInfo().getLocation().x);
+                   tileProps.setYWindowLocation(MouseInfo.getPointerInfo().getLocation().y);
+                   HSIProps[] hsiProps = {tileProps};
+                   ui_tile.restoreState(null, hsiProps, null, false, false);                   
+                   ui_tile.getHSIView().useSum(ui.getIsSum());
+                   ui_tile.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
+                }                
+             }
+          }
+       });
+
+         openTile.setActionCommand(tileName);
+         popup.add(openTile);
+         popup.show(this , x, y);
+      }
+   }
+
     private int getSegment(float[] array, float[] seg, int index) {
         int len = array.length;
         if (index >= len) {
@@ -323,6 +391,84 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         }
         return -1;
     }
+
+    public String getClosestTileName(int x, int y) {
+
+       // Get the mouse x,y position in machine coordinates.
+       double x_center_pos, y_center_pos;
+       double width = ui.getOpener().getWidth();
+       double height = ui.getOpener().getHeight();
+       double pixel_width = ui.getOpener().getPixelWidth()/1000;
+       double pixel_height = ui.getOpener().getPixelHeight()/1000;
+       try {
+          x_center_pos = new Integer(ui.getOpener().getPosition().split(",")[1]);
+          if (ui.getOpener().isPrototype())
+             x_center_pos = (-1)*x_center_pos;
+          y_center_pos = new Integer(ui.getOpener().getPosition().split(",")[0]);
+
+       } catch (NumberFormatException nfe) {
+          IJ.error("Unable to convert to X, Y coordinates: " + ui.getOpener().getPosition());
+          return null;
+       }
+
+       long x_mouse_pos = Math.round(x_center_pos - ((width/2.0) - (double)x)*pixel_width);
+       long y_mouse_pos = -1*Math.round(y_center_pos - ((height/2.0) - (double)y)*pixel_height);
+
+       // Find the nearest neighbor.
+       String nearestNeighbor = null;
+       String tileName = null;
+       double nearest_distance = Double.MAX_VALUE;
+       double distance = Double.MAX_VALUE;
+       int x_tile_pos, y_tile_pos;
+       String[] tileList = ui.getOpener().getTilePositions();
+       for (String tile : tileList) {
+          String[] params = tile.split(",");
+          if (params != null && params.length > 0) {
+             try {
+                tileName = params[0];
+                x_tile_pos = new Integer(params[2]);
+                if (ui.getOpener().isPrototype())
+                   x_tile_pos = (-1)*x_tile_pos;
+                y_tile_pos = (-1)*(new Integer(params[1]));
+                distance = Math.sqrt(Math.pow(x_mouse_pos-x_tile_pos, 2) + Math.pow(y_mouse_pos-y_tile_pos, 2));
+             } catch (Exception e) {
+                System.out.println("Unable to convert to X, Y coordinates: " + tile);
+                continue;
+             }
+          }
+          if (distance < nearest_distance) {
+             nearest_distance = distance;
+             nearestNeighbor = tileName;
+          }
+       }
+       System.out.println("");
+       return nearestNeighbor;
+    }
+
+   /**
+    * A specially designed method designed to search recursively under directory
+    * <code>dir</code> for a file named <code>name</code>. Once a file is found
+    * that matches, stop the recursive search.
+    *
+    * @param dir - the root directory.
+    * @param name - the name to search for.
+    * @param all - the collection of files that match name (not supported, returns first match).
+    */
+   private static void addFilesRecursively(File dir, String name, Collection<File> all) {
+      if (all.size() > 0)
+         return;
+      final File[] children = dir.listFiles();
+      if (children != null) {
+         for (File child : children) {
+            if (child.getName().matches(name)) {
+               all.add(child);
+               return;
+            }
+            addFilesRecursively(child, name, all);
+         }
+      }
+   }
+
     private com.nrims.UI ui = null;
     private com.nrims.MimsPlus mImp;
 }

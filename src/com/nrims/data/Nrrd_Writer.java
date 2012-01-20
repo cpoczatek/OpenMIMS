@@ -345,6 +345,8 @@ class NrrdFileInfo extends FileInfo {
    public boolean QSA_correction_applied = false;
    public float[] betas;
    public float fc_objective;
+   public boolean isPrototype = false;
+   public String[] tilePositions = null;
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;

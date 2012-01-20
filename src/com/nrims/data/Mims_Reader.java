@@ -38,6 +38,8 @@ public class Mims_Reader implements Opener {
     private boolean isQSACorrected = false;
     private float[] betas;
     private float fc_objective;
+    private boolean isPrototype = false;
+    private String[] tilePositions = null;
 
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
@@ -880,6 +882,17 @@ public class Mims_Reader implements Opener {
    }
 
    /**
+    * NOT SUPPORTED. NEEDS TO BE CORRECTLY IMPLEMENTED.
+    *
+    * (Returns true if data is from prototype.)
+    *
+    * @return false
+    */
+   public boolean isPrototype() {
+      return this.isPrototype;
+   }
+
+   /**
     * .IM files by default not QSA corrected .
     *
     * @return false
@@ -931,6 +944,15 @@ public class Mims_Reader implements Opener {
     */
     public float getFCObjective() {
        return this.fc_objective;
+    }
+
+   /**
+    * Get tile name and positions.
+    *
+    * @return tilePositions
+    */
+    public String[] getTilePositions() {
+       return this.tilePositions;
     }
 
     /*

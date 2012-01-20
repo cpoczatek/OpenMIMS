@@ -763,14 +763,26 @@ public class MimsHSIView extends javax.swing.JPanel {
 }//GEN-LAST:event_hsiWindowRadioButtonActionPerformed
 
     private void hsiSumRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hsiSumRadioButtonActionPerformed
+       useSum(hsiSumRadioButton.isSelected());
+}//GEN-LAST:event_hsiSumRadioButtonActionPerformed
+
+    /**
+     * Dictates behavior when selecting the Use Sum radio button.
+     * 
+     * @param useSum
+     */
+     public void useSum(boolean useSum) {
        if(this.bUpdating) return;
+
+       if (hsiSumRadioButton.isSelected() != useSum)
+          hsiSumRadioButton.setSelected(useSum);
 
        // Update GUI
        hsiWindowRadioButton.setSelected(false);
        hsiWindowjSpinner.setEnabled(false);
 
        // Set isSum in ui.
-       ui.setIsSum(hsiSumRadioButton.isSelected());
+       ui.setIsSum(useSum);
        ui.setIsWindow(false);
 
        // Recompute all ratio images.
@@ -779,7 +791,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
-}//GEN-LAST:event_hsiSumRadioButtonActionPerformed
+    }
 
     private void removeRatiojButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeRatiojButtonActionPerformed
        int index[] = jList1.getSelectedIndices();
@@ -874,11 +886,22 @@ public class MimsHSIView extends javax.swing.JPanel {
 }//GEN-LAST:event_medianRadiusjSpinnerStateChanged
 
     private void medianFilterjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_medianFilterjButtonActionPerformed
-       if (this.bUpdating) return;
 
        // Get button and spinner values.
        boolean med = medianFilterjButton.isSelected();
        double r = new Double(medianRadiusjSpinner.getValue().toString());
+
+       medianize(med, r);
+}//GEN-LAST:event_medianFilterjButtonActionPerformed
+
+    public void medianize(boolean med, double r) {
+       if (this.bUpdating) return;
+
+       if (medianFilterjButton.isSelected() != med)
+          medianFilterjButton.setSelected(med);
+
+       if (new Double(medianRadiusjSpinner.getValue().toString()) != r)
+          medianRadiusjSpinner.setValue(r);
 
        // Set values in ui.
        ui.setMedianFilterRatios(med);
@@ -889,7 +912,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
-}//GEN-LAST:event_medianFilterjButtonActionPerformed
+    }
 
     private void displayHSIjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayHSIjButtonActionPerformed
        if (bUpdating)
@@ -1230,7 +1253,7 @@ public class MimsHSIView extends javax.swing.JPanel {
    private javax.swing.JSpinner denThresholdjSpinner;
    private javax.swing.JButton displayHSIjButton;
    private javax.swing.JButton displayRatiojButton;
-   private javax.swing.JRadioButton hsiSumRadioButton;
+   public javax.swing.JRadioButton hsiSumRadioButton;
    private javax.swing.JRadioButton hsiWindowRadioButton;
    private javax.swing.JSpinner hsiWindowjSpinner;
    private javax.swing.JLabel imagejLabel;

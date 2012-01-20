@@ -28,6 +28,8 @@ public interface Opener {
     public static final String Mims_QSA_correction_applied = "Mims_QSA_correction_applied";
     public static final String Mims_QSA_betas = "Mims_QSA_betas";
     public static final String Mims_QSA_FC_Obj = "Mims_QSA_FC_Obj";
+    public static final String Mims_prototype = "Mims_prototype";
+    public static final String Mims_tile_positions = "Mims_tile_positions";
 
     // Worker functions.
     public File getImageFile();
@@ -59,6 +61,8 @@ public interface Opener {
     public boolean isQSACorrected();
     public float[] getBetas();
     public float getFCObjective();
+    public boolean isPrototype();
+    public String[] getTilePositions();
 
     //Setable metadata
     public void setNotes(String notes);
