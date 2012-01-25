@@ -298,7 +298,10 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
          int x = e.getX();
          int y = e.getY();
          JPopupMenu popup = new JPopupMenu();
-         String tileName = getClosestTileName(x,y);
+         double magnification = getMagnification();
+         int mag_x = Math.round((float)x/(float)magnification);
+         int mag_y = Math.round((float)y/(float)magnification);
+         String tileName = getClosestTileName(mag_x, mag_y);
          JMenuItem openTile = new JMenuItem("open tile: " + tileName);
          openTile.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent event) {
