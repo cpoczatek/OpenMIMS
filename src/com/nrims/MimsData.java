@@ -313,8 +313,12 @@ public class MimsData extends javax.swing.JPanel {
 
             jLabel30.setText(Boolean.toString(image.isQSACorrected()));
             
-            int raster = image.getRaster();
-            raster = java.lang.Math.round( ( (float)raster )/1000);
+
+            String raster = image.getRaster();
+            if (!raster.contains(",")) {
+               int ras = Math.round((Float.parseFloat(raster))/1000.0f);
+               raster = String.valueOf(ras);
+            }
             tempstring = raster + " um";
             jLabel16.setText(tempstring);
             

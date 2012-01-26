@@ -338,7 +338,8 @@ class NrrdFileInfo extends FileInfo {
    public String duration, position,  sampleDate, sampleHour,
                   userName, dwellTime, countTime,  sampleName;
    public String notes = "";
-   public int raster, dimension, nMasses;
+   public String raster;
+   public int dimension, nMasses;
    public float pixel_width;
    public float pixel_height;
    public boolean dt_correction_applied = false;

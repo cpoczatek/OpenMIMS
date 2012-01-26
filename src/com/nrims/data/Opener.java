@@ -54,7 +54,7 @@ public interface Opener {
     public String getDwellTime();
     public String getCountTime();
     public String getDuration();
-    public int getRaster();
+    public String getRaster();
     public String getNotes();
     public int getFileType();
     public boolean isDTCorrected();

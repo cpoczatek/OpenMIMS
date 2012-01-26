@@ -677,9 +677,8 @@ public class ReportGenerator extends javax.swing.JFrame {
    }
 
    private String getRaster() {
-      int raster = ui.getOpener().getRaster()/1000;
-      String rs = ((Integer)raster).toString() + " microns";
-      return rs;
+      String raster = ui.getOpener().getRaster();
+      return raster;
    }
 
    private String getRoiFileString() {

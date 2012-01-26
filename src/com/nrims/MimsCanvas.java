@@ -297,11 +297,10 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
       else {
          int x = e.getX();
          int y = e.getY();
-         JPopupMenu popup = new JPopupMenu();
-         double magnification = getMagnification();
-         int mag_x = Math.round((float)x/(float)magnification);
-         int mag_y = Math.round((float)y/(float)magnification);
-         String tileName = getClosestTileName(mag_x, mag_y);
+         JPopupMenu popup = new JPopupMenu();         
+         int mX = offScreenX(x);
+         int mY = offScreenY(y);
+         String tileName = getClosestTileName(mX, mY);
          JMenuItem openTile = new JMenuItem("open tile: " + tileName);
          openTile.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent event) {
@@ -444,7 +443,6 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
              nearestNeighbor = tileName;
           }
        }
-       System.out.println("");
        return nearestNeighbor;
     }
 

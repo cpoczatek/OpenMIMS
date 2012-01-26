@@ -761,11 +761,11 @@ public class Mims_Reader implements Opener {
     /**
      * @return the raster entry from the SIMS image header
      */
-    public int getRaster() {
+    public String getRaster() {
         if (this.ihdr == null) {
-            return 0;
+            return "";
         }
-        return this.ihdr.raster;
+        return String.valueOf(this.ihdr.raster);
     }
 
     

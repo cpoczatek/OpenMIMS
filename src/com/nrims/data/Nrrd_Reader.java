@@ -238,14 +238,10 @@ public class Nrrd_Reader implements Opener {
                 fi.userName=value;
 
             if (thisLine.startsWith(Opener.Mims_tile_positions))
-                fi.tilePositions=value.split(";");
+                fi.tilePositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
 
-            if (thisLine.startsWith(Opener.Mims_raster)) {
-                try {
-                   Integer ras = new Integer(value);
-                   fi.raster=ras.intValue();
-                } catch (Exception e) {fi.raster = -1;}
-            }
+            if (thisLine.startsWith(Opener.Mims_raster))
+                   fi.raster=value;
 
             if (thisLine.startsWith(Opener.Mims_pixel_height)) {
                 try {
@@ -454,7 +450,7 @@ public class Nrrd_Reader implements Opener {
         return fi.position;
     }
 
-    public int getRaster() {
+    public String getRaster() {
         return fi.raster;
     }
 

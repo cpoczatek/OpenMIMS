@@ -173,8 +173,11 @@ public class MimsCBControl extends javax.swing.JPanel {
       
       // Not sure why but sometimes images have NULL image processors.
       // Cant update histogram if it does not have one.
+      if (imp == null)
+         return;
       ImageProcessor ip = imp.getProcessor();
-      if (ip == null) return;
+      if (ip == null)
+         return;
       
       // Update the sliders.
       contrastAdjuster1.update(imp);                              
