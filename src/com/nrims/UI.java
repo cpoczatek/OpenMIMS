@@ -3658,6 +3658,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        public FileOpenTask(File file, UI ui) {
           this.file = file;
           this.ui = ui;
+          System.out.println("FileOpenTask: " + file.getAbsolutePath());
        }
 
         /*

@@ -118,7 +118,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
          @Override
            protected void processMouseEvent(MouseEvent e) {
               if (e.getID() == MouseEvent.MOUSE_PRESSED || e.getID() == MouseEvent.MOUSE_DRAGGED) {
-                 if (roijlist.getCellBounds(0, roiListModel.size() - 1).contains(e.getPoint()) == false) {
+                 if (roiListModel == null || roijlist == null || roijlist.getCellBounds(0, roiListModel.size() - 1) == null) {
+                    super.processMouseEvent(e);
+                 } else if (roijlist.getCellBounds(0, roiListModel.size() - 1).contains(e.getPoint()) == false) {
                     roijlist.clearSelection();
                     e.consume();
                  } else {
@@ -2055,14 +2057,27 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         roiListModel.addElement(label);
         roi2.setName(label);
         Calibration cal = imp.getCalibration();
-        if (cal.xOrigin != 0.0 || cal.yOrigin != 0.0) {
-            Rectangle r = roi2.getBounds();
+        Rectangle r = roi2.getBounds();
+        if (cal.xOrigin != 0.0 || cal.yOrigin != 0.0) {            
             roi2.setLocation(r.x - (int) cal.xOrigin, r.y - (int) cal.yOrigin);
         }
-        rois.put(label, roi2);
-        if (Recorder.record) {
-            Recorder.record("mimsRoiManager", "Add");
+
+        // Create positions arraylist.
+        ArrayList xypositions = new ArrayList<Integer[]>();
+        ArrayList xypositions_orig = (ArrayList<Integer[]>)locations.get(name);
+        for (int i = 0; i < xypositions_orig.size(); i++) {
+           xypositions.add(i, xypositions_orig.get(i));
         }
+        locations.put(label, xypositions);
+
+        // Add roi to list.
+        rois.put(label, roi2);
+
+        // Assign group.
+        String group = (String)groupsMap.get(name);
+        if (group != null)
+           groupsMap.put(label, group);
+
         return;
     }
 
@@ -2815,8 +2830,6 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     public ImagePlus getImage() {
         ImagePlus imp = WindowManager.getCurrentImage();
         if (imp == null) {
-            int[] x = new int[0];
-            int y = x[3];
             error("There are no images open.");
             return null;
         } else {
