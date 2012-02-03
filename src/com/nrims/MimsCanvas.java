@@ -4,17 +4,13 @@ import ij.IJ;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.geom.PathIterator;
-import java.awt.Polygon;
 import java.util.Hashtable;
 import ij.gui.*;
-import ij.io.RoiEncoder;
-import ij.io.RoiDecoder;
 import java.awt.Color;
 import java.awt.MouseInfo;
-import java.awt.Shape;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +43,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         }
     }
 
+    // Handles the drawing of Rois on the Canvas.
     void drawOverlay(Graphics g) {
         MimsRoiManager roiManager = ui.getRoiManager();
         Hashtable rois = roiManager.getROIs();
@@ -55,25 +52,14 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
             return;
         }
 
+        // Is the hide labels box checked.
         if (roiManager.getHideLabel())
            drawLabel = false;
 
-        //make color prefernce selectable
-        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
-            g.setColor(Color.WHITE);
-        } else {
-            g.setColor(Color.RED);
-        }
         Roi cRoi = mImp.getRoi();
         javax.swing.JList list = roiManager.getList();
 
-        //to count the rois on a plane if not synced
-        int nSyncid = 0;
-        //test is ratio/hsi to get correct plane number
-        //note getType is from ImagePlus
-        boolean isRatio = (mImp.getMimsType() == MimsPlus.RATIO_IMAGE) || (mImp.getMimsType() == MimsPlus.HSI_IMAGE);
         int parentplane = 1;
-        
         if (mImp.getMimsType() == MimsPlus.MASS_IMAGE) {
             parentplane = mImp.getCurrentSlice();
         } else if(mImp.getMimsType() == MimsPlus.RATIO_IMAGE) {
@@ -88,204 +74,49 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         }
 
 
+        // Loop over the Rois and draw each one.
         for (int id = 0; id < list.getModel().getSize(); id++) {
             String label = (list.getModel().getElementAt(id).toString());
             Roi roi = (Roi) rois.get(label);
+            roi.setImage(imp);
             Integer[] xy = roiManager.getRoiLocation(label, parentplane);
-            if (xy != null)
+            if (xy != null && roi.getType() != Roi.LINE)
                roi.setLocation(xy[0], xy[1]);
 
-            boolean bDraw = true;
-
-
-            // If the current slice is the one which the
-            // roi was created then we want to show the roi in red.
-
-            //make color preference selectable
+            // Set the color.
+            Color color;
             if(roiManager.isSelected(label)) {
-                g.setColor(Color.GREEN);
-                //should this be drawn "last"?
+                color = Color.GREEN;
             } else {
                 if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
-                    g.setColor(Color.WHITE);
+                   color = Color.WHITE;
                 } else {
-                    g.setColor(Color.RED);
+                   color = Color.RED;
                 }
             }
+            roi.setStrokeColor(color);
+            g.setColor(color);
 
-            String name = "";
-            name += label;
-            java.awt.Rectangle r = roi.getBounds();
-            int x = screenX(r.x + r.width / 2);
-            int y = screenY(r.y + r.height / 2);
-            if (drawLabel)
+            // Draw the Label.
+            if (drawLabel) {
+               String name = label;
+               Rectangle r = roi.getBounds();
+               int x = screenX(r.x + r.width / 2);
+               int y = screenY(r.y + r.height / 2);
                g.drawString(name, x, y);
-            bDraw = true;
+            }
 
             // We dont want to show the boundry if the mouse is within the roi.
+            boolean bDraw = true;
             if (cRoi != null && cRoi.toString().equals(roi.toString())) {
                 bDraw = false;
             }
 
-
-
+            // Draw the Roi.
             if (bDraw) {
-                switch (roi.getType()) {
-                    case Roi.COMPOSITE: {
-                        roi.setImage(imp);
-                        //make color preference selectable
-                        if (mImp.getMimsType() == MimsPlus.HSI_IMAGE || mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE || mImp.getMimsType() == MimsPlus.SEG_IMAGE) {
-                            roi.setInstanceColor(Color.WHITE);
-                        } else {
-                            roi.setInstanceColor(Color.RED);
-                        }
-                        roi.draw(g);
-                        break; 
-                    }
-                    case Roi.FREELINE: {
-                        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-                        Polygon p = roi.getPolygon();
-                        for (int j = 0; j < p.npoints; j++) {
-                            x2 = screenX(p.xpoints[j]);
-                            y2 = screenY(p.ypoints[j]);
-                            if (j > 0) {
-                                g.drawLine(x1, y1, x2, y2);
-                            }
-                            x1 = x2;
-                            y1 = y2;
-                        }
-                        break;
-                    }
-                    case Roi.POLYLINE: {
-                        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-                        Polygon p = roi.getPolygon();
-                        for (int j = 0; j < p.npoints; j++) {
-                            x2 = screenX(p.xpoints[j]);
-                            y2 = screenY(p.ypoints[j]);
-                            if (j > 0) {
-                                g.drawLine(x1, y1, x2, y2);
-                            }
-                            x1 = x2;
-                            y1 = y2;
-                        }
-                        break;
-                    }
-                    case Roi.LINE: {
-                        Line lroi = (Line) roi;
-                        int width = lroi.x2 - lroi.x1;
-                        int height = lroi.y2 - lroi.y1;                        
-                        int x1, y1, x2, y2;
-                        if (width > 0) {
-                           x1 = screenX(xy[0]);
-                           x2 = screenX(xy[0]+width);
-                        } else {
-                           x1 = screenX(xy[0]+Math.abs(width));
-                           x2 = screenX(xy[0]);
-                        }
-                        if (height > 0) {
-                           y1 = screenY(xy[1]);
-                           y2 = screenY(xy[1]+height);
-                        } else {
-                           y1 = screenY(xy[1]+Math.abs(height));
-                           y2 = screenY(xy[1]);
-                        }                                                
-                        g.drawLine(x1, y1, x2, y2);
-                        break;
-                    }
-                    case Roi.POINT: {
-                            java.awt.Rectangle r1 = roi.getBounds();
-                            int x1 = screenX(r1.x);
-                            int y1 = screenY(r1.y);
-                            g.drawLine(x1, y1 - 5, x1, y1 + 5);
-                            g.drawLine(x1 - 5, y1, x1 + 5, y1);
-                            break;
-                    }                    
-                    case Roi.OVAL: {
-                       
-                       // THIS IS A TEMPORARY FIX.
-                       // I am not sure why this needs to be done but
-                       // otherwise ovals do not appear. They were appearing if they 
-                       // were saved and then reloaded (which makes no sense) so this
-                       // code mimics that process using a bytestram only. (And solves the problem).
-                       // A more permamnent solution should be sought. But I beleive it is an ImageJ bug.
-                       
-                          ByteArrayOutputStream bos = new ByteArrayOutputStream(); 
-                          RoiEncoder re = new RoiEncoder(bos);
-                          try {
-                             re.write(roi);
-                          } catch (Exception e) {
-                             e.printStackTrace();
-                          }
-                                                                              
-                          byte[] bytes = bos.toByteArray();
-                          RoiDecoder rd = new RoiDecoder(bytes, roi.getName());
-                          try {
-                             roi = rd.getRoi();
-                          } catch (Exception e) {
-                             e.printStackTrace();
-                          }
-                        
-                        // END OF TEMPORARY SOLUTION.
-                          
-                            Shape p = (Shape) roi.getPolygon();
-                            PathIterator pi = p.getPathIterator(null);
-                            int nc = 0;
-                            float[] xys = new float[6];
-                            int xn = 0, yn = 0, xp = 0, yp = 0, xi = 0, yi = 0;
-                            int ct = 0;
-                            while (!pi.isDone()) {
-                                ct = pi.currentSegment(xys);
-                                xn = screenX(Math.round(xys[0]));
-                                yn = screenY(Math.round(xys[1]));
-                                if (nc == 0) {
-                                    xi = xn;
-                                    yi = yn;
-                                } else {
-                                    g.drawLine(xp, yp, xn, yn);
-                                }
-                                xp = xn;
-                                yp = yn;
-                                pi.next();
-                                nc++;
-                            }
-                            if (ct == pi.SEG_CLOSE) {
-                                g.drawLine(xn, yn, xi, yi);
-                            }
-                        }
-                    case Roi.FREEROI:
-                    case Roi.POLYGON:
-                    case Roi.RECTANGLE:
-                    default:
-                         {
-                            Polygon p = roi.getPolygon();
-                            PathIterator pi = p.getPathIterator(null);
-                            int nc = 0;
-                            float[] xys = new float[6];
-                            int xn = 0, yn = 0, xp = 0, yp = 0, xi = 0, yi = 0;
-                            int ct = 0;
-                            while (!pi.isDone()) {
-                                ct = pi.currentSegment(xys);
-                                xn = screenX(Math.round(xys[0]));
-                                yn = screenY(Math.round(xys[1]));
-                                if (nc == 0) {
-                                    xi = xn;
-                                    yi = yn;
-                                } else {
-                                    g.drawLine(xp, yp, xn, yn);
-                                }
-                                xp = xn;
-                                yp = yn;
-                                pi.next();
-                                nc++;
-                            }
-                            if (ct == pi.SEG_CLOSE) {
-                                g.drawLine(xn, yn, xi, yi);
-                            }
-                        }
-                        break;
-
-                }
-            }
+              roi.setStrokeWidth(0.0);
+              roi.drawOverlay(g);
+           }
         }
     }
 

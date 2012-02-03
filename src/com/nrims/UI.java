@@ -2390,8 +2390,7 @@ private boolean saveMIMS(java.awt.event.ActionEvent evt) {
          return false;
       }
    } catch (Exception e) {
-      ij.IJ.error("Save Error", "Error saving file.");
-      e.printStackTrace();
+      ij.IJ.error("Save Error", "Error saving file.");      
       return false;
    } finally {
       setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

@@ -719,7 +719,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
       // 
       Roi roi = (Roi) rois.get(label);
-      if (roi.isLine()) {
+      if (roi.getType() == Roi.LINE) {
          moveLine(roi, (Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue());
          roi = (Roi) rois.get(roi.getName());
       } else {
