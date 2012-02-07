@@ -1211,21 +1211,24 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         for(Object key:rois.keySet()) {
             Roi loopRoi = (Roi)rois.get(key);
+            loopRoi.setImage(this);
 
             if (!((DefaultListModel)ui.getRoiManager().getList().getModel()).contains(loopRoi.getName()))
                continue;            
 
             boolean linecheck = false;            
             int c = -1;
-            if( (loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE) || (loopRoi.getType() == Roi.FREELINE) ) {
-                c = loopRoi.isHandle(mX, mY);
-                if(c != -1)
-                   linecheck=true;
-                
-                if(loopRoi.getType()==Roi.FREELINE && loopRoi.contains(mX,mY)) {
-                                linecheck = true;
-                            }
-                        }
+            if ((loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE) || (loopRoi.getType() == Roi.FREELINE)) {
+              // I have no idea why, but the isHandle() method for Line Rois
+              // only works with true x, y not image x, y. This apparently
+              // is only true for Line Rois.
+              c = loopRoi.isHandle(x, y);
+              if (c != -1)
+                 linecheck = true;
+
+              if (loopRoi.getType() == Roi.FREELINE && loopRoi.contains(mX, mY))
+                 linecheck = true;
+            }
 
             if(loopRoi.contains(mX, mY) || linecheck) {
 
@@ -1255,6 +1258,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                      smallestRoi = loopRoi;
                      smallestRoiArea = stats.area;
                      smallestRoiStats = stats;
+                     if (linecheck)
+                        smallestRoiArea = 0;
                   }
                }
             } 
