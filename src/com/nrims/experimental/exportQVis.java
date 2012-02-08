@@ -201,6 +201,16 @@ public class exportQVis {
                 double alpha = java.lang.Math.max(denpix[i], min);
                 alpha = java.lang.Math.min(alpha, max);
                 alpha = (alpha-min) / (max - min);
+
+/*
+                //kludge to do ratio value alpha-ing
+                alpha = java.lang.Math.max(ratioval, min);
+                alpha = java.lang.Math.min(alpha, max);
+                alpha = (alpha-min) / (max - min);
+                if(denpix[i] < 5000.0) {
+                    alpha = (double)0.0;
+                }
+*/
                 plane_rgba[i][3] = (byte) (255 * alpha);
 
             }

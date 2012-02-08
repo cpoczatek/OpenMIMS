@@ -131,7 +131,7 @@ public class Nrrd_Writer {
 		StringWriter out=new StringWriter();
 		
 		out.write("NRRD000"+NRRD_VERSION+"\n");
-		out.write("# Created by Nrrd_Writer at "+(new Date())+"\n");
+		out.write("# Created by OpenMIMS at "+(new Date())+"\n");
 
 		// Data type.
 		out.write("type: "+imgType(fi.fileType)+"\n");
