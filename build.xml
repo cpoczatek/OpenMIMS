@@ -13,8 +13,7 @@
 
 <!-- Added to create svn revision number in file    -->
     <target name="-pre-jar">
-      <exec executable="svn" output="buildnum.txt" >
-        <arg line="info src"/>
+      <exec executable="svnversion" output="buildnum.txt" >
       </exec>
       <copy file="buildnum.txt" todir="${build.classes.dir}"/>
 <!-- Added to create list of /lib jars in file    -->
