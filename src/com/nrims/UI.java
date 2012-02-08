@@ -728,24 +728,19 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         try {
             InputStream build = getClass().getResourceAsStream("/buildnum.txt");
             InputStreamReader buildr = new InputStreamReader(build);
-            BufferedReader br = new BufferedReader(buildr);
-            String line = "";
-            boolean read = true;
-            while (read && (line = br.readLine()) != null) {
-                if (line.contains("Revision")) {
-                    line = line.split(":")[1].trim();
-                    read = false;
-                }
+            BufferedReader br = new BufferedReader(buildr);            
+            String revision = br.readLine();
+            if (revision.contains(":")) {
+                revision = revision.split(":")[1].trim();
             }
             br.close();
             buildr.close();
             build.close();
-
-            return line;
+            return revision;
         } catch (Exception v) {
+            v.printStackTrace();
             return "";
         }
-
     }
 
 
