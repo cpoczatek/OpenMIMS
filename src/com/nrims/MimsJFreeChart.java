@@ -351,11 +351,14 @@ public class MimsJFreeChart extends JFrame {
                for (int k = 0; k < stats.length; k++) {
 
                   // Generate a name for the dataset.
+                  String prefix = "";
+                  if (image.getType() == MimsPlus.MASS_IMAGE || image.getType() == MimsPlus.RATIO_IMAGE)
+                        prefix = "_m";
                   if (seriesname[i][j][k] == null) {
-                     tempName = image.getRoundedTitle() + " " + stats[k] + " r" + rois[i].getName();
+                     tempName = stats[k] + prefix + image.getRoundedTitle(true) + "_r" + rois[i].getName();
                      int dup = 1;
                      while (seriesNames.contains(tempName)) {
-                        tempName = image.getRoundedTitle() + " " + stats[k] + " r" + rois[i].getName() + " (" + dup + ")";
+                        tempName = stats[k] + prefix + image.getRoundedTitle(true) + "_r" + rois[i].getName() + " (" + dup + ")";
                         dup++;
                      }
                      seriesNames.add(tempName);

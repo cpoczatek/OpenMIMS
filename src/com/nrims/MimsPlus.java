@@ -702,8 +702,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
            return "";
     }
 
-
-
     /**
      * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded mass and excludes the "m".
      *
@@ -717,6 +715,22 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * </ul>
      */
     public String getRoundedTitle() {
+       return getRoundedTitle(false);
+    }
+
+    /**
+     * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded mass and excludes the "m".
+     *
+     * @return Text string containing the rounded mass value. For example:
+     * <ul>
+     * <li>"13" for Mass images.
+     * <li>"ratio 13/12" for Ratio images.
+     * <li>"hsi 13/12" for HSI images.
+     * <li>"sum 13" for Sum images.
+     * <li>"0" by default.
+     * </ul>
+     */
+    public String getRoundedTitle(boolean forTableOrPlot) {
 
       String roundedTitle = "";
       try {
@@ -746,13 +760,19 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             SumProps props = this.getSumProps();
             if (props.getSumType() == SumProps.MASS_IMAGE) {
                int mass_idx = props.getParentMassIdx();
-               roundedTitle = "sum " + ui.getMassImage(mass_idx).getRoundedTitle();
+               if (forTableOrPlot)
+                  roundedTitle = "sm" + ui.getMassImage(mass_idx).getRoundedTitle();
+               else
+                  roundedTitle = "sum " + ui.getMassImage(mass_idx).getRoundedTitle();
             } else if (props.getSumType() == SumProps.RATIO_IMAGE) {
                double num_d = ui.getMassValue(props.getNumMassIdx());
                double den_d = ui.getMassValue(props.getDenMassIdx());
                long num_l = java.lang.Math.round(num_d);
                long den_l = java.lang.Math.round(den_d);
-               roundedTitle = "sum " + Long.toString(num_l) + "/" + Long.toString(den_l);
+               if (forTableOrPlot)
+                  roundedTitle = " sm" + Long.toString(num_l) + "/" + Long.toString(den_l);
+               else
+                  roundedTitle = "sum " + Long.toString(num_l) + "/" + Long.toString(den_l);
             }
          }
       } catch (Exception e) {

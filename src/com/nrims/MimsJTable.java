@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -400,7 +401,7 @@ public class MimsJTable {
          for (int col = 0; col < SUM_IMAGE_MANDOTORY_COLUMNS.length; col++) {
             stat = SUM_IMAGE_MANDOTORY_COLUMNS[col];
             if (stat.equals(FILENAME))
-               data[row][col] = ui.getImageFilePrefix();
+               data[row][col] = ui.getOpener().getImageFile().getName();
             else if (stat.equals(ROIGROUP)) {
                String group = ui.getRoiManager().getRoiGroup(roi.getName());
                if (group == null)
@@ -528,8 +529,8 @@ public class MimsJTable {
             for (int k = 0; k < stats.length; k++) {
                String stat = stats[k];
                if (j == 0) {
-                  if (stats[k].endsWith(tableOnly))
-                     stat = stats[k].substring(0, stats[k].indexOf(tableOnly) - 1);
+                  if (stats[k].startsWith(GROUP))
+                     stat = GROUP;
                } else {
                   if ((stats[k].startsWith(GROUP) || stats[k].equalsIgnoreCase(AREA)))
                      continue;
@@ -537,7 +538,9 @@ public class MimsJTable {
                String prefix = "_";
                if (images[j].getType() == MimsPlus.MASS_IMAGE || images[j].getType() == MimsPlus.RATIO_IMAGE)
                   prefix = "_m";
-               header = stat + prefix + images[j].getRoundedTitle() + "_r" + rois[i].getName();
+               header = stat + prefix + images[j].getRoundedTitle(true) + "_r" + rois[i].getName();
+               if (stat.matches(AREA) || stat.matches(GROUP))
+                  header = stat + "_r" + rois[i].getName();
                columnNamesArray.add(header);
                col++;
             }
@@ -581,13 +584,15 @@ public class MimsJTable {
          image = images[col1];
          for (int col2 = 0; col2 < stats.length; col2++) {
             stat = stats[col2];
-            String label = stat + " " + image.getRoundedTitle();
+            String label = stat + " " + image.getRoundedTitle(true);
 
             if (stat.startsWith(GROUP))
                continue;
 
             if (col1 > 0 && stat.equals(AREA))
                continue;
+            else if(col1 == 0 && stat.equals(AREA))
+               columnNamesArray.add(AREA);
             else
                columnNamesArray.add(label);
          }
@@ -914,33 +919,35 @@ public class MimsJTable {
     * Sets the renderers for the various columns.
     */
    public void setColumnRenderer() {
-      String colName = "";
       for(int i = 0; i < table.getColumnCount(); i++) {
-         colName = table.getColumnName(i);
-         if (colName.matches(AREA)     || colName.startsWith(GROUP) || colName.matches(FILENAME) ||
-             colName.matches(ROIGROUP) || colName.matches(ROINAME)  || colName.matches(SLICE)) {
-            // do nothing
-         } else {
-             table.getColumnModel().getColumn(i).setCellRenderer(new DecimalFormatRenderer() );
-         }
+          table.getColumnModel().getColumn(i).setCellRenderer(new OpenMIMSTableFormatRenderer() );
       }
    }
 
    /**
     * A custom renderer that display a Number to two decimal places.
     */
-   static class DecimalFormatRenderer extends DefaultTableCellRenderer {
+   static class OpenMIMSTableFormatRenderer extends DefaultTableCellRenderer {
 
       private static final DecimalFormat formatter = new DecimalFormat("0.00");
+      private static final DecimalFormat wholeNumberFormatter = new DecimalFormat("##");
 
+      @Override
       public Component getTableCellRendererComponent(
               JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
          // First format the cell value as required
 
-         value = formatter.format((Number) value);
+         String colName = table.getColumnName(column);
+         if (colName.startsWith(GROUP) || colName.matches(FILENAME) ||
+             colName.matches(ROIGROUP) || colName.matches(ROINAME)  || colName.matches(SLICE)) {
+             setHorizontalAlignment(JLabel.LEFT);
+         } else if (colName.startsWith(AREA)) {
+             value = wholeNumberFormatter.format((Number) value);
+         } else {
+             value = formatter.format((Number) value);
+         }
 
          // And pass it on to parent class
-
          return super.getTableCellRendererComponent(
                  table, value, isSelected, hasFocus, row, column);
       }
