@@ -160,7 +160,7 @@ public class MimsJFreeChart extends JFrame {
           JMenuItem asTextMenuItem = new javax.swing.JMenuItem("Display text");
           asTextMenuItem.addActionListener(new ActionListener() {
               public void actionPerformed(ActionEvent e) {
-                  MimsJFreeChart.displayProfileData(chartpanel);
+                  displayProfileData();
               }
           });
           chartpanel.getPopupMenu().add(asTextMenuItem, 2);
@@ -518,32 +518,17 @@ public class MimsJFreeChart extends JFrame {
     }
 
    /**
-    * Extract and show table of plot's underlying data.
-    * @param chartpanel GUI element to be affected.
+    * Create a table from the same roi/images/stats/planes
+    * set as used to creazte the plot
     */
-    public static void displayProfileData(MimsChartPanel chartpanel) {
-        MimsXYPlot plot = (MimsXYPlot) chartpanel.getChart().getPlot();
-        XYDataset data = plot.getDataset();
-
-        ij.measure.ResultsTable table = new ij.measure.ResultsTable();
-        table.setHeading(1, "Plane");
-        for(int i = 0; i<plot.getLegendItems().getItemCount(); i++) {
-            table.setHeading(i+2, plot.getLegendItems().get(i).getLabel() );
-        }
-
-        //table.incrementCounter();
-
-        //end of table bug?
-        for (int i = 0; i < data.getItemCount(0); i++) {
-            table.incrementCounter();
-            table.addValue(1, data.getXValue(0, i));
-
-            for(int j = 0; j < plot.getLegendItems().getItemCount(); j++) {
-                table.addValue(j+1, data.getYValue(j, i));
-            }
-        }
-
-        table.show("");
+    public void displayProfileData() {
+       MimsJTable table = new MimsJTable(ui);
+       table.setPlanes(planes);
+       table.setStats(stats);
+       table.setRois(rois);
+       table.setImages(images);
+       table.createTable(false);
+       table.showFrame();
     }
 
    /**
