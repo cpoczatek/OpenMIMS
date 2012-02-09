@@ -41,6 +41,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     static final public int SUM_IMAGE = 4 ;
     static final public int COMPOSITE_IMAGE = 5 ;
 
+    static final public int X_OFFSET = 15;
+    static final public int Y_OFFSET = 40;
+
     // Internal images for test data display.
     public MimsPlus internalRatio_filtered;
     public MimsPlus internalRatio;

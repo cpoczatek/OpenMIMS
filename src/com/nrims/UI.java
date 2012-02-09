@@ -2173,6 +2173,8 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
     // Open a sum image for each mass image.
     for (int i = 0; i < openmass.length; i++) {
         sumProps = new SumProps(openmass[i].getMassIndex());
+        sumProps.setXWindowLocation(openmass[i].getWindow().getLocationOnScreen().x+MimsPlus.X_OFFSET);
+        sumProps.setYWindowLocation(openmass[i].getWindow().getLocationOnScreen().y+MimsPlus.Y_OFFSET);
         MimsPlus mp = new MimsPlus(this, sumProps, null);
         mp.showWindow();
     }
@@ -2181,6 +2183,8 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
     for (int i = 0; i < openratio.length; i++) {
         sumProps = new SumProps(openratio[i].getRatioProps().getNumMassIdx(), openratio[i].getRatioProps().getDenMassIdx());
         sumProps.setRatioScaleFactor(openratio[i].getRatioProps().getRatioScaleFactor());
+        sumProps.setXWindowLocation(openratio[i].getWindow().getLocationOnScreen().x+MimsPlus.X_OFFSET);
+        sumProps.setYWindowLocation(openratio[i].getWindow().getLocationOnScreen().y+MimsPlus.Y_OFFSET);
         MimsPlus mp = new MimsPlus(this, sumProps, null);
         mp.showWindow();
     }

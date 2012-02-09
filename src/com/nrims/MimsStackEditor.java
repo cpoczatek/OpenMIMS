@@ -1414,6 +1414,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
        } else {
           return;
        }
+       sumProps.setXWindowLocation(mp.getWindow().getLocationOnScreen().x+MimsPlus.X_OFFSET);
+       sumProps.setYWindowLocation(mp.getWindow().getLocationOnScreen().y+MimsPlus.Y_OFFSET);
 
        // Get list from field box.
        if (sumTextFieldString.isEmpty()) {
