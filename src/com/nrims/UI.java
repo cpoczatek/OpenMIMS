@@ -2172,11 +2172,15 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 
     // Open a sum image for each mass image.
     for (int i = 0; i < openmass.length; i++) {
-        sumProps = new SumProps(openmass[i].getMassIndex());
-        sumProps.setXWindowLocation(openmass[i].getWindow().getLocationOnScreen().x+MimsPlus.X_OFFSET);
-        sumProps.setYWindowLocation(openmass[i].getWindow().getLocationOnScreen().y+MimsPlus.Y_OFFSET);
-        MimsPlus mp = new MimsPlus(this, sumProps, null);
-        mp.showWindow();
+        try {
+           sumProps = new SumProps(openmass[i].getMassIndex());
+           sumProps.setXWindowLocation(openmass[i].getWindow().getLocationOnScreen().x+MimsPlus.X_OFFSET);
+           sumProps.setYWindowLocation(openmass[i].getWindow().getLocationOnScreen().y+MimsPlus.Y_OFFSET);
+           MimsPlus mp = new MimsPlus(this, sumProps, null);
+           mp.showWindow();
+        } catch (NullPointerException npe) {
+           // Most likely the user tried to close a mass image hitting the X button
+        }
     }
 
     // open a sum image for each ratio image.

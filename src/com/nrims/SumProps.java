@@ -80,6 +80,9 @@ public class SumProps implements java.io.Serializable {
      */
     public boolean equals(SumProps sp) {
 
+       if (sumType != sp.getSumType())
+          return false;
+
        if (sumType == RATIO_IMAGE) {
          if (sp.getNumMassIdx() == numMassIdx && sp.getDenMassIdx() == denMassIdx)
             return true;
