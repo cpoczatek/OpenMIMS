@@ -2752,7 +2752,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     * @return an instance of the RoiManager.
     */
     public MimsRoiManager getRoiManager() {
-        roiManager = MimsRoiManager.getInstance();
+        //roiManager = getRoiManager().getInstance();
         if (roiManager == null) {
             roiManager = new MimsRoiManager(this);
         }

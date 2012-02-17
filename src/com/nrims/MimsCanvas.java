@@ -38,7 +38,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
     public void paint(Graphics g) {
         super.paint(g);
         // Check if the MimsRoiManager is open..
-        if (MimsRoiManager.getInstance() != null) {
+        if (ui.getRoiManager().getInstance() != null) {
             drawOverlay(g);
         }
     }

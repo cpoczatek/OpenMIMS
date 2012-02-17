@@ -55,7 +55,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     File roiFile = null;
     JPanel panel;
     MimsJTable table;
-    static Frame instance;
+    Frame instance;
     static final String DEFAULT_GROUP = "...";
     static final String GROUP_FILE_NAME = "group";
     static final String GROUP_MAP_FILE_NAME = "group_map";
@@ -2908,7 +2908,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * Returns a reference to the MIMS ROI Manager
      * or null if it is not open.
      */
-    public static MimsRoiManager getInstance() {
+    public MimsRoiManager getInstance() {
         return (MimsRoiManager) instance;
     }
 
