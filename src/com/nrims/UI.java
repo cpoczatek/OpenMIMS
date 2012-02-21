@@ -836,7 +836,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         str += "Duration (s): " + im.getDuration() + "\n";
         str += "Dwell time (ms/xy): " + im.getDwellTime() + "\n";
         str += "Stage Position: " + im.getPosition() + "\n";
-        str += "Sample name: " + im.getSampleName() + "\n";
+        str += "Z Position: " + im.getZPosition() + "\n";
         str += "Sample date: " + im.getSampleDate() + "\n";
         str += "Sample hour: " + im.getSampleHour() + "\n";
         str += "Pixel width (nm): " + im.getPixelWidth() + "\n";
@@ -2309,7 +2309,7 @@ public Image getScreenCaptureCurrentImage() {
       }
       win.setVisible(false);
       win.setVisible(true);
-            win.repaint();
+      win.repaint();
       try {
          Thread.sleep(500);
       } catch (Exception e) {
@@ -2408,7 +2408,10 @@ private boolean saveMIMS(java.awt.event.ActionEvent evt) {
          return false;
       }
    } catch (Exception e) {
-      ij.IJ.error("Save Error", "Error saving file.");      
+      if (!silentMode)
+         ij.IJ.error("Save Error", "Error saving file.");
+      else
+         e.printStackTrace();
       return false;
    } finally {
       setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -2668,11 +2671,17 @@ private void qvisExportMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
          //log what was done
          this.getmimsLog().Log("DT correction dwelltime (s) = " + dwell);
       } catch (NumberFormatException e) {
-         ij.IJ.error("Error", "Cannot get dwelltime from file header.");
+         if (!silentMode)
+            ij.IJ.error("Error", "Cannot get dwelltime from file header.");
+         else
+            e.printStackTrace();
          return false;
       } catch (Exception e) {
-         ij.IJ.error("Error", "Error applying correction and/or saving file.");
-
+         if (!silentMode)
+            ij.IJ.error("Error", "Error applying correction and/or saving file.");
+         else
+            e.printStackTrace();
+         return false;
       }
 
       boolean saved = saveSession(fileName, true);
@@ -3903,7 +3912,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    return false;
                 }
              } catch (Exception e) {
-                IJ.error("Failed to open " + file + "\n");
+                if (!ui.silentMode)
+                   IJ.error("Failed to open " + file + "\n");
                 e.printStackTrace();
                 return false;
              }

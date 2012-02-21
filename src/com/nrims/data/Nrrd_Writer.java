@@ -96,33 +96,31 @@ public class Nrrd_Writer {
 	}
 	File writeImage(FileInfo[] fi, Calibration cal) throws IOException {
 
-        File file = new File(fi[0].directory, fi[0].fileName);
+      File file = new File(fi[0].directory, fi[0].fileName);
 
-        // Setup output stream.
+      // Setup output stream.
 		FileOutputStream out = new FileOutputStream(file);
 
-        // First write out the full header
+      // First write out the full header
 		Writer bw = new BufferedWriter(new OutputStreamWriter(out));
 		bw.write(makeHeader(fi[0],cal));
 		
-        // Write Mims specific fields.
-        bw.write(getMimsKeyValuePairs()+"\n");
+      // Write Mims specific fields.
+      bw.write(getMimsKeyValuePairs()+"\n");
 
-        // Flush rather than close
+      // Flush rather than close
 		bw.flush();		
 
 		// Then the image data
 		ImageWriter[] writer = new ImageWriter[fi.length];
-        for (int i = 0; i < writer.length; i++) {
-            writer[i] = new ImageWriter(fi[i]);
-            writer[i].write(out);
-        }
+      for (int i = 0; i < writer.length; i++) {
+         writer[i] = new ImageWriter(fi[i]);
+         writer[i].write(out);
+      }
 
-        out.close();
-			
+      out.close();	
 		IJ.showStatus("Saved "+ fi[0].fileName);
-
-        return file;
+      return file;
 	}
 		
 	public static String makeHeader(FileInfo fi, Calibration cal) {
@@ -213,6 +211,9 @@ public class Nrrd_Writer {
 
        // Sample name
        out.write(Opener.Mims_sample_name+Opener.Nrrd_seperator+op.getSampleName()+"\n");
+
+       // Z position
+       out.write(Opener.Mims_z_position+Opener.Nrrd_seperator+op.getZPosition()+"\n");
 
        // Dwell time
        out.write(Opener.Mims_dwell_time+Opener.Nrrd_seperator+op.getDwellTime()+"\n");
@@ -339,6 +340,7 @@ class NrrdFileInfo extends FileInfo {
                   userName, dwellTime, countTime,  sampleName;
    public String notes = "";
    public String raster;
+   public String zposition;
    public int dimension, nMasses;
    public float pixel_width;
    public float pixel_height;

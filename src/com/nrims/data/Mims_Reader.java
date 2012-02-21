@@ -206,14 +206,10 @@ public class Mims_Reader implements Opener {
         dhdr.sple_pos_y = in.readIntEndian();
         dhdr.analysis_name = getChar(32);
         dhdr.username = getChar(16);
-        //this is NOT 16 bytes of chars but 4 ints (4*4 bytes)
-        dhdr.sample_name = getChar(16);
-        /* from spec
-         * int nSamplePosz ; / sample position Z en micron /
-         * int nUnused[ 3 ] ;/ libre /
-         */
-
-
+        dhdr.pos_z = in.readIntEndian();
+        int unused = in.readIntEndian();
+        unused = in.readIntEndian();
+        unused = in.readIntEndian();
         dhdr.date = getChar(16);
         dhdr.hour = getChar(16);
 
@@ -707,13 +703,24 @@ public class Mims_Reader implements Opener {
     }
 
     /**
+     * @return the z position entries from the SIMS image header
+     */
+    public String getZPosition() {
+        if (this.dhdr == null) {
+            return null;
+        }
+        String pos_z = this.dhdr.pos_z + "";
+        return pos_z;
+    }
+
+    /**
      * @return the date entry from the SIMS image header
      */
     public String getSampleDate() {
         if (this.dhdr == null) {
             return null;
         }
-        if (this.dhdr.sample_name == null) {
+        if (this.dhdr.date == null) {
             return new String(" ");
         }
         return this.dhdr.date;
@@ -726,7 +733,7 @@ public class Mims_Reader implements Opener {
         if (this.dhdr == null) {
             return null;
         }
-        if (this.dhdr.sample_name == null) {
+        if (this.dhdr.hour == null) {
             return new String(" ");
         }
         return this.dhdr.hour;

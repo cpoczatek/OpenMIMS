@@ -231,6 +231,9 @@ public class Nrrd_Reader implements Opener {
             if (thisLine.startsWith(Opener.Mims_position))
                 fi.position=value;
 
+            if (thisLine.startsWith(Opener.Mims_z_position))
+                fi.zposition=value;
+
             if (thisLine.startsWith(Opener.Mims_sample_name))
                 fi.sampleName=value;
 
@@ -448,6 +451,10 @@ public class Nrrd_Reader implements Opener {
 
     public String getPosition() {
         return fi.position;
+    }
+
+    public String getZPosition() {
+        return fi.zposition;
     }
 
     public String getRaster() {

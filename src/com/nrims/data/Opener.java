@@ -17,6 +17,7 @@ public interface Opener {
     public static final String Mims_hour = "Mims_hour";
     public static final String Mims_user_name = "Mims_user_name";
     public static final String Mims_sample_name = "Mims_sample_name";
+    public static final String Mims_z_position = "Mims_z_position";
     public static final String Mims_dwell_time = "Mims_dwell_time";
     public static final String Mims_count_time = "Mims_count_time";
     public static final String Mims_duration = "Mims_duration";
@@ -56,6 +57,7 @@ public interface Opener {
     public String getDuration();
     public String getRaster();
     public String getNotes();
+    public String getZPosition();
     public int getFileType();
     public boolean isDTCorrected();
     public boolean isQSACorrected();
@@ -243,6 +245,7 @@ public interface Opener {
         int data_included;
         int sple_pos_x;
         int sple_pos_y;
+        int pos_z;
         String analysis_name;
         String username;
         String sample_name;
@@ -266,6 +269,9 @@ public interface Opener {
             if (sple_pos_y != 0) {
                 info += "Analysis.PositionY=" + sple_pos_y + "\n";
                 // if(data_included != 0) info += "Analysis.data_included="+data_included+"\n";
+            }
+            if (pos_z != 0) {
+                info += "Analysis.PosistionZ=" + pos_z + "\n";
             }
             if (analysis_name.length() > 0) {
                 info += "Analysis.Name=" + analysis_name + "\n";

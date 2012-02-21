@@ -71,7 +71,7 @@ public class MimsData extends javax.swing.JPanel {
 
       jLabel5.setText("User");
 
-      jLabel6.setText("Sample");
+      jLabel6.setText("Z position");
 
       jLabel7.setText("Dwell Time");
 
@@ -143,39 +143,42 @@ public class MimsData extends javax.swing.JPanel {
                .add(jLabel25)
                .add(jLabel2)
                .add(jLabel3)
-               .add(jLabel4)
-               .add(jLabel5)
-               .add(jLabel6)
                .add(jLabel7)
                .add(jLabel19)
                .add(jLabel8)
                .add(jLabel21)
                .add(jLabel27)
-               .add(jLabel29))
+               .add(jLabel29)
+               .add(jLabel4)
+               .add(jLabel6)
+               .add(jLabel5))
             .add(21, 21, 21)
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-               .add(jLabel30)
-               .add(jLabel28)
-               .add(jLabel24)
-               .add(jLabel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 243, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-               .add(jLabel18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 302, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                .add(layout.createSequentialGroup()
-                  .add(jLabel26)
-                  .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 262, Short.MAX_VALUE)
-                  .add(syncjCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 153, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-               .add(jLabel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 66, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-               .add(jLabel11)
-               .add(jLabel12)
+                  .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(jLabel30)
+                     .add(jLabel28)
+                     .add(jLabel24)
+                     .add(jLabel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 243, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                     .add(jLabel18, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 302, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                     .add(layout.createSequentialGroup()
+                        .add(jLabel26)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 172, Short.MAX_VALUE)
+                        .add(syncjCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 153, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                     .add(jLabel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 66, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                     .add(jLabel11)
+                     .add(jLabel15)
+                     .add(jLabel20)
+                     .add(jLabel16)
+                     .add(jLabel22))
+                  .add(102, 102, 102))
                .add(jLabel13)
-               .add(jLabel14)
-               .add(jLabel15)
-               .add(jLabel20)
-               .add(jLabel16)
-               .add(jLabel22))
+               .add(jLabel12)
+               .add(jLabel14, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
             .addContainerGap())
       );
 
-      layout.linkSize(new java.awt.Component[] {jLabel11, jLabel12, jLabel13, jLabel14, jLabel15, jLabel16, jLabel18, jLabel9}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
+      layout.linkSize(new java.awt.Component[] {jLabel11, jLabel12, jLabel13, jLabel15, jLabel16, jLabel18, jLabel9}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
 
       layout.setVerticalGroup(
          layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -207,16 +210,16 @@ public class MimsData extends javax.swing.JPanel {
                .add(jLabel11))
             .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+               .add(jLabel6)
+               .add(jLabel14))
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                .add(jLabel4)
                .add(jLabel12))
             .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                .add(jLabel5)
                .add(jLabel13))
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-               .add(jLabel6)
-               .add(jLabel14))
             .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                .add(jLabel7)
@@ -300,7 +303,7 @@ public class MimsData extends javax.swing.JPanel {
             tempstring = image.getUserName();
             jLabel13.setText(tempstring);
             
-            tempstring = image.getSampleName();
+            tempstring = image.getZPosition();
             jLabel14.setText(tempstring);
             
             tempstring = image.getDwellTime() + " ms/px    " + image.getCountTime() + " s/plane";
