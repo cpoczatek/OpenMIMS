@@ -184,7 +184,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          if (silentMode)
             ijapp = new ij.ImageJ(ij.ImageJ.NO_SHOW);
          else
-            ijapp = new ij.ImageJ();                  
+            ijapp = new ij.ImageJ();         
+         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       }
       
       if (image == null) {
@@ -252,7 +253,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       addWindowListener(new WindowAdapter() {
          @Override
          public void windowClosing(WindowEvent winEvt) {
-            prefs.savePreferences();
+            if (IJ.getInstance() != null) {
+               prefs.savePreferences();
+            }
             closeCurrentImage();
             close();
          }
