@@ -2034,51 +2034,46 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * Duplicates the current ROI.
      */
     private void duplicate() {
-        ImagePlus imp = getImage();
-        if (imp == null) {
-            return;
-        }
+       
+       // Get the selected rois.
+       Roi[] selected_rois = getSelectedROIs();
+       if (selected_rois == null || selected_rois.length == 0) {
+          error("You must select rois to duplicate.");
+          return;
+       }
 
-        Roi roi = imp.getRoi();
+       // Duplicate each roi selected making sure to preserve
+       // group and position information.
+       for (Roi roi : selected_rois) {
 
-        if (roi == null) {
-            error("The active image does not have a selection.");
-            return;
-        }
+          // Get unique name.
+          Roi roi2 = (Roi) roi.clone();
+          String name = roi2.getName();
+          String label = name;
+          label = getUniqueName(label);
+          if (label == null)
+             return;
+          roiListModel.addElement(label);
+          roi2.setName(label);
 
-        Roi roi2 = (Roi)roi.clone();
+          // Duplicate positions.
+          ArrayList xypositions = new ArrayList<Integer[]>();
+          ArrayList xypositions_orig = (ArrayList<Integer[]>)locations.get(name);
+          for (int i = 0; i < xypositions_orig.size(); i++) {
+             xypositions.add(i, xypositions_orig.get(i));
+          }
+          locations.put(label, xypositions);
 
-        String name = roi2.getName();
-        String label = name;
-        label = getUniqueName(label);
-        if (label == null) {
-            return;
-        }
-        roiListModel.addElement(label);
-        roi2.setName(label);
-        Calibration cal = imp.getCalibration();
-        Rectangle r = roi2.getBounds();
-        if (cal.xOrigin != 0.0 || cal.yOrigin != 0.0) {            
-            roi2.setLocation(r.x - (int) cal.xOrigin, r.y - (int) cal.yOrigin);
-        }
-
-        // Create positions arraylist.
-        ArrayList xypositions = new ArrayList<Integer[]>();
-        ArrayList xypositions_orig = (ArrayList<Integer[]>)locations.get(name);
-        for (int i = 0; i < xypositions_orig.size(); i++) {
-           xypositions.add(i, xypositions_orig.get(i));
-        }
-        locations.put(label, xypositions);
-
-        // Add roi to list.
-        rois.put(label, roi2);
-
-        // Assign group.
-        String group = (String)groupsMap.get(name);
-        if (group != null)
-           groupsMap.put(label, group);
-
-        return;
+          // Duplicate group assignment.
+          String group = (String)groupsMap.get(name);
+          if (group != null)
+             groupsMap.put(label, group);
+          
+          // Add the roi the the hashmap.
+          rois.put(label, roi2);
+       }
+       
+       return;
     }
 
 
