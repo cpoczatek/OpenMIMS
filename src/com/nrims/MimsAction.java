@@ -22,6 +22,7 @@ public class MimsAction implements Cloneable {
     private ArrayList<String> imageList;
     double zeros[] = {0.0, 0.0};
     private boolean isCompressed = false;
+    private boolean isTracked = false;
     private int blockSize =1;
 
     public MimsAction(Opener im) {
@@ -398,6 +399,25 @@ public class MimsAction implements Cloneable {
     }
 
    /**
+    * Returns <code>true</code> if image has been
+    * tracked, otherwise <code>false</code>.
+    *
+    * @return boolean
+    */
+    public boolean getIsTracked() {
+       return isTracked;
+    }
+
+   /**
+    * Set to <code>true</code> if image has been tracked.
+    *
+    * @param tracked <code>true</code> if tracked, otherwise <code>false</code>.
+    */
+    public void setIsTracked(boolean tracked) {
+       isTracked = tracked;
+    }
+
+   /**
     * Returns the number of images that makes up a block.
     *
     * @return int
@@ -423,6 +443,28 @@ public class MimsAction implements Cloneable {
     */  
     public int getOpenerIndex(int plane) {       
        return imageIndex.get(plane);       
+    }
+
+   /**
+    * Returns maximum delta translation.
+    *
+    * @return max delta
+    */
+    public double getMaxDelta() {
+       double max_delta = 0.0;
+       if (getIsTracked()) {
+            int dispIndx = 1;
+            double[][] trans = new double[getSizeMinusNumberDropped()][2];
+            for (int i = 0; i < getSize(); i++) {
+               if (!isDropped(i+1)) {
+                  trans[dispIndx-1][0] = getXShift(dispIndx);
+                  trans[dispIndx-1][1] = getYShift(dispIndx);
+                  dispIndx++;
+               }
+            }
+            max_delta = AutoTrack.calcMaxDelta(AutoTrack.calcOffset(trans));
+       }
+       return max_delta;
     }
 
    /**

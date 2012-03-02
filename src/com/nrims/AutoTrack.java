@@ -1454,6 +1454,106 @@ public class AutoTrack implements Runnable {
         return (source);
     } /* end registerSlice */
 
+    /**
+     * This method takes an array of doubles[][] (presumably the array generated
+     * by the track() method, but it can work with any array of doubles) and
+     * converts it into a vector of distances, which represent the offset from
+     * the center. For example:
+     *
+     * translations =      offset=
+     * [0.1235 0.2493]     [0.2782]
+     * [2.9173 1.2709]     [3.1821]
+     * [5.8213 3.4180]     [6.7505]
+     * .                   .
+     * .                   .
+     *
+     * @param translations a 2 column array of arbitrary length.
+     * @return a vector representing the offsets.
+     */
+    public static double[] calcOffset(double[][] translations) {
+
+       if (translations == null)
+          return null;
+
+       if (translations.length == 0)
+          return new double[0];
+
+       double[] offsets = new double[translations.length];
+       for (int i=0; i < offsets.length; i++) {
+          offsets[i] = Math.sqrt(Math.pow(translations[i][0],2.0) + Math.pow(translations[i][1],2.0));
+       }
+
+       return offsets;
+    }
+
+    /**
+     * This method takes a vector of doubles[] and returns the maximum.
+     * For example:
+     *
+     * offset=      maxOffset=
+     * [0.2782]     6.7505
+     * [3.1821]
+     * [6.7505]
+     * .            .
+     * .            .
+     *
+     * @param offsets a vector of doubles of arbitrary length.
+     * @return a maximum offset.
+     */
+    public static double calcMaxOffset(double[] offsets) {
+
+       // Calculate offset array.
+       double max_offset = -1.0;
+       if (offsets == null || offsets.length == 0)
+          return max_offset;
+
+       // Determine the maximum offset.
+       double offset = offsets[0];
+       if (offsets.length > 0) {
+          for (int i = 1; i < offsets.length; i++) {
+             offset = offsets[i];
+             if (offset > max_offset) {
+                max_offset = offset;
+             }
+          }
+       }
+
+       return max_offset;
+    }
+
+    /**
+     * This method takes a vector of doubles[] and returns the maximum delta.
+     * For example:
+     *
+     * offset=
+     * [1 3 9 13 6 7]
+     *
+     * maxDelta of [1 2 6 4 7 1] = 7
+     *
+     * @param offsets a vector of doubles of arbitrary length.
+     * @return a maximum absolute delta
+     */
+    public static double calcMaxDelta(double[] offsets) {
+
+       // Calculate offset array.
+       double max_delta = -1.0;
+       if (offsets == null || offsets.length == 0)
+          return max_delta;
+
+       // Determine the maximum offset.
+       double delta = -1.0;
+       if (offsets.length > 0) {
+          for (int i = 1; i < offsets.length; i++) {
+             delta = Math.abs(offsets[i]-offsets[i-1]);
+             if (delta > max_delta) {
+                max_delta = delta;
+             }
+          }
+       }
+
+       return max_delta;
+    }
+
     private long randnumber;
 // end of class...
 }

@@ -24,6 +24,9 @@ import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import java.io.*;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
                           
 public class Nrrd_Writer {
 
@@ -106,7 +109,10 @@ public class Nrrd_Writer {
 		bw.write(makeHeader(fi[0],cal));
 		
       // Write Mims specific fields.
-      bw.write(getMimsKeyValuePairs()+"\n");
+      bw.write(getMimsKeyValuePairs());
+
+      // Write out any other metadat.
+      bw.write(getMetaDataKeyValuePairs()+"\n");
 
       // Flush rather than close
 		bw.flush();		
@@ -266,6 +272,20 @@ public class Nrrd_Writer {
 	   return out.toString();
     }
 
+    // Write Mims specific key/value pairs.
+    private String getMetaDataKeyValuePairs() {
+
+       // initialize variables.
+       StringWriter out=new StringWriter();
+
+       Map<String,String> sortedMap = new TreeMap<String,String>(op.getMetaDataKeyValuePairs());
+       for(String key : sortedMap.keySet()) {
+          out.write(key + Opener.Nrrd_seperator + sortedMap.get(key) + "\n");
+       }
+
+       return out.toString();
+    }
+
 	public static String imgType(int fiType) {
 		switch (fiType) {
 			case FileInfo.GRAY32_FLOAT:
@@ -350,6 +370,7 @@ class NrrdFileInfo extends FileInfo {
    public float fc_objective;
    public boolean isPrototype = false;
    public String[] tilePositions = null;
+   public HashMap metadata = new HashMap();
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;

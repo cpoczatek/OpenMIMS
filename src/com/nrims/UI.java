@@ -48,6 +48,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.JFileChooser;
@@ -101,6 +102,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private String lastFolder = null;      
     public  File   tempActionFile;                        
     private HashMap openers = new HashMap();
+    private HashMap metaData = new HashMap();
 
     private MimsPlus[] massImages = new MimsPlus[maxMasses];
     private MimsPlus[] ratioImages = new MimsPlus[maxMasses];
@@ -1821,6 +1823,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         if (imgNotes != null)
            getOpener().setNotes(imgNotes.getOutputFormatedText());
 
+        if (mimsAction.getIsTracked()) {
+           double max_delta = mimsAction.getMaxDelta();
+           DecimalFormat twoDForm = new DecimalFormat("#.##");
+           insertMetaData(Opener.Max_Tracking_Delta, twoDForm.format(max_delta));
+        }
+
+        if (!metaData.isEmpty())
+           getOpener().setMetaDataKeyValuePairs(metaData);
+
         // Set DT correction flag.
         getOpener().setIsDTCorrected(isDTCorrected);
 
@@ -1847,6 +1858,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         // Update the Opener object.
         image.close();
         image = new Nrrd_Reader(dataFile);
+        openers.clear();
+        openers.put(nrrdFileName, image);
 
         // Update the Action object.
         mimsAction = new MimsAction(image);
@@ -2410,9 +2423,9 @@ private boolean saveMIMS(java.awt.event.ActionEvent evt) {
          return false;
       }
    } catch (Exception e) {
-      if (!silentMode)
+      if (!silentMode) {
          ij.IJ.error("Save Error", "Error saving file.");
-      else
+      } else
          e.printStackTrace();
       return false;
    } finally {
@@ -3006,6 +3019,38 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             }
         }
         return mp;
+    }
+
+    /**
+     * Add the key value pair to the metaData hashmap.
+     * Nulls not allowed as key or value.
+     *
+     * @param key the key
+     * @param value the value
+     * @return <code>true</code> if succesfull
+     */
+    public synchronized void insertMetaData(String key, String value) {
+       metaData.put(key, value);
+       return;
+    }
+
+    /**
+     * Return the value associated with key.
+     *
+     * @param key the key
+     * @return the value
+     */
+    public synchronized String getMetaDataFromKey(String key) {
+       return (String)metaData.get(key);
+    }
+
+    /**
+     * Return the map.
+     *
+     * @return the map
+     */
+    public HashMap getMetaData() {
+       return metaData;
     }
 
     /**
@@ -3776,6 +3821,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
           // Update notes gui
           if (image != null) imgNotes.setOutputFormatedText(image.getNotes());
+
+          // Update hashmap
+          if (image != null) metaData = image.getMetaDataKeyValuePairs();
 
           // Update dt correction flag
           if (image != null) isDTCorrected = image.isDTCorrected();

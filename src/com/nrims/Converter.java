@@ -36,17 +36,20 @@ public class Converter extends SwingWorker<Void, Void> {
    public static final boolean PNG_OVERWRITE_DEFAULT    = false;
    public static final boolean USE_SUM_DEFAULT          = false;
    public static final boolean MEDIANIZE_DEFAULT        = false;
-   public static final double  MEDIANIZE_RADIUS_DEFAULT = 1.5;
+   public static final boolean INSERT_KV_PAIRS_DEFAULT  = false;
+   public static final String  KEYS_DEFAULT             = "";
+   public static final String  VALUES_DEFAULT           = "";
    public static final String  TRACK_MASS_DEFAULT       = "0";
    public static final String  HSI_DEFAULT              = "";
    public static final String  THRESH_UPPER_DEFAULT     = "";
    public static final String  THRESH_LOWER_DEFAULT     = "";
    public static final String  RGB_MAX_DEFAULT          = "";
    public static final String  RGB_MIN_DEFAULT          = "";
-   public static final int     RGB_MAX_INT_DEFAULT      = 51;
-   public static final int     RGB_MIN_INT_DEFAULT      = 1;
    public static final String  PNG_DIRECTORY_DEFAULT    = null;
    public static final String  NRRD_EXTENSION           = ".nrrd";
+   public static final int     RGB_MAX_INT_DEFAULT      = 51;
+   public static final int     RGB_MIN_INT_DEFAULT      = 1;
+   public static final double  MEDIANIZE_RADIUS_DEFAULT = 1.5;
 
    UI ui;
    boolean pngs_only       = PNGS_ONLY_DEFAULT;
@@ -55,6 +58,9 @@ public class Converter extends SwingWorker<Void, Void> {
    boolean overwrite_pngs  = PNG_OVERWRITE_DEFAULT;
    boolean useSum          = USE_SUM_DEFAULT;
    boolean medianize       = MEDIANIZE_DEFAULT;
+   boolean insert_kv_pairs = INSERT_KV_PAIRS_DEFAULT;
+   String keys             = KEYS_DEFAULT;
+   String values           = VALUES_DEFAULT;
    String massToTrack      = TRACK_MASS_DEFAULT;
    String[] HSIs           = new String[0];
    String[] threshUppers   = new String[0];
@@ -68,12 +74,17 @@ public class Converter extends SwingWorker<Void, Void> {
    boolean proceed         = true;
    
    public Converter(boolean readProps, boolean bpngs_only, boolean bTrack,
-           String sMassToTrack, String propertiesFileString) {
+           String sMassToTrack, String propertiesFileString, String keys, String values) {
 
       ui = new UI(true);
       pngs_only = bpngs_only;
       track = bTrack;
       massToTrack = sMassToTrack;
+      if (!keys.isEmpty()) {
+         insert_kv_pairs = true;
+         this.keys = keys;
+         this.values = values;
+      }
 
       if (readProps) {
          try {
@@ -379,6 +390,36 @@ public class Converter extends SwingWorker<Void, Void> {
       return opened;
    }
 
+   private void insert_kv_pairs() {
+
+      // Check if keys or values is empty
+      if (keys.isEmpty() || values.isEmpty()) {
+         System.out.println("      Can not insert key/value pairs: -k or -v is empty");
+         return;
+      }
+
+      // Split the keys.
+      keys = keys.replaceAll("\"", "");
+      String[] k = keys.split(" ");
+
+      // Split the values
+      values = values.replaceAll("\"", "");
+      String[] v = values.split(" ");
+
+      // Make sure same number of keys as values.
+      if (k.length != v.length) {
+         System.out.println("      Can not insert key/value pairs: number of keys not equal to number of values");
+         return;
+      }
+
+      // Insert into hashmap.
+      System.out.println("      Inserting key value pairs...");
+      for(int i = 0; i < k.length; i++) {         
+         ui.insertMetaData(k[i], v[i]);
+      }
+      
+   }
+
     public static void main(String[] args) {
 
        // Properties defaults.
@@ -389,7 +430,12 @@ public class Converter extends SwingWorker<Void, Void> {
         boolean track = TRACK_DEFAULT;
         String massToTrack = TRACK_MASS_DEFAULT;
 
+        // Generate PNGS only.
         boolean lpngs_only = PNGS_ONLY_DEFAULT;
+
+        // Insert key value pairs.
+        String keys = "";
+        String values = "";
 
         // File list
         ArrayList filesArrayList = new ArrayList<String>();
@@ -403,6 +449,14 @@ public class Converter extends SwingWorker<Void, Void> {
                i++;
                massToTrack = args[i].trim();
                track = true;
+            }
+            else if (arg.equals("-k")) {
+               i++;
+               keys = args[i].trim();
+            }
+            else if (arg.equals("-v")) {
+               i++;
+               values = args[i].trim();
             }
             else if (arg.startsWith("-properties")) {
                i++;
@@ -419,7 +473,7 @@ public class Converter extends SwingWorker<Void, Void> {
             }
         }
 
-        Converter mn = new Converter(readProps, lpngs_only, track, massToTrack, propertiesFileString);
+        Converter mn = new Converter(readProps, lpngs_only, track, massToTrack, propertiesFileString, keys, values);
         mn.setFiles(filesArrayList);
         mn.doInBackground();
         System.exit(0);
@@ -473,6 +527,10 @@ public class Converter extends SwingWorker<Void, Void> {
 
             percentComplete = Math.round(100*((float)counter+(float)0.75)/(float)total);
             setProgress(percentComplete);
+
+            if (insert_kv_pairs) {
+               insert_kv_pairs();
+            }
 
             // Save File.
             if (!pngs_only) {

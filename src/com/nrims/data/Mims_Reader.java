@@ -6,6 +6,7 @@ import com.nrims.common.*;
 import ij.ImagePlus;
 import ij.io.FileInfo;
 import ij.io.FileOpener;
+import java.util.HashMap;
 
 /**
  * Class responsible for opening MIMS files.
@@ -40,6 +41,7 @@ public class Mims_Reader implements Opener {
     private float fc_objective;
     private boolean isPrototype = false;
     private String[] tilePositions = null;
+    private HashMap metaData = new HashMap();
 
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
@@ -961,6 +963,26 @@ public class Mims_Reader implements Opener {
     public String[] getTilePositions() {
        return this.tilePositions;
     }
+
+   /**
+    * .IM are strictly formatted and written by the mass spec.
+    * They will never have user entered data in them.
+    *
+    * @return null
+    */
+   public HashMap getMetaDataKeyValuePairs() {
+      return this.metaData;
+   }
+
+   /**
+    * Set the userData HashMap.
+    *
+    * @param the HashMap
+    */
+   public void setMetaDataKeyValuePairs(HashMap metadata) {
+      this.metaData = metadata;
+   }
+
 
     /*
     public String getInfo() {

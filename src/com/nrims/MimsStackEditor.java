@@ -143,6 +143,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
          this.images[k].killRoi();
          this.images[k].getProcessor().translate(xval, 0.0);
          images[k].updateAndDraw();
+         ui.mimsAction.setIsTracked(true);
       }
    }
 
@@ -157,6 +158,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
          this.images[k].killRoi();
          this.images[k].getProcessor().translate(0.0, yval);
          images[k].updateAndDraw();
+         ui.mimsAction.setIsTracked(true);
       }
    }
 
@@ -753,6 +755,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
          ui.mimsAction.setShiftX(plane, xval);
          ui.mimsAction.setShiftY(plane, yval);
       }
+      ui.mimsAction.setIsTracked(false);
       ui.getmimsLog().Log("Untracked.");
    }
 

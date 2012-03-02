@@ -17,6 +17,7 @@ import ij.io.FileOpener;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.HashMap;
 
 /**
  * ImageJ plugin to read a file in Gordon Kindlmann's NRRD
@@ -105,6 +106,7 @@ public class Nrrd_Reader implements Opener {
 				//???????? add back dimension check?
                 //if(fi.dimension>3) throw new IOException("Nrrd_Reader: Dimension>3 not yet implemented!");
 			}
+
 			if (noteType.equals("sizes")) {
 				fi.sizes=new int[fi.dimension];
 				for(int i=0;i<fi.dimension;i++) {
@@ -116,7 +118,6 @@ public class Nrrd_Reader implements Opener {
 				}
 			}
 
-			if (noteType.equals("units")) //spatialCal.setUnit(firstNoteValue);
 			if (noteType.equals("spacings")) {
 				double[] spacings=new double[fi.dimension];
 				for(int i=0;i<fi.dimension;i++) {
@@ -127,6 +128,7 @@ public class Nrrd_Reader implements Opener {
 					//if(i==2) spatialCal.pixelDepth=spacings[2];
 				}
 			}
+
 			if (noteType.equals("centers") || noteType.equals("centerings")) {
 				fi.centers=new String[fi.dimension];
 				for(int i=0;i<fi.dimension;i++) {
@@ -148,7 +150,7 @@ public class Nrrd_Reader implements Opener {
 				}
 			}
 
-			if (noteType.equals("type")) {
+         if (noteType.equals("type")) {
 				if (uint8Types.indexOf(noteValuelc)>=0) {
 					fi.fileType=FileInfo.GRAY8;
 				}
@@ -175,6 +177,7 @@ public class Nrrd_Reader implements Opener {
 
 			if (noteType.equals("byte skip")||noteType.equals("byteskip"))
                 fi.longOffset=Long.valueOf(noteValue).longValue();
+
 			if (noteType.equals("endian")) {
 				if(noteValuelc.equals("little")) {
 					fi.intelByteOrder = true;
@@ -196,96 +199,96 @@ public class Nrrd_Reader implements Opener {
          if (noteType.equals("line skip"))
             lineskip = Integer.valueOf(noteValue).intValue();
 
-            // All the following are Mims specific headers.
-            int i = noteType.indexOf(Opener.Nrrd_seperator);
-            int j = Opener.Nrrd_seperator.length();
-            int k = i+j;
-            String value = noteType.substring(k);
-            String originalvalue = originalNoteType.substring(k);
-            if (value == null) value = "";
+         // All the following are Mims specific headers.
+         int i = noteType.indexOf(Opener.Nrrd_seperator);
+         int j = Opener.Nrrd_seperator.length();
+         int k = i+j;
+         String key = null;
+         if (i >= 0)
+            key = noteType.substring(0,i);
+         String value = noteType.substring(k);
+         String originalvalue = originalNoteType.substring(k);
+         if (value == null) value = "";
 
-            if (thisLine.startsWith(Opener.Mims_mass_numbers)) {               
+         if (thisLine.startsWith(Opener.Mims_mass_numbers))
                 fi.massNames=noteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
-            }
 
-            if (thisLine.startsWith(Opener.Mims_mass_symbols)) {
-                //Mass symbols are case sensitive, eg 12C and 77Se
+         else if(thisLine.startsWith(Opener.Mims_mass_symbols))
                 fi.massSymbols=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
-            }
 
-            if (thisLine.startsWith(Opener.Mims_count_time))
+         else if(thisLine.startsWith(Opener.Mims_count_time))
                 fi.countTime=value;
 
-            if (thisLine.startsWith(Opener.Mims_date))
+         else if(thisLine.startsWith(Opener.Mims_date))
                 fi.sampleDate=value;
 
-            if (thisLine.startsWith(Opener.Mims_duration))
+         else if(thisLine.startsWith(Opener.Mims_duration))
                 fi.duration=value;
 
-            if (thisLine.startsWith(Opener.Mims_dwell_time))
+         else if(thisLine.startsWith(Opener.Mims_dwell_time))
                 fi.dwellTime=value;
 
-            if (thisLine.startsWith(Opener.Mims_hour))
+         else if(thisLine.startsWith(Opener.Mims_hour))
                 fi.sampleHour=value;
 
-            if (thisLine.startsWith(Opener.Mims_position))
+         else if(thisLine.startsWith(Opener.Mims_position))
                 fi.position=value;
 
-            if (thisLine.startsWith(Opener.Mims_z_position))
+         else if(thisLine.startsWith(Opener.Mims_z_position))
                 fi.zposition=value;
 
-            if (thisLine.startsWith(Opener.Mims_sample_name))
+         else if(thisLine.startsWith(Opener.Mims_sample_name))
                 fi.sampleName=value;
 
-            if (thisLine.startsWith(Opener.Mims_user_name))
+         else if(thisLine.startsWith(Opener.Mims_user_name))
                 fi.userName=value;
 
-            if (thisLine.startsWith(Opener.Mims_tile_positions))
+         else if(thisLine.startsWith(Opener.Mims_tile_positions))
                 fi.tilePositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
 
-            if (thisLine.startsWith(Opener.Mims_raster))
+         else if(thisLine.startsWith(Opener.Mims_raster))
                    fi.raster=value;
 
-            if (thisLine.startsWith(Opener.Mims_pixel_height)) {
+         else if(thisLine.startsWith(Opener.Mims_pixel_height)) {
                 try {
                    Float fl = new Float(value);
                    fi.pixel_height=fl.floatValue();
                 } catch (Exception e) {fi.pixelHeight = (new Float(-1.0)).floatValue();}
             }
 
-            if (thisLine.startsWith(Opener.Mims_pixel_width)) {
+         else if(thisLine.startsWith(Opener.Mims_pixel_width)) {
                 try {
                    Float fl = new Float(value);
                    fi.pixel_width=fl.floatValue();
                 } catch (Exception e) {fi.pixelWidth = (new Float(-1.0)).floatValue();}
             }
 
-            if (thisLine.startsWith(Opener.Mims_dt_correction_applied)) {
+         else if(thisLine.startsWith(Opener.Mims_dt_correction_applied)) {
                 try {                   
                    fi.dt_correction_applied = Boolean.parseBoolean(value);
                 } catch (Exception e) {fi.dt_correction_applied = false;}
             }
 
-            if (thisLine.startsWith(Opener.Mims_prototype)) {
+         else if(thisLine.startsWith(Opener.Mims_prototype)) {
                 try {
                    fi.isPrototype = Boolean.parseBoolean(value);
                 } catch (Exception e) {fi.isPrototype = false;}
             }
 
-            if (thisLine.startsWith(Opener.Mims_QSA_correction_applied)) {
+         else if(thisLine.startsWith(Opener.Mims_QSA_correction_applied)) {
                 try {
                    fi.QSA_correction_applied = Boolean.parseBoolean(value);
                 } catch (Exception e) {fi.QSA_correction_applied = false;}
             }
 
-            if (fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_FC_Obj)) {
+         else if(fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_FC_Obj)) {
                 try {
                    Float fl = new Float(value);
                    fi.fc_objective=fl.floatValue();
                 } catch (Exception e) {}
             }
 
-            if (fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_betas)) {
+         else if(fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_betas)) {
                 try {
                    String[] qsa_string_vals = value.split(",");
                    float[] qsa_vals = new float[qsa_string_vals.length];
@@ -295,11 +298,13 @@ public class Nrrd_Reader implements Opener {
                    fi.betas = qsa_vals;
                 } catch (Exception e) {}
             }
-
-            //case sensitive text
-            if (thisLine.startsWith(Opener.Mims_notes)) {
+            
+         else if(thisLine.startsWith(Opener.Mims_notes))
                 fi.notes = originalvalue;
-            }           
+
+         else if (key != null)
+                fi.metadata.put(key, originalvalue);
+
 		}
 
       if (header) {
@@ -523,5 +528,13 @@ public class Nrrd_Reader implements Opener {
 
     public boolean isPrototype() {
        return fi.isPrototype;
+    }
+
+    public HashMap getMetaDataKeyValuePairs() {
+       return fi.metadata;
+    }
+
+    public void setMetaDataKeyValuePairs(HashMap metaData) {
+       fi.metadata = metaData;
     }
 }

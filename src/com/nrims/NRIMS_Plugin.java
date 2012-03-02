@@ -24,9 +24,10 @@ public class NRIMS_Plugin implements PlugIn {
     public void run(String arg) {
         //System.out.println("NRIMS.run");
         String options = ij.Macro.getOptions();
-        if(options!=null)
+        if(options!=null) {
             options = options.trim();
-        System.out.println("options="+options+",");
+            System.out.println("options="+options+",");
+        }
 
         ui.run(options);
         if(ui.isVisible() == false) ui.setVisible(true);

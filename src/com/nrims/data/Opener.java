@@ -1,6 +1,7 @@
 package com.nrims.data;
 
 import java.io.*;
+import java.util.HashMap;
 
 /**
  * Class responsible for opening MIMS files.
@@ -31,6 +32,11 @@ public interface Opener {
     public static final String Mims_QSA_FC_Obj = "Mims_QSA_FC_Obj";
     public static final String Mims_prototype = "Mims_prototype";
     public static final String Mims_tile_positions = "Mims_tile_positions";
+    
+    // Field that do not define parameters about the image
+    // but are still userful. In theory, Mims_notes, Mims_tile_positions
+    // and QSA and deadtime parameters probably belong here.
+    public static final String Max_Tracking_Delta = "max_tracking_delta";
 
     // Worker functions.
     public File getImageFile();
@@ -65,6 +71,7 @@ public interface Opener {
     public float getFCObjective();
     public boolean isPrototype();
     public String[] getTilePositions();
+    public HashMap getMetaDataKeyValuePairs();
 
     //Setable metadata
     public void setNotes(String notes);
@@ -72,6 +79,7 @@ public interface Opener {
     public void setIsQSACorrected(boolean isQSACorrected);
     public void setBetas(float[] betas);
     public void setFCObjective(float fc_objective);
+    public void setMetaDataKeyValuePairs(HashMap metaData);
 
     /**
      * defines a structure for saving the HeaderImage data

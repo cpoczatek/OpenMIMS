@@ -207,7 +207,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
        }
 
        // Initialize and run Converter object.
-       co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null);
+       co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
        co.setFiles(fileNames);
        co.addPropertyChangeListener(this);
        co.execute();
