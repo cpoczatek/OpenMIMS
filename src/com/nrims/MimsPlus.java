@@ -12,6 +12,7 @@ import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
+import java.awt.Image;
 
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent ;
@@ -933,6 +934,19 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ui.setActiveMimsPlus(this);
         ui.getCBControl().setWindowlistCombobox(getTitle());
         ui.getCBControl().setLUT(lut);
+
+        // Add to ReportGenerator, if open.
+        ReportGenerator rg = ui.getReportGenerator();        
+        if (rg != null && rg.isVisible()) {
+           Image im = ui.getScreenCaptureCurrentImage();
+           if (im != null) {
+              String text = "";
+              if (nType == MimsPlus.MASS_IMAGE)
+                 text += "mass ";           
+              text += getRoundedTitle();
+              rg.addImage(im, text);
+           }
+        }
 
         MimsRoiManager rm = ui.getRoiManager();
         if(rm==null) return;

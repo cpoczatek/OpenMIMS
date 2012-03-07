@@ -8,11 +8,15 @@ import ij.gui.*;
 import ij.process.*;
 
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +45,7 @@ import org.jfree.ui.ExtensionFileFilter;
  *
  * @author zkaufman
  */
-public class MimsJFreeChart extends JFrame {
+public class MimsJFreeChart extends JFrame implements WindowListener {
 
    private String[] stats;
    private MimsPlus images[];
@@ -435,8 +439,30 @@ public class MimsJFreeChart extends JFrame {
     * Display the reportGenerator object for generating user reports.
     */
    public void generateReport() {
-      ReportGenerator rg = new ReportGenerator(ui, this);
-      rg.setVisible(true);
+      ReportGenerator rg = ui.getReportGenerator();
+      if (rg == null || !rg.isVisible()) {
+         ui.openReportGenerator();
+         rg = ui.getReportGenerator();
+      }
+      Image img = getImage();
+      if (img == null)
+         return;
+      rg.addImage(img, "Plot");
+   }
+
+   /**
+    * Gets an AWT Image for insertion in report.
+    *
+    * @return the AWT Image.
+    */
+   public Image getImage() {
+      MimsChartPanel mcp = getChartPanel();
+      if (mcp == null)
+         return null;
+      BufferedImage img = mcp.getChart().createBufferedImage(mcp.getWidth(), mcp.getHeight());
+      if (img == null)
+         return null;
+      return img;
    }
 
    /**
@@ -635,4 +661,28 @@ public class MimsJFreeChart extends JFrame {
       }
       return returnVal;
    }
+
+   @Override
+   public void windowActivated(WindowEvent e) {
+      // Update ReportGenerator, if open.
+      ReportGenerator rg = ui.getReportGenerator();
+      if (rg != null && rg.isVisible()) {
+         Image img = getImage();
+         if (img != null) {
+            rg.addImage(img, "Plot");
+         }
+      }
+   }
+
+   public void windowOpened(WindowEvent e) {}
+
+   public void windowClosing(WindowEvent e) {}
+
+   public void windowClosed(WindowEvent e) {}
+
+   public void windowIconified(WindowEvent e) {}
+
+   public void windowDeiconified(WindowEvent e) {}
+
+   public void windowDeactivated(WindowEvent e) {}
 }

@@ -120,6 +120,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsHSIView hsiControl = null;
     private SegmentationForm segmentation = null;
     private QSAcorrectionManager qsam;
+    private ReportGenerator rg = null;
 
     private javax.swing.JRadioButtonMenuItem[] viewMassMenuItems = null;
     private Opener image = null;
@@ -2317,19 +2318,20 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
  * @return the AWT Image.
  */
 public Image getScreenCaptureCurrentImage() {
-   MimsPlus imp = (MimsPlus) ij.WindowManager.getCurrentImage();
+      MimsPlus imp = (MimsPlus) ij.WindowManager.getCurrentImage();
       final ImageWindow win = imp.getWindow();
       if (win == null) {
          return null;
       }
-      win.setVisible(false);
-      win.setVisible(true);
-      win.repaint();
+      //win.setVisible(false);
+      //win.setVisible(true);
+      //win.repaint();
+      //win.toFront();
       try {
          Thread.sleep(500);
       } catch (Exception e) {
       }
-      win.toFront();
+      //win.toFront();
       Point loc = win.getLocation();
       ImageCanvas ic = win.getCanvas();
       ic.update(ic.getGraphics());
@@ -2579,9 +2581,13 @@ private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
 }//GEN-LAST:event_jMenuItem5ActionPerformed
 
 private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
-    ReportGenerator rg = new ReportGenerator(this);
-    rg.setVisible(true);
+    openReportGenerator();
 }//GEN-LAST:event_jMenuItem8ActionPerformed
+
+public void openReportGenerator() {
+    rg = new ReportGenerator(this);
+    rg.setVisible(true);
+}
 
 private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
    convertManager cm = new convertManager(this);
@@ -2781,6 +2787,15 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             roiManager = new MimsRoiManager(this);
         }
         return roiManager;
+    }
+
+   /**
+    * Returns an instance of the ReportGenerator
+    *
+    * @return an instance of the ReportGenerator
+    */
+    public ReportGenerator getReportGenerator() {
+        return rg;
     }
 
     /**

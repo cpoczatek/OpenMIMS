@@ -12,6 +12,7 @@ import static com.tutego.jrtf.Rtf.rtf;
 import com.tutego.jrtf.RtfPara;
 import static com.tutego.jrtf.RtfPara.*;
 import com.tutego.jrtf.RtfPicture;
+import com.tutego.jrtf.RtfText;
 import static com.tutego.jrtf.RtfText.*;
 import ij.IJ;
 import java.awt.BorderLayout;
@@ -19,6 +20,10 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
@@ -34,11 +39,15 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -51,14 +60,19 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author zkaufman
  */
-public class ReportGenerator extends javax.swing.JFrame {
+public class ReportGenerator extends javax.swing.JFrame implements MouseListener {
 
    UI ui;
    static File reportFile;
-   MimsPlus imp;
    Date date;
    MimsJFreeChart jfc;
    MimsJTable jt;
+   JLabel[] jlabelArray;
+   Image[] imageArray;
+   Font font = new Font(Font.SERIF, Font.PLAIN, 12);
+   DecimalFormat formatter = new DecimalFormat("0.00");
+   JPopupMenu jp;
+   JLabel currentLabel = null;
 
    private int reportType = 0;
    private int iconWidth = 128;
@@ -66,7 +80,6 @@ public class ReportGenerator extends javax.swing.JFrame {
 
    public static final String REPORT_EXTENSION = "_report.rtf";
    public static final int IMAGE = 1;
-   public static final int PLOT = 2;
    public static final int TABLE = 3;
 
    /**
@@ -78,21 +91,6 @@ public class ReportGenerator extends javax.swing.JFrame {
       this.ui = ui;
       this.date = new Date();
       this.reportType = IMAGE;
-      initComponents();
-      initComponentsCustom();
-   }
-
-   /**
-    * ReportGenerator constructor for plots.
-    *
-    * @param ui
-    * @param mimsjfreechart
-    */
-   public ReportGenerator(UI ui, MimsJFreeChart jfc) {
-      this.ui = ui;
-      this.date = new Date();
-      this.jfc = jfc;
-      this.reportType = PLOT;
       initComponents();
       initComponentsCustom();
    }
@@ -127,14 +125,19 @@ public class ReportGenerator extends javax.swing.JFrame {
       okButton = new javax.swing.JButton();
       cancelButton = new javax.swing.JButton();
       browseButton = new javax.swing.JButton();
-      jPanel1 = new javax.swing.JPanel();
-      imageIcon = new javax.swing.JLabel();
-      metadataJpanel = new javax.swing.JPanel();
-      imageJlabel = new javax.swing.JLabel();
-      imageFileJlabel = new javax.swing.JLabel();
-      dateJlabel = new javax.swing.JLabel();
       reportJLabel = new javax.swing.JLabel();
       jPanel2 = new javax.swing.JPanel();
+      imageIcon = new javax.swing.JLabel();
+      imageIcon1 = new javax.swing.JLabel();
+      imageIcon2 = new javax.swing.JLabel();
+      imageIcon3 = new javax.swing.JLabel();
+      imageIcon4 = new javax.swing.JLabel();
+      imageIcon5 = new javax.swing.JLabel();
+      imageIcon6 = new javax.swing.JLabel();
+      imageIcon7 = new javax.swing.JLabel();
+      dateJlabel = new javax.swing.JLabel();
+      imageFileJlabel = new javax.swing.JLabel();
+      clickLabel = new javax.swing.JLabel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -163,88 +166,94 @@ public class ReportGenerator extends javax.swing.JFrame {
          }
       });
 
-      imageIcon.setText("image");
-
-      javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-      jPanel1.setLayout(jPanel1Layout);
-      jPanel1Layout.setHorizontalGroup(
-         jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addComponent(imageIcon)
-      );
-      jPanel1Layout.setVerticalGroup(
-         jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addComponent(imageIcon)
-      );
-
-      imageJlabel.setText("image");
-
-      imageFileJlabel.setText("imageFile");
-
-      dateJlabel.setText("date");
-
-      javax.swing.GroupLayout metadataJpanelLayout = new javax.swing.GroupLayout(metadataJpanel);
-      metadataJpanel.setLayout(metadataJpanelLayout);
-      metadataJpanelLayout.setHorizontalGroup(
-         metadataJpanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addComponent(imageJlabel)
-         .addComponent(imageFileJlabel)
-         .addComponent(dateJlabel)
-      );
-      metadataJpanelLayout.setVerticalGroup(
-         metadataJpanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGroup(metadataJpanelLayout.createSequentialGroup()
-            .addComponent(imageJlabel)
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addComponent(imageFileJlabel)
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addComponent(dateJlabel))
-      );
-
       reportJLabel.setText("reportfile");
 
       javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
       jPanel2.setLayout(jPanel2Layout);
       jPanel2Layout.setHorizontalGroup(
          jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGap(0, 561, Short.MAX_VALUE)
+         .addGap(0, 522, Short.MAX_VALUE)
       );
       jPanel2Layout.setVerticalGroup(
          jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGap(0, 94, Short.MAX_VALUE)
+         .addGap(0, 141, Short.MAX_VALUE)
       );
+
+      dateJlabel.setText("date");
+
+      imageFileJlabel.setText("imageFile");
+
+      clickLabel.setText("Click");
 
       javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
       getContentPane().setLayout(layout);
       layout.setHorizontalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-               .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-               .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
+         .addGroup(layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+               .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                  .addContainerGap()
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                     .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(dateJlabel, javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(imageFileJlabel, javax.swing.GroupLayout.Alignment.LEADING)
+                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(browseButton)
+                        .addGap(6, 6, 6)
+                        .addComponent(reportJLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE))
+                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                           .addGap(419, 419, 419)
+                           .addComponent(cancelButton)
+                           .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                           .addComponent(okButton)))
+                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(imageIcon)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imageIcon7)
+                        .addGap(480, 480, 480))))
                .addGroup(layout.createSequentialGroup()
-                  .addComponent(cancelButton)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(okButton))
-               .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                  .addComponent(browseButton)
-                  .addGap(6, 6, 6)
-                  .addComponent(reportJLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 490, Short.MAX_VALUE))
-               .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                  .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                  .addComponent(metadataJpanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                  .addGap(150, 150, 150)
+                  .addComponent(clickLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)))
             .addContainerGap())
       );
       layout.setVerticalGroup(
          layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
          .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
             .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-               .addComponent(metadataJpanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+               .addGroup(layout.createSequentialGroup()
+                  .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(imageIcon)
+                     .addComponent(imageIcon1)
+                     .addComponent(imageIcon3)
+                     .addComponent(imageIcon5)
+                     .addComponent(imageIcon4)
+                     .addComponent(imageIcon6)
+                     .addComponent(imageIcon7)
+                     .addComponent(imageIcon2))
+                  .addGap(22, 22, 22))
+               .addGroup(layout.createSequentialGroup()
+                  .addComponent(clickLabel)
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(imageFileJlabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(dateJlabel)
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                .addComponent(browseButton)
@@ -295,15 +304,20 @@ public class ReportGenerator extends javax.swing.JFrame {
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JButton browseButton;
    private javax.swing.JButton cancelButton;
+   private javax.swing.JLabel clickLabel;
    private javax.swing.JLabel dateJlabel;
    private javax.swing.JLabel imageFileJlabel;
    private javax.swing.JLabel imageIcon;
-   private javax.swing.JLabel imageJlabel;
-   private javax.swing.JPanel jPanel1;
+   private javax.swing.JLabel imageIcon1;
+   private javax.swing.JLabel imageIcon2;
+   private javax.swing.JLabel imageIcon3;
+   private javax.swing.JLabel imageIcon4;
+   private javax.swing.JLabel imageIcon5;
+   private javax.swing.JLabel imageIcon6;
+   private javax.swing.JLabel imageIcon7;
    private javax.swing.JPanel jPanel2;
    private javax.swing.JScrollPane jScrollPane1;
    private javax.swing.JScrollPane jScrollPane2;
-   private javax.swing.JPanel metadataJpanel;
    private javax.swing.JTextArea notesTextArea;
    private javax.swing.JButton okButton;
    private javax.swing.JLabel reportJLabel;
@@ -311,21 +325,23 @@ public class ReportGenerator extends javax.swing.JFrame {
 
    private void initComponentsCustom() {
 
-      Font font = new Font(Font.SERIF, Font.PLAIN, 12);
-
-      // Set the image.
-      imp = (MimsPlus) ij.WindowManager.getCurrentImage();
-      if (imp == null) {
-         return;
-      }
-      Image massImage = getImage();
-      ImageIcon icon = null;
-      if (massImage != null){
-         icon = new ImageIcon(massImage);
-         icon = new ImageIcon(getScaledImage(icon.getImage(), iconWidth, iconHeight));
-      }
-      imageIcon.setIcon(icon);
-      imageIcon.setText("");
+      // JPopupMenu
+      jp = new JPopupMenu();
+      JMenuItem menuItem = new JMenuItem("remove");
+      menuItem.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            String currentLabelText = currentLabel.getText();
+            for (int i = 0; i < jlabelArray.length; i++) {
+               String labelText = jlabelArray[i].getText();
+               if (labelText != null && labelText.matches(currentLabelText)) {
+                  jlabelArray[i].setText(null);
+                  jlabelArray[i].setIcon(null);
+                  imageArray[i] = null;
+               }
+            }
+         }
+      });
+      jp.add(menuItem);
 
       // Set the report file label.
       if (reportFile == null) {
@@ -333,33 +349,9 @@ public class ReportGenerator extends javax.swing.JFrame {
          String dirName = imageDir.getName();
          String reportName = dirName + REPORT_EXTENSION;
          reportFile = new File(imageDir, reportName);
-         
       }
       reportJLabel.setFont(font);
       reportJLabel.setText(reportFile.getAbsolutePath());
-
-      // Set the image label.
-      String imageText = "<html><B>Image:</B> ";
-      if (reportType == IMAGE) {
-         if (imp.getMimsType() == MimsPlus.MASS_IMAGE)
-            imageText += "mass ";
-         imageText += imp.getRoundedTitle();
-         remove(jPanel2);
-      } else if (reportType == PLOT) {
-         imageText += "Plot";
-         remove(jPanel2);
-      } else if (reportType == TABLE) {
-         imageText += "Table";
-         remove(imageIcon);
-         JTable table1 = jt.getJTable();
-         JTable table = new JTable(table1.getModel());
-         JScrollPane jsp = new JScrollPane(table);         
-         jsp.setPreferredSize(jPanel2.getPreferredSize());
-         jPanel2.setLayout(new BorderLayout());
-         jPanel2.add(jsp);
-      }
-      imageJlabel.setFont(font);
-      imageJlabel.setText(imageText);
 
       // Set the image label.
       String imageFileText = "<html><B>File:</B> ";
@@ -374,7 +366,93 @@ public class ReportGenerator extends javax.swing.JFrame {
       dateJlabel.setFont(font);
       dateJlabel.setText(dateText);
 
-      pack();
+      // Specifics depending on the type of report.
+      if (reportType == IMAGE) {
+
+         // Set up the icon array.
+         jlabelArray = new JLabel[8];
+         jlabelArray[0] = imageIcon;
+         jlabelArray[1] = imageIcon1;
+         jlabelArray[2] = imageIcon2;
+         jlabelArray[3] = imageIcon3;
+         jlabelArray[4] = imageIcon4;
+         jlabelArray[5] = imageIcon5;
+         jlabelArray[6] = imageIcon6;
+         jlabelArray[7] = imageIcon7;
+         for (JLabel label : jlabelArray) {
+            label.setVerticalTextPosition(JLabel.BOTTOM);
+            label.setHorizontalTextPosition(JLabel.CENTER);
+            label.addMouseListener(this);
+         }
+         imageArray = new Image[jlabelArray.length];
+
+         // Set the place holder text
+         clickLabel.setFont(font);
+         clickLabel.setText("<html><I>Click the image you want to add</I>");
+
+      } else if (reportType == TABLE) {
+         remove(clickLabel);
+         addTable();
+      }
+   }   
+   
+   public void addImage(Image img, String text) {
+
+      // Validate
+      if (reportType != IMAGE)
+         return;
+      
+      // Set the image.
+      if (img == null)
+         return;
+
+      if (text == null || text.length() == 0)
+         return;
+
+      // Remove the space reserved for the table.
+      remove(jPanel2);
+
+      // Get rid of "click to add" instruction.
+      clickLabel.setText("");
+
+      // Get the icon.      
+      ImageIcon icon = new ImageIcon(img);
+      icon = new ImageIcon(getScaledImage(icon.getImage(), iconWidth, iconHeight));
+
+      // Fill in image.
+      for (int i = 0; i < jlabelArray.length; i++) {
+         if (jlabelArray[i].getText() != null && jlabelArray[i].getText().matches(text)) {
+            return;
+         }
+      }
+      for (int i = 0; i < jlabelArray.length; i++) {
+        if (jlabelArray[i].getText() == null || jlabelArray[i].getText().length() == 0) {
+            imageArray[i] = img;
+            jlabelArray[i].setIcon(icon);
+            jlabelArray[i].setText(text);
+            jlabelArray[i].setName(Integer.toString(i));
+            break;
+         }
+      }
+      
+   }
+
+   public void addTable() {
+
+      if (reportType != TABLE)
+         return;
+
+      // Set the image label.
+      JTable table1 = jt.getJTable();      
+      JTable table = new JTable(table1.getModel());
+      JScrollPane jsp = new JScrollPane(table);
+      jsp.setPreferredSize(jPanel2.getPreferredSize());
+      jPanel2.setLayout(new BorderLayout());
+      jPanel2.add(jsp);
+
+      for(int i = 0; i < table.getColumnCount(); i++) {
+          table.getColumnModel().getColumn(i).setCellRenderer(table1.getColumnModel().getColumn(i).getCellRenderer());
+      }
    }
 
    /**
@@ -394,20 +472,6 @@ public class ReportGenerator extends javax.swing.JFrame {
    }
 
    /**
-    * Returns an AWT image from the current
-    * @return - the current image
-    */
-   private Image getImage() {
-      Image img = null;
-      if (reportType == IMAGE)
-         img = ui.getScreenCaptureCurrentImage();
-      else if (reportType == PLOT)
-         img = getPlotImage();
-
-      return img;
-   }
-
-   /**
     * Writes the report.
     */
    private void writeReport() {
@@ -416,8 +480,6 @@ public class ReportGenerator extends javax.swing.JFrame {
       try {
          if (reportType == IMAGE) {
             newcontent = getImageRtfContent();
-         } else if (reportType == PLOT) {
-            newcontent = getPlotRtfContent();
          } else if (reportType == TABLE) {
             newcontent = getTableRtfContent();
          }
@@ -441,6 +503,7 @@ public class ReportGenerator extends javax.swing.JFrame {
             close();
          }
       } catch (Exception x) {
+         x.printStackTrace();
          IJ.error("Error writing " + reportFile.getName());
       }
    }
@@ -560,60 +623,44 @@ public class ReportGenerator extends javax.swing.JFrame {
       return last_cb_position;
    }
 
-   /**
-    * Returns the AWT Image associated with a MimsJFreeChart object.
-    *
-    * @return the AWT image of the plot.
-    */
-   private Image getPlotImage() {
-      MimsChartPanel mcp = jfc.getChartPanel();
-      BufferedImage img = mcp.getChart().createBufferedImage(mcp.getWidth(), mcp.getHeight());
-      return img;
-   }
-
    private Rtf getImageRtfContent() {
 
-      // image
-      Image img = getImage();
-
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try {
-         ImageIO.write((RenderedImage) img, "PNG", baos);
-      } catch (IOException ex) {
-         return null;
+      // Build the ArrayList of RtfPictures.
+      String namesString = "";      
+      ByteArrayOutputStream baos;
+      ArrayList<RtfPicture> rtfpicArray = new ArrayList<RtfPicture>();
+      for (int i = 0; i < imageArray.length; i++) {
+         Image img = imageArray[i];
+         if (img != null) {
+            namesString += jlabelArray[i].getText();
+            if (i < imageArray.length - 1)
+               namesString += ", ";            
+            try {
+               baos = new ByteArrayOutputStream();
+               ImageIO.write((RenderedImage) img, "PNG", baos);
+               rtfpicArray.add(picture(new ByteArrayInputStream(baos.toByteArray())));
+            } catch (IOException ex) {
+               return null;
+            }
+         }
       }
+
+      // Convert to Array of RtfText
+      RtfText[] rtfpics = new RtfText[rtfpicArray.size()];
+      for (int i = 0; i < rtfpics.length; i++)
+         rtfpics[i] = rtfpicArray.get(i).type(RtfPicture.PictureType.AUTOMATIC);
+
+      // Build the content.
       Rtf newcontent = rtf().section(
               p(bold("DATE: "), getDate()),
-              p(picture(new ByteArrayInputStream(baos.toByteArray())).type(RtfPicture.PictureType.AUTOMATIC)),
-              p(bold("Image: "), getImageName(), bold(" Raster: "), getRaster()),
+              p((Object[])rtfpics),
+              p(bold("Images: "), namesString),
               p(bold("Image File: "), ui.getOpener().getImageFile().getAbsolutePath()),
+              p(bold("Raster: "), getRaster()),
               p(bold("Roi File: "), getRoiFileString()),
               p(bold("Notes: "), notesTextArea.getText()),
               p(""),
-              p(""));
-
-      return newcontent;
-   }
-
-   private Rtf getPlotRtfContent() {
-
-      // image
-      Image img = getImage();
-
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try {
-         ImageIO.write((RenderedImage) img, "PNG", baos);
-      } catch (IOException ex) {
-         return null;
-      }
-      Rtf newcontent = rtf().section(
-              p(bold("DATE: "), getDate()),
-              p(picture(new ByteArrayInputStream(baos.toByteArray())).type(RtfPicture.PictureType.AUTOMATIC)),
-              p(bold("Image File: "), ui.getOpener().getImageFile().getAbsolutePath()),
-              p(bold("Roi File: "), getRoiFileString()),
-              p(bold("Notes: "), notesTextArea.getText()),
-              p(""),
-              p(""));
+              p(""));    
 
       return newcontent;
    }
@@ -621,7 +668,7 @@ public class ReportGenerator extends javax.swing.JFrame {
    private Rtf getTableRtfContent() throws IOException {
 
       // initialize
-      DefaultTableModel dft = (DefaultTableModel) jt.getJTable().getModel();
+      DefaultTableModel dft = (DefaultTableModel) jt.getJTable().getModel();      
       int cols = dft.getColumnCount();
       int rows = dft.getRowCount();
       Object[] objs = new Object[cols];
@@ -639,7 +686,12 @@ public class ReportGenerator extends javax.swing.JFrame {
       for (int row = 0; row < rows; row++) {
          objs = new Object[cols];
          for (int col = 0; col < cols; col++) {
-            objs[col] = dft.getValueAt(row, col);
+            Object value = dft.getValueAt(row, col);
+            if (value instanceof Double) {
+               objs[col] = formatter.format((Number) value);
+            } else {
+               objs[col] = value;
+            }             
          }
          rtfs_arr.add(row(objs).leftCellBorder().rightCellBorder());
       }
@@ -668,14 +720,6 @@ public class ReportGenerator extends javax.swing.JFrame {
       return dateText;
    }
 
-   private String getImageName() {
-      String imageName = "";
-      if (imp.getMimsType() == MimsPlus.MASS_IMAGE)
-         imageName = "mass";
-      imageName += imp.getRoundedTitle();
-      return imageName;
-   }
-
    private String getRaster() {
       String raster = ui.getOpener().getRaster();
       return raster;
@@ -690,5 +734,27 @@ public class ReportGenerator extends javax.swing.JFrame {
       return roiFileString;
    }
 
+   public void mouseClicked(MouseEvent e) {
+      
+   }
 
+   public void mousePressed(MouseEvent e) {
+      if (e.isPopupTrigger()) {
+         currentLabel = (JLabel)e.getSource();
+         jp.show(currentLabel, e.getX(), e.getY());
+      } 
+   }
+
+   public void mouseEntered(MouseEvent e) {
+      
+   }
+
+   public void mouseExited(MouseEvent e) {
+      
+   }
+
+   @Override
+   public void mouseReleased(MouseEvent e) {
+
+   }
 }
