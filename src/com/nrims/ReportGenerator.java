@@ -6,13 +6,13 @@
 package com.nrims;
 
 import com.nrims.data.MIMSFileFilter;
-import com.nrims.plot.MimsChartPanel;
 import com.tutego.jrtf.Rtf;
 import static com.tutego.jrtf.Rtf.rtf;
 import com.tutego.jrtf.RtfPara;
 import static com.tutego.jrtf.RtfPara.*;
 import com.tutego.jrtf.RtfPicture;
 import com.tutego.jrtf.RtfText;
+import com.tutego.jrtf.RtfUnit;
 import static com.tutego.jrtf.RtfText.*;
 import ij.IJ;
 import java.awt.BorderLayout;
@@ -75,12 +75,15 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
    JLabel currentLabel = null;
 
    private int reportType = 0;
-   private int iconWidth = 128;
-   private int iconHeight = 128;
-
    public static final String REPORT_EXTENSION = "_report.rtf";
    public static final int IMAGE = 1;
    public static final int TABLE = 3;
+
+   public static final int HEIGHT_TWIPS = 2490;
+   public int WIDTH_TWIPS = 2490;
+   
+   public static final int ICON_HEIGHT = 128;
+   public int ICON_WIDTH = 128;
 
    /**
     * ReportGenerator constructor for images.
@@ -415,9 +418,13 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
       // Get rid of "click to add" instruction.
       clickLabel.setText("");
 
-      // Get the icon.      
+      // Get the icon and scale.
       ImageIcon icon = new ImageIcon(img);
-      icon = new ImageIcon(getScaledImage(icon.getImage(), iconWidth, iconHeight));
+      double icon_scale = (double)ICON_HEIGHT/(double)icon.getIconHeight();
+      ICON_WIDTH = Math.round((float)icon_scale*(float)icon.getIconWidth());
+      double ratio = (double)icon.getIconWidth()/(double)icon.getIconHeight();
+      WIDTH_TWIPS = Math.round((float)ratio*(float)HEIGHT_TWIPS);
+      icon = new ImageIcon(getScaledImage(icon.getImage(), ICON_WIDTH, ICON_HEIGHT));
 
       // Fill in image.
       for (int i = 0; i < jlabelArray.length; i++) {
@@ -638,7 +645,7 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
             try {
                baos = new ByteArrayOutputStream();
                ImageIO.write((RenderedImage) img, "PNG", baos);
-               rtfpicArray.add(picture(new ByteArrayInputStream(baos.toByteArray())));
+               rtfpicArray.add(picture(new ByteArrayInputStream(baos.toByteArray())).size(WIDTH_TWIPS,HEIGHT_TWIPS,RtfUnit.TWIPS));
             } catch (IOException ex) {
                return null;
             }

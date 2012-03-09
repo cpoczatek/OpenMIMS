@@ -588,31 +588,29 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        if (isSilentMode())
           return;
 
-       int c=0;
-        for(int i = 0; i< windowPositions.length; i++) {
-           if(windowPositions[i]!=null) c++;
-        }
 
         for (int i = 0; i < viewMassMenuItems.length; i++) {
-            if (i < image.getNMasses()) {
-                viewMassMenuItems[i].setText(image.getMassNames()[i]);
-                viewMassMenuItems[i].setVisible(true);
-                if (i < windowPositions.length && windowPositions[i]!=null) {
-                    if (windowPositions[i].x > 0 && windowPositions[i].y > 0) {
-                        viewMassMenuItems[i].setSelected(true);
-                    } else {
-                        viewMassMenuItems[i].setSelected(false);
-                    }
+          if (i < image.getNMasses()) {
+             viewMassMenuItems[i].setText(image.getMassNames()[i]);
+             viewMassMenuItems[i].setVisible(true);
+             if (windowPositions != null) {
+                if (i < windowPositions.length && windowPositions[i] != null) {
+                   if (windowPositions[i].x > 0 && windowPositions[i].y > 0) {
+                      viewMassMenuItems[i].setSelected(true);
+                   } else {
+                      viewMassMenuItems[i].setSelected(false);
+                   }
                 } else {
-                    viewMassMenuItems[i].setSelected(true);
+                   viewMassMenuItems[i].setSelected(true);
                 }
-            } else {
-                viewMassMenuItems[i].setText("foo");
-                viewMassMenuItems[i].setVisible(false);
-                viewMassMenuItems[i].setSelected(false);
-            }
+             }
+          } else {
+             viewMassMenuItems[i].setText("foo");
+             viewMassMenuItems[i].setVisible(false);
+             viewMassMenuItems[i].setSelected(false);
+          }
 
-        }
+       }
     }
 
     /** Initializes the view menu.*/

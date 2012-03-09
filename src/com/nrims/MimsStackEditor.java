@@ -1584,7 +1584,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
       }
 
       if (nullTrans == true && STATE == MimsStackEditor.OK) {
-         throw new NullPointerException("translations is null: AutoTrack has failed.");
+         System.out.println("translations is null");
       }
    }
 
@@ -1704,37 +1704,43 @@ public class MimsStackEditor extends javax.swing.JPanel {
             ui.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             atManager.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-            // Get optional parameters for auto tracking algorithm.
-            String options = getOptions();
-            if (options == null) {
-               STATE = CANCEL;
-               notifyComplete(null);
-               return;
-            }
+            try {
 
-            // Get the list of included images and create substack.
-            ImagePlus currentImage = WindowManager.getCurrentImage();
-            startSlice = currentImage.getCurrentSlice();
-            if (atManager.getSelection(atManager.buttonGroup).getActionCommand().equals("Subset")) {
-               includeList = parseList(atManager.txtField.getText(), 1, ui.mimsAction.getSize());
-            } else {
-               for (int i = 0; i < images[0].getNSlices(); i++) {
-                  includeList.add(i, i + 1);
+               // Get optional parameters for auto tracking algorithm.
+               String options = getOptions();
+               if (options == null) {
+                  STATE = CANCEL;
+                  notifyComplete(null);
+                  return;
                }
+
+               // Get the list of included images and create substack.
+               ImagePlus currentImage = WindowManager.getCurrentImage();
+               startSlice = currentImage.getCurrentSlice();
+               if (atManager.getSelection(atManager.buttonGroup).getActionCommand().equals("Subset")) {
+                  includeList = parseList(atManager.txtField.getText(), 1, ui.mimsAction.getSize());
+               } else {
+                  for (int i = 0; i < images[0].getNSlices(); i++) {
+                     includeList.add(i, i + 1);
+                  }
+               }
+
+               ImagePlus tempImage = getSubStack(currentImage, includeList);
+
+               // Set options.
+               tempImage = setOptions(tempImage, options);
+
+               // Call Autotrack algorithm.
+               THREAD_STATE = WORKING;
+               AutoTrack temptrack = new AutoTrack(ui, tempImage);
+               temptrack.setIncludeList(includeList);
+               Thread thread = new Thread(temptrack);
+               thread.start();
+
+               tempImage.close();
+            } catch (Exception ex) {
+               notifyComplete(null);
             }
-            ImagePlus tempImage = getSubStack(currentImage, includeList);
-
-            // Set options.
-            tempImage = setOptions(tempImage, options);
-
-            // Call Autotrack algorithm.
-            THREAD_STATE = WORKING;
-            AutoTrack temptrack = new AutoTrack(ui, tempImage);
-            temptrack.setIncludeList(includeList);
-            Thread thread = new Thread(temptrack);
-            thread.start();
-
-            tempImage.close();
          }
       }
 
