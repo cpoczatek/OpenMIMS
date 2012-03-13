@@ -357,7 +357,7 @@ public class Converter extends SwingWorker<Void, Void> {
          
          // Build a copy of the image.
          ImageStack imgStack = img.getImageStack();
-         ImageStack tempStack = new ImageStack(img.getHeight(), img.getWidth());
+         ImageStack tempStack = new ImageStack(img.getWidth(), img.getHeight());
          for (int i = 0; i < imgStack.getSize(); i++) {
                tempStack.addSlice(Integer.toString(i + 1), imgStack.getProcessor(i + 1));
          }
