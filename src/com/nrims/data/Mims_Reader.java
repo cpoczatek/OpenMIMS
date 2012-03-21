@@ -143,7 +143,7 @@ public class Mims_Reader implements Opener {
 
        // Get image from file.
        ImagePlus imp = fo.open(false);
-       if (imp == null) {
+       if (imp == null) {          
           throw new IOException();
        }
 
@@ -605,7 +605,7 @@ public class Mims_Reader implements Opener {
     }
 
     /**
-     * @return the number of "masses" in this SIMS image file.
+     * @return the number of planes in this SIMS image file.
      */
     public int getNImages() {
         return fi.nImages;
@@ -642,6 +642,20 @@ public class Mims_Reader implements Opener {
           return FileInfo.GRAY32_UNSIGNED;
        else
           return FileInfo.GRAY16_UNSIGNED;
+    }
+
+    /**
+     * @return the IM file's header size;
+     */
+    public long getHeaderSize() {
+       return dhdr.header_size;
+    }
+
+    /**
+     * @return the file's data type;
+     */
+    public short getBitsPerPixel() {
+       return ihdr.d;
     }
 
     /**
@@ -911,6 +925,28 @@ public class Mims_Reader implements Opener {
    }
 
    /**
+    * Performs a check to see if the actual file size is in agreement
+    * with what the file size should be indicated by the header.
+    *
+    * @return <code>true</code> if in agreement, otherwise <code>false</code>.
+    */
+   public boolean performFileSanityCheck() {
+      long header_size = getHeaderSize();
+      int pixels_per_plane = getWidth() * getHeight();
+      int num_planes = getNImages();
+      int num_masses = getNMasses();
+      int bytes = ihdr.d;
+
+      long theoretical_file_size = (((long)pixels_per_plane)*((long)num_planes)*((long)num_masses)*((long)bytes)) + header_size;
+      long file_size = file.length();
+
+      if (theoretical_file_size == file_size)
+         return true;
+      else
+         return false;
+   }
+
+   /**
     * Set to true if QSA correction applied.
     *
     * @param isQSACorrected
@@ -983,6 +1019,50 @@ public class Mims_Reader implements Opener {
       this.metaData = metadata;
    }
 
+   /**
+    * Sets the width (in pixels).
+    *
+    * @param width
+    */
+   public void setWidth(int width) {
+      fi.width = width;
+   }
+
+   /**
+    * Sets the height (in pixels).
+    *
+    * @param height
+    */
+   public void setHeight(int height) {
+      fi.height = height;
+   }
+
+   /**
+    * Sets the number of masses.
+    *
+    * @param nmasses
+    */
+   public void setNMasses(int nmasses) {
+      fi.nMasses = nmasses;
+   }
+
+   /**
+    * Sets the number of images.
+    *
+    * @param nimages
+    */
+   public void setNImages(int nimages) {
+      fi.nImages = nimages;
+   }
+
+   /**
+    * Sets the bits per pixels.
+    *
+    * @param bitsperpixel
+    */
+   public void setBitsPerPixel(short bitperpixel) {
+      ihdr.d = bitperpixel;
+   }
 
     /*
     public String getInfo() {

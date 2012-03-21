@@ -38,7 +38,7 @@ public class Nrrd_Reader implements Opener {
     private int currentIndex = 0;
     private NrrdFileInfo fi = null;
     private boolean header = false;
-    private int bitSize = 0;
+    private short bitSize = 0;
 
     public Nrrd_Reader(File imageFile) throws IOException {
 
@@ -537,4 +537,54 @@ public class Nrrd_Reader implements Opener {
     public void setMetaDataKeyValuePairs(HashMap metaData) {
        fi.metadata = metaData;
     }
+
+   /**
+    * Performs a check to see if the actual file size is in agreement
+    * with what the file size should be indicated by the header.
+    *
+    * @return <code>true</code> if in agreement, otherwise <code>false</code>.
+    */
+   public boolean performFileSanityCheck() {
+      long header_size = fi.longOffset;
+      int pixels_per_plane = getWidth() * getHeight();
+      int num_planes = getNImages();
+      int num_masses = getNMasses();
+      int bytes = bitSize;
+
+      long theoretical_file_size = (((long)pixels_per_plane)*((long)num_planes)*((long)num_masses)*((long)bytes)) + header_size;
+      long file_size = file.length();
+
+      if (theoretical_file_size == file_size)
+         return true;
+      else
+         return false;
+   }
+
+   public long getHeaderSize() {
+      return fi.longOffset;
+   }
+
+   public short getBitsPerPixel() {
+      return bitSize;
+   }
+
+   public void setWidth(int width) {
+      fi.width = width;
+   }
+
+   public void setHeight(int height) {
+      fi.height = height;
+   }
+
+   public void setNMasses(int nmasses) {
+      fi.nMasses = nmasses;
+   }
+
+   public void setNImages(int nimages) {
+      fi.nImages = nimages;
+   }
+
+   public void setBitsPerPixel(short bitsperpixel) {
+      bitSize = bitsperpixel;
+   }
 }

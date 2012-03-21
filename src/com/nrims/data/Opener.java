@@ -49,6 +49,12 @@ public interface Opener {
     public float getPixelHeight();
     public void setStackIndex(int currentIndex);
     public void close();
+    public boolean performFileSanityCheck();
+    public void setWidth(int width);
+    public void setHeight(int height);
+    public void setNMasses(int nmasses);
+    public void setNImages(int nimages);
+    public void setBitsPerPixel(short bitperpixel);
 
     // Metadata
     public String getPosition();
@@ -65,6 +71,8 @@ public interface Opener {
     public String getNotes();
     public String getZPosition();
     public int getFileType();
+    public long getHeaderSize();
+    public short getBitsPerPixel();
     public boolean isDTCorrected();
     public boolean isQSACorrected();
     public float[] getBetas();

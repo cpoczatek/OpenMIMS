@@ -5,6 +5,7 @@
  */
 package com.nrims;
 
+import com.nrims.managers.OpenerManager;
 import com.nrims.data.*;
 import com.nrims.managers.QSAcorrectionManager;
 import com.nrims.managers.convertManager;
@@ -1020,6 +1021,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             autocontrastAllImages();
             //cbControl.updateHistogram();
             roiManager.updateSpinners();
+            this.mimsStackEditing.resetTrueIndexLabel();
+            this.mimsStackEditing.resetSpinners();
 
         } else if (evt.getAttribute() == MimsPlusEvent.ATTR_SET_ROI || 
                    evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
@@ -1078,11 +1081,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
 
         bUpdating = false;
-
-        // had to wait untill not changing....
-        // System.out.println("mims state changed...");
-        this.mimsStackEditing.resetTrueIndexLabel();
-        this.mimsStackEditing.resetSpinners();
     }
 
     /**
@@ -3952,68 +3950,81 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           return true;
        }
 
-    /**
-     * Opens an image file in the .im or .nrrd file format.
-     * @param file absolute file path.
-     * @throws java.lang.NullPointerException
-     */
+       /**
+        * Opens an image file in the .im or .nrrd file format.
+        * @param file absolute file path.
+        * @throws java.lang.NullPointerException
+        */
        public synchronized boolean loadMIMSFile(File file) throws NullPointerException {
           if (!file.exists()) {
              throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
           }
 
-          int progress = 0;            
-             closeCurrentImage();
-             getRoiManager().roijlist.clearSelection();
+          boolean isIM = false;
+          boolean isNRRD = false;
+          int progress = 0;
+          closeCurrentImage();
+          getRoiManager().roijlist.clearSelection();
 
-             try {
-                if (file.getName().endsWith(MIMS_EXTENSION)) {
-                   image = new Mims_Reader(file);
-                } else if (file.getName().endsWith(NRRD_EXTENSION)) {
-                   image = new Nrrd_Reader(file);
-                } else {
-                   return false;
-                }
-             } catch (Exception e) {
-                if (!ui.silentMode)
-                   IJ.error("Failed to open " + file + "\n");
-                e.printStackTrace();
+          try {
+
+             // Set up the Opener object depending on file type.
+             if (file.getName().endsWith(MIMS_EXTENSION)) {
+                image = new Mims_Reader(file);
+                isIM = true;
+             } else if (file.getName().endsWith(NRRD_EXTENSION)) {
+                image = new Nrrd_Reader(file);
+                isNRRD = true;
+             } else {
                 return false;
              }
 
-             int nMasses = image.getNMasses();
-             int nImages = image.getNImages();
-
-             long memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * ((long) 2) * ((long) nImages);
-             long maxMemory = IJ.maxMemory() - (128000000);
-
-             for (int i = 0; i < nMasses; i++) {
-                bOpenMass[i] = true;
+             // Make sure there is agreement between the file size and header.
+             boolean checks_out = image.performFileSanityCheck();
+             if (checks_out == false) {
+                if (ui.silentMode == true) {
+                   System.out.println("File has a bad header.");
+                   return false;
+                } else {
+                   OpenerManager opg = new OpenerManager(ui, image);
+                   opg.setModal(true);
+                   opg.setLocation(ui.getLocation().x + 50, ui.getLocation().y + 50);
+                   opg.setVisible(true);
+                   if (opg.isOK() == false) {
+                      return false;
+                   }
+                }
              }
 
+             // Make sure we have enough memory.
+             // This code has not been maintained for a long time and probably
+             // contains some errors. At the very least the nImages of the
+             // Opener object should be updated. Should be phased out or updated.
+             int nMasses = image.getNMasses();
+             int nImages = image.getNImages();
+             long memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * ((long) 2) * ((long) nImages);
+             long maxMemory = IJ.maxMemory() - (128000000);
+             for (int i = 0; i < nMasses; i++)
+                bOpenMass[i] = true;
              while (memRequired > maxMemory) {
                 ij.gui.GenericDialog gd = new ij.gui.GenericDialog("File Too Large");
                 long aMem = memRequired;
                 int canOpen = nImages;
-
                 while (aMem > maxMemory) {
                    canOpen--;
                    aMem = nMasses * image.getWidth() * image.getHeight() * 2 * canOpen;
                 }
-
                 String[] names = image.getMassNames();
                 for (int i = 0; i < image.getNMasses(); i++) {
                    String msg = "Open mass " + names[i];
                    gd.addCheckbox(msg, bOpenMass[i]);
                 }
                 gd.addNumericField("Open only ", (double) canOpen, 0, 5, " of " + image.getNImages() + " Images");
-
                 gd.showDialog();
                 if (gd.wasCanceled()) {
                    image = null;
                    return false;
                 }
-
                 nMasses = 0;
                 for (int i = 0; i < image.getNMasses(); i++) {
                    bOpenMass[i] = gd.getNextBoolean();
@@ -4024,46 +4035,79 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 nImages = (int) gd.getNextNumber();
                 memRequired = memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * ((long) 2) * ((long) nImages);
              }
-             try {
-                int n = 0;
-                int t = image.getNMasses() * (nImages);
-                for (int i = 0; i < image.getNMasses(); i++) {
-                   if (isCancelled()) {
-                      return false;
+
+             // Opens the first plane.
+             int n = 0;
+             int t = image.getNMasses() * (nImages);
+             for (int i = 0; i < image.getNMasses(); i++) {
+                if (isCancelled()) {
+                   return false;
+                }
+                progress = 100 * n++ / t;
+                setProgress(Math.min(progress, 100));
+                if (bOpenMass[i]) {
+                   MimsPlus mp = new MimsPlus(ui, i);
+                   mp.setAllowClose(false);
+                   massImages[i] = mp;
+                   if (mp != null) {
+                      massImages[i].getProcessor().setMinAndMax(0, 0);
+                      massImages[i].getProcessor().setPixels(image.getPixels(i));
                    }
+                }
+             }
+             updateStatus("1 of " + nImages);
+             if (nImages <= 1)
+                return true;
+
+             // Appends additional planes.
+             //
+             // Yes, this code is kind ugly :(
+             // and Yes, this code works :)
+             for (int i = 1; i < nImages; i++) {
+                boolean stop = false;
+                if (isCancelled())
+                   return false;
+                image.setStackIndex(i);
+                for (int mass = 0; mass < image.getNMasses(); mass++) {
                    progress = 100 * n++ / t;
                    setProgress(Math.min(progress, 100));
-                   if (bOpenMass[i]) {
-                      MimsPlus mp = new MimsPlus(ui, i);
-                      mp.setAllowClose(false);
-                      massImages[i] = mp;
-                      if (mp != null) {
-                         massImages[i].getProcessor().setMinAndMax(0, 0);
-                         massImages[i].getProcessor().setPixels(image.getPixels(i));
-                      }
-                   }                   
-                }
-                updateStatus("1 of " + nImages);
-                if (nImages > 1) {
-                   for (int i = 1; i < nImages; i++) {
-                      if (isCancelled()) {
-                         return false;
-                      }
-                      image.setStackIndex(i);
-                      for (int mass = 0; mass < image.getNMasses(); mass++) {
-                         progress = 100 * n++ / t;
-                         setProgress(Math.min(progress, 100));
-                         if (bOpenMass[mass]) {
+                   if (bOpenMass[mass]) {
+                      if (stop) {
+                         massImages[mass].appendBlankImage(i);
+                      } else {
+                         try {
                             massImages[mass].appendImage(i);
+                         } catch (IOException ioe) {
+                            if (mass == 0) {
+                               stop = true;
+                               break;
+                            }
+                            else if(isIM) {
+                               stop = true;
+                               massImages[mass].appendBlankImage(i);
+                            }
+                            else if(isNRRD) {
+                               massImages[mass].appendBlankImage(i);
+                            }
                          }
                       }
-                      updateStatus((i+1) + " of " + nImages);
                    }
                 }
-             } catch (Exception x) {
-                IJ.error(x.getMessage());
-                return false;
+                updateStatus((i + 1) + " of " + nImages);
+                if (stop) {
+                   image.setNImages(i + 1);
+                   break;
+                }
              }
+          } catch (Exception e) {
+             if (!ui.silentMode) {
+                IJ.error("Failed to open " + file + "\n");
+                e.printStackTrace();
+             } else {
+                e.printStackTrace();
+             }
+             return false;
+          }
           return true;
        }
 

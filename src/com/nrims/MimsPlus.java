@@ -691,6 +691,36 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
+     * This method is required for those instances where the header was incorrect
+     * or the file did not contain all of the data. For example, lets say the file
+     * should contain 40 planes (for 4 masses) but the last plane of the
+     * last two masses is missing. The plugin rquires that all masses contain the same
+     * number of planes, so in this case we want to append two blank images to the
+     * end of the last two masses, thereby ensuring all masses have the same number of planes.
+     */
+    public void appendBlankImage(int nImage)  {
+
+       ij.process.ImageProcessor ipp = null;
+       Opener op = ui.getOpener();
+       if (op.getFileType() == FileInfo.GRAY16_UNSIGNED) {
+           short[] pixels = new short[getWidth() * getHeight()];
+           ipp = new ij.process.ShortProcessor(getWidth(), getHeight(), pixels, null);
+        } else if (op.getFileType() == FileInfo.GRAY32_FLOAT) {
+           float[] pixels = new float[getWidth() * getHeight()];
+           ipp = new ij.process.FloatProcessor(getWidth(), getHeight(), pixels, null);
+        } else if (op.getFileType() == FileInfo.GRAY32_UNSIGNED) {
+           int[] pixels = new int[getWidth() * getHeight()];
+           ipp = new ij.process.FloatProcessor(getWidth(), getHeight(), pixels);
+        }
+        ij.ImageStack stack = getStack();
+        stack.addSlice(null, ipp);
+        setStack(null, stack);
+        setSlice(nImage + 1);
+        bIgnoreClose = true;
+        bIsStack = true;
+    }
+
+    /**
      * Returns a short title in the form "m13.01" or "m26.05".
      * @return The title (e.g. "m13.01").
      */
