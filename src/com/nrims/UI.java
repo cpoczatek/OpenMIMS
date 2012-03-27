@@ -1021,6 +1021,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             autocontrastAllImages();
             //cbControl.updateHistogram();
             roiManager.updateSpinners();
+            bUpdating = false;
             this.mimsStackEditing.resetTrueIndexLabel();
             this.mimsStackEditing.resetSpinners();
 
