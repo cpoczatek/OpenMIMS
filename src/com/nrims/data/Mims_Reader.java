@@ -798,7 +798,7 @@ public class Mims_Reader implements Opener {
         if (this.maskIm == null || this.ihdr == null) {
             return new String(" ");
         }
-        double ctime = getCountTimeD();
+        double ctime = getCountTime();
         double size = (double) (this.ihdr.w * this.ihdr.h);
         if (size == 0) {
             return new String(" ");
@@ -808,12 +808,7 @@ public class Mims_Reader implements Opener {
         return dtime;
     }
     
-    // @return the counttime units are second per plane     
-    public String getCountTime() {
-        return Double.toString(counting_time);
-    }
-
-    public double getCountTimeD() {       
+    public double getCountTime() {       
         return counting_time;
     }
      

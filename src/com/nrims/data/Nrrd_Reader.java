@@ -216,9 +216,6 @@ public class Nrrd_Reader implements Opener {
          else if(thisLine.startsWith(Opener.Mims_mass_symbols))
                 fi.massSymbols=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
 
-         else if(thisLine.startsWith(Opener.Mims_count_time))
-                fi.countTime=value;
-
          else if(thisLine.startsWith(Opener.Mims_date))
                 fi.sampleDate=value;
 
@@ -248,6 +245,13 @@ public class Nrrd_Reader implements Opener {
 
          else if(thisLine.startsWith(Opener.Mims_raster))
                    fi.raster=value;
+
+         else if(thisLine.startsWith(Opener.Mims_count_time)) {
+                try {
+                   Double ct = new Double(value);
+                   fi.countTime=ct.doubleValue();
+                } catch (Exception e) {fi.countTime = (new Double(-1.0)).doubleValue();}
+            }
 
          else if(thisLine.startsWith(Opener.Mims_pixel_height)) {
                 try {
@@ -470,7 +474,7 @@ public class Nrrd_Reader implements Opener {
         return fi.dwellTime;
     }
 
-    public String getCountTime() {
+    public double getCountTime() {
         return fi.countTime;
     }
 

@@ -1250,6 +1250,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
           ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
        }
 
+       ui.updateScrollbars();
        this.resetTrueIndexLabel();
        this.resetSpinners();
        deleteListTextField.setText("");

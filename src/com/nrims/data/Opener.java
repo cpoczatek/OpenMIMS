@@ -65,7 +65,7 @@ public interface Opener {
     public String getUserName();
     public String getSampleName();
     public String getDwellTime();
-    public String getCountTime();
+    public double getCountTime();
     public String getDuration();
     public String getRaster();
     public String getNotes();

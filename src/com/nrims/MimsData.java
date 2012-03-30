@@ -306,7 +306,7 @@ public class MimsData extends javax.swing.JPanel {
             tempstring = image.getZPosition();
             jLabel14.setText(tempstring);
             
-            tempstring = image.getDwellTime() + " ms/px    " + image.getCountTime() + " s/plane";
+            tempstring = image.getDwellTime() + " ms/px    " + Double.toString(image.getCountTime()) + " s/plane";
             jLabel15.setText(tempstring);
             
             tempstring = image.getDuration() + " s";

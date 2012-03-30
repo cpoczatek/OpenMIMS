@@ -906,6 +906,22 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     }
 
     /**
+     * Updates the scroll bar size/placement.
+     *
+     * As far as I can tell the only way I can see to do
+     * update the scroll bar is to update the slice position twice.
+     */
+    public void updateScrollbars() {
+       int current_slice = massImages[0].getCurrentSlice();
+       int num_planes = massImages[0].getNSlices();
+       if (current_slice == num_planes)
+         massImages[0].setSlice(num_planes-1);
+       else
+         massImages[0].setSlice(num_planes);
+       massImages[0].setSlice(current_slice);
+    }
+
+    /**
      * Recomputes all ratio images. This needs to be done
      * whenever an action is performed that changes the
      * underlying data of the ratio image. For example,
@@ -1012,6 +1028,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     }
                 }
                 // Update rois in sum images
+                // This is questionable code.
                 for (int i = 0; i < sum.length; i++) {
                     // For some reason 1 does not work... any other number does.
                     sum[i].setSlice(2);
@@ -1065,7 +1082,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (roi != null && roi.getState() != Roi.CONSTRUCTING) {
                     MimsRoiManager rm = getRoiManager();
                     rm.add();
-                    rm.showFrame();
+                    if (rm.isVisible() == false)
+                       rm.showFrame();
                 }
             }
 
@@ -3935,11 +3953,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              return false;
           }
 
-          // These 3 lines solves some strange updating issues.
-          // Has to do with syncing images by changing the slice.
-          int startslice = massImages[0].getCurrentSlice();
-          massImages[0].setSlice(getOpener().getNImages());
-          massImages[0].setSlice(startslice);
+          updateScrollbars();
 
           if (onlyShowDraggedFile) {
              MimsPlus[] mps = getOpenMassImages();
@@ -4245,6 +4259,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              });
 
              mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
+             
+             // Calculate theoretical duration
+             double duration = image.getCountTime() * (double)image.getNImages();
+             mimsLog.Log("Theoretical duration (s): " + Double.toString(duration));
+
              mimsTomography.resetImageNamesList();
              mimsStackEditing.resetSpinners();
 

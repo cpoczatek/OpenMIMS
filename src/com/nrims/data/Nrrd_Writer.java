@@ -357,7 +357,7 @@ class NrrdFileInfo extends FileInfo {
 	public String[] centers=null;
    public String[] massNames, massSymbols;
    public String duration, position,  sampleDate, sampleHour,
-                  userName, dwellTime, countTime,  sampleName;
+                  userName, dwellTime,  sampleName;
    public String notes = "";
    public String raster;
    public String zposition;
@@ -371,6 +371,7 @@ class NrrdFileInfo extends FileInfo {
    public boolean isPrototype = false;
    public String[] tilePositions = null;
    public HashMap metadata = new HashMap();
+   public double countTime;
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;
