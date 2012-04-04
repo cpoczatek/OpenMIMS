@@ -1,0 +1,107 @@
+====== OpenMIMS ======
+
+**OpenMIMS is an ImageJ plugin designed to open, process and analyze images captured with NanoSIMS 50 & 50L secondary ion mass spectrometers (Cameca).**
+
+===== Introduction =====
+
+The OpenMIMS plugin has been developed at the National Resource for
+ Imaging Mass Spectrometry (NRIMS, http://www.nrims.hms.harvard.edu), 
+ an NIH-supported National Resource developing Multi-isotope Imaging 
+ Mass Spectrometry (MIMS) for biomedical research. Images and/or 
+ stacks of images of up to 7 different isotopes can be opened, 
+ analyzed and saved. Image ratios and Hue-Saturation-Intensity (HSI) 
+ maps of any combination of isotopes can be displayed and data from 
+ any number of Regions of Interest (ROIs) extracted, analyzed and 
+ tabulated for single images or entire stacks.
+
+{{:playground:snapshot_desktop_x600.png|}}
+
+===== Developers =====
+  * Zeke Kaufman
+  * Joseph Collin Poczatek
+  * Boris Epstein
+
+===== Features =====
+  - Open, process and analyze images captured with NanoSIMS 50 & 50L secondary ion mass spectrometers.
+  - QSA and dead time correction.
+  - Generates plots and tables for Regions of Interest (ROIs).
+  - Generates reports.
+  - Export images in png format.
+
+===== Installation =====
+
+To install the OpenMIMS plugin, extract the contents of the 
+ [[http://www.nrims.harvard.edu/OpenMIMS.zip|Open_MIMS.zip]] file into the "plugins" directory under ImageJ. Only 
+ the .jar files need to be the placed in the "plugins" directory. 
+ The files README_OpenMIMS.txt and MimsManual.pdf are documentation 
+ files and are not required by the OpenMIMS plugin.
+ 
+ Once the contents are copied over, restart ImageJ or use the Update Menu command. "Open MIMS
+ Image" should now appear under Plugins menu.
+
+===== Download =====
+
+  * [[http://www.nrims.harvard.edu/software.php|The plugin is also available from the NRIMS website]].
+  * [[http://www.nrims.harvard.edu/OpenMIMS-Manual.pdf|OpenMIMS Manual]].
+  * [[http://www.nrims.harvard.edu/ReadMe.txt|OpenMIMS ReadMe]].
+  * [[http://www.nrims.harvard.edu/SampleData1.im.gz|SampleData1]] (4 masses, single plane, 1.1Mb)
+  * [[http://zoomwhee.mgh.harvard.edu/~cpoczatek/NRIMS_web/SampleData2.im.gz|SampleData2]] (7 masses, 292 planes, 90Mb)
+
+===== Contact Information =====
+
+For inquiries regarding feature requests, bug report, or anything
+ else related to the OpenMIMS plugin, please send email to:
+ 
+   nrims.software@rics.bwh.harvard.edu
+   
+===== License Information =====  
+
+Copyright 2010 NRIMS, National Resource for Imaging Mass Spectrometry.
+ All rights reserved.
+ 
+ http://www.nrims.hms.harvard.edu/
+ 
+ Permission is hereby granted, free of charge, to any person
+ obtaining a copy of this software and associated documentation
+ files (the "Software"), copy, modify, merge, publish, or
+ otherwise alter this software for educational or academic
+ purposes subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software. 
+ 
+ The copyright holders of other software modified and included in
+ the Software retain their rights and the licenses on that software
+ should not be removed.
+ 
+ Cite the NRIMS acknowledgement (above) in any publication that 
+ relies on the Software. Also cite those projects on which the 
+ Software relies when applicable. See the "About OpenMIMS" menu 
+ for the most up to date list.
+ 
+ If you would like to use or modify the Software for commercial
+ purposes contact us.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+
+ OpenMIMS has modified, uses, or depends upon: 
+   * TurboReg:  http://bigwww.epfl.ch/thevenaz/turboreg/ 
+   * libSVM: http://www.csie.ntu.edu.tw/~cjlin/libsvm/ 
+   * NRRD file format: http://teem.sourceforge.net/nrrd/ 
+   * nrrd plugins: http://flybrain.stanford.edu/nrrd 
+   * jFreeChart:  http://www.jfree.org/jfreechart/ 
+   * FileDrop:  http://iharder.sourceforge.net/current/java/filedrop/ 
+   * Apache Commons: http://commons.apache.org/io/
+   * jRTF: http://code.google.com/p/jrtf/
+   * jUnique: http://www.sauronsoftware.it/projects/junique/
+
+ Please cite OpenMIMS or any of the above projects when applicable.
+
+
