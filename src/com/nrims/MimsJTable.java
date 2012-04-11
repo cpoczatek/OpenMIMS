@@ -46,7 +46,7 @@ import javax.swing.table.TableModel;
  */
 public class MimsJTable {
 
-   UI ui;
+   UI gui;
    JTable table;
    String[] stats;
    MimsPlus images[];
@@ -77,7 +77,7 @@ public class MimsJTable {
                  ImageStatistics.STACK_POSITION+ImageStatistics.SCIENTIFIC_NOTATION;
 
    public MimsJTable(UI ui) {
-      this.ui = ui;
+      this.gui = ui;
    }
 
   /**
@@ -253,7 +253,7 @@ public class MimsJTable {
          menu.add(menuItem);
 
          // Generate frame.
-         String title = ui.getImageFilePrefix();
+         String title = gui.getImageFilePrefix();
          for (int i = 0; i < images.length; i++)
             title += " : " + images[i].getShortTitle();
          frame = new JFrame(title);
@@ -275,7 +275,7 @@ public class MimsJTable {
       autoResizeColWidth();
 
       // Update title.
-      String title = ui.getImageFilePrefix();
+      String title = gui.getImageFilePrefix();
       for (int i = 0; i < images.length; i++)
          title += " : " + images[i].getShortTitle();
 
@@ -339,7 +339,7 @@ public class MimsJTable {
          for (int col = 0; col < ROIMANAGER_MANDATORY_COLUMNS.length; col++) {
             stat = ROIMANAGER_MANDATORY_COLUMNS[col];
             if (stat.equals(ROIGROUP)) {
-               String group = ui.getRoiManager().getRoiGroup(roi.getName());
+               String group = gui.getRoiManager().getRoiGroup(roi.getName());
                if (group == null)
                   group = "null";
                data[row][col] = group;
@@ -359,7 +359,7 @@ public class MimsJTable {
          int colnum = SUM_IMAGE_MANDOTORY_COLUMNS.length;
          
          // Set the ROI location.
-         Integer[] xy = ui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
+         Integer[] xy = gui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
          rois[row].setLocation(xy[0], xy[1]);
          image.setRoi(rois[row]);
 
@@ -369,7 +369,7 @@ public class MimsJTable {
             if (stat.startsWith(GROUP))
                continue;
 
-            data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, ui);
+            data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, gui);
             colnum++;
          }
      }
@@ -401,9 +401,9 @@ public class MimsJTable {
          for (int col = 0; col < SUM_IMAGE_MANDOTORY_COLUMNS.length; col++) {
             stat = SUM_IMAGE_MANDOTORY_COLUMNS[col];
             if (stat.equals(FILENAME))
-               data[row][col] = ui.getOpener().getImageFile().getName();
+               data[row][col] = gui.getOpener().getImageFile().getName();
             else if (stat.equals(ROIGROUP)) {
-               String group = ui.getRoiManager().getRoiGroup(roi.getName());
+               String group = gui.getRoiManager().getRoiGroup(roi.getName());
                if (group == null)
                   group = "null";
                data[row][col] = group;
@@ -425,8 +425,8 @@ public class MimsJTable {
             // Sum images, by definition, are only 1 plane. Since Rois
             // can have different location on different planes, we will
             // choose the location for the currently displayed slice.
-            int plane = ui.getMassImages()[0].getCurrentSlice();
-            Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), plane);
+            int plane = gui.getMassImages()[0].getCurrentSlice();
+            Integer[] xy = gui.getRoiManager().getRoiLocation(roi.getName(), plane);
             roi.setLocation(xy[0], xy[1]);
             image.setRoi(roi);
 
@@ -439,12 +439,12 @@ public class MimsJTable {
 
                // Some stats we only want to put in once, like "area".
                if (col1 == 0)
-                  data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, ui);
+                  data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, gui);
                else {
                   if (stat.equals(AREA))
                      continue;
                   else
-                     data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, ui);
+                     data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, gui);
                }
                colnum++;
             }
@@ -460,7 +460,7 @@ public class MimsJTable {
    private Object[][] getDataSet() {
 
       // initialize variables.
-      int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
+      int currentSlice = gui.getOpenMassImages()[0].getCurrentSlice();
       Object[][] data = new Object[planes.size()][rois.length * images.length * stats.length + 1];
 
       // Fill in "slice" field.
@@ -480,7 +480,7 @@ public class MimsJTable {
                image.setSlice(plane, image);
             for (int i = 0; i < rois.length; i++) {
 
-               Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
+               Integer[] xy = gui.getRoiManager().getRoiLocation(rois[i].getName(), plane);
                rois[i].setLocation(xy[0], xy[1]);
                image.setRoi(rois[i]);
 
@@ -488,17 +488,17 @@ public class MimsJTable {
                            
                   if (j == 0) {
                      if (stats[k].startsWith(GROUP)) {
-                        String group = ui.getRoiManager().getRoiGroup(rois[i].getName());
+                        String group = gui.getRoiManager().getRoiGroup(rois[i].getName());
                         if (group == null)
                            group = "null";
                         data[ii][col] = group;
                      } else
-                        data[ii][col] = MimsJFreeChart.getSingleStat(image, stats[k], ui);                        
+                        data[ii][col] = MimsJFreeChart.getSingleStat(image, stats[k], gui);
                   } else {
                      if ((stats[k].startsWith(GROUP) || stats[k].equalsIgnoreCase(AREA)))
                         continue;
                      else
-                        data[ii][col] = MimsJFreeChart.getSingleStat(image, stats[k], ui);
+                        data[ii][col] = MimsJFreeChart.getSingleStat(image, stats[k], gui);
                   }
                   col++;
                }
@@ -506,7 +506,7 @@ public class MimsJTable {
          }
       }
 
-      ui.getOpenMassImages()[0].setSlice(currentSlice);
+      gui.getOpenMassImages()[0].setSlice(currentSlice);
 
       return data;
    }
@@ -642,16 +642,16 @@ public class MimsJTable {
    * Determines the behavior of the "Save" action.
    */
    private void saveActionPerformed(ActionEvent evt) {
-      MimsJFileChooser fc = new MimsJFileChooser(ui);
+      MimsJFileChooser fc = new MimsJFileChooser(gui);
       MIMSFileFilter mff_txt = new MIMSFileFilter("txt");
       mff_txt.setDescription("Text file");
       fc.addChoosableFileFilter(mff_txt);
       fc.setFileFilter(mff_txt);
       fc.setPreferredSize(new java.awt.Dimension(650, 500));
-      String lastFolder = ui.getLastFolder();
+      String lastFolder = gui.getLastFolder();
 
       try {
-         fc.setSelectedFile(new File(lastFolder, ui.getImageFilePrefix()+DEFAULT_TABLE_NAME));
+         fc.setSelectedFile(new File(lastFolder, gui.getImageFilePrefix()+DEFAULT_TABLE_NAME));
 
          int returnVal = fc.showSaveDialog(frame);
          if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -724,7 +724,7 @@ public class MimsJTable {
     * Display the reportGenerator object for generating user reports.
     */
    public void generateReport() {
-      ReportGenerator rg = new ReportGenerator(ui, this);
+      ReportGenerator rg = new ReportGenerator(gui, this);
       rg.setVisible(true);
    }
 
@@ -927,15 +927,18 @@ public class MimsJTable {
    /**
     * A custom renderer that display a Number to two decimal places.
     */
-   static class OpenMIMSTableFormatRenderer extends DefaultTableCellRenderer {
+   class OpenMIMSTableFormatRenderer extends DefaultTableCellRenderer {
 
-      private static final DecimalFormat formatter = new DecimalFormat("0.00");
-      private static final DecimalFormat wholeNumberFormatter = new DecimalFormat("##");
+      private DecimalFormat formatter = new DecimalFormat("0.00");
+      private DecimalFormat wholeNumberFormatter = new DecimalFormat("##");
 
       @Override
       public Component getTableCellRendererComponent(
               JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
          // First format the cell value as required
+         
+         formatter.setMaximumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
+         formatter.setMinimumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
 
          String colName = table.getColumnName(column);
          if (colName.startsWith(GROUP) || colName.matches(FILENAME) ||
