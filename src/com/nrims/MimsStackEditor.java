@@ -1380,7 +1380,12 @@ public class MimsStackEditor extends javax.swing.JPanel {
     * Launches the Autotrack manager and displayes the frame.
     */
    public void showTrackManager() {
-      atManager = new AutoTrackManager();
+      MimsPlus currentImage = (MimsPlus) WindowManager.getCurrentImage();
+      if (currentImage.getMimsType() != MimsPlus.MASS_IMAGE) {
+         ij.IJ.showMessage("Please select a mass image for tracking.");
+         return;
+      }
+      atManager = new AutoTrackManager(currentImage);
       atManager.showFrame();
    }
 
@@ -1609,15 +1614,16 @@ public class MimsStackEditor extends javax.swing.JPanel {
       JRadioButton eq;
       JButton cancelButton;
       JButton okButton;
+      MimsPlus currentImage;
 
       /**The AutoTrackManager contructor assembles and displays the GUI.*/
-      public AutoTrackManager() {
+      public AutoTrackManager(MimsPlus currentImage) {
          super("Auto Track Manager");
-
          if (instance != null) {
             instance.toFront();
             return;
          }
+         this.currentImage = currentImage;
          instance = this;
 
          // Setup radiobutton panel.
@@ -1716,7 +1722,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
                }
 
                // Get the list of included images and create substack.
-               ImagePlus currentImage = WindowManager.getCurrentImage();
                startSlice = currentImage.getCurrentSlice();
                if (atManager.getSelection(atManager.buttonGroup).getActionCommand().equals("Subset")) {
                   includeList = parseList(atManager.txtField.getText(), 1, ui.mimsAction.getSize());
