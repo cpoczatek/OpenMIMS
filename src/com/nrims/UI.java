@@ -143,6 +143,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     private static final String IMFILE_OPTION = "-imfile";
     private static final String SINGLE_INSTANCE_OPTION = "-single_instance";
+    private static final String FIJI_RUN_COMMAND = "run(\"Open MIMS Image\"";
+    private static final String IMAGEJ_RUN_COMMAND = "-run";
 
     // Task related variables.
     public SwingWorker task;
@@ -3637,43 +3639,61 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     //ONLY HIT FROM IDE NOT OUTSIDE
     public static void main(String args[]) {
 
-        for (int i = 0; i < args.length; i++) {
-            if(args[i].equals("-t")) {
-                isTesting = true;
-            }
-        }
-
         Boolean skip_next = false;
-        im_file_path = null;
-
         for (int i = 0; i < args.length; i++) {
             System.out.println("Arg " + i + " " + args[i]);
 
-            if (!skip_next) {
-                if (args[i].startsWith("-ijpath") && i + 1 < args.length) {
-                    //Prefs.setHomeDir(args[i+1]);
-                    skip_next = true;
-                }
+          if (args[i] == null)
+             continue;
+          
+          if (!skip_next) {
 
-                if ( (args[i].equals(IMFILE_OPTION)) && i + 1 < args.length )
-                {
-                    im_file_path = args[i+1];
-                    skip_next = true;
-                }
+             if (args[i].equals("-t")) {
+                isTesting = true;
+             }
 
-                if ( (args[i].equals(SINGLE_INSTANCE_OPTION)) )
-                {
-                    single_instance_mode = true;
-                }
+             if (args[i].startsWith("-ijpath") && i + 1 < args.length) {
+                //Prefs.setHomeDir(args[i+1]);
+                skip_next = true;
+             }
+             
+             // NO LONGER SUPPORTED
+             // The use of the "-imFile" flag is no longer supported or required.
+             if ( (args[i].equals(IMFILE_OPTION)) && i + 1 < args.length )
+             {
+                im_file_path = args[i+1];
+                skip_next = true;
+             }
 
-                if ( im_file_path == null && (new File(args[i])).exists() )
-                {
-                   im_file_path = args[i];
+             if (args[i].startsWith(FIJI_RUN_COMMAND))
+             {
+                int q1 = args[i].indexOf("\"");
+                int q2 = args[i].indexOf("\"", q1 + 1);
+                int q3 = args[i].indexOf("\"", q2 + 1);
+                int q4 = args[i].indexOf("\"", q3 + 1);
+                if (q3 > 0 && q4 > 0) {
+                   im_file_path = args[i].substring(q3 + 1, q4);
                 }
+             }
 
-            } else
-                skip_next = false;
-        }
+             if (args[i].startsWith(IMAGEJ_RUN_COMMAND))
+             {
+                skip_next = true;
+             }
+
+             if ( (args[i].equals(SINGLE_INSTANCE_OPTION)) )
+             {
+                single_instance_mode = true;
+             }
+             
+             if ( im_file_path == null && (new File(args[i])).exists() )
+             {
+                im_file_path = args[i];
+             }
+
+          } else
+             skip_next = false;
+       }
 
         String id = UI.class.getName();
 

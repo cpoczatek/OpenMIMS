@@ -729,6 +729,10 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
 
    private String getRaster() {
       String raster = ui.getOpener().getRaster();
+      if (!raster.contains(",")) {
+         int ras = Math.round((Float.parseFloat(raster))/1000.0f);
+         raster = String.valueOf(ras);
+      }
       return raster;
    }
 
