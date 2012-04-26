@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -1043,6 +1044,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             bUpdating = false;
             this.mimsStackEditing.resetTrueIndexLabel();
             this.mimsStackEditing.resetSpinners();
+            return;
 
         } else if (evt.getAttribute() == MimsPlusEvent.ATTR_SET_ROI || 
                    evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
@@ -1102,6 +1104,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
 
         bUpdating = false;
+        this.mimsStackEditing.resetTrueIndexLabel();
+        this.mimsStackEditing.resetSpinners();
     }
 
     /**
@@ -4204,10 +4208,18 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
                       //wo.run("tile");
                       MimsPlus[] windows = getOpenImages();
+                      double[] massVals = new double[windows.length];
                       int[] win_ids = new int[windows.length];
                       int i = 0;
                       for (MimsPlus mp : windows) {
-                         win_ids[i] = mp.getID();
+                         massVals[i] = windows[i].getMassValue();
+                         i++;
+                      }
+                      Arrays.sort(massVals);
+                      i = 0;
+                      for (Double mass : massVals) {
+                         int massValIdx = getMassIndices(mass, 0.1)[0];
+                         win_ids[i] = windows[massValIdx].getID();
                          i++;
                       }
                       tileWindows(win_ids);

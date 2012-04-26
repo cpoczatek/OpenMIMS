@@ -483,7 +483,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        // Set processor.
        ImageProcessor ipp = new FloatProcessor(getWidth(), getHeight(), rPixels, getProcessor().getColorModel());
        ipp.setMinAndMax(ratioProps.getMinLUT(), ratioProps.getMaxLUT());
-       setProcessor(title, ipp);
        if (forInternalRatio) {
           internalRatio = null;
        }  else {
@@ -497,10 +496,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
           killRoi();
           RankFilters rfilter = new RankFilters();
           double r = ui.getHSIView().getMedianRadius();
-          rfilter.rank(getProcessor(), r, RankFilters.MEDIAN);
+          rfilter.rank(ipp, r, RankFilters.MEDIAN);
           rfilter = null;
           setRoi(temproi);
        }
+       setProcessor(title, ipp);
     }
 
    /**
@@ -1528,8 +1528,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
    }
 
     @Override
-    public void mouseWheelMoved(MouseWheelEvent e){
-        int plane = 1;
+    public void mouseWheelMoved(MouseWheelEvent e){     
+       int plane = 1;
         int size = 1;
         MimsPlus mp = null;
         if(IJ.controlKeyDown()) {
@@ -1540,7 +1540,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if(this.nType == MimsPlus.MASS_IMAGE) {
             this.getWindow().mouseWheelMoved(e);
             return;
-        }else if (this.nType == MimsPlus.HSI_IMAGE) {
+        } else if (this.nType == MimsPlus.HSI_IMAGE) {
             mp = ui.getMassImage(this.getHSIProps().getNumMassIdx());
             plane = mp.getSlice();
             size = mp.getStackSize();
@@ -1548,13 +1548,16 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             mp = ui.getMassImage(this.getRatioProps().getNumMassIdx());
             plane = mp.getSlice();
             size = mp.getStackSize();
-        } else if( this.nType == MimsPlus.SUM_IMAGE ){ return; }
+        } else if( this.nType == MimsPlus.SUM_IMAGE ){
+           return;
+        }
+
         if(mp==null) return;
 
         int d = e.getWheelRotation();
         if( ( (plane + d)<=size ) && ( (plane+d)>=1 ) ) {
             mp.setSlice(plane+d);
-        }
+        }   
     }
 
     /**
