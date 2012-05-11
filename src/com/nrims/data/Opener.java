@@ -32,9 +32,18 @@ public interface Opener {
     public static final String Mims_QSA_FC_Obj = "Mims_QSA_FC_Obj";
     public static final String Mims_prototype = "Mims_prototype";
     public static final String Mims_tile_positions = "Mims_tile_positions";
-    
+    public static final String Mims_BField = "Mims_BField";
+    public static final String Mims_pszComment = "Mims_pszComment";
+    public static final String Mims_PrimCurrentT0 = "Mims_PrimCurrentT0";
+    public static final String Mims_PrimCurrentTEnd = "Mims_PrimCurrentTEnd";
+    public static final String Mims_ESPos = "Mims_ESPos";
+    public static final String Mims_ASPos = "Mims_ASPos";
+    public static final String Mims_D1Pos = "Mims_D1Pos";
+    public static final String Mims_Radius = "Mims_Radius";
+
     // Field that do not define parameters about the image
-    // but are still userful. In theory, Mims_notes, Mims_tile_positions
+    // but are still userful. Not found in original IM header.
+    // In theory, Mims_notes, Mims_tile_positions
     // and QSA and deadtime parameters probably belong here.
     public static final String Max_Tracking_Delta = "max_tracking_delta";
 
@@ -80,6 +89,14 @@ public interface Opener {
     public boolean isPrototype();
     public String[] getTilePositions();
     public HashMap getMetaDataKeyValuePairs();
+    public String getBField();
+    public String getpszComment();
+    public String getPrimCurrentT0();
+    public String getPrimCurrentTEnd();
+    public String getESPos();
+    public String getASPos();
+    public String getD1Pos();
+    public String getRadius();
 
     //Setable metadata
     public void setNotes(String notes);

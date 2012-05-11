@@ -6,6 +6,7 @@ import com.nrims.common.*;
 import ij.ImagePlus;
 import ij.io.FileInfo;
 import ij.io.FileOpener;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -43,6 +44,24 @@ public class Mims_Reader implements Opener {
     private String[] tilePositions = null;
     private HashMap metaData = new HashMap();
 
+    // These field were specifically selected by analysts as having importance.
+    // Rather than create a class for the structure, we just want the field.
+    //
+    // If we find ourselves needing more fields from the structure than we
+    // may want to create equivalent classes for those structures, similar to
+    // what is done with HeaderImage, DefAnalysis, MaskSampleStageImage and MaskImage.
+    //
+    // We store as Strings becasue theat is how they are stored in the NRRD file,
+    // how they are read by NrrdReader, and there is no need to keep original data type.
+    private String BField;          // Magnetic field in DAC
+    private String PrimCurrentT0;   // Primary current at t = 0 in pA
+    private String PrimCurrentTEnd; // Primary current at t = End in pA
+    private String D1Pos;           // D1 position
+    private String pszComment;      // Comment
+    private String Radius;	         // Trolley radius
+    private String ESPos;           // Entrance slit position
+    private String ASPos;           // Aperture slit position
+    
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
 
@@ -577,7 +596,12 @@ public class Mims_Reader implements Opener {
           }
        }
 
-       // Reader the Header_Image structure
+       // Read meta data.
+       if(this.dhdr.release >=4108) {
+          read_metaData_v7();
+       }
+
+       // Read the Header_Image structure
        long offset = dhdr.header_size - IHDR_SIZE;
        in.seek(offset);
        this.ihdr = new HeaderImage();
@@ -594,6 +618,94 @@ public class Mims_Reader implements Opener {
 
        return fi;
    }
+
+    /*
+     * Reads various fields from the header of the Cameca File Spec v7.
+     */
+    public void read_metaData_v7() throws NullPointerException, IOException {
+
+       int nb_poly, nNbBField;
+
+       // nb_poly
+       long position_of_PolyList = 652 + (288*nMasses);
+       long position_of_nb_poly = position_of_PolyList + (16);
+       in.seek(position_of_nb_poly);
+       nb_poly = in.readIntEndian();
+       
+       // nNbBField
+       long position_of_MaskNano = 676 + (288*nMasses) + (144*nb_poly);
+       long position_of_nNbBField = position_of_MaskNano + (4*24);
+       in.seek(position_of_nNbBField);
+       nNbBField = in.readIntEndian();
+       
+       // nBField
+       long position_of_Tab_BField_Nano = 2228 + (288*nMasses) + (144*nb_poly);
+       long position_of_nBField = position_of_Tab_BField_Nano + (4);
+       in.seek(position_of_nBField);       
+       int nBField = in.readIntEndian();
+       BField = Integer.toString(nBField);
+
+       // dRadius
+       long position_of_Tab_Trolley_Nano = position_of_Tab_BField_Nano + (10*4) + (2*8);
+       double[] dRadius = new double[12];
+       for (int i = 0; i < dRadius.length; i++) {
+          long position_of_dRadius = position_of_Tab_Trolley_Nano + (i*(208)) + (64+8);
+          in.seek(position_of_dRadius);
+          dRadius[i] = in.readDoubleEndian();
+       }
+       Radius = Arrays.toString(dRadius);
+
+       // pszComment
+       long position_of_Anal_param_nano = 2228 + (288*nMasses) + (144*nb_poly) + (2840*nNbBField);
+       long position_of_pszComment = position_of_Anal_param_nano + (16+4+4+4+4);
+       in.seek(position_of_pszComment);
+       pszComment = getChar(256);
+       
+       // nPrimCurrentT0, nPrimCurrentTEnd
+       long position_of_Anal_primary_nano = position_of_Anal_param_nano + (16+4+4+4+4+256);
+       long position_of_nPrimCurrentT0 = position_of_Anal_primary_nano + (8);
+       in.seek(position_of_nPrimCurrentT0);
+       int nPrimCurrentT0 = in.readIntEndian();
+       int nPrimCurrentTEnd = in.readIntEndian();
+       PrimCurrentT0 = Integer.toString(nPrimCurrentT0);
+       PrimCurrentTEnd = Integer.toString(nPrimCurrentTEnd);
+
+       // nD1Pos
+       long position_of_nD1Pos = position_of_nPrimCurrentT0 + (8+4+4+4+4+4+4+4+4);
+       in.seek(position_of_nD1Pos);
+       int nD1Pos = in.readIntEndian();
+       D1Pos = Integer.toString(nD1Pos);
+
+       // nESPos
+       long size_Ap_primary_nano = 552;
+       long position_Ap_secondary_nano = position_of_Anal_primary_nano + (size_Ap_primary_nano);
+       long position_nESPos = position_Ap_secondary_nano + (8);
+       in.seek(position_nESPos);
+       int nESPos = in.readIntEndian();
+       ESPos = Integer.toString(nESPos);
+
+       // nASPos
+       long position_nASPos = position_nESPos + (4+40+40);
+       in.seek(position_nASPos);
+       int nASPos = in.readIntEndian();
+       ASPos = Integer.toString(nASPos);
+
+       /*
+       System.out.println("nb_poly = " + nb_poly);
+       System.out.println("nNbBField = " + nNbBField);
+       System.out.println("nBField = " + nBField);
+       System.out.println("pszComment = " + pszComment);
+       System.out.println("nPrimCurrentT0 = " + nPrimCurrentT0);
+       System.out.println("nPrimCurrentTEnd = " + nPrimCurrentTEnd);
+       System.out.println("nESPos = " + nESPos);
+       System.out.println("nASPos = " + nASPos);
+       System.out.print("dRadius = ");
+       for (int i = 0; i < dRadius.length; i++) {
+          System.out.print(formatter.format(dRadius[i]) + ", ");
+       }
+       System.out.print("\n");
+       */
+    }
 
     /**
      * @return the name of the SIMS image file
@@ -1058,6 +1170,78 @@ public class Mims_Reader implements Opener {
    public void setBitsPerPixel(short bitperpixel) {
       ihdr.d = bitperpixel;
    }
+
+   /**
+    * Get nBField.
+    *
+    * @return nBField
+    */
+    public String getBField() {
+       return BField;
+    }
+
+   /**
+    * Get nPrimCurrentT0.
+    *
+    * @return nPrimCurrentT0
+    */
+    public String getPrimCurrentT0() {
+       return PrimCurrentT0;
+    }
+
+   /**
+    * Get nPrimCurrentTEnd.
+    *
+    * @return nPrimCurrentTEnd
+    */
+    public String getPrimCurrentTEnd() {
+       return PrimCurrentTEnd;
+    }
+
+   /**
+    * Get nD1Pos
+    *
+    * @return nD1Pos
+    */
+    public String getD1Pos() {
+       return D1Pos;
+    }
+
+   /**
+    * Get pszComment.
+    *
+    * @return pszComment
+    */
+    public String getpszComment() {
+       return pszComment;
+    }
+
+   /**
+    * Get dRadius.
+    *
+    * @return dRadius
+    */
+    public String getRadius() {
+       return Radius;
+    }
+
+   /**
+    * Get nESPos.
+    *
+    * @return nESPos
+    */
+    public String getESPos() {
+       return ESPos;
+    }
+
+   /**
+    * Get nASPos.
+    *
+    * @return nASPos
+    */
+    public String getASPos() {
+       return ASPos;
+    }
 
     /*
     public String getInfo() {

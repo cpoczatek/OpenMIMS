@@ -459,10 +459,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      *
      * @return the mass images window positions.
      */
-    public Point[] gatherWindowPosistions() {
-        Point[] positions = new Point[maxMasses];
+    public Point[] gatherWindowPosistions() {        
 
         MimsPlus[] images = this.getOpenMassImages();
+        Point[] positions = new Point[images.length];
         if(images.length==0) return null;
 
         for( int i = 0; i < images.length; i++) {
@@ -649,7 +649,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Action method for the "view" menu items. */
     private void viewMassChanged(java.awt.event.ActionEvent evt) {
-        if(windowPositions==null) windowPositions = gatherWindowPosistions();
+        if(windowPositions==null)
+           windowPositions = gatherWindowPosistions();
         int index = 0;
         for (int i = 0; i < viewMassMenuItems.length; i++) {
             if (evt.getActionCommand() == viewMassMenuItems[i].getText()) {
@@ -675,7 +676,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** The behavior for "closing" mass images, when closing is not allowed.*/
     public void massImageClosed(MimsPlus im) {
-        if(windowPositions==null) windowPositions = gatherWindowPosistions();
+        if(windowPositions==null)
+           windowPositions = gatherWindowPosistions();
         for (int i = 0; i < massImages.length; i++) {
             if (massImages[i] != null) {
                 if (massImages[i].equals(im)) {
@@ -4202,7 +4204,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 }
 
                 if (isSilentMode() == false) {
-                   if (windowPositions != null) {
+                   int wl = 0;
+                   if (windowPositions != null)
+                      wl = windowPositions.length;
+                   int ol = getOpenMassImages().length;
+                   if (windowPositions != null && wl == ol) {
                       applyWindowPositions(windowPositions);
                    } else {
                       //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();

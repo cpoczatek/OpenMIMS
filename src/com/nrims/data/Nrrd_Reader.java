@@ -244,7 +244,31 @@ public class Nrrd_Reader implements Opener {
                 fi.tilePositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
 
          else if(thisLine.startsWith(Opener.Mims_raster))
-                   fi.raster=value;
+                fi.raster=value;
+
+         else if(thisLine.startsWith(Opener.Mims_BField))
+                fi.BField=value;
+
+         else if(thisLine.startsWith(Opener.Mims_pszComment))
+                fi.pszComment=value;
+
+         else if(thisLine.startsWith(Opener.Mims_PrimCurrentT0))
+                fi.PrimCurrentT0=value;
+
+         else if(thisLine.startsWith(Opener.Mims_PrimCurrentTEnd))
+                fi.PrimCurrentTEnd=value;
+
+         else if(thisLine.startsWith(Opener.Mims_ESPos))
+                fi.ESPos=value;
+
+         else if(thisLine.startsWith(Opener.Mims_ASPos))
+                fi.ASPos=value;
+
+         else if(thisLine.startsWith(Opener.Mims_D1Pos))
+                fi.D1Pos=value;
+
+         else if(thisLine.startsWith(Opener.Mims_Radius))
+                fi.Radius=value;
 
          else if(thisLine.startsWith(Opener.Mims_count_time)) {
                 try {
@@ -590,5 +614,37 @@ public class Nrrd_Reader implements Opener {
 
    public void setBitsPerPixel(short bitsperpixel) {
       bitSize = bitsperpixel;
+   }
+
+   public String getBField() {
+      return fi.BField;
+   }
+
+   public String getpszComment() {
+      return fi.pszComment;
+   }
+
+   public String getPrimCurrentT0() {
+      return fi.PrimCurrentT0;
+   }
+
+   public String getPrimCurrentTEnd() {
+      return fi.PrimCurrentTEnd;
+   }
+
+   public String getESPos() {
+      return fi.ESPos;
+   }
+
+   public String getASPos() {
+      return fi.ASPos;
+   }
+
+   public String getD1Pos() {
+      return fi.D1Pos;
+   }
+
+   public String getRadius() {
+      return fi.Radius;
    }
 }

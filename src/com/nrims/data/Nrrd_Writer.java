@@ -245,6 +245,38 @@ public class Nrrd_Writer {
        // QSA correction
        out.write(Opener.Mims_QSA_correction_applied+Opener.Nrrd_seperator+op.isQSACorrected()+"\n");
 
+       // BField
+       if (op.getBField() != null)
+          out.write(Opener.Mims_BField+Opener.Nrrd_seperator+op.getBField()+"\n");
+
+       // PrimCurrentT0
+       if (op.getPrimCurrentT0() != null)
+          out.write(Opener.Mims_PrimCurrentT0+Opener.Nrrd_seperator+op.getPrimCurrentT0()+"\n");
+
+       // PrimCurrentTEnd
+       if (op.getPrimCurrentTEnd() != null)
+          out.write(Opener.Mims_PrimCurrentTEnd+Opener.Nrrd_seperator+op.getPrimCurrentTEnd()+"\n");
+
+       // D1Pos
+       if (op.getD1Pos() != null)
+          out.write(Opener.Mims_D1Pos+Opener.Nrrd_seperator+op.getD1Pos()+"\n");
+
+       // pszComment
+       if (op.getpszComment() != null)
+          out.write(Opener.Mims_pszComment+Opener.Nrrd_seperator+op.getpszComment()+"\n");
+
+       // Radius
+       if (op.getRadius() != null)
+          out.write(Opener.Mims_Radius+Opener.Nrrd_seperator+op.getRadius()+"\n");
+
+       // ESPos
+       if (op.getESPos() != null)
+          out.write(Opener.Mims_ESPos+Opener.Nrrd_seperator+op.getESPos()+"\n");
+
+       // ASPos
+       if (op.getASPos() != null)
+          out.write(Opener.Mims_ASPos+Opener.Nrrd_seperator+op.getASPos()+"\n");
+
        // QSA correction parameters
        if (op.isQSACorrected()) {
       
@@ -372,6 +404,17 @@ class NrrdFileInfo extends FileInfo {
    public String[] tilePositions = null;
    public HashMap metadata = new HashMap();
    public double countTime;
+
+   // These field were specifically selected by analysts as having importance,
+   // but are not required to make the application work.
+   public String BField;          // Magnetic field in DAC
+   public String PrimCurrentT0;   // Primary current at t = 0 in pA
+   public String PrimCurrentTEnd; // Primary current at t = End in pA
+   public String D1Pos;           // D1 position
+   public String pszComment;       // Comment
+   public String Radius;	        // Trolley radius
+   public String ESPos;           // Entrance slit position
+   public String ASPos;           // Aperture slit position
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;
