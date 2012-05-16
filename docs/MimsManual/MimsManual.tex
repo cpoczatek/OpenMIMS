@@ -286,7 +286,7 @@
 	statistics are being generating. Mass and ratio images that are more
 	than one plane will output one row of data per plane. In the case of
 	sum images and other images that are only one plane, one row of data
-	will be produced per ROI. See Appendix E for a sample data output table.
+	will be produced per ROI. See \textbf{APPENDIX B} for a sample data output table.
 	
 	The right side of the tab includes a histogram that displays the intensity values for 
 	the pixels within a given ROI.
@@ -323,7 +323,7 @@
 	\includegraphics[scale=0.70]{snapshot_MimsSegmentation.png}
 	\caption{The \textbf{Segementation} tab.}
 	\end{figure}
-	The \textbf{Segmentation} tab allows the user to perform an algorithmic segmentation of a MIMS image to automatically generate ROIs for a given image plane. The algorithm used is a support vector machine (SVM) based segmentation that classifies pixels in the image using methods similar to \textit{Fuller et. al.} [1]. A full description of SVMs is outside the scope of this document but will be detailed in a forthcoming paper.  The algorithm can use many values or features to classify a pixel: the value of that pixel in a set of mass or ratio images, the mean and standard deviation in a neighborhood around that pixel, and the gradient around that pixel. Note that the ability to use other features may be added later. To perform a segmentation the user clicks on the \textbf{Config} button and is presented with a window as shown in Figure 13.  The \textbf{Export} button will export the SVM and data if the SVM has been trained using the libSVM format.
+	The \textbf{Segmentation} tab allows the user to perform an algorithmic segmentation of a MIMS image to automatically generate ROIs for a given image plane. The algorithm used is a support vector machine (SVM) based segmentation that classifies pixels in the image using methods similar to \textit{Fuller et. al.} [1]. A full description of SVMs is outside the scope of this document but will be detailed in a forthcoming paper.  The algorithm can use many values or features to classify a pixel: the value of that pixel in a set of mass or ratio images, the mean and standard deviation in a neighborhood around that pixel, and the gradient around that pixel. Note that the ability to use other features may be added later. To perform a segmentation the user clicks on the \textbf{Config} button and is presented with a window as shown in Figure 10.  The \textbf{Export} button will export the SVM and data if the SVM has been trained using the libSVM format.
 
 	\begin{figure}[h]
 	\centering
@@ -351,7 +351,7 @@
 
 \newpage
 	The SVM must be trained by clicking the \textbf{Train} button, located below 
-	\textbf{Model description} in Figure 12.  It should be noted that the SVM can 
+	\textbf{Model description} in Figure 11.  It should be noted that the SVM can 
 	be saved either before training (saving all parameter settings and training ROIs) 
 	or after training (also saving the trained SVM).  The segmentation of the entire 
 	image can be performed by clicking \textbf{Predict} and the result of this 
@@ -359,7 +359,7 @@
 	segments 2D images. Generating ROIs from the prediction can be done by clicking 
 	\textbf{ROIs} which will generate a set of ROIs for each class ignoring groups 
 	of pixels of the same class that are below the value in the \textbf{min area} 
-	field. An example of a segmentation can be seen in Appendix C.
+	field. An example of a segmentation can be seen in \textbf{APPENDIX C}.
 
 \newpage
 \section*{Mims Log:}
@@ -571,17 +571,16 @@
 \end{figure}
 \vfill
 
-
 \newpage
 \begin{center}\LARGE{\textbf{APPENDIX B}}\end{center} 
 \vfill
-\begin{figure}[htp!]
+\begin{figure}[h]
 \centering
-\includegraphics[scale=0.75]{snapshot_ActionFile.png}
-\caption{A sample Action File.}
+\includegraphics[scale=0.8]{snapshot_Table.png}
+\caption{Sample output table showing mean and standard deviation
+for a 40 plane image file with three ROIs}
 \end{figure}
 \vfill
-
 
 \newpage
 \begin{center}\LARGE{\textbf{APPENDIX C}}\end{center} 
@@ -604,16 +603,7 @@
 \end{figure}
 \vfill
 
-\newpage
-\begin{center}\LARGE{\textbf{APPENDIX E}}\end{center} 
-\vfill
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.8]{snapshot_Table.png}
-\caption{Sample output table showing mean and standard deviation
-for a 40 plane image file with three ROIs}
-\end{figure}
-\vfill
+
 
 
 \end{document}
