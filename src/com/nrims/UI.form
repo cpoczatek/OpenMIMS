@@ -208,10 +208,18 @@
               <SubComponents>
                 <MenuItem class="javax.swing.JMenuItem" name="exportPNGjMenuItem">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Export All Derived (png)"/>
+                    <Property name="text" type="java.lang.String" value="All Derived (png)"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportPNGjMenuItemActionPerformed"/>
+                  </Events>
+                </MenuItem>
+                <MenuItem class="javax.swing.JMenuItem" name="exportQVisMenuItem">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="HSI image 3D (qvis)"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportQVisMenuItemActionPerformed"/>
                   </Events>
                 </MenuItem>
               </SubComponents>
@@ -306,12 +314,12 @@
             <Property name="text" type="java.lang.String" value="Testing"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="qvisExportMenuItem">
+            <MenuItem class="javax.swing.JMenuItem" name="emptyTestMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Export QVis"/>
+                <Property name="text" type="java.lang.String" value="empty test"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="qvisExportMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="emptyTestMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -400,12 +408,12 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <EmptySpace min="0" pref="723" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="719" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <EmptySpace min="0" pref="424" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="416" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
