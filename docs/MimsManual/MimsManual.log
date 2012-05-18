@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.4.13)  22 DEC 2011 10:31
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2011.4.13)  16 MAY 2012 09:56
 entering extended mode
  %&-line parsing enabled.
 **MimsManual.tex
@@ -290,7 +290,7 @@ File: snapshot_MimsLog.png Graphic file (type png)
 File: snapshot_m26ROIs.png Graphic file (type png)
 
 <use snapshot_m26ROIs.png>
-<snapshot_ROImanager.png, id=61, 475.7775pt x 313.9228pt>
+<snapshot_ROImanager.png, id=61, 347.79938pt x 229.60782pt>
 File: snapshot_ROImanager.png Graphic file (type png)
 
 <use snapshot_ROImanager.png> [12 <./snapshot_m26ROIs.png (PNG copy)> <./snapsh
@@ -305,43 +305,39 @@ File: snapshot_HSIimage.png Graphic file (type png)
 <use snapshot_HSIimage.png> [15
 
  <./snapshot_HSIimage.png (PNG copy)>]
-<snapshot_ActionFile.png, id=77, 440.64626pt x 607.26875pt>
-File: snapshot_ActionFile.png Graphic file (type png)
+<snapshot_Table.png, id=77, 573.90883pt x 595.80733pt>
+File: snapshot_Table.png Graphic file (type png)
 
-<use snapshot_ActionFile.png> [16 <./snapshot_ActionFile.png>]
-<seg_lechene_94p.png, id=83, 769.87625pt x 770.88pt>
+<use snapshot_Table.png> [16 <./snapshot_Table.png (PNG copy)>]
+<seg_lechene_94p.png, id=81, 769.87625pt x 770.88pt>
 File: seg_lechene_94p.png Graphic file (type png)
  <use seg_lechene_94p.png>
 [17 <./seg_lechene_94p.png (PNG copy)>]
-<snapshot_ImageList.png, id=87, 491.8375pt x 489.83pt>
+<snapshot_ImageList.png, id=85, 491.8375pt x 489.83pt>
 File: snapshot_ImageList.png Graphic file (type png)
 
-<use snapshot_ImageList.png> [18 <./snapshot_ImageList.png>]
-<snapshot_Table.png, id=92, 573.90883pt x 595.80733pt>
-File: snapshot_Table.png Graphic file (type png)
-
-<use snapshot_Table.png> [19 <./snapshot_Table.png (PNG copy)>]
-(./MimsManual.aux) ) 
+<use snapshot_ImageList.png> [18 <./snapshot_ImageList.png>] (./MimsManual.aux)
+ ) 
 Here is how much of TeX's memory you used:
- 1728 strings out of 495061
- 24140 string characters out of 1182621
+ 1723 strings out of 495061
+ 24006 string characters out of 1182621
  78239 words of memory out of 3000000
- 4902 multiletter control sequences out of 15000+50000
+ 4898 multiletter control sequences out of 15000+50000
  8895 words of font info for 31 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
  25i,10n,43p,993b,296s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cm
-bx10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx12.pfb></
-usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/t
-exmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive
-/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-texlive/fonts/type1
-/public/amsfonts/cm/cmr6.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfo
-nts/cm/cmr8.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy10
-.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/
-share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-Output written on MimsManual.pdf (19 pages, 3799227 bytes).
+</usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/sha
+re/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texmf-te
+xlive/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-texlive/fonts
+/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive/fonts/type1/publi
+c/amsfonts/cm/cmr12.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/c
+m/cmr6.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr8.pfb></
+usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/t
+exmf-texlive/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texmf-texliv
+e/fonts/type1/public/amsfonts/cm/cmti12.pfb>
+Output written on MimsManual.pdf (18 pages, 3805011 bytes).
 PDF statistics:
- 129 PDF objects out of 1000 (max. 8388607)
+ 123 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 111 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 106 words of extra memory for PDF output out of 10000 (max. 10000000)
 
