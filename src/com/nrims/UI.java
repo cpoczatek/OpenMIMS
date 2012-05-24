@@ -127,10 +127,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private javax.swing.JRadioButtonMenuItem[] viewMassMenuItems = null;
     private Opener image = null;
     private ij.ImageJ ijapp = null;
-    private FileDrop mimsDrop;        
-    private Point[] windowPositions = null;
-    private int[] hiddenWindows = null;
-    private double[] windowZooms = null;
+    private FileDrop mimsDrop;
+    private HashMap wpMap = new HashMap<Double, Point>();
+    private HashMap hwMap = new HashMap<Double, Boolean>();
+    private HashMap zmMap = new HashMap<Double, Double>();
     protected MimsLineProfile lineProfile;
     protected MimsAction mimsAction = null; 
     private imageNotes imgNotes;
@@ -327,26 +327,26 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            if (getRoiManager().isVisible())
               getRoiManager().close();
         }
-           this.windowPositions = gatherWindowPosistions();
-           this.hiddenWindows = gatherHiddenWindows();
-           this.windowZooms = this.gatherWindowZooms();
+
+        if (previousFileCanceled == false)
+           gatherWindowState();
         for (int i = 0; i < maxMasses; i++) {
             if (segImages[i] != null) {
                 segImages[i].removeListener(this);
                 if (bCloseOldWindows) {
                     if (segImages[i].getWindow() != null) {
-                        segImages[i].getWindow().close();
-                        segImages[i] = null;
+                        segImages[i].getWindow().close();                        
                     }
+                    segImages[i] = null;
                 }
             }
             if (massImages[i] != null) {
                 massImages[i].removeListener(this);
                 if (bCloseOldWindows) {
                     if (massImages[i].getWindow() != null) {
-                        massImages[i].getWindow().close();
-                        massImages[i] = null;
+                        massImages[i].getWindow().close();                        
                     }
+                    massImages[i] = null;
                 }
             }
             bOpenMass[i] = false;
@@ -354,18 +354,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 hsiImages[i].removeListener(this);
                 if (bCloseOldWindows) {
                     if (hsiImages[i].getWindow() != null) {
-                        hsiImages[i].getWindow().close();
-                        hsiImages[i] = null;
+                        hsiImages[i].getWindow().close();                        
                     }
+                    hsiImages[i] = null;
                 }
             }
             if (ratioImages[i] != null) {
                 ratioImages[i].removeListener(this);
                 if (bCloseOldWindows) {
                     if (ratioImages[i].getWindow() != null) {
-                        ratioImages[i].getWindow().close();
-                        ratioImages[i] = null;
+                        ratioImages[i].getWindow().close();                        
                     }
+                    ratioImages[i] = null;
                 }
             }
         }
@@ -375,18 +375,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 sumImages[i].removeListener(this);
                 if (bCloseOldWindows) {
                     if (sumImages[i].getWindow() != null) {
-                        sumImages[i].getWindow().close();
-                        sumImages[i] = null;
+                        sumImages[i].getWindow().close();                        
                     }
+                    sumImages[i] = null;
                 }
             }
             if (compImages[i] != null) {
                 compImages[i].removeListener(this);
                 if (bCloseOldWindows) {
                     if (compImages[i].getWindow() != null) {
-                        compImages[i].getWindow().close();
-                        compImages[i] = null;
+                        compImages[i].getWindow().close();                        
                     }
+                    compImages[i] = null;
                 }
             }
         }
@@ -454,128 +454,179 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       return opened;
    }
 
-    /**
-     * Returns the mass images window positions as an array of Points.
-     *
-     * @return the mass images window positions.
-     */
-    public Point[] gatherWindowPosistions() {        
+   /**
+    * gathers the state of all the mass images by filling in
+    * the windows position, windows hidden, and windows zoom HashMaps.
+    *
+    */
+   public void gatherWindowState() {
 
-        MimsPlus[] images = this.getOpenMassImages();
-        Point[] positions = new Point[images.length];
-        if(images.length==0) return null;
+      wpMap = new HashMap<Double, Point>();
+      hwMap = new HashMap<Double, Boolean>();
+      zmMap = new HashMap<Double, Double>();
 
-        for( int i = 0; i < images.length; i++) {
-            if( images[i].getWindow() != null)
-                positions[i] = images[i].getWindow().getLocation();
-            else
-                positions[i] = new Point(-9,-9);
-        }
+      if (massImages == null || massImages.length == 0) {
+         return;
+      }
 
-        return positions;
-    }
+      MimsPlus mp;
+      Double mass;
+      Double zoom;
+      Point point;
+      Boolean isVisible;
+      for (int i = 0; i < massImages.length; i++) {
+         mp = massImages[i];
+         if (mp == null) {
+            continue;
+         }
+         mass = mp.getMassValue();
+         isVisible = mp.isVisible();
+         if (mp.getWindow() != null) {
+            point = mp.getWindow().getLocation();
+         } else {
+            point = new Point(-1, -1);
+         }
+         if (mp.getCanvas() != null) {
+            zoom = mp.getCanvas().getMagnification();
+         } else {
+            zoom = 1.0;
+         }
+         wpMap.put(mass, point);
+         hwMap.put(mass, isVisible);
+         zmMap.put(mass, zoom);
+      }
+   }
 
-    /**
-     * Returns an array of int describing if certain mass
-     * images are visible or hidden.
-     *
-     * @return an array describing if mass images are visible (1) or hidden (0).
-     */
-     public int[] gatherHiddenWindows() {
-        int[] hidden = new int[maxMasses];
+   /**
+    * Everybody has a different opinion on how this method should work.
+    * Im sure it will change again, butthis is how it works for now:
+    *
+    * 1) All mass images are placed in the same location as their
+    *    equvalent mass image from the previous session.
+    *
+    * 2) All mass images that were hidden in the previous session are
+    *    hidden in the current session.
+    *
+    * 3) All zoom levels from the previous session are applied
+    *    to the equivalent mass image of the current session.
+    *
+    * Negatives of this model are as follows:
+    *
+    * - Images that did not exist in the previous session are
+    *   not tiled, and simply overlap each other in the current session.
+    *
+    * - Images that were hidden in the previous session are hidden in the
+    *   current session. But when those images are made visible (e.g. View > m12.00),
+    *   they are placed in the upper left corner.
+    */
+   public void applyWindowState() {
 
-        MimsPlus[] images = this.getOpenMassImages();
-        if(images.length==0) return null;
-
-        for( int i = 0; i < images.length; i++) {
-            if( !images[i].isVisible() )
-                hidden[i] = 1;
-            else
-                hidden[i] = 0;
-        }
-
-        return hidden;
-    }
-
-    /**
-     * Returns the mass images window magnifications.
-     *
-     * @return the mass images window magnifications.
-     */
-     public double[] gatherWindowZooms() {
-        double[] zooms = new double[maxMasses];
-
-        for(int i=0; i< zooms.length; i++) { zooms[i] = 1.0; }
-
-        MimsPlus[] images = this.getOpenMassImages();
-        if(images.length==0) return null;
-
-        for( int i = 0; i < images.length; i++) {
-            if( images[i].getCanvas() != null) {
-                zooms[i]=images[i].getCanvas().getMagnification();
-            } else {
-                zooms[i] = 1.0;
+      Double zoom;
+      Point point;
+      Boolean isVisible;
+      double massVal;
+      for (int i = 0; i < massImages.length; i++) {
+         if (massImages[i] != null) {
+            massVal = massImages[i].getMassValue();
+            point = getWindowLocation(massVal);
+            isVisible = getWindowVisible(massVal);
+            zoom = getWindowZoom(massVal);
+            
+            if (point !=  null) {
+               massImages[i].getWindow().setLocation(point);
             }
-        }
 
-        return zooms;
-    }
-
-    /**
-     * Opens the mass image windows at the positions
-     * specified in the <code>positions</code> array.
-     *
-     * @param positions an array of points.
-     */
-    public void applyWindowPositions(Point[] positions) {
-        for(int i = 0; i < positions.length; i++) {
-           if ( positions[i] != null && massImages[i] != null)
-               if (massImages[i].getWindow() != null)
-                massImages[i].getWindow().setLocation(positions[i]);
-
-        }
-    }
-
-    /**
-     * Keeps visible or hides the mass images based
-     * on the contents of the <code>hidden</code> array.
-     *
-     * @param hidden an array of ints: (1) equals visible, (0) equals hidden.
-     */
-    public void applyHiddenWindows(int[] hidden) {
-        for(int i = 0; i < hidden.length; i++) {
-           if ( massImages[i] != null)
-               if( hidden[i] == 1)
-                    massImages[i].hide();
-        }
-    }
-
-    /**
-     * Applies the magnification factor stored in
-     * the <code>zoom</code> array to the mass images.
-     *
-     * @param zooms an array of zoom values.
-     */
-    public void applyWindowZooms(double[] zooms) {
-        for (int i = 0; i < zooms.length; i++) {
-            if (massImages[i] != null) {
-                if (massImages[i].getCanvas() != null) {
-                   double z = massImages[i].getCanvas().getMagnification();
-                   if(z==0.0) continue;
-                   if(massImages[i].getCanvas().getMagnification() < zooms[i]) {
-                       while(massImages[i].getCanvas().getMagnification() < zooms[i]) {
-                           massImages[i].getCanvas().zoomIn(0, 0);
-                       }
-                   }
-
-                   if(massImages[i].getCanvas().getMagnification() > zooms[i]) {
-                       while(massImages[i].getCanvas().getMagnification() > zooms[i]) {
-                           massImages[i].getCanvas().zoomOut(0, 0);
-                       }
-                   }
-                }
+            if (isVisible == false) {
+               massImages[i].hide();
             }
-        }
+
+            if (zoom != 1.0) {
+               applyZoom(massImages[i], zoom);
+            }
+
+         }
+      }
+   }
+
+   /**
+    * Gets the window position of the mass image
+    * with value <code>massVal1</code> from the previous session.
+    *
+    * @param massVal1 the mass value.
+    * @return the position.
+    */
+    public Point getWindowLocation(double massVal1) {
+       Double massVal2;
+       for (Object key : wpMap.keySet()) {
+          massVal2 = (Double) key;
+          double diff = Math.abs(massVal2 - massVal1);
+          if (diff < 0.5)
+             return (Point)wpMap.get(key);
+       }
+       return null;
+    }
+
+   /**
+    * Gets the window visibility of the mass image
+    * with value <code>massVal1</code> from the previous session.
+    *
+    * @param massVal1 the mass value.
+    * @return the visibility.
+    */
+    public Boolean getWindowVisible(double massVal1) {
+       Double massVal2;
+       for (Object key : hwMap.keySet()) {
+          massVal2 = (Double) key;
+          double diff = Math.abs(massVal2 - massVal1);
+          if (diff < 0.5)
+             return (Boolean)hwMap.get(key);
+       }
+       return true;
+    }
+
+   /**
+    * Gets the window zoom level of the mass image
+    * with value <code>massVal1</code> from the previous session.
+    *
+    * @param massVal1 the mass value.
+    * @return the zoom level.
+    */
+    public Double getWindowZoom(double massVal1) {
+       Double massVal2;
+       for (Object key : zmMap.keySet()) {
+          massVal2 = (Double) key;
+          double diff = Math.abs(massVal2 - massVal1);
+          if (diff < 0.5)
+             return (Double)zmMap.get(key);
+       }
+       return 1.0;
+    }
+
+    /**
+     * Applies the magnification factor stored <code>zoom</code>
+     * to the specified image <code>mp</code>
+     *
+     */
+    public void applyZoom(MimsPlus mp, double zoom) {
+
+       if (zoom == 0.0 || zoom == 1.0)
+          return;
+      
+       if (mp == null)
+          return;
+
+       if (mp.getCanvas() == null)
+          return;
+
+       if (mp.getCanvas().getMagnification() < zoom) {
+          while (mp.getCanvas().getMagnification() < zoom) {
+             mp.getCanvas().zoomIn(0, 0);
+          }
+       } else if (mp.getCanvas().getMagnification() > zoom) {
+          while (mp.getCanvas().getMagnification() > zoom) {
+             mp.getCanvas().zoomOut(0, 0);
+          }
+       }
     }
 
    public void removeComponentFromMimsDrop(Component comp) {
@@ -584,38 +635,32 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
    }
 
     /**
-     * Resets the "view" menu item to reflect the
-     * mass images in the current data file.
-     */
-    private void resetViewMenu() {
+    * Resets the "view" menu item to reflect the
+    * mass images in the current data file.
+    */
+   private void resetViewMenu() {
 
-       if (isSilentMode())
-          return;
+      if (isSilentMode())
+         return;
 
-
-        for (int i = 0; i < viewMassMenuItems.length; i++) {
-          if (i < image.getNMasses()) {
-             viewMassMenuItems[i].setText(image.getMassNames()[i]);
-             viewMassMenuItems[i].setVisible(true);
-             if (windowPositions != null) {
-                if (i < windowPositions.length && windowPositions[i] != null) {
-                   if (windowPositions[i].x > 0 && windowPositions[i].y > 0) {
-                      viewMassMenuItems[i].setSelected(true);
-                   } else {
-                      viewMassMenuItems[i].setSelected(false);
-                   }
-                } else {
-                   viewMassMenuItems[i].setSelected(true);
-                }
-             }
-          } else {
-             viewMassMenuItems[i].setText("foo");
-             viewMassMenuItems[i].setVisible(false);
-             viewMassMenuItems[i].setSelected(false);
-          }
-
-       }
-    }
+      for (int i = 0; i < viewMassMenuItems.length; i++) {
+         if (i < image.getNMasses()) {
+            viewMassMenuItems[i].setText(image.getMassNames()[i]);
+            viewMassMenuItems[i].setVisible(true);
+            double massVal = massImages[i].getMassValue();
+            Boolean isVisible = getWindowVisible(massVal);
+            if (isVisible) {
+               viewMassMenuItems[i].setSelected(true);
+            } else {
+               viewMassMenuItems[i].setSelected(false);
+            }
+         } else {
+            viewMassMenuItems[i].setText("foo");
+            viewMassMenuItems[i].setVisible(false);
+            viewMassMenuItems[i].setSelected(false);
+         }
+      }
+   }
 
     /** Initializes the view menu.*/
     private void initializeViewMenu() {
@@ -649,39 +694,40 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Action method for the "view" menu items. */
     private void viewMassChanged(java.awt.event.ActionEvent evt) {
-        if(windowPositions==null)
-           windowPositions = gatherWindowPosistions();
         int index = 0;
         for (int i = 0; i < viewMassMenuItems.length; i++) {
             if (evt.getActionCommand() == viewMassMenuItems[i].getText()) {
                 index = i;
-            }
-        }
-        if (massImages[index] != null) {
-            if (viewMassMenuItems[index].isSelected() && !massImages[index].isVisible()) {
-                massImages[index].show();
-                if(windowPositions[index] != null && (windowPositions[index].x > 0 && windowPositions[index].y > 0))
-                    massImages[index].getWindow().setLocation(windowPositions[index]);
-                massImages[index].setbIgnoreClose(true);
-            } else if( !viewMassMenuItems[index].isSelected() && massImages[index].isVisible()) {
-                windowPositions[index] = massImages[index].getWindow().getLocation();
-                massImages[index].hide();
+                break;
             }
         }
 
-        System.out.print(evt.getActionCommand() + " index: " + index);
-        System.out.print(" selected: " + viewMassMenuItems[index].isSelected());
-        System.out.print(" visable: " + massImages[index].isVisible() + "\n");
+        if (massImages[index] == null)
+           return;
+
+        MimsPlus mp = massImages[index];
+
+         if (viewMassMenuItems[index].isSelected() && !mp.isVisible()) {
+            Double mass = mp.getMassValue();
+            Point point = getWindowLocation(mass);            
+            mp.show();
+            mp.getWindow().setLocation(point);
+            mp.setbIgnoreClose(true);
+         } else if( !viewMassMenuItems[index].isSelected() && mp.isVisible()) {
+            Double mass = mp.getMassValue();
+            Point point = mp.getWindow().getLocation();
+            wpMap.put(mass, point);
+            mp.hide();
+         }
     }
 
-    /** The behavior for "closing" mass images, when closing is not allowed.*/
+    /** 
+     * The behavior for "closing" mass images, when closing is not allowed.
+     */
     public void massImageClosed(MimsPlus im) {
-        if(windowPositions==null)
-           windowPositions = gatherWindowPosistions();
         for (int i = 0; i < massImages.length; i++) {
             if (massImages[i] != null) {
                 if (massImages[i].equals(im)) {
-                    windowPositions[i] = im.getXYLoc();
                     viewMassMenuItems[i].setSelected(false);
                 }
             }
@@ -1828,7 +1874,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /**
      * Saves the current analysis session. If <code>saveImageOnly</code> is
-     * set to <code>true</code> than only the mass image data will be save
+     * set to <code>true</code> than only the mass image data will be saved
      * to a file with name <code>fileName</code> (always ending with .nrrd).
      * If <code>saveImageOnly</code> is set to <code>false</code> than
      * mass image data will be save ALONG with a roi zip file containing
@@ -4253,13 +4299,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    }
                 }
 
-                if (isSilentMode() == false) {
-                   int wl = 0;
-                   if (windowPositions != null)
-                      wl = windowPositions.length;
-                   int ol = getOpenMassImages().length;
-                   if (windowPositions != null && wl == ol) {
-                      applyWindowPositions(windowPositions);
+                if (isSilentMode() == false) {                   
+                   if (wpMap.size() > 0) {
+                      applyWindowState();
                    } else {
                       //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
                       //wo.run("tile");
@@ -4268,7 +4310,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       int[] win_ids = new int[windows.length];
                       int i = 0;
                       for (MimsPlus mp : windows) {
-                         massVals[i] = windows[i].getMassValue();
+                         massVals[i] = mp.getMassValue();
                          i++;
                       }
                       Arrays.sort(massVals);
@@ -4279,9 +4321,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                          i++;
                       }
                       tileWindows(win_ids);
-                   }
-                   if (windowZooms != null) {
-                      applyWindowZooms(windowZooms);
                    }
                 }
 
@@ -4364,11 +4403,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              for (int i = 0; i < mp.length; i++) {
                 cbControl.addWindowtoList(mp[i]);
              }
-
-             //hide mass images if needed
-             if (hiddenWindows != null) {
-                applyHiddenWindows(hiddenWindows);
-             }
         }
 
       private void openProcessFailedOrCanceled() {         
@@ -4376,7 +4410,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
          jTabbedPane1.setEnabled(false);
          previousFileCanceled = true;
          currentlyOpeningImages = false;
-         hiddenWindows = null;
       }
     }
 
