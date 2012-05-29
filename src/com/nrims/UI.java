@@ -4300,7 +4300,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 }
 
                 if (isSilentMode() == false) {                   
-                   if (wpMap.size() > 0) {
+                   if (wpMap.size() > 0 || previousFileCanceled == false) {
                       applyWindowState();
                    } else {
                       //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
