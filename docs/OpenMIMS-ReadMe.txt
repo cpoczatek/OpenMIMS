@@ -4,7 +4,7 @@
 PRODUCT DESCRIPTION
 ==================================
 
- OpenMIMS version 2.0 (Dec 2011)
+ OpenMIMS version 2.5 (June 2012)
 
  OpenMIMS is an ImageJ plugin designed to open, process and analyze 
  images captured with NanoSIMS 50 & 50L secondary ion mass 
@@ -57,7 +57,7 @@ HARDWARE AND SOFTWARE REQUIREMENTS
 CONTENTS AND INSTALLATION
 ==================================
 
- To install the OpenMIMS plugin, extract the contents of the 
+ To install the OpenMIMS plugin, copy the contents of the 
  Open_MIMS.zip file into the "plugins" directory under ImageJ. Only 
  the .jar files need to be the placed in the "plugins" directory. 
  The files README_OpenMIMS.txt and MimsManual.pdf are documentation 
@@ -84,13 +84,26 @@ CONTENTS AND INSTALLATION
  within the software.
  
  Once the contents are copied over, restart ImageJ and "Open MIMS
- Image" should appear under Plugins menu in ImageJ.
+ Image" should appear under "Plugins" menu in ImageJ.
 
  See MimsManual.pdf for a brief guide/manual on the OpenMIMS plugin.
 
 ==================================
 RELEASE NOTES
 ==================================
+
+ June 2012 (v2.5):
+ - Allow for opening of individual tiles for mosaic images.
+ - Auto generate derived images when opening individual tiles from mosaic.
+ - Added 3D HSI export in QVis format.
+ - Additional functionality of Generate Report feature.
+ - Added sanity/error check between file header and actual data in file.
+ - More organized layout when generating Sum images.
+ - Decimal places in table adjustable.
+ - Read/Write metadata key value pairs.
+ - Various performance upgrade and bug fixes.
+
+
  December 2011 (v2.0):
  - Implemented QSA and dead time correction.
  - All data product report raw data only (not medianized).
