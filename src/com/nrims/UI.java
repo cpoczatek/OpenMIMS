@@ -780,22 +780,25 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @return a string containing the build number.
      */
     private String extractRevisionNumber() {
+        File buildFile = new File("/buildnum.txt");
+        String revision = "";
+        if (!buildFile.exists())
+           return revision;
         try {
             InputStream build = getClass().getResourceAsStream("/buildnum.txt");
             InputStreamReader buildr = new InputStreamReader(build);
             BufferedReader br = new BufferedReader(buildr);            
-            String revision = br.readLine();
+            revision = br.readLine();
             if (revision.contains(":")) {
                 revision = revision.split(":")[1].trim();
             }
             br.close();
             buildr.close();
-            build.close();
-            return revision;
+            build.close();            
         } catch (Exception v) {
-            v.printStackTrace();
-            return "";
+            v.printStackTrace();            
         }
+        return revision;
     }
 
 
