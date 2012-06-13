@@ -780,10 +780,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @return a string containing the build number.
      */
     private String extractRevisionNumber() {
-        File buildFile = new File("/buildnum.txt");
         String revision = "";
-        if (!buildFile.exists())
-           return revision;
         try {
             InputStream build = getClass().getResourceAsStream("/buildnum.txt");
             InputStreamReader buildr = new InputStreamReader(build);
@@ -796,7 +793,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             buildr.close();
             build.close();            
         } catch (Exception v) {
-            v.printStackTrace();            
+            //v.printStackTrace();
         }
         return revision;
     }
@@ -2294,7 +2291,7 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
 /** Action method for File>About menu item. Displays basic information about the Open Mims plugins. */
 private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
 
-    String message = "OpenMIMS v2.0 (rev: " + revisionNumber+")";
+    String message = "OpenMIMS v2.5 (rev: " + revisionNumber+")";
     message += "\n\n";
     message += "http://www.nrims.hms.harvard.edu/";
     message += "\n\n";
