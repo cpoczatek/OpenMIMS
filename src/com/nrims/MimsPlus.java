@@ -1180,7 +1180,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * Handles a mouse move event. A fairly in depth method
      * that displays data in the status bar of the application.
      * The data that is displayed is dependant on the type of image
-     * (Mass, HSI, Sum, etc.) This methos also controls various
+     * (Mass, HSI, Sum, etc.) This method also controls various
      * aspects of ROI behavior regarding mouse events.
      *
      * @param e mouse move event
@@ -1410,7 +1410,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     // Display statistics while dragging or creating ROIs.
     public void mouseDragged(MouseEvent e) {
 
-        if( Toolbar.getBrushSize() != 0 && Toolbar.getToolId()==Toolbar.OVAL) return;
+        //cannot hit return below, confused as to why this is here
+        if( Toolbar.getBrushSize() != 0 && Toolbar.getToolId()==Toolbar.OVAL) 
+            return;
 
        // get mouse poistion
        int x = (int) e.getPoint().getX();

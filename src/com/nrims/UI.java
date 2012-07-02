@@ -95,6 +95,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private boolean isRatio = true;
     private boolean[] bOpenMass = new boolean[maxMasses];
     private static boolean isTesting = false;
+    private static boolean isDeveloping = false;
     private boolean silentMode = false;
     private boolean isDTCorrected = false;
     private boolean isQSACorrected = false;
@@ -193,6 +194,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          else
             ijapp = new ij.ImageJ();         
          setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+      }
+      
+      if (isDeveloping) {       
+          String pdir = ij.IJ.getDirectory("plugins");
+          System.out.println("plugins dir: "+pdir);
+          String mdir = ij.IJ.getDirectory("macros");
+          System.out.println("macros dir: "+mdir);
       }
       
       if (image == null) {
@@ -3738,9 +3746,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     /**
      * @param args the command line arguments
      */
-    //ONLY HIT FROM IDE NOT OUTSIDE
+    //NOT hit if starting plugin from ImageJ plugins menu
     public static void main(String args[]) {
-
+        System.out.println("Entering com.nrims.UI.main()");
         Boolean skip_next = false;
         for (int i = 0; i < args.length; i++) {
             System.out.println("Arg " + i + " " + args[i]);
@@ -3750,8 +3758,18 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           
           if (!skip_next) {
 
+             // Testing should work inside and outside IDE.
              if (args[i].equals("-t")) {
                 isTesting = true;
+                
+             }
+             
+             // Development doesn't work outside IDE
+             if (args[i].equals("-d")) {
+                 isDeveloping = true;
+                 System.getProperties().setProperty("plugins.dir", "lib/plugins");
+                 System.getProperties().setProperty("macros.dir", "lib/macros");
+
              }
 
              if (args[i].startsWith("-ijpath") && i + 1 < args.length) {
