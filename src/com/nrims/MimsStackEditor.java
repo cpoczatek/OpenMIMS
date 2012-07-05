@@ -80,8 +80,10 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
    /** Some basic setup of interface componenets. */
    private void initComponentsCustom() {
-      translateXSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
-      translateYSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 0.01d));
+       
+       //Note from Farah: These are double, but no translations occur except with integer number
+      translateXSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 1.0d));
+      translateYSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, -999.0d, 999.0d, 1.0d));
 
       // Remove components (jspinners) from the area
       // in which a user can drag and drop a file.
