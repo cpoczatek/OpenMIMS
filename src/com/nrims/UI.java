@@ -151,6 +151,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     // Task related variables.
     public SwingWorker task;
     boolean previousFileCanceled = true;
+    
 
     public UI() {
        this(false);
@@ -195,6 +196,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             ijapp = new ij.ImageJ();         
          setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       }
+      
       
       if (isDeveloping) {       
           String pdir = ij.IJ.getDirectory("plugins");

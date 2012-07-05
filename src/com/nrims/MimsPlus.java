@@ -81,6 +81,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     private CompositeProcessor compProcessor = null ;
     private com.nrims.UI ui = null;
     private EventListenerList fStateListeners = null ;
+    
+    //Mouse coordinates for use with OpenMIMS too
+    private int startX;
+    private int startY;
 
     /**
      * Generic constructor
@@ -1033,6 +1037,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     @Override
     public void mousePressed(MouseEvent e) {
 
+      if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE)) {
+          startX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
+          startY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
+          return;
+      }
+      
       if(getRoi() != null ) {
 
          // Set the moving flag so we know if user is attempting to move a roi.
@@ -1409,7 +1419,36 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     @Override
     // Display statistics while dragging or creating ROIs.
     public void mouseDragged(MouseEvent e) {
-
+        
+        if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE)) {
+            //Get spinners
+            javax.swing.JSpinner xSpin = ui.getmimsStackEditing().getTranslateX();
+            javax.swing.JSpinner ySpin = ui.getmimsStackEditing().getTranslateY();
+            
+            //Get mouse position
+            int x = (int) e.getPoint().getX();
+            int y = (int) e.getPoint().getY();
+            int mX = getWindow().getCanvas().offScreenX(x);
+            int mY = getWindow().getCanvas().offScreenY(y);
+            
+            
+            //Calculate deltas
+            int xDelta = mX - startX;
+            int yDelta = mY - startY;
+            
+            //Spinner numbers
+            Double xVal = (Double) xSpin.getModel().getValue() + xDelta;
+            Double yVal = (Double) ySpin.getModel().getValue() + yDelta;
+            
+            //Update spinners
+            xSpin.getModel().setValue(xVal);
+            ySpin.getModel().setValue(yVal);
+            
+            //Update start points
+            startX = mX;
+            startY = mY;
+            return;
+        }
         //cannot hit return below, confused as to why this is here
         if( Toolbar.getBrushSize() != 0 && Toolbar.getToolId()==Toolbar.OVAL) 
             return;

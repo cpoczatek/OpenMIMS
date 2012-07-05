@@ -1512,6 +1512,14 @@ public class MimsStackEditor extends javax.swing.JPanel {
    private javax.swing.JButton untrackButton;
    // End of variables declaration//GEN-END:variables
 
+   //Getters for spinners
+   public javax.swing.JSpinner getTranslateX() {
+       return translateXSpinner;
+   }
+   
+   public javax.swing.JSpinner getTranslateY() {
+       return translateYSpinner;
+   }
 
    /**
     * Crops the image to the Roi selected in RoiManager.
