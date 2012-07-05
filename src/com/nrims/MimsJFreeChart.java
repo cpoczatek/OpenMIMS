@@ -11,11 +11,7 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +41,7 @@ import org.jfree.ui.ExtensionFileFilter;
  *
  * @author zkaufman
  */
-public class MimsJFreeChart extends JFrame implements WindowListener {
+public class MimsJFreeChart extends JFrame implements WindowListener, MouseListener {
 
    private String[] stats;
    private MimsPlus images[];
@@ -62,6 +58,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener {
       JMenuItem menuItem;
       menu = new JMenu("File");
       menuBar.add(menu);
+      
+      addMouseListener(this);
 
       // Save as menu item.
       menuItem = new JMenuItem("Save");
@@ -113,6 +111,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener {
 
          // Generate the layout.
          chartpanel = new MimsChartPanel(chart);
+         chartpanel.addMouseListener(this);
          chartpanel.setPreferredSize(new java.awt.Dimension(600, 400));
          String lastFolder = ui.getLastFolder();
          if (lastFolder != null) {
@@ -195,7 +194,6 @@ public class MimsJFreeChart extends JFrame implements WindowListener {
    private static JFreeChart createChart() {
       JFreeChart chart = MimsChartFactory.createMimsXYLineChart("", "Plane", "", null, PlotOrientation.VERTICAL, true, true, false);
       chart.setBackgroundPaint(Color.white);
-
       // Get a reference to the plot.
       MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
 
@@ -661,18 +659,10 @@ public class MimsJFreeChart extends JFrame implements WindowListener {
       }
       return returnVal;
    }
+  
 
    @Override
-   public void windowActivated(WindowEvent e) {
-      // Update ReportGenerator, if open.
-      ReportGenerator rg = ui.getReportGenerator();
-      if (rg != null && rg.isVisible()) {
-         Image img = getImage();
-         if (img != null) {
-            rg.addImage(img, "Plot");
-         }
-      }
-   }
+   public void windowActivated(WindowEvent e) {}
 
    public void windowOpened(WindowEvent e) {}
 
@@ -685,4 +675,22 @@ public class MimsJFreeChart extends JFrame implements WindowListener {
    public void windowDeiconified(WindowEvent e) {}
 
    public void windowDeactivated(WindowEvent e) {}
+
+   @Override
+   public void mouseClicked(MouseEvent e) {
+      ReportGenerator rg = ui.getReportGenerator();
+      if (rg != null && rg.isVisible() && e.isControlDown()) {
+         Image img = getImage();
+         if (img != null) {
+            rg.addImage(img, "Plot");
+         }
+      }
+   }
+    public void mousePressed(MouseEvent e) {}
+
+    public void mouseReleased(MouseEvent e) {}
+
+    public void mouseEntered(MouseEvent e) {}
+
+    public void mouseExited(MouseEvent e) {}
 }

@@ -969,19 +969,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ui.getCBControl().setWindowlistCombobox(getTitle());
         ui.getCBControl().setLUT(lut);
 
-        // Add to ReportGenerator, if open.
-        ReportGenerator rg = ui.getReportGenerator();        
-        if (rg != null && rg.isVisible()) {
-           Image im = ui.getScreenCaptureCurrentImage();
-           if (im != null) {
-              String text = "";
-              if (nType == MimsPlus.MASS_IMAGE)
-                 text += "mass ";           
-              text += getRoundedTitle();
-              rg.addImage(im, text);
-           }
-        }
-
         MimsRoiManager rm = ui.getRoiManager();
         if(rm==null) return;
 
@@ -1087,6 +1074,20 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     public void mouseClicked(MouseEvent e) {
 
         if(bStateChanging) return;
+        
+        // Add to ReportGenerator, if open and if shift+click
+        ReportGenerator rg = ui.getReportGenerator();        
+        if (rg != null && rg.isVisible() && e.isControlDown() ) {
+           Image im = ui.getScreenCaptureCurrentImage();
+           if (im != null) {
+              String text = "";
+              if (nType == MimsPlus.MASS_IMAGE)
+                 text += "mass ";           
+              text += getRoundedTitle();
+              rg.addImage(im, text);
+              return;
+           }
+        }
 
          float[] pix;
          if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
