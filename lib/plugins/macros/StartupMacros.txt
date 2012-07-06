@@ -7,7 +7,7 @@
 
    //macro "AutoRun" {print('AutoRun');}
 
-  macro "OpenMIMS tool - Ca00L07f7L707f" {
+  macro "OpenMIMS tool - Ca00L07f7L707fL0729L0725Lf7d5Lf7d9L7092L7052L7f5dL7f9d" {
       //empty tool trickery!
  }
 
