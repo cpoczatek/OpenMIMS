@@ -391,7 +391,7 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
 
          // Set the place holder text
          clickLabel.setFont(font);
-         clickLabel.setText("<html><I>Click the image you want to add</I>");
+         clickLabel.setText("<html><I>Ctrl+Click the image you want to add</I>");
 
       } else if (reportType == TABLE) {
          remove(clickLabel);
