@@ -569,10 +569,16 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
     }
 
     /**
-     * Closes the report generator window.
+     * Closes the report generator window and removes reference from main UI.
      */
     public void close() {
-       setVisible(false);
+       dispose();
+       
+       //Check might be unnecessary, but first check if this is referenced
+       //by the main UI. If so, delete reference.
+       if(ui.getReportGenerator() == this) {
+           ui.setReportGenerator(null);
+       }
     }
 
     /**

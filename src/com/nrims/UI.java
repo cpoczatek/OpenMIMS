@@ -2672,9 +2672,18 @@ private void generateReportMenuItemActionPerformed(java.awt.event.ActionEvent ev
     openReportGenerator();
 }//GEN-LAST:event_generateReportMenuItemActionPerformed
 
+/*
+ * Method for opening report generator. If user closed or cancelled old report dialog,
+ * this will report the old one. 
+ */
 public void openReportGenerator() {
-    rg = new ReportGenerator(this);
-    rg.setVisible(true);
+    if(rg != null) {
+        rg.setVisible(true);
+        return;
+    } else {
+        rg = new ReportGenerator(this);
+        rg.setVisible(true);
+    }
 }
 
 private void batch2nrrdMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_batch2nrrdMenuItemActionPerformed
@@ -2925,6 +2934,18 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     */
     public ReportGenerator getReportGenerator() {
         return rg;
+    }
+    
+    /**
+    * Sets the report generator
+    *
+    */
+    protected void setReportGenerator(ReportGenerator gen) {
+        if(gen != null ) {
+            rg = gen;
+        } else{
+            rg = null;
+        }
     }
 
     /**
