@@ -1257,22 +1257,22 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jSeparator2 = new javax.swing.JSeparator();
         exitMenuItem = new javax.swing.JMenuItem();
         editMenu = new javax.swing.JMenu();
-        jMenuItem3 = new javax.swing.JMenuItem();
-        jMenuItem4 = new javax.swing.JMenuItem();
+        preferencesMenuItem = new javax.swing.JMenuItem();
+        restoreMimsMenuItem = new javax.swing.JMenuItem();
         viewMenu = new javax.swing.JMenu();
-        jMenuItem2 = new javax.swing.JMenuItem();
+        tileWindowsMenuItem = new javax.swing.JMenuItem();
         jSeparator6 = new javax.swing.JSeparator();
-        jMenuItem5 = new javax.swing.JMenuItem();
+        roiManagerMenuItem = new javax.swing.JMenuItem();
         jSeparator8 = new javax.swing.JSeparator();
         utilitiesMenu = new javax.swing.JMenu();
         imageNotesMenuItem = new javax.swing.JMenuItem();
-        jMenuItem8 = new javax.swing.JMenuItem();
+        generateReportMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         sumAllMenuItem = new javax.swing.JMenuItem();
         importIMListMenuItem = new javax.swing.JMenuItem();
         captureImageMenuItem = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JSeparator();
-        jMenuItem7 = new javax.swing.JMenuItem();
+        batch2nrrdMenuItem = new javax.swing.JMenuItem();
         exportjMenu = new javax.swing.JMenu();
         exportPNGjMenuItem = new javax.swing.JMenuItem();
         exportQVisMenuItem = new javax.swing.JMenuItem();
@@ -1308,11 +1308,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 719, Short.MAX_VALUE)
+            .add(0, 723, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 416, Short.MAX_VALUE)
+            .add(0, 422, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Images", jPanel1);
@@ -1389,43 +1389,43 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         editMenu.setText("Edit");
 
-        jMenuItem3.setText("Preferences...");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+        preferencesMenuItem.setText("Preferences...");
+        preferencesMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
+                preferencesMenuItemActionPerformed(evt);
             }
         });
-        editMenu.add(jMenuItem3);
+        editMenu.add(preferencesMenuItem);
 
-        jMenuItem4.setText("Restore MIMS");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+        restoreMimsMenuItem.setText("Restore MIMS");
+        restoreMimsMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
+                restoreMimsMenuItemActionPerformed(evt);
             }
         });
-        editMenu.add(jMenuItem4);
+        editMenu.add(restoreMimsMenuItem);
 
         jMenuBar1.add(editMenu);
 
         viewMenu.setText("View");
 
-        jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.ALT_MASK));
-        jMenuItem2.setText("Tile Windows");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+        tileWindowsMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.ALT_MASK));
+        tileWindowsMenuItem.setText("Tile Windows");
+        tileWindowsMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
+                tileWindowsMenuItemActionPerformed(evt);
             }
         });
-        viewMenu.add(jMenuItem2);
+        viewMenu.add(tileWindowsMenuItem);
         viewMenu.add(jSeparator6);
 
-        jMenuItem5.setText("Roi Manager");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+        roiManagerMenuItem.setText("Roi Manager");
+        roiManagerMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem5ActionPerformed(evt);
+                roiManagerMenuItemActionPerformed(evt);
             }
         });
-        viewMenu.add(jMenuItem5);
+        viewMenu.add(roiManagerMenuItem);
         viewMenu.add(jSeparator8);
 
         jMenuBar1.add(viewMenu);
@@ -1440,13 +1440,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         utilitiesMenu.add(imageNotesMenuItem);
 
-        jMenuItem8.setText("Generate Report");
-        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
+        generateReportMenuItem.setText("Generate Report");
+        generateReportMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem8ActionPerformed(evt);
+                generateReportMenuItemActionPerformed(evt);
             }
         });
-        utilitiesMenu.add(jMenuItem8);
+        utilitiesMenu.add(generateReportMenuItem);
         utilitiesMenu.add(jSeparator1);
 
         sumAllMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.ALT_MASK));
@@ -1475,13 +1475,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         utilitiesMenu.add(captureImageMenuItem);
         utilitiesMenu.add(jSeparator3);
 
-        jMenuItem7.setText("Batch covert to nrrd");
-        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
+        batch2nrrdMenuItem.setText("Batch covert to nrrd");
+        batch2nrrdMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem7ActionPerformed(evt);
+                batch2nrrdMenuItemActionPerformed(evt);
             }
         });
-        utilitiesMenu.add(jMenuItem7);
+        utilitiesMenu.add(batch2nrrdMenuItem);
 
         exportjMenu.setText("Export...");
 
@@ -1621,7 +1621,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * and compression, reinserts all deleted planes, and
      * sets all translations back to zero.
      */
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {                                           
+    private void restoreMimsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                           
         
         int currentSlice = massImages[0].getCurrentSlice();
 
@@ -1869,15 +1869,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     }
 
     /** An action method for the Edit>Preferences... menu item.*/
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    private void preferencesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_preferencesMenuItemActionPerformed
       
        if(this.prefs==null) { prefs = new PrefFrame(this); }
        prefs.showFrame();
         
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    }//GEN-LAST:event_preferencesMenuItemActionPerformed
 
     /** Action method for the View>Tile Windows menu item.*/
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {                                           
+    private void tileWindowsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                           
         ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
         wo.run("tile");
     }
@@ -2664,24 +2664,24 @@ private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GE
 }//GEN-LAST:event_exportHSI_RGBAActionPerformed
 
 /** Action method for View>Roi Manager menu item. Display the Roi Manager. */
-private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+private void roiManagerMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roiManagerMenuItemActionPerformed
    getRoiManager().viewManager();
-}//GEN-LAST:event_jMenuItem5ActionPerformed
+}//GEN-LAST:event_roiManagerMenuItemActionPerformed
 
-private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
+private void generateReportMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateReportMenuItemActionPerformed
     openReportGenerator();
-}//GEN-LAST:event_jMenuItem8ActionPerformed
+}//GEN-LAST:event_generateReportMenuItemActionPerformed
 
 public void openReportGenerator() {
     rg = new ReportGenerator(this);
     rg.setVisible(true);
 }
 
-private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+private void batch2nrrdMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_batch2nrrdMenuItemActionPerformed
    convertManager cm = new convertManager(this);
    cm.setVisible(true);
    cm.selectFiles();
-}//GEN-LAST:event_jMenuItem7ActionPerformed
+}//GEN-LAST:event_batch2nrrdMenuItemActionPerformed
 
 private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
    task.cancel(true);
@@ -4437,6 +4437,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
     public javax.swing.JCheckBoxMenuItem QSACorrectionMenuItem;
     private javax.swing.JMenuItem aboutMenuItem;
+    private javax.swing.JMenuItem batch2nrrdMenuItem;
     private javax.swing.JMenuItem captureImageMenuItem;
     private javax.swing.JMenuItem closeAllHSIMenuItem;
     private javax.swing.JMenuItem closeAllRatioMenuItem;
@@ -4452,16 +4453,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenu exportjMenu;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenuItem genStackMenuItem;
+    private javax.swing.JMenuItem generateReportMenuItem;
     private javax.swing.JMenuItem imageNotesMenuItem;
     private javax.swing.JMenuItem importIMListMenuItem;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
-    private javax.swing.JMenuItem jMenuItem5;
-    private javax.swing.JMenuItem jMenuItem7;
-    private javax.swing.JMenuItem jMenuItem8;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;
@@ -4475,10 +4471,14 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JSeparator jSeparator8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JMenuItem openNewMenuItem;
+    private javax.swing.JMenuItem preferencesMenuItem;
+    private javax.swing.JMenuItem restoreMimsMenuItem;
+    private javax.swing.JMenuItem roiManagerMenuItem;
     private javax.swing.JMenuItem saveMIMSjMenuItem;
     public javax.swing.JButton stopButton;
     private javax.swing.JMenuItem sumAllMenuItem;
     private javax.swing.JMenu testingMenu;
+    private javax.swing.JMenuItem tileWindowsMenuItem;
     private javax.swing.JMenu utilitiesMenu;
     private javax.swing.JMenu viewMenu;
     // End of variables declaration//GEN-END:variables
