@@ -391,7 +391,7 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
 
          // Set the place holder text
          clickLabel.setFont(font);
-         clickLabel.setText("<html><I>Ctrl+Click the image you want to add</I>");
+         clickLabel.setText("<html><I>Shift+Click the image you want to add</I>");
 
       } else if (reportType == TABLE) {
          remove(clickLabel);
@@ -428,7 +428,7 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
 
       // Fill in image.
       for (int i = 0; i < jlabelArray.length; i++) {
-         if (jlabelArray[i].getText() != null && jlabelArray[i].getText().matches(text)) {
+         if (jlabelArray[i].getText() != null && jlabelArray[i].getText().equals(text)) {
             return;
          }
       }
