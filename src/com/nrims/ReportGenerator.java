@@ -336,7 +336,7 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
             String currentLabelText = currentLabel.getText();
             for (int i = 0; i < jlabelArray.length; i++) {
                String labelText = jlabelArray[i].getText();
-               if (labelText != null && labelText.matches(currentLabelText)) {
+               if (labelText != null && labelText.equals(currentLabelText)) {
                   jlabelArray[i].setText(null);
                   jlabelArray[i].setIcon(null);
                   imageArray[i] = null;
