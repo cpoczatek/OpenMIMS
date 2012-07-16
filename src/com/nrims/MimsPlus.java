@@ -784,7 +784,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             double den_d = ui.getMassValue(hprops.getDenMassIdx());
             long num_l = java.lang.Math.round(num_d);
             long den_l = java.lang.Math.round(den_d);
-            roundedTitle = "hsi " + Long.toString(num_l) + "/" + Long.toString(den_l);
+            roundedTitle = "HSI " + Long.toString(num_l) + "/" + Long.toString(den_l);
          }
          if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
             RatioProps rprops = getRatioProps();
@@ -819,6 +819,40 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
       return roundedTitle;
    }
+    
+    /**
+     * Returns extended title information with properties
+     * Mass: contrast range "(min - max)" + "slice number"
+     * HSI: Ratio range "(min - max)"
+     * Ratio: "(min - max)"
+     * 
+     * @return 
+     */
+    public String getPropsTitle() {
+        String propTitle = "";
+        try {
+         if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
+             double max = this.getDisplayRangeMax();
+             double min = this.getDisplayRangeMin();
+             propTitle += " (" + min +" - " + max + ") " + this.getCurrentSlice() + "/" + this.getStackSize();
+             
+             
+         } else if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
+            HSIProps hprops = getHSIProps();
+            double max = hprops.getMaxRatio();
+            double min = hprops.getMinRatio();
+            propTitle += " (" + min +" - " + max + ")"; 
+         } else if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+            //Do nothing?
+         } else if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
+            //Do nothing?
+         }
+      } catch (Exception e) {
+         propTitle = "0";
+      }
+        
+        return propTitle;
+    }
 
     /**
      * Returns numerator image if such exists.
@@ -1077,13 +1111,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         
         // Add to ReportGenerator, if open and if shift+click
         ReportGenerator rg = ui.getReportGenerator();        
-        if (rg != null && rg.isVisible() && e.isControlDown() ) {
+        if (rg != null && rg.isVisible() && e.isShiftDown() && true ) {
            Image im = ui.getScreenCaptureCurrentImage();
            if (im != null) {
               String text = "";
-              if (nType == MimsPlus.MASS_IMAGE)
-                 text += "mass ";           
+              if (nType == MimsPlus.MASS_IMAGE) 
+                 text += "mass ";
               text += getRoundedTitle();
+              text += getPropsTitle();
               rg.addImage(im, text);
               return;
            }
