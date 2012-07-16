@@ -1112,7 +1112,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         // Add to ReportGenerator, if open and if shift+click
         ReportGenerator rg = ui.getReportGenerator();        
         if (rg != null && rg.isVisible() && e.isShiftDown() && true ) {
-           ij.WindowManager.setCurrentWindow(this.getWindow());
+            ij.WindowManager.setCurrentWindow(this.getWindow());
+           ij.WindowManager.setWindow(this.getWindow());
            Image im = ui.getScreenCaptureCurrentImage();
            if (im != null) {
               String text = "";
