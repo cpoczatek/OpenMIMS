@@ -1547,11 +1547,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             String msg = "Delete all items on the list?";
             canceled = false;
             if (!IJ.macroRunning() && !macro) {
-                int d = JOptionPane.showConfirmDialog(this, msg, "MIMS ROI Manager", JOptionPane.YES_NO_CANCEL_OPTION);
-                if (d == JOptionPane.CANCEL_OPTION) {
-                    canceled = true;
-                    return false;
-                }
+                int d = JOptionPane.showConfirmDialog(this, msg, "MIMS ROI Manager", JOptionPane.YES_NO_OPTION);
                 if (d == JOptionPane.NO_OPTION) {
                     return false;
                 }
