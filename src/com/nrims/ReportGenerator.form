@@ -50,23 +50,6 @@
                                   <Component id="okButton" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="imageIcon" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon1" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon2" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon3" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon5" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon4" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon6" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="imageIcon7" min="-2" max="-2" attributes="0"/>
-                          </Group>
                       </Group>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
@@ -82,25 +65,8 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="1" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="1" attributes="0">
-                  <Group type="102" attributes="0">
-                      <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="imageIcon" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon3" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon5" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon4" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon6" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon7" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="imageIcon2" alignment="3" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace min="-2" pref="22" max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" alignment="1" attributes="0">
-                      <Component id="clickLabel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                  </Group>
-              </Group>
+              <Component id="clickLabel" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Component id="jPanel2" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="imageFileJlabel" min="-2" max="-2" attributes="0"/>
@@ -173,7 +139,7 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="522" max="32767" attributes="0"/>
+              <EmptySpace min="0" pref="535" max="32767" attributes="0"/>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
@@ -183,22 +149,6 @@
         </DimensionLayout>
       </Layout>
     </Container>
-    <Component class="javax.swing.JLabel" name="imageIcon">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon1">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon2">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon3">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon4">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon5">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon6">
-    </Component>
-    <Component class="javax.swing.JLabel" name="imageIcon7">
-    </Component>
     <Component class="javax.swing.JLabel" name="dateJlabel">
       <Properties>
         <Property name="text" type="java.lang.String" value="date"/>
