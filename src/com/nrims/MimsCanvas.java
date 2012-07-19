@@ -6,9 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.PathIterator;
 import java.util.Hashtable;
 import ij.gui.*;
-import java.awt.Color;
-import java.awt.MouseInfo;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -128,7 +126,31 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
    @Override
    protected void handlePopupMenu(MouseEvent e) {
       String[] tileList = ui.getOpener().getTilePositions();
-      if (ui.getOpener().getTilePositions() == null || tileList.length == 0)
+      ReportGenerator rg = ui.getReportGenerator();  
+      if(rg != null && rg.isVisible()) {
+         int x = e.getX();
+         int y = e.getY();
+         JPopupMenu popup = new JPopupMenu();         
+         int mX = offScreenX(x);
+         int mY = offScreenY(y);
+         JMenuItem addImage = new JMenuItem("add to report");
+         addImage.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent event) {
+                Image im = ui.getScreenCaptureCurrentImage();
+                if (im != null) {
+                    String text = "";
+                    if (mImp.getMimsType() == MimsPlus.MASS_IMAGE) 
+                        text += "mass ";
+                    text += mImp.getRoundedTitle();
+                    text += mImp.getPropsTitle();
+                    ui.getReportGenerator().addImage(im, text);
+                }
+             }
+         });
+         popup.add(addImage);
+         popup.show(this , x, y);
+      }
+      else if (ui.getOpener().getTilePositions() == null || tileList.length == 0)
          super.handlePopupMenu(e);
       else {
          int x = e.getX();
