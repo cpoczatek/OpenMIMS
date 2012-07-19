@@ -388,7 +388,6 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
       
       imageArray.add(img);
       jlabelArray.add(label);
-      System.out.println("Should be added. Size: " + imageArray.size());
       jPanel2.add(label, jPanel2.getComponentCount());
       jPanel2.revalidate();
       
