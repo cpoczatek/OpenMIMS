@@ -85,6 +85,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     //Mouse coordinates for use with OpenMIMS too
     private int startX;
     private int startY;
+    
+    //These two hold after a mousepress
+    private int pressX;
+    private int pressY;
 
     /**
      * Generic constructor
@@ -1057,10 +1061,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void mousePressed(MouseEvent e) {
-
       if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE)) {
           startX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
           startY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
+          pressX = startX;
+          pressY = startY;
           return;
       }
       
@@ -1109,22 +1114,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         if(bStateChanging) return;
         
-        // Add to ReportGenerator, if open and if shift+click
-        ReportGenerator rg = ui.getReportGenerator();        
-        if (rg != null && rg.isVisible() && e.isShiftDown() && true ) {
-            ij.WindowManager.setCurrentWindow(this.getWindow());
-           ij.WindowManager.setWindow(this.getWindow());
-           Image im = ui.getScreenCaptureCurrentImage();
-           if (im != null) {
-              String text = "";
-              if (nType == MimsPlus.MASS_IMAGE) 
-                 text += "mass ";
-              text += getRoundedTitle();
-              text += getPropsTitle();
-              rg.addImage(im, text);
-              return;
-           }
-        }
 
          float[] pix;
          if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
@@ -1203,6 +1192,33 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         updateHistogram(true);
         bMoving = false;
         return;
+      }
+      
+      
+      if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE) && e.isShiftDown()) {
+          int endX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
+          int endY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
+          int deltaX = pressX - endX;
+          int deltaY = pressY - endY;
+          
+          //Make into double[][] and ArrayList for passing to applytranslations method. 
+          //Should probably go and make another method for this in MimsStackEditor
+          
+          int current = getCurrentSlice();
+          int total = getNSlices();
+          double[][] translate = new double[total - current][2];
+          for(int i = 0; i < translate.length; i++) {
+              translate[i][0] = deltaX;
+              translate[i][1] = deltaY;
+          }
+          
+          ArrayList<Integer> sliceIndices = new ArrayList<Integer>();
+          for(int i = current + 1; i <= total; i++) {
+              sliceIndices.add(i);
+          }
+          
+          ui.getmimsStackEditing().applyTranslations(translate, sliceIndices);
+          setSlice(current);
       }
 
       switch (Toolbar.getToolId()) {
