@@ -507,6 +507,32 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
       return options;
    }
+   
+   /**
+    * shifts all slices within a range the same x and y
+    * @param xShift
+    * @param yShift
+    * @param startSlice
+    * @param endSlice
+    */
+   public void translateStack(int xShift, int yShift, int startSlice, int endSlice) {
+
+      MimsAction action = ui.mimsAction;
+      
+      for(int i = startSlice; i <= endSlice; i++) {
+          double actx = action.getXShift(i);
+          double acty = action.getYShift(i);
+          //for all images:
+          for(int k = 0; k <= (numberMasses -1); k++) {
+              this.images[k].killRoi();
+              this.images[k].getStack().getProcessor(i).translate(xShift, yShift);
+          }
+          
+          action.setShiftX(i, actx + xShift);
+          action.setShiftY(i, acty + yShift);
+      }
+      action.setIsTracked(true);
+   }
 
    /**
     * Applies a set of translations to the images.

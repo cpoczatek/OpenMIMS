@@ -1198,27 +1198,13 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE) && e.isShiftDown()) {
           int endX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
           int endY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
-          int deltaX = pressX - endX;
-          int deltaY = pressY - endY;
+          int deltaX = endX - pressX;
+          int deltaY = endY - pressY;
           
-          //Make into double[][] and ArrayList for passing to applytranslations method. 
-          //Should probably go and make another method for this in MimsStackEditor
-          
-          int current = getCurrentSlice();
+          int current = getCurrentSlice() + 1;
           int total = getNSlices();
-          double[][] translate = new double[total - current][2];
-          for(int i = 0; i < translate.length; i++) {
-              translate[i][0] = deltaX;
-              translate[i][1] = deltaY;
-          }
-          
-          ArrayList<Integer> sliceIndices = new ArrayList<Integer>();
-          for(int i = current + 1; i <= total; i++) {
-              sliceIndices.add(i);
-          }
-          
-          ui.getmimsStackEditing().applyTranslations(translate, sliceIndices);
-          setSlice(current);
+
+          ui.getmimsStackEditing().translateStack(deltaX, deltaY, current, total);
       }
 
       switch (Toolbar.getToolId()) {
