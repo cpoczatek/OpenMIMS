@@ -11,17 +11,14 @@ import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 import ij.process.StackConverter;
 import ij.process.StackProcessor;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Frame;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -345,7 +342,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
     * so that a new translation can be applied.
     *
     * @param plane
-    * @return [0.0 0.0] if restoring a slice, [x y] if resotring a block.
+    * @return [0.0 0.0] if restoring a slice, [x y] if restoring a block.
     */
    public double[] restoreSlice(int plane) {
 
@@ -515,23 +512,187 @@ public class MimsStackEditor extends javax.swing.JPanel {
     * @param startSlice
     * @param endSlice
     */
-   public void translateStack(int xShift, int yShift, int startSlice, int endSlice) {
+    public void translateStack(int xShift, int yShift, int startSlice, int endSlice) {
 
-      MimsAction action = ui.mimsAction;
-      
-      for(int i = startSlice; i <= endSlice; i++) {
-          double actx = action.getXShift(i);
-          double acty = action.getYShift(i);
-          //for all images:
-          for(int k = 0; k <= (numberMasses -1); k++) {
-              this.images[k].killRoi();
-              this.images[k].getStack().getProcessor(i).translate(xShift, yShift);
-          }
-          
-          action.setShiftX(i, actx + xShift);
-          action.setShiftY(i, acty + yShift);
-      }
-      action.setIsTracked(true);
+        MimsAction action = ui.mimsAction;
+
+        for (int i = startSlice; i <= endSlice; i++) {
+            double actx = action.getXShift(i);
+            double acty = action.getYShift(i);
+
+            boolean redraw = ((xShift * actx < 0) || (yShift * acty < 0));
+
+            for (int k = 0; k < numberMasses; k++) {
+                if (!holdupdate && (!ui.isUpdating())) {
+                    double deltaX = xShift;
+                    double deltaY = yShift;
+                    if (redraw) {
+
+                        double[] xy = restore(i);
+                        deltaX = actx + xShift + xy[0];
+                        deltaY = acty + yShift + xy[1];
+                        
+                        if(xy[0] != 0.0 && xy[1] != 0.0) {
+                            //TODO: Test this case. This if block is just a reminder for Farah.
+                            System.out.println("We need to test to make sure this works properly.");
+                        }
+
+                    } 
+                    
+                    this.images[k].getStack().getProcessor(i).translate(deltaX, deltaY);
+                    
+
+
+                }
+
+                action.setShiftX(i, actx + xShift);
+                action.setShiftY(i, acty + yShift);
+            }
+
+            action.setIsTracked(true);
+        }
+    }
+
+   /** This method is used by translateStack -- restores image without going through
+    * each slice visually. Repeat of restoreSlice and restoreBlock
+    * @param plane number
+    */
+   private double[] restore(int plane) {
+       
+       if (ui.mimsAction.getIsCompressed()) {
+           //This is from restoreBlock
+           
+           System.out.println("SHOULD NOT COME HERE");
+
+           int[] planes = ui.mimsAction.getPlaneNumbersFromBlockNumber(plane);
+           int openerIndex;
+           Opener op;
+
+           Object[][] pixels = new Object[numberMasses][planes.length];
+
+           // Get the smallest translation
+           double minXval = 0.0;
+           double minYval = 0.0;
+           double Xmean = ui.mimsAction.getXShift(plane);
+           double Ymean = ui.mimsAction.getYShift(plane);
+           for (int k = 0; k <= (numberMasses - 1); k++) {
+               for (int i = 0; i < planes.length; i++) {
+                   double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i] - 1)[0];
+                   double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i] - 1)[1];
+                   double xTrans = Xcurrent - Xmean;
+                   double yTrans = Ycurrent - Ymean;
+                   if (xTrans < minXval) {
+                       minXval = xTrans;
+                   }
+                   if (yTrans < minYval) {
+                       minYval = yTrans;
+                   }
+               }
+           }
+
+           // Apply the translations.
+           for (int k = 0; k <= (numberMasses - 1); k++) {
+               for (int i = 0; i < planes.length; i++) {
+                   openerIndex = ui.mimsAction.getOpenerIndex(planes[i] - 1);
+                   op = ui.getFromOpenerList(ui.mimsAction.getOpenerName(planes[i] - 1));
+                   op.setStackIndex(openerIndex);
+
+                   try {
+                       pixels[k][i] = op.getPixels(k);
+                   } catch (IOException ioe) {
+                       ioe.printStackTrace();
+                   }
+
+                   ImageProcessor ip = null;
+                   if (op.getFileType() == FileInfo.GRAY16_UNSIGNED) {
+                       ip = new ShortProcessor(images[0].getWidth(), images[0].getHeight());
+                   } else if (op.getFileType() == FileInfo.GRAY32_FLOAT || op.getFileType() == FileInfo.GRAY32_UNSIGNED) {
+                       ip = new FloatProcessor(images[0].getWidth(), images[0].getHeight());
+                   }
+                   ip.setPixels(pixels[k][i]);
+                   double Xcurrent = ui.mimsAction.xyTranslationList.get(planes[i] - 1)[0];
+                   double Ycurrent = ui.mimsAction.xyTranslationList.get(planes[i] - 1)[1];
+
+                   double xTrans = Xcurrent - Xmean - minXval;
+                   double yTrans = Ycurrent - Ymean - minYval;
+                   ip.translate(xTrans, yTrans);
+                   pixels[k][i] = ip.getPixels();
+               }
+           }
+
+           int pixelLength = 0;
+           if (pixels[0][0] instanceof short[]) {
+               pixelLength = ((short[]) pixels[0][0]).length;
+           } else if (pixels[0][0] instanceof float[]) {
+               pixelLength = ((float[]) pixels[0][0]).length;
+           }
+
+           Object sumPixels[][] = new Object[numberMasses][pixelLength];
+
+           // Sum the pixels.
+           for (int k = 0; k <= (numberMasses - 1); k++) {
+               for (int i = 0; i < planes.length; i++) {
+                   for (int j = 0; j < pixelLength; j++) {
+                       if (sumPixels[k][j] == null && images[k].getProcessor() instanceof ShortProcessor) {
+                           short zero = 0;
+                           sumPixels[k][j] = zero;
+                       }
+                       if (sumPixels[k][j] == null && images[k].getProcessor() instanceof FloatProcessor) {
+                           float zero = 0;
+                           sumPixels[k][j] = zero;
+                       }
+                       if (images[k].getProcessor() instanceof ShortProcessor) {
+                           short tempVal = ((Short) sumPixels[k][j]).shortValue();
+                           short[] temppixels = (short[]) pixels[k][i];
+                           sumPixels[k][j] = tempVal + temppixels[j];
+                       } else if (images[k].getProcessor() instanceof FloatProcessor) {
+                           float tempVal = ((Float) sumPixels[k][j]).floatValue();
+                           float[] temppixels = (float[]) pixels[k][i];
+                           sumPixels[k][j] = tempVal + temppixels[j];
+                       } else {
+                           sumPixels[k][j] = 0;
+                       }
+                   }
+               }
+               
+               images[k].getStack().setPixels(sumPixels[k], plane);
+           }
+
+           double[] returnVal = {minXval, minYval};
+           return returnVal;
+       } else {
+           //this is the edited version from restoreSlice
+           int restoreIndex = ui.mimsAction.trueIndex(plane);
+           try {
+
+               int openerIndex = ui.mimsAction.getOpenerIndex(restoreIndex - 1);
+               Opener op = ui.getFromOpenerList(ui.mimsAction.getOpenerName(restoreIndex - 1));
+
+               op.setStackIndex(openerIndex);
+               
+               for (int k = 0; k < numberMasses; k++) {
+                   
+                   /*NOTE: images[k].getProcessor() and images[k].getStack().getProcessor(plane) where plane is
+                    * your current plane do not return the same object. When you're setting the pixels for the stack,
+                    * call images[k].getStack().setPixels(object, plane) and NOT! images[k].getStack().getProcessor().setPixels(obj)
+                    * 
+                    * ImageJ --> :(
+                    */
+                   
+                   images[k].getStack().setPixels(op.getPixels(k), plane);
+               }
+           } catch (Exception e) {
+               System.err.println("Error re-reading plane " + restoreIndex);
+               System.err.println(e.toString());
+               e.printStackTrace();
+           }
+
+           double[] returnVal = {0.0, 0.0};
+           return returnVal;
+       }
+
+       
+       
    }
 
    /**
