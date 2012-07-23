@@ -302,36 +302,51 @@ public class MimsStackEditor extends javax.swing.JPanel {
          pixelLength = ((float[]) pixels[0][0]).length;
       }
 
-      Object sumPixels[][] = new Object[numberMasses][pixelLength];
-
+      Object[][] sumPixels = new Object[numberMasses][pixelLength];
       // Sum the pixels.
-      for (int k = 0; k <= (numberMasses - 1); k++) {
-         for (int i = 0; i < planes.length; i++) {
-            for (int j = 0; j < pixelLength; j++) {
-               if (sumPixels[k][j] == null && images[k].getProcessor() instanceof ShortProcessor) {
-                  short zero = 0;
-                  sumPixels[k][j] = zero;
+       for (int k = 0; k <= (numberMasses - 1); k++) {
+           for (int i = 0; i < planes.length; i++) {
+               for (int j = 0; j < pixelLength; j++) {
+                   if (sumPixels[k][j] == null && images[k].getProcessor() instanceof ShortProcessor) {
+                       short zero = 0;
+                       sumPixels[k][j] = zero;
+                   }
+                   if (sumPixels[k][j] == null && images[k].getProcessor() instanceof FloatProcessor) {
+                       float zero = 0;
+                       sumPixels[k][j] = zero;
+                   }
+                   if (images[k].getProcessor() instanceof ShortProcessor) {
+                       short tempVal = ((Short) sumPixels[k][j]).shortValue();
+                       short[] temppixels = (short[]) pixels[k][i];
+                       sumPixels[k][j] = (short) (tempVal + temppixels[j]);
+                   } else if (images[k].getProcessor() instanceof FloatProcessor) {
+                       float tempVal = ((Float) sumPixels[k][j]).floatValue();
+                       float[] temppixels = (float[]) pixels[k][i];
+                       sumPixels[k][j] = tempVal + temppixels[j];
+                   } else {
+                       sumPixels[k][j] = 0;
+                   }
                }
-               if (sumPixels[k][j] == null && images[k].getProcessor() instanceof FloatProcessor) {
-                  float zero = 0;
-                  sumPixels[k][j] = zero;
+           }
+
+           images[k].setSlice(plane);
+
+           if (images[k].getProcessor() instanceof ShortProcessor) {
+               short[] shortPixels = new short[pixelLength];
+               for (int j = 0; j < pixelLength; j++) {
+                   shortPixels[j] = ((Short) sumPixels[k][j]).shortValue();
                }
-               if (images[k].getProcessor() instanceof ShortProcessor) {
-                  short tempVal = ((Short) sumPixels[k][j]).shortValue();
-                  short[] temppixels = (short[]) pixels[k][i];
-                  sumPixels[k][j] = tempVal + temppixels[j];
-               } else if (images[k].getProcessor() instanceof FloatProcessor) {
-                  float tempVal = ((Float) sumPixels[k][j]).floatValue();
-                  float[] temppixels = (float[]) pixels[k][i];
-                  sumPixels[k][j] = tempVal + temppixels[j];
-               } else {
-                  sumPixels[k][j] = 0;
+               images[k].getProcessor().setPixels(shortPixels);
+
+           } else if (images[k].getProcessor() instanceof FloatProcessor) {
+               float[] floatPixels = new float[pixelLength];
+               for (int j = 0; j < pixelLength; j++) {
+                   floatPixels[j] = ((Float) sumPixels[k][j]).floatValue();
                }
-            }
-         }
-         images[k].setSlice(plane);
-         images[k].getProcessor().setPixels(sumPixels[k]);
-      }
+               images[k].getProcessor().setPixels(floatPixels);
+           }
+
+       }
 
       double[] returnVal = {minXval, minYval};
       return returnVal;
@@ -556,6 +571,27 @@ public class MimsStackEditor extends javax.swing.JPanel {
             action.setShiftY(i, acty + yShift);
             action.setIsTracked(true);
         }
+    }
+    
+    public void translatePlane(double deltax, double deltay) {
+       int plane = images[0].getCurrentSlice();
+       double actx = ui.mimsAction.getXShift(plane);
+       double acty = ui.mimsAction.getYShift(plane);
+       
+       boolean redraw = ((deltax * actx < 0) || (deltay * acty < 0));
+
+       if (!holdupdate && !ui.isUpdating()) {
+          if (redraw) {
+             double[] xy = restore(plane);
+             this.XShiftSlice(actx + deltax + xy[0]);
+             this.YShiftSlice(acty + deltay + xy[1]);
+          } else {
+             this.XShiftSlice(deltax);
+             this.YShiftSlice(deltay);
+          }
+          ui.mimsAction.setShiftX(plane, actx + deltax);
+          ui.mimsAction.setShiftY(plane, acty + deltay);
+       }
     }
 
    /** This method is used by translateStack -- restores image without going through
