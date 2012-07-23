@@ -516,39 +516,44 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
         MimsAction action = ui.mimsAction;
 
+
         for (int i = startSlice; i <= endSlice; i++) {
+
             double actx = action.getXShift(i);
             double acty = action.getYShift(i);
 
             boolean redraw = ((xShift * actx < 0) || (yShift * acty < 0));
 
-            for (int k = 0; k < numberMasses; k++) {
-                if (!holdupdate && (!ui.isUpdating())) {
-                    double deltaX = xShift;
-                    double deltaY = yShift;
-                    if (redraw) {
 
-                        double[] xy = restore(i);
-                        deltaX = actx + xShift + xy[0];
-                        deltaY = acty + yShift + xy[1];
-                        
-                        if(xy[0] != 0.0 && xy[1] != 0.0) {
-                            //TODO: Test this case. This if block is just a reminder for Farah.
-                            System.out.println("We need to test to make sure this works properly.");
-                        }
+            double deltaX = xShift;
+            double deltaY = yShift;
 
-                    } 
-                    
-                    this.images[k].getStack().getProcessor(i).translate(deltaX, deltaY);
-                    
 
+            if (!holdupdate && (!ui.isUpdating())) {
+
+                if (redraw) {
+
+                    double[] xy = restore(i);
+                    deltaX = actx + xShift + xy[0];
+                    deltaY = acty + yShift + xy[1];
+
+                    if (xy[0] != 0.0 && xy[1] != 0.0) {
+                        //TODO: Test this case. This if block is just a reminder for Farah.
+                        System.out.println("We need to test to make sure this works properly.");
+                    }
 
                 }
 
-                action.setShiftX(i, actx + xShift);
-                action.setShiftY(i, acty + yShift);
+                for (int k = 0; k < numberMasses; k++) {
+                    images[k].getStack().getProcessor(i).translate(deltaX, deltaY);
+
+                }
+
+
             }
 
+            action.setShiftX(i, actx + xShift);
+            action.setShiftY(i, acty + yShift);
             action.setIsTracked(true);
         }
     }
