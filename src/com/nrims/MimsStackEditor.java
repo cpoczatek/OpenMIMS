@@ -322,7 +322,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
                    } else if (images[k].getProcessor() instanceof FloatProcessor) {
                        float tempVal = ((Float) sumPixels[k][j]).floatValue();
                        float[] temppixels = (float[]) pixels[k][i];
-                       sumPixels[k][j] = tempVal + temppixels[j];
+                       sumPixels[k][j] = (float) tempVal + temppixels[j];
                    } else {
                        sumPixels[k][j] = 0;
                    }
@@ -685,20 +685,32 @@ public class MimsStackEditor extends javax.swing.JPanel {
                        if (images[k].getProcessor() instanceof ShortProcessor) {
                            short tempVal = ((Short) sumPixels[k][j]).shortValue();
                            short[] temppixels = (short[]) pixels[k][i];
-                           sumPixels[k][j] = tempVal + temppixels[j];
+                           sumPixels[k][j] = (short) (tempVal + temppixels[j]);
                        } else if (images[k].getProcessor() instanceof FloatProcessor) {
                            float tempVal = ((Float) sumPixels[k][j]).floatValue();
                            float[] temppixels = (float[]) pixels[k][i];
-                           sumPixels[k][j] = tempVal + temppixels[j];
+                           sumPixels[k][j] = (float) (tempVal + temppixels[j]);
                        } else {
                            sumPixels[k][j] = 0;
                        }
                    }
-               }
-               
-               images[k].getStack().setPixels(sumPixels[k], plane);
-           }
 
+
+                   if (images[k].getProcessor() instanceof ShortProcessor) {
+                       short[] shortPixels = new short[pixelLength];
+                       for (int j = 0; j < pixelLength; j++) {
+                           shortPixels[j] = ((Short) sumPixels[k][j]).shortValue();
+                       }
+                       images[k].getStack().setPixels(shortPixels[k], plane);
+                   } else if (images[k].getProcessor() instanceof FloatProcessor) {
+                       float[] floatPixels = new float[pixelLength];
+                       for (int j = 0; j < pixelLength; j++) {
+                           floatPixels[j] = ((Float) sumPixels[k][j]).floatValue();
+                       }
+                       images[k].getStack().setPixels(floatPixels[k], plane);
+                   }
+               }
+           }
            double[] returnVal = {minXval, minYval};
            return returnVal;
        } else {
