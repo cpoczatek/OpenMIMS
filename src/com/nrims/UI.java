@@ -4029,7 +4029,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           QSACorrectionMenuItem.setEnabled(!isQSACorrected);
 
           // close/kill the existing ReportGenerator
-          ui.rg.close();
+          if(ui.rg != null) {
+              ui.rg.close();
+          }
 
           return true;
        }

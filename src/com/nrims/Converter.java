@@ -25,9 +25,10 @@ public class Converter extends SwingWorker<Void, Void> {
    public static final String  PROPERTIES_THRESH_LOWER  = "HSI_THRESH_LOWER";
    public static final String  PROPERTIES_RGB_MAX       = "HSI_RGB_MAX";
    public static final String  PROPERTIES_RGB_MIN       = "HSI_RGB_MIN";
+   public static final String  PROPERTIES_RATIO_SCALE_FACTOR  = "RATIO_SCALE_FACTOR";
    public static final String  PROPERTIES_USE_SUM       = "USE_SUM";
    public static final String  PROPERTIES_MEDIANIZE     = "MEDIANIZE";
-   public static final String  PROPERTIES_MEDIANIZATION_RADIUS = "THRESH_LOWER";
+   public static final String  PROPERTIES_MEDIANIZATION_RADIUS = "MEDIANIZATION_RADIUS";
 
    // Default values.
    public static final boolean PNGS_ONLY_DEFAULT        = false;
@@ -45,6 +46,7 @@ public class Converter extends SwingWorker<Void, Void> {
    public static final String  THRESH_LOWER_DEFAULT     = "";
    public static final String  RGB_MAX_DEFAULT          = "";
    public static final String  RGB_MIN_DEFAULT          = "";
+   public static final double  SCALE_FACTOR_DEFAULT     = 10000;
    public static final String  PNG_DIRECTORY_DEFAULT    = null;
    public static final String  NRRD_EXTENSION           = ".nrrd";
    public static final int     RGB_MAX_INT_DEFAULT      = 51;
@@ -67,7 +69,8 @@ public class Converter extends SwingWorker<Void, Void> {
    String[] threshLowers   = new String[0];
    String[] rgbMaxes       = new String[0];
    String[] rgbMins        = new String[0];
-   int trackIndex          = 0;
+   String[] scaleFactors    = new String[0];
+   int      trackIndex     = 0;
    double medianizeRadius  = MEDIANIZE_RADIUS_DEFAULT;
    String pngDir           = PNG_DIRECTORY_DEFAULT;
    ArrayList<String> files = new ArrayList<String>();
@@ -149,6 +152,11 @@ public class Converter extends SwingWorker<Void, Void> {
       String rgbMin = defaultProps.getProperty(PROPERTIES_RGB_MIN, RGB_MIN_DEFAULT);
       rgbMin = rgbMin.replaceAll("\"", "");
       rgbMins = rgbMin.split(" ");
+
+      //ratio scale factor
+      String factors = defaultProps.getProperty(PROPERTIES_RATIO_SCALE_FACTOR, Double.toString(SCALE_FACTOR_DEFAULT));
+      factors = factors.replaceAll("\"", "");
+      scaleFactors = factors.split(" ");
 
       // Use sum.
       useSum = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_USE_SUM, Boolean.toString(USE_SUM_DEFAULT)));
@@ -249,6 +257,7 @@ public class Converter extends SwingWorker<Void, Void> {
       int numIdx, denIdx;
       double numMass, denMass;
       double upperThresh, lowerThresh;
+      double rfactor;
       int rgbMax, rgbMin;
       String numerator, denominator;
       int counter = 0;
@@ -308,6 +317,16 @@ public class Converter extends SwingWorker<Void, Void> {
                hsiprops.setMinRGB(rgbMin);
             } catch (NumberFormatException nfe) {
                hsiprops.setMinRGB(RGB_MIN_INT_DEFAULT);
+               System.out.println("WARNING: Bad format for min RGB: " + rgbMins[counter] + ". Auto setting");
+            }
+         }
+
+         if (counter < scaleFactors.length) {
+            try {
+               rfactor = new Double(scaleFactors[counter]);
+               hsiprops.setRatioScaleFactor(rfactor);
+            } catch (NumberFormatException nfe) {
+               hsiprops.setRatioScaleFactor(SCALE_FACTOR_DEFAULT);
                System.out.println("WARNING: Bad format for min RGB: " + rgbMins[counter] + ". Auto setting");
             }
          }
