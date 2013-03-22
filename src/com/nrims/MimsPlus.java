@@ -282,7 +282,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        this.ui = ui;
        this.compProps = compprops;
        this.nType = MimsPlus.COMPOSITE_IMAGE;
-       fStateListeners = new EventListenerList() ;
+       fStateListeners = new EventListenerList();
+       addListener(ui);
        setupCompositeImage(compprops);
    }
 
@@ -833,28 +834,37 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return 
      */
     public String getPropsTitle() {
+        //move elsewhere?
+        DecimalFormat formatter = new DecimalFormat("0.0");
+
         String propTitle = "";
         try {
-         if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
-             double max = this.getDisplayRangeMax();
-             double min = this.getDisplayRangeMin();
-             propTitle += " (" + min +" - " + max + ") " + this.getCurrentSlice() + "/" + this.getStackSize();
-             
-             
-         } else if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
-            HSIProps hprops = getHSIProps();
-            double max = hprops.getMaxRatio();
-            double min = hprops.getMinRatio();
-            propTitle += " (" + min +" - " + max + ")"; 
-         } else if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
-            //Do nothing?
-         } else if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
-            //Do nothing?
-         }
-      } catch (Exception e) {
-         propTitle = "0";
-      }
-        
+            if (this.getMimsType() == MimsPlus.MASS_IMAGE) {
+                double max = this.getDisplayRangeMax();
+                double min = this.getDisplayRangeMin();
+                propTitle += " (" + min + " - " + max + ") " + this.getCurrentSlice() + "/" + this.getStackSize();
+            } else if (this.getMimsType() == MimsPlus.HSI_IMAGE) {
+                HSIProps hprops = getHSIProps();
+                double max = hprops.getMaxRatio();
+                double min = hprops.getMinRatio();
+                propTitle += " (" + min + " - " + max + ")";
+                //TODO?
+                //need if not summed plane #s
+            } else if (this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+                double max = this.getDisplayRangeMax();
+                double min = this.getDisplayRangeMin();
+                propTitle += " (" + formatter.format((Number) min) + " - " + formatter.format((Number) max) + ")";
+                //TODO?
+                //need if not summed plane #s
+            } else if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
+                double max = this.getDisplayRangeMax();
+                double min = this.getDisplayRangeMin();
+                propTitle += " (" + min + " - " + max + ")";
+            }
+        } catch (Exception e) {
+            propTitle = "0";
+        }
+
         return propTitle;
     }
 
@@ -1275,6 +1285,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         else
             msg += " = ";
 
+        
+        //TODO, do something sensible for composite images....
+        
         // Get pixel data for the mouse location.
         if((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && (this.internalDenominator!=null && this.internalNumerator!=null) ) {
             float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
