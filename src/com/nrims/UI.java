@@ -139,7 +139,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private String revisionNumber = "0";
     private static String im_file_path = null;
     private static Boolean single_instance_mode = false;
-    private static UI ui = null;
+    public static UI ui = null;
     /*
      * Private stings for option parsing
      */
@@ -160,9 +160,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /** Creates a new instance of the OpenMIMS analysis interface.*/
     public UI(boolean silentMode) {
       super("OpenMIMS");
-
+      
       this.silentMode = silentMode;
-      System.out.println("Ui constructor");
+      System.out.println("Ui constructor: id=" + System.identityHashCode(this));
       System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
 
       revisionNumber = extractRevisionNumber();
@@ -1137,6 +1137,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         sumImages[i].setRoi(evt.getRoi());
                     }
                 }
+                for (i = 0; i < compImages.length; i++) {
+                    if (compImages[i] != mp && compImages[i] != null) {
+                        compImages[i].setRoi(evt.getRoi());
+                    }
+                }
             // Automatically appends a drawn ROI to the RoiManager
             // to improve work flow without extra mouse actions.             
             if (evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
@@ -1291,7 +1296,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         jMenuItem9.setText("Export all images");
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("OpenMIMS");
         setName("NRIMSUI"); // NOI18N
 
@@ -1574,7 +1579,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         testingMenu.setText("Testing");
 
-        emptyTestMenuItem.setText("empty test");
+        emptyTestMenuItem.setText("warp test");
         emptyTestMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 emptyTestMenuItemActionPerformed(evt);
@@ -2738,8 +2743,12 @@ private void QSACorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt
 }//GEN-LAST:event_QSACorrectionMenuItemActionPerformed
 
 private void emptyTestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emptyTestMenuItemActionPerformed
-    //empty
-
+    //empty?
+    //String foo = "{{\\b DATE: }2012/11/08 12:45\\par}";
+    //System.out.println("foo = "+foo);
+    
+    com.nrims.experimental.warp warp = new com.nrims.experimental.warp();
+    warp.cellWarp(this);
 }//GEN-LAST:event_emptyTestMenuItemActionPerformed
 
 private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportQVisMenuItemActionPerformed
@@ -3463,6 +3472,21 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return mimsTomography;
     }
 
+     /**
+     * Returns a pointer to the <code>SegmentationForm</code> object
+     * which controls the "Segmentation" tab.
+     *
+     * @return the <code>MimsTomography</code> object.
+     */
+    public SegmentationForm getmimsSegmentation() {
+        return segmentation;
+    }
+    
+    public static UI getInstance() {
+        return (UI)ui;
+    }
+    
+    
     /**
      * Returns a pointer to the <code>MimsAction</code> object.
      * The <code>MimsAction</code> object stores all the modifications
@@ -3956,7 +3980,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        public FileOpenTask(File file, UI ui) {
           this.file = file;
           this.ui = ui;
-          System.out.println("FileOpenTask: " + file.getAbsolutePath());
+          System.out.println("OpenMIMS: UI.FileOpenTask(): " + file.getAbsolutePath());
        }
 
         /*
@@ -4010,7 +4034,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
           // Autocontrast mass images.
           autoContrastImages(getOpenMassImages());
-          autoContrastImages(getOpenSumImages());
+          //TODO, remove/refactor
+          //This overrides contrast of sum images set in restoreState()
+          //autoContrastImages(getOpenSumImages());
 
           // Update notes gui
           if (image != null) imgNotes.setOutputFormatedText(image.getNotes());
@@ -4028,10 +4054,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           QSACorrectionMenuItem.setSelected(isQSACorrected);
           QSACorrectionMenuItem.setEnabled(!isQSACorrected);
 
-          // close/kill the existing ReportGenerator
-          if(ui.rg != null) {
-              ui.rg.close();
-          }
 
           return true;
        }

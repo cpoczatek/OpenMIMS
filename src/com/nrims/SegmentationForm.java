@@ -98,7 +98,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         updateModelInfo(); // reset model info
     }
 
-    private MimsPlus[] getImages() {
+    public MimsPlus[] getImages() {
         ArrayList<MimsPlus> images = new ArrayList<MimsPlus>();
 
         // get mass images
@@ -117,6 +117,10 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                 if (index == -1) {
                     // create ratio image
                     RatioProps props = new RatioProps(num, den);
+                    
+                    //why are we doing this...
+                    props.setRatioScaleFactor(mimsUi.getHSIView().getRatioScaleFactor());
+                    
                     MimsPlus mp = new MimsPlus(mimsUi, props);
                     mp.showWindow();
                     //mimsUi.computeRatio(props, true);
@@ -148,7 +152,31 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
 
         return images.toArray(new MimsPlus[images.size()]);
     }
+    
+    public int getColorImageIndex() {
+        return colorImageIndex;
+    }
 
+    public int[] getLocalFeatures() {
+        return localFeatures;
+    }
+    
+    public SegmentationEngine getActiveEngine() {
+        return activeEngine;
+    }
+    
+    public byte[] getClassification() {
+        return classification;
+    }
+    
+    public int[] getClassColors() {
+        return classColors;
+    }
+    
+    public String[] getClassNames() {
+        return classNames;
+    }
+    
     private void startTraining(ArrayList<ArrayList<ArrayList<Double>>> trainData) {
         // a new engine instance is needed for each execution as SwingWorker objects are non-reusable
         try {
@@ -166,7 +194,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         }
     }
 
-    private void startPrediction(ArrayList<ArrayList<ArrayList<Double>>> predData) {
+    public void startPrediction(ArrayList<ArrayList<ArrayList<Double>>> predData) {
         // a new engine instance is needed for each execution as SwingWorker objects are non-reusable
         try {
             String engineName = implementedEngines.get(properties.getValueOf(SegmentationEngine.ENGINE))[0];
@@ -212,11 +240,14 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
 
     private void setActiveClass(String className) {
         // remove ROIs from the RoiManager, if required
+        //TODO
+        //This is bad because it deletes rois
+        //Need to make segmentation "play better" with roi groups
         System.out.println("BAD METHOD HIT");
         if(true) return;
         if (roiManager.roijlist.getModel().getSize() > 0) {
             roiManager.selectAll();
-            roiManager.delete();
+            roiManager.delete(false);
             roiManager.getImage().setRoi((Roi) null);
         }
         // set the current class and add ROIs to the roiManager
@@ -227,7 +258,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         }
     }
 
-    private void updateModelInfo() {
+    public void updateModelInfo() {
         String desc = "";
         desc += "ENGINE\n";
         desc += "name: " + properties.getValueOf(SegmentationEngine.ENGINE) + "\n";
