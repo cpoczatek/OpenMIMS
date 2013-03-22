@@ -321,6 +321,10 @@ public class MimsData extends javax.swing.JPanel {
             jLabel30.setText(Boolean.toString(image.isQSACorrected()));
             
 
+            //TODO
+            //THIS IS A BUG
+            //if getRaster returns null things throw
+            //there should be ZERO required k/v pairs in a nrrd header
             String raster = image.getRaster();
             if (!raster.contains(",")) {
                int ras = Math.round((Float.parseFloat(raster))/1000.0f);
@@ -332,6 +336,11 @@ public class MimsData extends javax.swing.JPanel {
             int i, nMasses = image.getNMasses();
             String massNames = "" + nMasses + " [" ;
             String massSymbols = "" + nMasses + " [";
+            
+            //TODO
+            //THIS IS A BUG
+            //if this k/v pair is bad (ie length<nMass)
+            //throws, should fail gracefully
             for(i=0;i<nMasses;i++) {
                 massNames += image.getMassNames()[i];
                 if( i+1 != nMasses ) massNames += ", ";
@@ -340,6 +349,10 @@ public class MimsData extends javax.swing.JPanel {
             if (image.getMassSymbols() == null) {
                 massSymbols += " ]";
             } else {
+                //TODO
+                //THIS IS A BUG
+                //if this k/v pair is bad (ie length<nMass)
+                //throws, should fail gracefully
                 for (i = 0; i < nMasses; i++) {
                     massSymbols += image.getMassSymbols()[i];
                     if (i + 1 != nMasses) {
