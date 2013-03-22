@@ -826,6 +826,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         pm.setBorder(new javax.swing.border.LineBorder(Color.BLACK));
         addPopupItem("Duplicate");
         addPopupItem("Combine");
+        addPopupItem("Exclusive (xor)");
         addPopupItem("Split");
         addPopupItem("Particles");
         addPopupItem("Squares");
@@ -857,7 +858,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         if (command.equals("Add [t]")) {
             add();
         } else if (command.equals("Delete")) {
-            delete();
+            delete(true);
         } else if (command.equals("Rename")) {
             rename(null);
         } else if (command.equals("Open")) {
@@ -884,6 +885,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             duplicate();
         } else if (command.equals("Combine")) {
             combine();
+        } else if (command.equals("Exclusive pixels")) {
+            exclusiveToRoi();
         } else if (command.equals("Split")) {
             split();
         } else if (command.equals("Particles")) {
@@ -1537,16 +1540,16 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      *
      * @return <code>true</code> if successful, otherwise <code>false</code>.
      */
-    public boolean delete() {
+    public boolean delete(boolean prompt) {
         int count = roiListModel.getSize();
-        if (count == 0) {
+        if (count == 0 && prompt) {
             return error("The list is empty.");
         }
         int index[] = roijlist.getSelectedIndices();
         if (index.length == 0) {
             String msg = "Delete all items on the list?";
             canceled = false;
-            if (!IJ.macroRunning() && !macro) {
+            if (!IJ.macroRunning() && !macro && prompt) {
                 int d = JOptionPane.showConfirmDialog(this, msg, "MIMS ROI Manager", JOptionPane.YES_NO_OPTION);
                 if (d == JOptionPane.NO_OPTION) {
                     return false;
@@ -2141,6 +2144,63 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
     }
 
+    private void exclusiveToRoi() {
+        ImagePlus imp = getImage();
+        if (imp == null) {
+            return;
+        }
+        int[] indexes = roijlist.getSelectedIndices();
+                
+        
+        if (indexes.length == 0) {
+            indexes = getAllIndexes();
+        }
+        
+        //loop over selected rois
+        for (int i = 0; i < indexes.length; i++) {
+            Roi roi = (Roi) rois.get(roiListModel.get(indexes[i]).toString());
+            
+            //skip 0 area rois
+            if (roi.isLine() || roi.getType() == Roi.POINT) {
+                continue;
+            }
+            
+            ShapeRoi sroi = new ShapeRoi(roi);
+            sroi.setName(roi.getName());
+            
+            //loop over all other rois
+            boolean unchanged=true;
+            for (Object key : rois.keySet()) {
+                Roi subtractroi = (Roi) rois.get(key);
+                //don't subract self
+                if(roi==subtractroi) { continue; }
+            
+                ShapeRoi subshaperoi = new ShapeRoi(subtractroi);
+                
+                //if intersection is empty do nothing
+                ShapeRoi intersect = (ShapeRoi) sroi.clone();
+                intersect.and(subshaperoi);
+                if (intersect.getBounds().width == 0 || intersect.getBounds().height == 0) { continue; }
+                
+                sroi.not(subshaperoi);
+                unchanged = false;
+            }
+            
+            //skip if 0 area/empty
+            Rectangle r = sroi.getBounds();
+            System.out.println("Roi: " + sroi.getName() + " w: " + r.width + " h: "+ r.height + " unchanged: " + unchanged);
+            if(r.width == 0 || r.height == 0) {
+                continue;
+            }
+            if(unchanged) { continue; }
+            
+            
+            //finally add roi
+            add(sroi);
+        }
+        
+        
+    }
     /**
      * The action method for the "split" button.
      * Must be a ROI of composite type.
