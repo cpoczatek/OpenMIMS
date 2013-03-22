@@ -15,14 +15,14 @@ public class NRIMS_Plugin implements PlugIn {
     
     /** Creates a new instance of NRIMS_Plugin Analysis Module. */
     public NRIMS_Plugin() {
-        System.out.println("NRIMS constructor");
-        if(ui == null) ui = new com.nrims.UI();
+        System.out.println("NRIMS constructor: id=" + System.identityHashCode(this));
+        ui = new com.nrims.UI();
     }
 
     /** Opens the GUI. */
     @Override
     public void run(String arg) {
-        //System.out.println("NRIMS.run");
+        System.out.println("NRIMS.run");
         String options = ij.Macro.getOptions();
         if(options!=null) {
             options = options.trim();
