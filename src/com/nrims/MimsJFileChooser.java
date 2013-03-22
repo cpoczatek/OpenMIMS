@@ -43,7 +43,7 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
          if (lastFolderDir.exists())
             setCurrentDirectory(lastFolderDir);
       } else {
-         String ijDef = new ij.io.OpenDialog("", "asdf").getDefaultDirectory();
+         String ijDef = ij.io.OpenDialog.getDefaultDirectory();
          if(ijDef != null) {
             File ijDefDir = new File(ijDef);
             if (ijDefDir.exists())
@@ -60,6 +60,11 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
       MIMSFileFilter mff_im = new MIMSFileFilter("im");
       mff_im.setDescription("Mims image");
       addChoosableFileFilter(mff_im);
+      
+      MIMSFileFilter mff_img = new MIMSFileFilter("im");
+      mff_img.addExtension("nrrd");
+      mff_img.setDescription("Mims image");
+      addChoosableFileFilter(mff_img);
 
       // Add the filter accessory.
       fa = new FilterAccessory();
