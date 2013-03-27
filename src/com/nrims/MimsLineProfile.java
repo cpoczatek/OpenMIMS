@@ -4,26 +4,24 @@ import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
-
-import java.awt.event.*;
 import java.awt.Color;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ResourceBundle;
 import javax.swing.JFrame;
-import javax.swing.JPopupMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import org.jfree.chart.ChartUtilities;
-
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.util.ResourceBundleWrapper;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.util.ResourceBundleWrapper;
 import org.jfree.ui.ExtensionFileFilter;
 
 /**

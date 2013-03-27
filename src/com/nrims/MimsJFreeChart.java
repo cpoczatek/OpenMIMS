@@ -6,7 +6,6 @@ import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
 import ij.gui.*;
 import ij.process.*;
-
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.KeyEventDispatcher;
@@ -15,24 +14,24 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-
 import java.util.ResourceBundle;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.chart.plot.Plot;
-
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.util.ResourceBundleWrapper;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
+import org.jfree.ui.TextAnchor;
 
 /**
  * MimsJFreeChart class creates a frame containing a <code>MimsXYPlot</code>.
@@ -48,8 +47,9 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
    private Roi[] rois;
    private ArrayList planes;
    private com.nrims.UI ui;
+   //private MimsChartPanel chartpanel;
    private MimsChartPanel chartpanel;
-
+   
    public MimsJFreeChart(UI ui) {
       super("Plot");
       this.ui = ui;
@@ -110,6 +110,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          xyplot.setDataset(xydata);
 
          // Generate the layout.
+         //chartpanel = new MimsChartPanel(chart);
          chartpanel = new MimsChartPanel(chart);
          chartpanel.addMouseListener(this);
          chartpanel.setPreferredSize(new java.awt.Dimension(600, 400));
@@ -488,6 +489,27 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
    }
 
+   public void setLabel() {
+       System.out.println("MimsJFreeChart.setLabel() called");
+       
+       MimsXYPlot plot = (MimsXYPlot)chartpanel.getChart().getPlot();
+      if (plot.isDomainCrosshairVisible() && plot.isRangeCrosshairVisible() && plot.isCrosshairLabelVisible()) {
+         double x = plot.getDomainCrosshairValue();
+         double y = plot.getRangeCrosshairValue();
+         double xmax = plot.getDomainAxis().getUpperBound();
+         double ymax = plot.getRangeAxis().getUpperBound();
+        	DecimalFormat twoDForm = new DecimalFormat("#.##");
+         String xhairlabel = "x = " + Double.valueOf(twoDForm.format(x)) + ", y = " + Double.valueOf(twoDForm.format(y));
+         plot.getCrossHairAnnotation().setText(xhairlabel);
+         plot.getCrossHairAnnotation().setX(xmax);
+         plot.getCrossHairAnnotation().setY(ymax);
+         plot.getCrossHairAnnotation().setTextAnchor(TextAnchor.TOP_RIGHT);        
+      } else {
+         plot.getCrossHairAnnotation().setText("");
+      }
+
+   }
+   
     /**
     * Change y axis from linear to log scale or vice versa
     * @param chartpanel GUI element to be affected
@@ -676,16 +698,19 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
 
    public void windowDeactivated(WindowEvent e) {}
 
-   @Override
-   public void mouseClicked(MouseEvent e) {
-      ReportGenerator rg = ui.getReportGenerator();
-      if (rg != null && rg.isVisible() && e.isControlDown()) {
-         Image img = getImage();
-         if (img != null) {
-            rg.addImage(img, "Plot");
-         }
-      }
-   }
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        //this.setLabel();
+        //((MimsXYPlot)this.chartpanel.getChart().getPlot()).setCrosshairLabel();
+
+        ReportGenerator rg = ui.getReportGenerator();
+        if (rg != null && rg.isVisible() && e.isControlDown()) {
+            Image img = getImage();
+            if (img != null) {
+                rg.addImage(img, "Plot");
+            }
+        }
+    }
     public void mousePressed(MouseEvent e) {}
 
     public void mouseReleased(MouseEvent e) {}

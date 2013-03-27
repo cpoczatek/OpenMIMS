@@ -8,8 +8,11 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.AxisSpace;
 import org.jfree.chart.axis.AxisState;
@@ -38,7 +41,7 @@ public class MimsXYPlot extends XYPlot {
     /** A flag that controls whether or not a label displaying XHair location is displayed. */
     private boolean crosshairLabelVisible;
     XYTextAnnotation xyannot = new XYTextAnnotation("", 0, 0);
-
+    
    public MimsXYPlot(XYDataset dataset, ValueAxis domainAxis,
                      ValueAxis rangeAxis, XYItemRenderer renderer){
       super(dataset, domainAxis,
@@ -73,8 +76,8 @@ public class MimsXYPlot extends XYPlot {
    @Override
     public void draw(Graphics2D g2, Rectangle2D area, Point2D anchor,
             PlotState parentState, PlotRenderingInfo info) {
-
-        // if the plot area is too small, just return...
+       
+       // if the plot area is too small, just return...
         boolean b1 = (area.getWidth() <= MINIMUM_WIDTH_TO_DRAW);
         boolean b2 = (area.getHeight() <= MINIMUM_HEIGHT_TO_DRAW);
         if (b1 || b2) {
@@ -92,7 +95,15 @@ public class MimsXYPlot extends XYPlot {
 
         AxisSpace space = calculateAxisSpace(g2, area);
         Rectangle2D dataArea = space.shrink(area, null);
-        getAxisOffset().trim(dataArea);
+         getAxisOffset().trim(dataArea);
+
+       //Edit:
+       //integerize() is private so we don't have access
+       //dataArea = integerise(dataArea);
+       //if (dataArea.isEmpty()) {
+       //    return;
+       //}
+         
         createAndAddEntity((Rectangle2D) dataArea.clone(), info, null, null);
         if (info != null) {
             info.setDataArea(dataArea);
@@ -183,6 +194,17 @@ public class MimsXYPlot extends XYPlot {
             drawZeroRangeBaseline(g2, dataArea);
         }
 
+        
+        Graphics2D savedG2 = g2;
+        BufferedImage dataImage = null;
+       if (getShadowGenerator() != null) {
+            dataImage = new BufferedImage((int) dataArea.getWidth(),
+                    (int)dataArea.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            g2 = dataImage.createGraphics();
+            g2.translate(-dataArea.getX(), -dataArea.getY());
+            g2.setRenderingHints(savedG2.getRenderingHints());
+        }
+
         // draw the markers that are associated with a specific renderer...
         for (int i = 0; i < getRendererCount(); i++) {
             drawDomainMarkers(g2, dataArea, i, Layer.BACKGROUND);
@@ -190,7 +212,7 @@ public class MimsXYPlot extends XYPlot {
         for (int i = 0; i < getRendererCount(); i++) {
             drawRangeMarkers(g2, dataArea, i, Layer.BACKGROUND);
         }
-
+        
         // now draw annotations and render data items...
         boolean foundData = false;
         DatasetRenderingOrder order = getDatasetRenderingOrder();
@@ -244,11 +266,8 @@ public class MimsXYPlot extends XYPlot {
             }
 
             for (int i = getDatasetCount() - 1; i >= 0; i--) {
-               try {
-                  foundData = render(g2, dataArea, i, info, crosshairState) || foundData;
-               } catch (IllegalArgumentException iae) {
-                  return;
-               }
+                foundData = render(g2, dataArea, i, info, crosshairState)
+                    || foundData;
             }
 
             // draw foreground annotations
@@ -270,7 +289,7 @@ public class MimsXYPlot extends XYPlot {
         // draw domain crosshair if required...
         int xAxisIndex = crosshairState.getDomainAxisIndex();
         ValueAxis xAxis = getDomainAxis(xAxisIndex);
-        RectangleEdge xAxisEdge = getDomainAxisEdge(xAxisIndex);
+        RectangleEdge xAxisEdge = getRangeAxisEdge(xAxisIndex);
         if (!isDomainCrosshairLockedOnData() && anchor != null) {
             double xx;
             if (orient == PlotOrientation.VERTICAL) {
@@ -320,22 +339,44 @@ public class MimsXYPlot extends XYPlot {
         for (int i = 0; i < getRendererCount(); i++) {
             drawRangeMarkers(g2, dataArea, i, Layer.FOREGROUND);
         }
-
-        setLabel();
+        
+        if (getShadowGenerator() != null) {
+            BufferedImage shadowImage
+                    = getShadowGenerator().createDropShadow(dataImage);
+            g2 = savedG2;
+            g2.drawImage(shadowImage, (int) dataArea.getX() 
+                    + getShadowGenerator().calculateOffsetX(),
+                    (int) dataArea.getY() 
+                    + getShadowGenerator().calculateOffsetY(), null);
+            g2.drawImage(dataImage, (int) dataArea.getX(),
+                    (int) dataArea.getY(), null);
+        }
+        
+        //Added code:
+        //get the correct crosshair position, and change label
+        //without firing an event that lead to another call to draw()
+        //which is bad/recursive
+        double aX = getDomainCrosshairValue();
+        double aY = getRangeCrosshairValue();
+        System.out.println("after x: " + aX + "  y: " + aY);
+        
+        removeAnnotation(xyannot, false);
+        setCrosshairLabel(aX,aY);
+        addAnnotation(xyannot, false);
         drawAnnotations(g2, dataArea, info);
-
+        //end added code
+        
         g2.setClip(originalClip);
         g2.setComposite(originalComposite);
 
         drawOutline(g2, dataArea);
 
     }
-    
-        // Show label.
-   public void setLabel() {
+       
+   //Set label
+   public void setCrosshairLabel(double x, double y) {
+       System.out.println("MimsXYPlot.setCrosshairLabel() called");
       if (isDomainCrosshairVisible() && isRangeCrosshairVisible() && this.crosshairLabelVisible) {
-         double x = getDomainCrosshairValue();
-         double y = getRangeCrosshairValue();
          double xmax = getDomainAxis().getUpperBound();
          double ymax = getRangeAxis().getUpperBound();
         	DecimalFormat twoDForm = new DecimalFormat("#.##");
@@ -343,17 +384,24 @@ public class MimsXYPlot extends XYPlot {
          xyannot.setText(xhairlabel);
          xyannot.setX(xmax);
          xyannot.setY(ymax);
-         xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);        
+         xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);
       } else {
          xyannot.setText("");
       }
-
+      
    }
 
    public void showXHairLabel(boolean visible) {
       this.crosshairLabelVisible = visible;
-      setLabel();
+      //setCrosshairLabel();
    }
 
+   public boolean isCrosshairLabelVisible() {
+       return crosshairLabelVisible;
+   }
+   
+   public XYTextAnnotation getCrossHairAnnotation() {
+       return xyannot;
+   }
 
 }
