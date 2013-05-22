@@ -186,7 +186,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       //read in preferences so values are gettable
       //by various tabs (ie mimsTomography, HSIView, etc.
       //when constructed further down.
-      prefs = new PrefFrame(this);
+      
 
       ijapp = IJ.getInstance();
       if (ijapp == null || (ijapp != null && !ijapp.isShowing())) {
@@ -197,7 +197,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       }
       
-      
+      prefs = new PrefFrame(this);
       if (isDeveloping) {       
           String pdir = ij.IJ.getDirectory("plugins");
           System.out.println("plugins dir: "+pdir);
