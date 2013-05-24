@@ -480,6 +480,10 @@ public class MimsStackEditor extends javax.swing.JPanel {
          }
          IJ.run("Enhance Contrast", "saturated=0.5 " + tmpstring + " normalize_all");
       }
+       if (options.contains("medianize")) {
+          WindowManager.setTempCurrentImage(tempImage);
+          IJ.run("Median...", "radius=2");
+       }
 
       return tempImage;
    }
@@ -515,6 +519,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
       }
       if (atManager.eq.isSelected()) {
          options += "equalize ";
+      }
+      if (atManager.med.isSelected()) {
+         options += "medianize ";
       }
 
       return options;
@@ -1862,6 +1869,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
       JRadioButton sub;
       JRadioButton norm;
       JRadioButton eq;
+      JRadioButton med;
       JButton cancelButton;
       JButton okButton;
       MimsPlus currentImage;
@@ -1903,6 +1911,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
          norm.setSelected(true);
          eq = new JRadioButton("Equalize tracking image");
          eq.setSelected(true);
+         med = new JRadioButton("Medianize tracking image");
+         med.setSelected(true);
 
          buttonGroup.add(all);
          buttonGroup.add(some);
@@ -1922,6 +1932,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
          jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
          jPanel.add(eq);
          jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+         jPanel.add(med);
+         jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
          // Set up "OK" and "Cancel" buttons.
          JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -1938,7 +1950,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
          setLayout(new BorderLayout());
          add(jPanel, BorderLayout.PAGE_START);
          add(buttonPanel, BorderLayout.PAGE_END);
-         setSize(new Dimension(375, 300));
+         setSize(new Dimension(375, 350));
 
       }
 

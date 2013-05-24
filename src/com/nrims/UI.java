@@ -33,6 +33,9 @@ import java.awt.Robot;
 import java.awt.Point;
 import java.awt.Image;
 import java.awt.EventQueue;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -50,6 +53,7 @@ import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,7 +62,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
+import java.net.UnknownHostException;
 /**
  * The main user interface of the NRIMS ImageJ plugin.
  * A multitabbed window with a file menu, the UI class
@@ -164,7 +168,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       this.silentMode = silentMode;
       System.out.println("Ui constructor: id=" + System.identityHashCode(this));
       System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
-
+    try{
+      System.out.println(getMachineName());
+    }catch(Exception e){
+        System.out.println("Could not retrieve machine name");
+    }
       revisionNumber = extractRevisionNumber();
       System.out.println("revisionNumber: "+revisionNumber);
       
@@ -258,7 +266,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                openFileInBackground(file);
          }
       });
-
+      Thread t = new Thread(new AutoSaveROI());
+        t.start();
       // Create and start the thread
       //Thread thread = new StartupScript(this);
       //thread.start();
@@ -284,6 +293,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @param mp object to be inserted.
      * @return success/failure of insertion.
      */
+   private String getMachineName() throws UnknownHostException {
+       return InetAddress.getLocalHost().getHostName();
+   }
    public boolean addToImagesList(MimsPlus mp) {
       int i = 0; int ii = 0; boolean inserted=false;
       while (i < maxMasses) {
@@ -556,6 +568,23 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
          }
       }
+      /*MimsPlus[] windows = getOpenImages();
+      double[] massVals = new double[windows.length];
+      int[] win_ids = new int[windows.length];
+      int i = 0;
+      for (MimsPlus mp : windows) {
+          massVals[i] = mp.getMassValue();
+          i++;
+      }
+      Arrays.sort(massVals);
+      i = 0;
+      for (Double mass : massVals) {
+          int massValIdx = getMassIndices(mass, 0.1)[0];
+          win_ids[i] = windows[massValIdx].getID();
+          i++;
+      }
+      tileWindows(win_ids, prefs.getTileY());
+      */
    }
 
    /**
@@ -1217,9 +1246,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * @return prefix file name.
     */
    public String getImageFilePrefix() {
-      String filename = image.getImageFile().getName().toString();
-      String prefix = filename.substring(0, filename.lastIndexOf("."));
-      return prefix;
+       if (image != null){
+            String filename = image.getImageFile().getName().toString();
+            String prefix = filename.substring(0, filename.lastIndexOf("."));
+            return prefix;
+       }else{
+            return "none";
+       }
    }
 
    /**
@@ -1883,8 +1916,24 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Action method for the View>Tile Windows menu item.*/
     private void tileWindowsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                           
-        ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
-        wo.run("tile");
+        //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
+        //wo.run("tile");
+        MimsPlus[] windows = getOpenImages();
+        double[] massVals = new double[windows.length];
+        int[] win_ids = new int[windows.length];
+        int i = 0;
+        for (MimsPlus mp : windows) {
+             massVals[i] = mp.getMassValue();
+             i++;
+        }
+        Arrays.sort(massVals);
+        i = 0;
+        for (Double mass : massVals) {
+             int massValIdx = getMassIndices(mass, 0.1)[0];
+             win_ids[i] = windows[massValIdx].getID();
+             i++;
+        }
+        tileWindows(win_ids, prefs.getTileY());
     }
 
     /**
@@ -2432,6 +2481,7 @@ public Image getScreenCaptureCurrentImage() {
       Rectangle bounds = ic.getBounds();
       loc.x += bounds.x;
       loc.y += bounds.y;
+      System.out.println("Printing at "+ loc.x +", "+ loc.y);
       Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
       Robot robot = null;
       try {
@@ -3678,10 +3728,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     /**
      * This is a copy of imageJ's WindowOrganizer.tileWindows() method.
      *
-     * @param wList windows to be tiled.
+     * @param wList windows to be tiled. tileY amount of pixels to offset the vertical position by.
      */
-    public void tileWindows(int[] wList) {
-        final int XSTART=4, YSTART=80, XOFFSET=8, YOFFSET=24,MAXSTEP=200,GAP=2;
+    public void tileWindows(int[] wList, int tileY) {
+        final int XSTART=4, XOFFSET=8, YOFFSET=24,MAXSTEP=200,GAP=2;
+        int YSTART = 80 + tileY;
         int titlebarHeight = IJ.isMacintosh()?40:20;
 
         Dimension screen = IJ.getScreenSize();
@@ -3953,7 +4004,48 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        }
        return true;
    }
-
+   /**
+    * AutoSaveROI is the thread which is responsible for autosaving the ROI's
+    */
+    class AutoSaveROI implements Runnable {
+        public void run(){
+            for (;;){
+                try {
+                    // Save the ROI files to zip.
+                    String roisFileName = "/tmp/"+getImageFilePrefix();
+                    Roi[] rois = getRoiManager().getAllROIs();
+                    if (rois.length > 0){
+                       getRoiManager().saveMultiple(rois, roisFileName, false);
+                       //threadMessage("Autosaved at "+roisFileName);
+                    }else{
+                        //threadMessage("Nothing to autosave");
+                    }
+                    Thread.sleep(getInterval());
+                } catch (InterruptedException e){
+                    threadMessage("Autosave thread interrupted");
+                    break;
+                }
+            }
+        }
+    }
+    /**
+     * threadMessage will output a thread and it's message to the console
+     * @param message 
+     */
+    static void threadMessage(String message) {
+        String threadName =
+            Thread.currentThread().getName();
+        System.out.format("%s: %s%n",
+                          threadName,
+                          message);
+    }
+    public int getInterval(){
+        if (prefs != null){
+            return 1000*prefs.getAutoSaveInterval();
+        }else{
+            return 120000;
+        }
+    }
     /**
      * The FileOpenTask will open image files either in the background or
      * inline. To open a file in the background, use the following code sequence:
@@ -3972,6 +4064,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      * task in the background but that is the result of the naming convention
      * used by java.
      */
+    
     class FileOpenTask extends SwingWorker<Boolean, Void> {
 
        UI ui;
@@ -4388,7 +4481,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                          win_ids[i] = windows[massValIdx].getID();
                          i++;
                       }
-                      tileWindows(win_ids);
+                      tileWindows(win_ids, prefs.getTileY());
                    }
                 }
 
