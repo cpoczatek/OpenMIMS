@@ -73,6 +73,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     public static final long serialVersionUID = 1;
     public static final String NRRD_EXTENSION = ".nrrd";
+    public static final String NRRD_HEADER_EXTENSION = ".nhdr";
     public static final String MIMS_EXTENSION = ".im";
     public static final String ROIS_EXTENSION = ".rois.zip";
     public static final String ROI_EXTENSION = ".roi";
@@ -266,8 +267,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                openFileInBackground(file);
          }
       });
+      //Start Auto save thread for ROI
       Thread t = new Thread(new AutoSaveROI());
-        t.start();
+      t.start();
+        
       // Create and start the thread
       //Thread thread = new StartupScript(this);
       //thread.start();
@@ -4273,7 +4276,10 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              } else if (file.getName().endsWith(NRRD_EXTENSION)) {
                 image = new Nrrd_Reader(file);
                 isNRRD = true;
-             } else {
+             } else if (file.getName().endsWith(NRRD_HEADER_EXTENSION)) {
+                image = new Nrrd_Reader(file);
+                isNRRD = true;
+             }else {
                 return false;
              }
 
