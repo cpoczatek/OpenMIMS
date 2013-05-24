@@ -819,8 +819,10 @@ public class MimsHSIView extends javax.swing.JPanel {
        MimsRatioManager ratioManager = MimsRatioManager.getInstance();
        if (ratioManager == null) {
           ratioManager = new MimsRatioManager(this, ui);
+          ratioManager.showFrame();
+       }else{
+           ratioManager.showFront();
        }
-       ratioManager.showFrame();
 }//GEN-LAST:event_addRatiojButtonActionPerformed
 
     private void displayRatiojButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayRatiojButtonActionPerformed
@@ -1072,7 +1074,7 @@ public class MimsHSIView extends javax.swing.JPanel {
                 if (numIndices[k] == denIndices[l])
                    continue;
                 String listElement = numIndices[k] + ":" + denIndices[l];
-                if (numMass != denMass && ((prefNumVal > prefDenVal) && (numMass > denMass)) && !listModel.contains(listElement))
+                if (numMass != denMass /*&& ((prefNumVal > prefDenVal) && (numMass > denMass))*/ && !listModel.contains(listElement))
                    listModel.addElement(listElement);
              }
           }
@@ -1484,6 +1486,11 @@ public class MimsHSIView extends javax.swing.JPanel {
     // Show the frame.
     public void showFrame() {
         setLocation(400, 400);
+        setVisible(true);
+        toFront();
+        setExtendedState(NORMAL);
+    }
+    public void showFront() {
         setVisible(true);
         toFront();
         setExtendedState(NORMAL);
