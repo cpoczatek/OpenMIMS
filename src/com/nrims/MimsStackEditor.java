@@ -504,12 +504,20 @@ public class MimsStackEditor extends javax.swing.JPanel {
       if (options.contains("roi")) {
          MimsRoiManager roimanager = ui.getRoiManager();
          if (roimanager == null) {
-            ij.IJ.error("Error", "No ROI selected.");
+            JOptionPane.showMessageDialog(atManager,
+                "No ROI selected.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            //ij.IJ.error("Error", "No ROI selected.");
             return null;
          }
          ij.gui.Roi roi = roimanager.getRoi();
          if (roi == null) {
-            ij.IJ.error("Error", "No ROI selected.");
+             JOptionPane.showMessageDialog(atManager,
+                "No ROI selected.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            //ij.IJ.error("Error", "No ROI selected.");
             return null;
          }
       }
