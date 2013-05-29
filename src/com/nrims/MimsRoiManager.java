@@ -281,6 +281,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
                     JOptionPane.PLAIN_MESSAGE,null,null,"");
         addGroup(s);
+        if(partManager != null) partManager.updateGroups();
+        if(squaresManager != null) squaresManager.updateGroups();
     }
 
    /**
@@ -337,6 +339,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           groupListModel.removeElementAt(indexToDelete);
           groups.remove(groupNameToDelete);
        }
+       if(partManager != null) partManager.updateGroups();
+        if(squaresManager != null) squaresManager.updateGroups();
     }
 
    /**
@@ -380,6 +384,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           // Select new group.
           groupjlist.setSelectedValue(newName, true);
        }
+        if(partManager != null) partManager.updateGroups();
+        if(squaresManager != null) squaresManager.updateGroups();
     }
 
    /**
@@ -3336,7 +3342,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             setSize(new Dimension(480, 700));
 
         }
-
+        public void updateGroups(){
+            groupAssignmentPanel.updateJList(groupListModel.toArray());
+        }
         // Gray out textfield when "All" images radio button selected.
         public void actionPerformed(ActionEvent e) {
             if (e.getActionCommand().equals("Cancel")) {
@@ -3522,7 +3530,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             setSize(new Dimension(480, 590));
         }
 
-        
+        public void updateGroups(){
+            groupAssignmentPanel.updateJList(groupListModel.toArray());
+        }
          public void actionPerformed(ActionEvent e) {
 
             // Cancel
@@ -3792,6 +3802,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
          //setBorder(BorderFactory.createRaisedBevelBorder());
          setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+      }
+      public void updateJList(Object[] elements){
+           groupList.setListData(elements);
       }
 
     /**
