@@ -4166,7 +4166,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)
                   || fileName.endsWith(RATIO_EXTENSION) || fileName.endsWith(HSI_EXTENSION)
                   || fileName.endsWith(SUM_EXTENSION) || fileName.endsWith(ROIS_EXTENSION)
-                  || fileName.endsWith(ROI_EXTENSION)) {
+                  || fileName.endsWith(ROI_EXTENSION) || fileName.endsWith(NRRD_HEADER_EXTENSION)) {
           } else {
              String fileType;
              int lastIndexOf = fileName.lastIndexOf(".");
@@ -4184,7 +4184,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
           try {
              if (file.getAbsolutePath().endsWith(NRRD_EXTENSION)
-                     || file.getAbsolutePath().endsWith(MIMS_EXTENSION)) {
+                     || file.getAbsolutePath().endsWith(MIMS_EXTENSION) || file.getAbsolutePath().endsWith(NRRD_HEADER_EXTENSION)) {
                 onlyShowDraggedFile = false;
                 if(!loadMIMSFile(file))
                    return false;
@@ -4421,7 +4421,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
       stopButton.setEnabled(false);
       setProgress(0);
       currentlyOpeningImages = false;
-      previousFileCanceled = false;
+     
     }
 
         public void doneLoadingFile() {
@@ -4466,7 +4466,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    }
                 }
 
-                if (isSilentMode() == false) {                   
+                if (isSilentMode() == false) {
                    if (wpMap.size() > 0 || previousFileCanceled == false) {
                       applyWindowState();
                    } else {
@@ -4570,6 +4570,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              for (int i = 0; i < mp.length; i++) {
                 cbControl.addWindowtoList(mp[i]);
              }
+              previousFileCanceled = false;
         }
 
       private void openProcessFailedOrCanceled() {         
