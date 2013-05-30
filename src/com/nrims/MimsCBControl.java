@@ -243,7 +243,7 @@ public class MimsCBControl extends javax.swing.JPanel {
       
       // Displays polygon.
       XYPolygonAnnotation a = new XYPolygonAnnotation(new double[] {x1, y1, x2, y2, x3, y3, x4, y4},
-              new BasicStroke(1), new Color(200, 200, 255, 100), new Color(200, 200, 255, 100));
+              new BasicStroke(1), new Color(125, 125, 175, 100), new Color(125, 125, 175, 100));
       XYBarRenderer renderer = (XYBarRenderer) plot.getRenderer();
       renderer.removeAnnotations();
       renderer.addAnnotation(a, Layer.BACKGROUND);

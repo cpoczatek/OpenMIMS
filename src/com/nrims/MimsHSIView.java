@@ -1386,7 +1386,7 @@ public class MimsHSIView extends javax.swing.JPanel {
       // Create the button group.
       numeratorGroup = new ButtonGroup();
       denomatorGroup = new ButtonGroup();
-
+      int h = 0;
       // Loop over masses and create buttons
       for (int i = 0; i < massNames.length; i++){
 
@@ -1395,7 +1395,7 @@ public class MimsHSIView extends javax.swing.JPanel {
          jrb_num.setName((new Integer(i)).toString());
          JRadioButton jrb_den = new JRadioButton("m"+massNames[i]);
          jrb_den.setName((new Integer(i)).toString());
-
+         
          // Add radiobutton to the group.
          numeratorGroup.add(jrb_num);
          denomatorGroup.add(jrb_den);
@@ -1403,6 +1403,7 @@ public class MimsHSIView extends javax.swing.JPanel {
          // Add radiobutton to the panel.
          numeratorPanel.add(jrb_num);
          denomatorPanel.add(jrb_den);
+         h+= jrb_num.getHeight()+15;
       }
 
       // Add "1" to both numerator and denominator options.
@@ -1423,7 +1424,7 @@ public class MimsHSIView extends javax.swing.JPanel {
       add(new JSeparator(JSeparator.HORIZONTAL));
       add(buttonPanel);
 
-      setSize(new Dimension(275, 325));
+      setSize(new Dimension(275, 240+h));
    }
 
    public void actionPerformed(ActionEvent e) {
