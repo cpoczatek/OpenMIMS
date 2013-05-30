@@ -831,13 +831,17 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         pm.setBorderPainted(true);
         pm.setBorder(new javax.swing.border.LineBorder(Color.BLACK));
         addPopupItem("Duplicate");
-        addPopupItem("Combine");
+        addPopupItem("Intersection (and)");
+        addPopupItem("Combine (or)");
+        addPopupItem("Complement (not)");
         addPopupItem("Exclusive (xor)");
         addPopupItem("Split");
         addPopupItem("Particles");
         addPopupItem("Squares");
         addPopupItem("Add [t]");
         addPopupItem("Reorder all");
+        addPopupItem("Push to IJ Roi Manager");
+        addPopupItem("Pull from IJ Roi Manager");
         add(pm);
     }
 
@@ -889,8 +893,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             pm.show(this, ploc.x, bloc.y);
         } else if (command.equals("Duplicate")) {
             duplicate();
-        } else if (command.equals("Combine")) {
+        } else if (command.equals("Intersection (and)")) {
+            intersection();
+        } else if (command.equals("Combine (or)")) {
             combine();
+        } else if (command.equals("Complement (not)")) {
+            complement();
         } else if (command.equals("Exclusive pixels")) {
             exclusiveToRoi();
         } else if (command.equals("Split")) {
@@ -907,9 +915,26 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             bAllPlanes = cbAllPlanes.isSelected();
         } else if (command.equals("Reorder all")) {
            reorderAll();
+        } else if (command.equals("Push to IJ Roi Manager")) {
+           pushRoiToIJ();
+        } else if (command.equals("Pull from IJ Roi Manager")) {
+           pullRoiFromIJ();
         }
     }
-
+    public void pushRoiToIJ(){
+        Roi[] lrois = getAllROIsInList();
+        RoiManager manager = RoiManager.getInstance(); 
+        for (int i = 0; i < lrois.length; i++){
+            manager.addRoi(lrois[i]);
+        }
+    }
+    public void pullRoiFromIJ(){
+        RoiManager manager = RoiManager.getInstance(); 
+        Roi[] lrois = manager.getSelectedRoisAsArray();
+        for (int i = 0; i < lrois.length; i++){
+            add(lrois[i]);
+        }
+    }
     /**
      * Checks to see if the group assigned to roiName is contained within groupNames.
      */
@@ -2149,7 +2174,114 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             Recorder.record("mimsRoiManager", "Combine");
         }
     }
-
+     /**
+     * The action method for the "intersection" button.
+     * Finds the intersection of several ROI's.
+     */
+    private void intersection() {
+       ImagePlus imp = getImage();
+        if (imp == null) {
+            return;
+        }
+        int[] indexes = roijlist.getSelectedIndices();
+                
+        
+        if (indexes.length == 0) {
+            indexes = getAllIndexes();
+        }
+        
+        //loop over selected rois
+        for (int i = 0; i < 1; i++) {
+            Roi roi = (Roi) rois.get(roiListModel.get(indexes[i]).toString());
+            
+            //skip 0 area rois
+            if (roi.isLine() || roi.getType() == Roi.POINT) {
+                continue;
+            }
+            
+            ShapeRoi sroi = new ShapeRoi(roi);
+            sroi.setName(roi.getName());
+            
+            //loop over all other rois
+            boolean unchanged=true;
+            for (Object key : rois.keySet()) {
+                Roi subtractroi = (Roi) rois.get(key);
+                //don't subract self
+                if(roi==subtractroi) { continue; }
+            
+                ShapeRoi subshaperoi = new ShapeRoi(subtractroi);
+                
+                //if intersection is empty do nothing
+                ShapeRoi intersect = (ShapeRoi) sroi.clone();
+                intersect.and(subshaperoi);
+                if (intersect.getBounds().width == 0 || intersect.getBounds().height == 0) { continue; }
+                
+                sroi.and(subshaperoi);
+                unchanged = false;
+            }
+            
+            //skip if 0 area/empty
+            Rectangle r = sroi.getBounds();
+            System.out.println("Roi: " + sroi.getName() + " w: " + r.width + " h: "+ r.height + " unchanged: " + unchanged);
+            if(r.width == 0 || r.height == 0) {
+                continue;
+            }
+            if(unchanged) { continue; }
+            
+            
+            //finally add roi
+            add(sroi);
+        }
+    }
+     /**
+     * The action method for the "complement" button.
+     * Finds the complement of several ROI's.
+     */
+    private void complement() {
+       ImagePlus imp = getImage();
+        if (imp == null) {
+            return;
+        }
+        int[] indexes = roijlist.getSelectedIndices();
+                
+        
+        if (indexes.length == 0) {
+            indexes = getAllIndexes();
+        }
+        Roi fullroi = new Roi(0, 0, imp.getWidth(), imp.getHeight());
+        //loop over selected rois
+        ShapeRoi froi = new ShapeRoi(fullroi);
+            froi.setName(froi.getName());
+        for (int i = 0; i < indexes.length; i++) {
+            Roi roi = (Roi) rois.get(roiListModel.get(indexes[i]).toString());
+            
+            //skip 0 area rois
+            if (roi.isLine() || roi.getType() == Roi.POINT) {
+                continue;
+            }
+             
+            ShapeRoi sroi = new ShapeRoi(roi);
+             froi.not(sroi);
+        }
+         Rectangle r = froi.getBounds();
+            System.out.println("Roi: " + froi.getName() + " w: " + r.width + " h: "+ r.height + " unchanged: ");
+            if(r.width != 0 && r.height != 0) {
+                add(froi);
+            }
+            
+    }
+    /*private void roiSplit(){
+        ImagePlus imp = getImage();
+        if (imp == null) {
+            return;
+        }
+        int[] indexes = roijlist.getSelectedIndices();
+                
+        
+        if (indexes.length == 0) {
+            indexes = getAllIndexes();
+        }
+    }*/
     private void exclusiveToRoi() {
         ImagePlus imp = getImage();
         if (imp == null) {
