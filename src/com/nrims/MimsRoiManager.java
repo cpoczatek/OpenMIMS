@@ -842,6 +842,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         addPopupItem("Reorder all");
         addPopupItem("Push to IJ Roi Manager");
         addPopupItem("Pull from IJ Roi Manager");
+        addPopupItem("Split ROI");
         add(pm);
     }
 
@@ -919,20 +920,26 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            pushRoiToIJ();
         } else if (command.equals("Pull from IJ Roi Manager")) {
            pullRoiFromIJ();
+        } else if (command.equals("Split ROI")) {
+           roiSplit();
         }
     }
     public void pushRoiToIJ(){
         Roi[] lrois = getAllROIsInList();
-        RoiManager manager = RoiManager.getInstance(); 
-        for (int i = 0; i < lrois.length; i++){
-            manager.addRoi(lrois[i]);
+        RoiManager manager = RoiManager.getInstance();
+        if(manager != null){
+            for (int i = 0; i < lrois.length; i++){
+                manager.addRoi(lrois[i]);
+            }
         }
     }
     public void pullRoiFromIJ(){
         RoiManager manager = RoiManager.getInstance(); 
         Roi[] lrois = manager.getSelectedRoisAsArray();
-        for (int i = 0; i < lrois.length; i++){
-            add(lrois[i]);
+        if(manager != null){
+            for (int i = 0; i < lrois.length; i++){
+                add(lrois[i]);
+            }
         }
     }
     /**
@@ -2270,18 +2277,69 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             }
             
     }
-    /*private void roiSplit(){
+    private void roiSplit(){
         ImagePlus imp = getImage();
+        imp.killRoi();
+        ImagePlus workImp = imp.duplicate();
         if (imp == null) {
             return;
         }
         int[] indexes = roijlist.getSelectedIndices();
-                
-        
         if (indexes.length == 0) {
             indexes = getAllIndexes();
         }
-    }*/
+        ShapeRoi s1 = null, s2 = null;
+        for (int i = 0; i < indexes.length; i++) {
+            Roi roi = (Roi) rois.get(roiListModel.get(indexes[i]).toString());
+            if (roi.isLine() || roi.getType() == Roi.POINT) {
+                continue;
+            }
+            Calibration cal = imp.getCalibration();
+            if (cal.xOrigin != 0.0 || cal.yOrigin != 0.0) {
+                roi = (Roi) roi.clone();
+                Rectangle r = roi.getBounds();
+                roi.setLocation(r.x + (int) cal.xOrigin, r.y + (int) cal.yOrigin);
+            }
+            if (s1 == null) {
+                s1 = new ShapeRoi(roi);
+                if (s1 == null) {
+                    return;
+                }
+            } else {
+                s2 = new ShapeRoi(roi);
+                if (s2 == null) {
+                    continue;
+                }
+                if (roi.isArea()) {
+                    s1.or(s2);
+                }
+            }
+        }
+        
+        if (s1 != null) {
+            Roi roi = s1.shapeToRoi();
+            ImageStack stack = workImp.getStack();
+            int stackSize = stack.getSize();
+            for(int i = 0; i <stackSize-1;i++){
+                stack.deleteLastSlice();
+            }
+            workImp.setStack(stack);
+            ij.WindowManager.setTempCurrentImage(workImp);
+            ImageProcessor ip = workImp.getProcessor();
+            ip.setValue(255);
+            ip.fill(roi);
+            ip.setValue(0);
+            ip.fillOutside(roi);
+            IJ.run("Convert to Mask", " ");
+            //IJ.run("Dilate", "");
+            //IJ.run("Erode", "");
+            IJ.run("Watershed", "");
+            IJ.run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing clear add slice");
+            pullRoiFromIJ();
+            RoiManager manager = RoiManager.getInstance();
+            manager.close();
+        }
+    }
     private void exclusiveToRoi() {
         ImagePlus imp = getImage();
         if (imp == null) {
