@@ -531,6 +531,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
       if (atManager.med.isSelected()) {
          options += "medianize ";
       }
+      if (atManager.show.isSelected()) {
+         options += "show ";
+      }
 
       return options;
    }
@@ -1622,7 +1625,11 @@ public class MimsStackEditor extends javax.swing.JPanel {
      * Launches the TrackManager to auto-track the image.
      */
     private void autoTrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoTrackButtonActionPerformed
-       showTrackManager();
+        if (atManager == null){
+            showTrackManager();
+        }else{
+            atManager.showFrame();
+        }
     }//GEN-LAST:event_autoTrackButtonActionPerformed
 
     /**
@@ -1634,7 +1641,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
     }//GEN-LAST:event_untrackButtonActionPerformed
 
    /**
-    * Launches the Autotrack manager and displayes the frame.
+    * Launches the Autotrack manager and displays the frame.
     */
    public void showTrackManager() {
       MimsPlus currentImage = (MimsPlus) WindowManager.getCurrentImage();
@@ -1787,8 +1794,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
    public ImagePlus cropImage(ImagePlus img) {
 
       ImageStack tempStack = img.getImageStack();
-      ImageProcessor tempProcessor = img.getProcessor();
-      ij.process.StackProcessor stackproc = new ij.process.StackProcessor(tempStack, tempProcessor);
 
       MimsRoiManager roimanager = ui.getRoiManager();
       if (roimanager == null) {
@@ -1798,13 +1803,47 @@ public class MimsStackEditor extends javax.swing.JPanel {
       if (roi == null) {
          return null;
       }
-      int width = roi.getBoundingRect().width;
-      int height = roi.getBoundingRect().height;
-      int x = roi.getBoundingRect().x;
-      int y = roi.getBoundingRect().y;
-      img.getProcessor().setRoi(roi);
-      img.setStack("cropped", stackproc.crop(x, y, width, height));
-      img.killRoi();
+     ImageProcessor mask = roi.getMask();
+      if(mask == null){
+        ImageProcessor tempProcessor = img.getProcessor();
+        ij.process.StackProcessor stackproc = new ij.process.StackProcessor(tempStack, tempProcessor);
+        int width = roi.getBoundingRect().width;
+        int height = roi.getBoundingRect().height;
+        int x = roi.getBoundingRect().x;
+        int y = roi.getBoundingRect().y;
+        img.getProcessor().setRoi(roi);
+        img.setStack("cropped", stackproc.crop(x, y, width, height));
+        img.killRoi();
+      }else{
+        ImagePlus tempImg = img.duplicate();
+        img.killRoi();
+        ImageProcessor tempProcessor = tempImg.getProcessor();
+        tempImg.killRoi();
+        //tempProcessor.setRoi(roi);
+        //tempProcessor.setValue(0);
+        //tempProcessor.fillOutside(roi);
+        //tempStack.update(tempProcessor);
+        //tempProcessor.setMask(mask);
+        //tempProcessor.setRoi(roi);
+        tempStack = tempImg.getStack();
+        int stackSize = tempStack.getSize();
+        for (int i = 1; i <= stackSize; i++){
+          tempProcessor = tempStack.getProcessor(i);
+          tempProcessor.setValue(0);
+          tempProcessor.fillOutside(roi);
+          
+        }
+        ij.process.StackProcessor stackproc = new ij.process.StackProcessor(tempStack, tempProcessor);
+        int width = roi.getBoundingRect().width;
+        int height = roi.getBoundingRect().height;
+        int x = roi.getBoundingRect().x;
+        int y = roi.getBoundingRect().y;
+        img.getProcessor().setRoi(roi);
+        img.setStack("cropped", stackproc.crop(x, y, width, height));
+        img.killRoi();
+        
+        
+     }
 
       return img;
    }
@@ -1878,6 +1917,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
       JRadioButton norm;
       JRadioButton eq;
       JRadioButton med;
+      JRadioButton show;
       JButton cancelButton;
       JButton okButton;
       MimsPlus currentImage;
@@ -1921,6 +1961,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
          eq.setSelected(true);
          med = new JRadioButton("Medianize tracking image");
          med.setSelected(true);
+         show = new JRadioButton("Show temp image");
+         show.setSelected(false);
 
          buttonGroup.add(all);
          buttonGroup.add(some);
@@ -1942,6 +1984,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
          jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
          jPanel.add(med);
          jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+         jPanel.add(show);
+         jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
          // Set up "OK" and "Cancel" buttons.
          JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -1958,7 +2002,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
          setLayout(new BorderLayout());
          add(jPanel, BorderLayout.PAGE_START);
          add(buttonPanel, BorderLayout.PAGE_END);
-         setSize(new Dimension(375, 350));
+         setSize(new Dimension(375, 385));
 
       }
 
@@ -2002,18 +2046,19 @@ public class MimsStackEditor extends javax.swing.JPanel {
                }
 
                ImagePlus tempImage = getSubStack(currentImage, includeList);
-
+               
                // Set options.
                tempImage = setOptions(tempImage, options);
 
                // Call Autotrack algorithm.
                THREAD_STATE = WORKING;
                AutoTrack temptrack = new AutoTrack(ui, tempImage);
+               if (options.contains("show")) tempImage.show();
                temptrack.setIncludeList(includeList);
                Thread thread = new Thread(temptrack);
                thread.start();
-
-               tempImage.close();
+               
+               //tempImage.close();
             } catch (Exception ex) {
                notifyComplete(null);
             }
