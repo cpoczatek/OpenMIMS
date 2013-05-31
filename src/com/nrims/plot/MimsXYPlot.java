@@ -63,6 +63,10 @@ public class MimsXYPlot extends XYPlot {
 
     /**
      * Draws the plot within the specified area on a graphics device.
+     * 
+     * This is a copied and modified version of the parent class method.
+     * Could not find another way to change.
+     * See end of method for modifications.
      *
      * @param g2  the graphics device.
      * @param area  the plot area (in Java2D space).
