@@ -85,7 +85,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public static final String SAVE_IMAGE = "Save Image";
     public static final String SAVE_SESSION = "Save Session";
 
-    public int maxMasses = 8;
+    public int maxMasses = 25;
     private double medianFilterRadius = 1;
     
     private boolean bSyncStack = true;
@@ -2480,7 +2480,7 @@ public Image getScreenCaptureCurrentImage() {
       Point loc = win.getLocation();
       ImageCanvas ic = win.getCanvas();
       ic.update(ic.getGraphics());
-
+      
       Rectangle bounds = ic.getBounds();
       loc.x += bounds.x;
       loc.y += bounds.y;
@@ -2488,7 +2488,7 @@ public Image getScreenCaptureCurrentImage() {
       Rectangle r = new Rectangle(loc.x, loc.y, bounds.width, bounds.height);
       Robot robot = null;
       try {
-         robot = new Robot();
+          robot = new Robot();
       } catch (AWTException ex) {
          IJ.error("Unable to capture image");
          return null;
