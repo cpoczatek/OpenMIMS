@@ -515,7 +515,7 @@ public class ReportGenerator extends javax.swing.JFrame implements MouseListener
             }
         } catch (Exception x) {
             x.printStackTrace();
-            IJ.error("Error writing " + reportFile.getName());
+            IJ.error("Error writing " + reportFile.getName() +":" + x.getMessage());
         }
     }
 

@@ -1291,6 +1291,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jMenuBar1 = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         openNewMenuItem = new javax.swing.JMenuItem();
+        openNextMenuItem = new javax.swing.JMenuItem();
         jMenuItem1 = new javax.swing.JMenuItem();
         saveMIMSjMenuItem = new javax.swing.JMenuItem();
         jSeparator7 = new javax.swing.JSeparator();
@@ -1387,6 +1388,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         fileMenu.add(openNewMenuItem);
         openNewMenuItem.getAccessibleContext().setAccessibleDescription("Open a MIMS Image");
+
+        openNextMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        openNextMenuItem.setText("Open Next");
+        openNextMenuItem.setToolTipText("Open next MIMS image(.im/.nrrd) in folder of current image.");
+        openNextMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openNextMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(openNextMenuItem);
 
         jMenuItem1.setText(SAVE_IMAGE);
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
@@ -2090,6 +2101,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         //getmimsAction().writeAction(new File(baseFileName+ACT_EXTIONSION));
 
       } catch (FileNotFoundException e) {
+          JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
          e.printStackTrace();
          return false;
       } catch (IOException e) {
@@ -2450,7 +2462,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
       FileSaver saver = new ij.io.FileSaver(imp2);
       saver.saveAsPng(file.getAbsolutePath());
    } catch (Exception e) {
-      ij.IJ.error("Save Error", "Error saving file.");
+      ij.IJ.error("Save Error", "Error saving file:" + e.getMessage());
       e.printStackTrace();
    } finally {
       setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -2572,7 +2584,7 @@ private boolean saveMIMS(java.awt.event.ActionEvent evt) {
       }
    } catch (Exception e) {
       if (!silentMode) {
-         ij.IJ.error("Save Error", "Error saving file.");
+         ij.IJ.error("Save Error", "Error saving file:" + e.getMessage());
       } else
          e.printStackTrace();
       return false;
@@ -2872,6 +2884,10 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     this.getOpenMassImages()[0].setSlice(startplane);
 }//GEN-LAST:event_exportQVisMenuItemActionPerformed
 
+    private void openNextMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNextMenuItemActionPerformed
+        openNext();
+    }//GEN-LAST:event_openNextMenuItemActionPerformed
+
    /**
     * Applies a correction to the current image and writes the file
     * to fileName.
@@ -2899,7 +2915,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
          return false;
       } catch (Exception e) {
          if (!silentMode)
-            ij.IJ.error("Error", "Error applying correction and/or saving file.");
+            ij.IJ.error("Error", "Error applying correction and/or saving file:" + e.getMessage());
          else
             e.printStackTrace();
          return false;
@@ -4050,6 +4066,81 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
     }
     /**
+     * getNext: modified version of getNext function from NextImageOpener plugin in ImageJ, modified for OpenMIMS
+     * @param path
+     * @param imageName
+     * @param forward
+     * @return 
+     */
+    public String getNext(String path, String imageName, boolean forward){
+        File dir = new File(path);
+        if (!dir.isDirectory()) return null;
+        String[] names = dir.list();
+        ij.util.StringSorter.sort(names);
+        int thisfile = -1;
+        for (int i=0; i<names.length; i++) {
+            if (names[i].equals(imageName)) {
+                thisfile = i;
+                break;
+            }
+        }
+         //System.out.println("OpenNext.thisfile:" + thisfile);
+        if(thisfile == -1) return null;// can't find current image
+        
+        // make candidate the index of the next file
+        int candidate = thisfile + 1;
+        if (!forward) candidate = thisfile - 1;
+        if (candidate<0) candidate = names.length - 1;
+        if (candidate==names.length) candidate = 0;
+        // keep on going until an image file is found or we get back to beginning
+        while (candidate!=thisfile) {
+            String nextPath = path + "/" + names[candidate];
+             //System.out.println("OpenNext: "+ candidate + "  " + names[candidate]);
+            File nextFile = new File(nextPath);
+            boolean canOpen = true;
+            if (names[candidate].startsWith(".") || nextFile.isDirectory())
+                canOpen = false;
+            if (canOpen) {
+                 String fileName = nextFile.getName();
+                    if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)) {
+                    }else{
+                        canOpen = false;
+                    }
+            }
+            if (canOpen)
+                    return nextPath;
+            else {// increment again
+                if (forward)
+                    candidate = candidate + 1;
+                else
+                    candidate = candidate - 1;
+                if (candidate<0) candidate = names.length - 1;
+                if (candidate == names.length) candidate = 0;
+            }
+            
+        }
+        //System.out.println("OpenNext: Search failed");
+        return null;
+    }
+    public void openNext(){
+        if (image != null){
+            String imageName = image.getImageFile().getName();
+            String path = getLastFolder();
+            String nextPath = getNext(path, imageName, true);
+             File nextFile = new File(nextPath);
+            if(nextFile != null){
+                 System.out.println(nextFile.getName());
+                if (checkCurrentFileStatusBeforeOpening()){
+                    openFileInBackground(nextFile);
+                }
+            }else{
+                JOptionPane.showMessageDialog(this, "Unable to find next file", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }else{
+            JOptionPane.showMessageDialog(this, "No image loaded", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    /**
      * The FileOpenTask will open image files either in the background or
      * inline. To open a file in the background, use the following code sequence:
      *
@@ -4235,6 +4326,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 getRoiManager().showFrame();
              }
           } catch (Exception e) {
+             IJ.error("Failed to open " + file + ":" + e.getMessage() + "\n");
              e.printStackTrace();
              return false;
           }
@@ -4405,7 +4497,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              }
           } catch (Exception e) {
              if (!ui.silentMode) {
-                IJ.error("Failed to open " + file + "\n");
+                IJ.error("Failed to open " + file + ":" + e.getMessage() + "\n");
                 e.printStackTrace();
              } else {
                 e.printStackTrace();
@@ -4619,6 +4711,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JSeparator jSeparator8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JMenuItem openNewMenuItem;
+    private javax.swing.JMenuItem openNextMenuItem;
     private javax.swing.JMenuItem preferencesMenuItem;
     private javax.swing.JMenuItem restoreMimsMenuItem;
     private javax.swing.JMenuItem roiManagerMenuItem;
