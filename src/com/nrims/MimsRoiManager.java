@@ -924,6 +924,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            roiSplit();
         }
     }
+    /**
+     * pushRoitoIJ: push all ROI's in OpenMIMS Roi manager and imports them to ImageJ Roi manager. 
+     * Note: nothing will happen if the ImageJ ROI manager has not been opened at least once
+     * or there are no ROI's to push
+     */
     public void pushRoiToIJ(){
         Roi[] lrois = getAllROIsInList();
         RoiManager manager = RoiManager.getInstance();
@@ -931,9 +936,29 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             for (int i = 0; i < lrois.length; i++){
                 manager.addRoi(lrois[i]);
             }
+            if (lrois.length > 0) ui.updateAllImages();
         }
     }
+    /**
+     * pullRoiFromIJ: pull all ROI's from ImageJ ROI manager and imports them to OpenMIMS Manager.
+     * Note: nothing will happen if the ImageJ ROI manager has not been opened at least once
+     * or there are no ROI's to pull
+     */
     public void pullRoiFromIJ(){
+        RoiManager manager = RoiManager.getInstance(); 
+        Roi[] lrois = manager.getSelectedRoisAsArray();
+        if(manager != null){
+            for (int i = 0; i < lrois.length; i++){
+                add(lrois[i]);
+            }
+            if (lrois.length > 0) ui.updateAllImages();
+        }
+    }
+    /**
+     * pullRoiFromIJNoUpdate: pull all ROI's from ImageJ ROI manager and imports them to OpenMIMS Manager, without updating images.
+     * Note: used specifically for roiSplit due to weird issue with redrawing.
+     */
+    public void pullRoiFromIJNoUpdate(){
         RoiManager manager = RoiManager.getInstance(); 
         Roi[] lrois = manager.getSelectedRoisAsArray();
         if(manager != null){
@@ -2277,6 +2302,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             }
             
     }
+    /**
+     * roiSplit(): Takes one or more ROI's, combines them, filling the roi and outside with white and black respectively,
+     * thresholding, watersheding, then running Analyze Particles, resulting in a split ROI
+     */
     private void roiSplit(){
         ImagePlus imp = getImage();
         imp.killRoi();
@@ -2284,6 +2313,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         if (imp == null) {
             return;
         }
+        //combine all selected ROI's
         int[] indexes = roijlist.getSelectedIndices();
         if (indexes.length == 0) {
             indexes = getAllIndexes();
@@ -2326,16 +2356,20 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             workImp.setStack(stack);
             ij.WindowManager.setTempCurrentImage(workImp);
             ImageProcessor ip = workImp.getProcessor();
+            //fill inside and outside
             ip.setValue(255);
             ip.fill(roi);
             ip.setValue(0);
             ip.fillOutside(roi);
+            //run IJ effects
             IJ.run("Convert to Mask", " ");
             //IJ.run("Dilate", "");
             //IJ.run("Erode", "");
             IJ.run("Watershed", "");
             IJ.run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing clear add slice");
-            pullRoiFromIJ();
+            //resulting roi's from IJ operation creates the ROIs in the IJ Roi manager, so we want to pull them
+            pullRoiFromIJNoUpdate();
+            //for convenience's sake, we close the IJ ROI window.
             RoiManager manager = RoiManager.getInstance();
             manager.close();
         }

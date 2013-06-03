@@ -4122,6 +4122,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         //System.out.println("OpenNext: Search failed");
         return null;
     }
+    /**
+     * openNext(): called to open next file in same folder as current image.
+     */
     public void openNext(){
         if (image != null){
             String imageName = image.getImageFile().getName();
