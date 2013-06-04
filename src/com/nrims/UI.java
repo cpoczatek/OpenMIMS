@@ -1942,11 +1942,82 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
         Arrays.sort(massVals);
         i = 0;
-        for (Double mass : massVals) {
-             int massValIdx = getMassIndices(mass, 0.1)[0];
-             win_ids[i] = windows[massValIdx].getID();
-             i++;
-        }
+            /*Change: 6/4/2013
+           * previous code:
+           * for (Double mass : massVals) {
+           *   int massValIdx = getMassIndices(mass, 0.1)[0];
+           *   win_ids[i] = windows[massValIdx].getID();
+           *   i++;
+           *}
+           * 
+           * the problem with that if there are any other values from MassIndices, they are ignored and only window
+           * out of the similar mass images is set in the win_ids array.
+           * 
+           * below are two solutions. For convienance, it seems easier to tile similar mass images in columns
+           * if such a situation is detected where all the groups of similar masses are equal in length, then this sorting
+           * takes place. If this is not the case then it simply orders all the returned ids by the order they are found in.
+           * 
+           * a better way to do this probably exists, as it adds a few seconds to opening up images
+           */
+
+          boolean flip = true;
+          int col_size = 0;
+          //loop through all mass indice groups to see if they all have same length
+          for (Double mass: massVals) {
+             int[] massValIds = getMassIndices(mass, 0.1);
+             if (col_size == 0){
+                 col_size = massValIds.length;
+             }else if (col_size != massValIds.length){
+                 flip = false;
+             }
+          }
+          //if all have same length, sort similar mass indices into columns
+          if (flip == true){
+              int row_size = win_ids.length/col_size;
+              for (int j = 0; j < massVals.length; j+= col_size) {
+                    Double mass = massVals[j];
+                    int[] massValIds = getMassIndices(mass, 0.1);
+                        for (int k = 0; k < massValIds.length; k++){
+                            int massValIdx = massValIds[k];
+                            win_ids[(j/col_size)+(k*row_size)] = windows[massValIdx].getID();
+                        }
+
+              }
+          //else we just order the mass indices in the order we find them.
+          }else{        
+            for (int j = 0; j < massVals.length; j++) {
+               Double mass = massVals[j];
+               if (j > 0){//don't need to do any checking for first group
+                   Double prevMass = massVals[j-1];
+                   if (prevMass != mass){
+                       int[] massValIds = getMassIndices(mass, 0.1);
+                       for (int k = 0; k < massValIds.length; k++){
+                          int massValIdx = massValIds[k];
+                          int id = windows[massValIdx].getID();
+                          boolean exists = false;
+                          //because of the possibility of a massIndice group > 1, we need to check for repeats
+                          if (massValIds.length != 1){
+                            for (int l = 0; l < i; l++){
+                                if (win_ids[l] == id) exists = true; 
+                            }
+                            if (!exists) {
+                                win_ids[i] = id;
+                                i++;
+                            }
+                          }
+                       }
+                   }
+               }else{
+                   int[] massValIds = getMassIndices(mass, 0.1);
+                       for (int k = 0; k < massValIds.length; k++){
+                          int massValIdx = massValIds[k];
+                          win_ids[i] = windows[massValIdx].getID();
+                          i++;
+                       }
+               }
+
+            }
+          }
         tileWindows(win_ids, prefs.getTileY());
     }
 
@@ -4577,10 +4648,81 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       }
                       Arrays.sort(massVals);
                       i = 0;
-                      for (Double mass : massVals) {
-                         int massValIdx = getMassIndices(mass, 0.1)[0];
-                         win_ids[i] = windows[massValIdx].getID();
-                         i++;
+                      /*Change: 6/4/2013
+                       * previous code:
+                       * for (Double mass : massVals) {
+                       *   int massValIdx = getMassIndices(mass, 0.1)[0];
+                       *   win_ids[i] = windows[massValIdx].getID();
+                       *   i++;
+                       *}
+                       * 
+                       * the problem with that if there are any other values from MassIndices, they are ignored and only window
+                       * out of the similar mass images is set in the win_ids array.
+                       * 
+                       * below are two solutions. For convienance, it seems easier to tile similar mass images in columns
+                       * if such a situation is detected where all the groups of similar masses are equal in length, then this sorting
+                       * takes place. If this is not the case then it simply orders all the returned ids by the order they are found in.
+                       * 
+                       * a better way to do this probably exists, as it adds a few seconds to opening up images
+                       */
+                     
+                      boolean flip = true;
+                      int col_size = 0;
+                      //loop through all mass indice groups to see if they all have same length
+                      for (Double mass: massVals) {
+                         int[] massValIds = getMassIndices(mass, 0.1);
+                         if (col_size == 0){
+                             col_size = massValIds.length;
+                         }else if (col_size != massValIds.length){
+                             flip = false;
+                         }
+                      }
+                      //if all have same length, sort similar mass indices into columns
+                      if (flip == true){
+                          int row_size = win_ids.length/col_size;
+                          for (int j = 0; j < massVals.length; j+= col_size) {
+                                Double mass = massVals[j];
+                                int[] massValIds = getMassIndices(mass, 0.1);
+                                    for (int k = 0; k < massValIds.length; k++){
+                                        int massValIdx = massValIds[k];
+                                        win_ids[(j/col_size)+(k*row_size)] = windows[massValIdx].getID();
+                                    }
+                                
+                          }
+                      //else we just order the mass indices in the order we find them.
+                      }else{        
+                        for (int j = 0; j < massVals.length; j++) {
+                           Double mass = massVals[j];
+                           if (j > 0){//don't need to do any checking for first group
+                               Double prevMass = massVals[j-1];
+                               if (prevMass != mass){
+                                   int[] massValIds = getMassIndices(mass, 0.1);
+                                   for (int k = 0; k < massValIds.length; k++){
+                                      int massValIdx = massValIds[k];
+                                      int id = windows[massValIdx].getID();
+                                      boolean exists = false;
+                                      //because of the possibility of a massIndice group > 1, we need to check for repeats
+                                      if (massValIds.length != 1){
+                                        for (int l = 0; l < i; l++){
+                                            if (win_ids[l] == id) exists = true; 
+                                        }
+                                        if (!exists) {
+                                            win_ids[i] = id;
+                                            i++;
+                                        }
+                                      }
+                                   }
+                               }
+                           }else{
+                               int[] massValIds = getMassIndices(mass, 0.1);
+                                   for (int k = 0; k < massValIds.length; k++){
+                                      int massValIdx = massValIds[k];
+                                      win_ids[i] = windows[massValIdx].getID();
+                                      i++;
+                                   }
+                           }
+
+                        }
                       }
                       tileWindows(win_ids, prefs.getTileY());
                    }
