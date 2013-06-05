@@ -840,8 +840,10 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
       // (Pre)append slices, include labels.
       if (pre) {
+          if (tempImage.getBitsPerPixel() == 2){
          for (int mass = 0; mass < numberMasses; mass++) {
             ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());
+             
             for (int i = tempImage.getNImages(); i >= 1; i--) {
                tempImage.setStackIndex(i - 1);
                try {
@@ -853,20 +855,55 @@ public class MimsStackEditor extends javax.swing.JPanel {
             }
             images[mass].setStack(null, tempstacks[mass]);
          }
-      } else {
-         for (int mass = 0; mass < numberMasses; mass++) {
-            ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());
-            for (int i = 1; i <= tempImage.getNImages(); i++) {
+        }else if (tempImage.getBitsPerPixel() == 4){
+            for (int mass = 0; mass < numberMasses; mass++) {
+            FloatProcessor sp = new FloatProcessor(tempImage.getWidth(), tempImage.getHeight());
+             
+            for (int i = tempImage.getNImages(); i >= 1; i--) {
                tempImage.setStackIndex(i - 1);
                try {
                   sp.setPixels(tempImage.getPixels(mass));
                } catch (IOException ioe) {
                   ioe.printStackTrace();
                }
-               tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp);
+               tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp, 0);
             }
             images[mass].setStack(null, tempstacks[mass]);
          }
+        }
+        
+      } else {
+          if (tempImage.getBitsPerPixel() == 2){
+            for (int mass = 0; mass < numberMasses; mass++) {
+               ShortProcessor sp = new ShortProcessor(tempImage.getWidth(), tempImage.getHeight());
+               for (int i = 1; i <= tempImage.getNImages(); i++) {
+                  tempImage.setStackIndex(i - 1);
+                  try {
+                     sp.setPixels(tempImage.getPixels(mass));
+                  } catch (IOException ioe) {
+                     ioe.printStackTrace();
+                  }
+                  tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp);
+               }
+               images[mass].setStack(null, tempstacks[mass]);
+            }
+          }else if (tempImage.getBitsPerPixel() == 4){
+              System.out.println("Concating");
+               for (int mass = 0; mass < numberMasses; mass++) {
+               FloatProcessor sp = new FloatProcessor(tempImage.getWidth(), tempImage.getHeight());
+               for (int i = 1; i <= tempImage.getNImages(); i++) {
+                  tempImage.setStackIndex(i - 1);
+                  try {
+                     sp.setPixels(tempImage.getPixels(mass));
+                  } catch (IOException ioe) {
+                     ioe.printStackTrace();
+                  }
+                  tempstacks[mass].addSlice(tempimage[mass].getTitle(), sp);
+               }
+               images[mass].setStack(null, tempstacks[mass]);
+            }
+          }
+
       }
 
       // Update images.
