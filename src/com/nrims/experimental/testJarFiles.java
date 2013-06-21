@@ -13,6 +13,10 @@ import java.util.ArrayList;
 /**
  *
  * @author cpoczatek
+ * 
+ * This is totally uneeded if running in fiji w/ an update site.
+ * Should delete...
+ * 
  */
 public class testJarFiles {
 

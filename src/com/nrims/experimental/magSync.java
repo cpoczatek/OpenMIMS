@@ -19,6 +19,12 @@ import java.util.List;
  */
 
 /*
+ * 
+ * This is mostly uneeded. Command IJ -> Analyze -> Tools -> Syncronize Windows 
+ * performs a very similar function.
+ * 
+ * Consider deletion....
+ * 
  * changes in MimsPlus are:
  * at end of mouse clicked method
  *          if (this.getCanvas() != null && Toolbar.getToolId() == Toolbar.MAGNIFIER) {
