@@ -508,7 +508,14 @@ public class MimsTomography extends javax.swing.JPanel {
          }
       });
    }
-
+   /**
+    * Gets the table created by MimTomography
+    * 
+    * @return current table (or null if none)
+    */
+   public MimsJTable getTable(){
+       return table;
+   }
    /**
     * Gets the images selected by the user in the jlist.
     *

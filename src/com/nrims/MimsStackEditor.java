@@ -16,7 +16,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Box;
@@ -57,6 +60,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
    public AutoTrackManager atManager;
    public ArrayList<Integer> includeList = new ArrayList<Integer>();
    public int startSlice = -1;
+   private MimsJTable table;
+   private ArrayList<Integer> removedList = new ArrayList<Integer>();
+   private HashMap<Integer, Integer> currentToRemoved = null;
 
    /**
     * The MimsStackEditor constructor.
@@ -73,6 +79,12 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
       images = ui.getMassImages();
       numberMasses = image.getNMasses();
+      int numSlices = images[0].getNSlices();
+      currentToRemoved = new HashMap<Integer, Integer> (numSlices);
+      for (int i = 1; i <= numSlices; i++){
+          currentToRemoved.put(Integer.valueOf(i), Integer.valueOf(i));
+      }
+      
    }
 
    /** Some basic setup of interface componenets. */
@@ -400,7 +412,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
          System.out.println("already there...");
          return;
       }
-
       // Get some properties about the image we are trying to restore.
       int restoreIndex = ui.mimsAction.displayIndex(plane);
       int displaysize = images[0].getNSlices();
@@ -1539,12 +1550,93 @@ public class MimsStackEditor extends javax.swing.JPanel {
      */
     private void deleteListButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteListButtonActionPerformed
        String liststr = deleteListTextField.getText();
-       ArrayList<Integer> checklist = parseList(liststr, 1, images[0].getStackSize());
-
-       if (checklist.size() != 0) {
-          liststr = removeSliceList(checklist);
-          ui.getmimsLog().Log("Deleted list: " + liststr);
-          ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
+        ArrayList<Integer> checklist = null;
+       if (liststr != null && !liststr.equals("")){
+            checklist = parseList(liststr, 1, images[0].getStackSize());
+       }else{
+           MimsTomography tomo = ui.getmimsTomography();
+           //need to check whether both MimTomography and MimsJTable are initialized, else create a new table
+           if (tomo != null){
+               MimsJTable tomo_table = tomo.getTable();
+               if (tomo_table != null){
+                   //retrieve the selected rows from the tomography table
+                    checklist = tomo_table.getSelectedImageRows();
+                    if (checklist == null){
+                       //no rows selected
+                    }
+               }else{
+                   //check for previous existing table
+                   if (table == null){
+                       createTable(false);
+                       int index = ui.getRoiManager().getAllROIs().length-1;
+                       ui.getRoiManager().select(index);
+                       ui.getRoiManager().delete(false);
+                   }else{
+                       
+                       checklist = table.getSelectedImageRows();
+                       table.close();
+                       table = null;
+                       
+                   }
+               }
+           }else{
+               //check for previous existing table
+               if (table == null){
+                   createTable(false);
+                   int index = ui.getRoiManager().getAllROIs().length-1;
+                   ui.getRoiManager().select(index);
+                   ui.getRoiManager().delete(false);
+               }else{
+                   checklist = table.getSelectedImageRows();
+                   table.close();
+                   table = null;
+               }
+           }
+       }
+       if (checklist != null){
+            if (!checklist.isEmpty()) {
+               liststr = removeSliceList(checklist);
+                for (Integer check : checklist){
+                    removedList.add(currentToRemoved.get(check));
+                }
+                int removedIndex = 0;
+                int curSize = images[0].getNSlices();
+                int curSliceIndex = 1;
+                int distance = 0;
+                Collections.sort(removedList);
+                int offset = 0;
+                while (curSliceIndex <= curSize){
+                    if (removedIndex < removedList.size()){
+                         if (removedList.get(removedIndex).compareTo(Integer.valueOf(curSliceIndex + distance)) == 0){
+                            removedIndex++;
+                            distance++;
+                         }else{
+                             offset += distance;
+                             distance = 0;
+                             System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
+                             currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
+                              curSliceIndex++;
+                         }
+                    }else{
+                        offset+= distance;
+                        System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
+                        currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
+                        distance = 0;
+                        curSliceIndex++;
+                    }
+                }
+                
+                ui.getmimsLog().Log("Deleted list: " + liststr);
+                ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
+                MimsTomography tomo = ui.getmimsTomography();
+           //need to check whether both MimTomography and MimsJTable are initialized, else create a new table
+               if (tomo != null){
+                    MimsJTable tomo_table = tomo.getTable();
+                    if (tomo_table != null){
+                      tomo_table.close();
+                    }
+               }
+            }
        }
 
        ui.updateScrollbars();
@@ -1563,11 +1655,58 @@ public class MimsStackEditor extends javax.swing.JPanel {
        int trueSize = ui.mimsAction.getSize();
        ArrayList<Integer> checklist = parseList(liststr, 1, trueSize);
        int length = checklist.size();
-
+       if (length == 0){
+         if (table == null){
+            createTable(true);
+         }else{
+             checklist = table.getSelectedSlices();
+             table.close();
+             table = null;
+         }
+          
+       }
+       length = checklist.size();
        for (int i = 0; i < length; i++) {
           this.insertSlice(checklist.get(i));
+          removedList.remove(checklist.get(i));
        }
-
+       if (length > 0) {
+            //added 6/20/2013
+            //in order to get the true indices to show when we open up table view for add/remove slices, we need to store them
+            int curSize = images[0].getNSlices();
+            int removedIndex = 0;
+            int curSliceIndex = 1;
+            int distance = 0;
+            Collections.sort(removedList);
+            int offset = 0;
+            //loop through all current slices
+            while (curSliceIndex <= curSize){
+                //check to see whether or not we've looped through all the removed indices
+                if (removedIndex < removedList.size()){
+                     //increment through removed list by steps of 1 to see what the next non-removed true slice is which we need to assign
+                     if (removedList.get(removedIndex).compareTo(Integer.valueOf(curSliceIndex + distance)) == 0){
+                        removedIndex++;
+                        distance++;
+                     }else{
+                         //increment the offset to the curSliceIndex by distance of next consequetive group of removed integers
+                         offset += distance;
+                         distance = 0;
+                         System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
+                         currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
+                         curSliceIndex++;
+                     }
+                }else{
+                    //increment the offset to the curSliceIndex by distance of next consequetive group of removed integers
+                    offset += distance;
+                    distance = 0;
+                    System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
+                    currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
+                    curSliceIndex++;
+                }
+            }
+                
+       }
+       
        images[0].setSlice(current);
        this.resetTrueIndexLabel();
        this.resetSpinners();
@@ -1933,6 +2072,41 @@ public class MimsStackEditor extends javax.swing.JPanel {
       if (nullTrans == true && STATE == MimsStackEditor.OK) {
          System.out.println("translations is null");
       }
+   }
+   public void createTable(boolean insert){
+       // initialize variables.
+       table = new MimsJTable(ui);
+       // Determine planes.
+       ArrayList<Integer> planes = new ArrayList<Integer>();
+       if (insert == false){
+          for (int i = 1; i <= ui.getOpenMassImages()[0].getNSlices(); i++) {
+             planes.add(Integer.valueOf(i));
+          }
+       }else{
+           for (int i = 1; i <= ui.getOpenMassImages()[0].getNSlices(); i++) {
+             planes = removedList;
+          }
+       }
+          int numPlanes = planes.size();
+          Object[][] data = new Object[numPlanes][7];
+          for(int i = 0; i < numPlanes; i++){
+              ArrayList ar = ui.mimsAction.getActionList(i+1);
+              data[i][0] = planes.get(i);
+              if (insert) data[i][1] = planes.get(i);
+              else data[i][1] = currentToRemoved.get(Integer.valueOf(i+1));
+              data[i][2] = ar.get(0);
+              data[i][3] = ar.get(1);
+              data[i][4] = ar.get(2);
+              data[i][5] = ar.get(3);
+              data[i][6] = ar.get(4);  
+              System.out.println (data[i][0] + " " + data[i][1] + " " + data[i][2] + " " + data[i][3] + " " + data[i][4] + " " + data[i][5] + " " + data[i][6] + " ");
+          }
+          table = new MimsJTable(ui);
+          table.setImages(ui.getOpenMassImages());
+          String[] columnNames = {"Slice", "True Index", "x", "y", "drop", "image index", "file"};
+          table.createCustomTable(data, columnNames);
+          table.showFrame();
+         
    }
 
    /**

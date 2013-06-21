@@ -141,6 +141,14 @@ public class MimsJTable {
       else
          displayTable(data, columnNames);
    }
+   /**
+    * Create a table with custom data and column names.
+    * @param data data to be displayed in table
+    * @param columnNames column header names
+    */
+   public void createCustomTable(Object[][] data, String[] columnNames) {
+         displayTable(data, columnNames);
+   }
 
   /**
    * Generates a table for listing Roi info (name and group) and their pixel values.
@@ -779,6 +787,40 @@ public class MimsJTable {
     	table = null;
       if (frame != null)
          frame.setVisible(false);
+   }
+   /**
+    * Get the currently selected rows indices
+    * 
+    * @return an arraylist containing the indices of all selected rows, or null if no table
+    */
+   public ArrayList<Integer> getSelectedImageRows(){
+       if (table != null){
+        int[] rowsArray = table.getSelectedRows();
+        ArrayList<Integer> rows = new ArrayList<Integer>();
+        for (int value : rowsArray) {
+             rows.add(Integer.valueOf(value+1));
+         }
+        return rows;
+       }else{
+           return null;
+       }
+   }
+   /**
+    * Get the currently selected rows 'slice' value
+    * 
+    * @return an arraylist containing the indices of all selected rows, or null if no table
+    */
+   public ArrayList<Integer> getSelectedSlices(){
+       if (table != null){
+        int[] rowsArray = table.getSelectedRows();
+        ArrayList<Integer> rows = new ArrayList<Integer>();
+        for (int value : rowsArray) {
+             rows.add((Integer) table.getValueAt(value, 0));
+         }
+        return rows;
+       }else{
+           return null;
+       }
    }
 
    /**
