@@ -1450,7 +1450,10 @@ public class MimsHSIView extends javax.swing.JPanel {
          if (num == null || den == null) {
             JOptionPane.showMessageDialog(ui, "Must select both numerator and denominator", "Error", JOptionPane.ERROR_MESSAGE);
          } else {
-            // example names: m12.99, m13.01
+            /* names of jButtons set to integer postion in button group
+             * in constructor.  Specifically 0,1,2,....,n where n = number masses.
+             * Extra value is for "mass" "1".
+             */
             String numName = num.getName();
             String denName = den.getName();
 
