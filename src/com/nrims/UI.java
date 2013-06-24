@@ -40,9 +40,15 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.beans.DefaultPersistenceDelegate;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -63,6 +69,10 @@ import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.net.UnknownHostException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 /**
  * The main user interface of the NRIMS ImageJ plugin.
  * A multitabbed window with a file menu, the UI class
@@ -78,8 +88,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public static final String ROIS_EXTENSION = ".rois.zip";
     public static final String ROI_EXTENSION = ".roi";
     public static final String RATIO_EXTENSION = ".ratio";
+    public static final String RATIOS_EXTENSION = ".ratios.zip";
     public static final String HSI_EXTENSION = ".hsi";
+    public static final String HSIS_EXTENSION = ".hsis.zip";
     public static final String SUM_EXTENSION = ".sum";
+    public static final String SUMS_EXTENSION = ".sums.zip";
+    public static final String SESSIONS_EXTENSION = ".session.zip";
     public static final String ACT_EXTIONSION = ".act";
 
     public static final String SAVE_IMAGE = "Save Image";
@@ -270,6 +284,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       //Start Auto save thread for ROI
       Thread t = new Thread(new AutoSaveROI());
       t.start();
+      this.ui = this;
         
       // Create and start the thread
       //Thread thread = new StartupScript(this);
@@ -571,23 +586,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
          }
       }
-      /*MimsPlus[] windows = getOpenImages();
-      double[] massVals = new double[windows.length];
-      int[] win_ids = new int[windows.length];
-      int i = 0;
-      for (MimsPlus mp : windows) {
-          massVals[i] = mp.getMassValue();
-          i++;
-      }
-      Arrays.sort(massVals);
-      i = 0;
-      for (Double mass : massVals) {
-          int massValIdx = getMassIndices(mass, 0.1)[0];
-          win_ids[i] = windows[massValIdx].getID();
-          i++;
-      }
-      tileWindows(win_ids, prefs.getTileY());
-      */
    }
 
    /**
@@ -1932,93 +1930,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private void tileWindowsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                           
         //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
         //wo.run("tile");
-        MimsPlus[] windows = getOpenImages();
-        double[] massVals = new double[windows.length];
-        int[] win_ids = new int[windows.length];
-        int i = 0;
-        for (MimsPlus mp : windows) {
-             massVals[i] = mp.getMassValue();
-             i++;
-        }
-        Arrays.sort(massVals);
-        i = 0;
-            /*Change: 6/4/2013
-           * previous code:
-           * for (Double mass : massVals) {
-           *   int massValIdx = getMassIndices(mass, 0.1)[0];
-           *   win_ids[i] = windows[massValIdx].getID();
-           *   i++;
-           *}
-           * 
-           * the problem with that if there are any other values from MassIndices, they are ignored and only window
-           * out of the similar mass images is set in the win_ids array.
-           * 
-           * below are two solutions. For convienance, it seems easier to tile similar mass images in columns
-           * if such a situation is detected where all the groups of similar masses are equal in length, then this sorting
-           * takes place. If this is not the case then it simply orders all the returned ids by the order they are found in.
-           * 
-           * a better way to do this probably exists, as it adds a few seconds to opening up images
-           */
-
-          boolean flip = true;
-          int col_size = 0;
-          //loop through all mass indice groups to see if they all have same length
-          for (Double mass: massVals) {
-             int[] massValIds = getMassIndices(mass, 0.1);
-             if (col_size == 0){
-                 col_size = massValIds.length;
-             }else if (col_size != massValIds.length){
-                 flip = false;
-             }
-          }
-          //if all have same length, sort similar mass indices into columns
-          if (flip == true){
-              int row_size = win_ids.length/col_size;
-              for (int j = 0; j < massVals.length; j+= col_size) {
-                    Double mass = massVals[j];
-                    int[] massValIds = getMassIndices(mass, 0.1);
-                        for (int k = 0; k < massValIds.length; k++){
-                            int massValIdx = massValIds[k];
-                            win_ids[(j/col_size)+(k*row_size)] = windows[massValIdx].getID();
-                        }
-
-              }
-          //else we just order the mass indices in the order we find them.
-          }else{        
-            for (int j = 0; j < massVals.length; j++) {
-               Double mass = massVals[j];
-               if (j > 0){//don't need to do any checking for first group
-                   Double prevMass = massVals[j-1];
-                   if (prevMass != mass){
-                       int[] massValIds = getMassIndices(mass, 0.1);
-                       for (int k = 0; k < massValIds.length; k++){
-                          int massValIdx = massValIds[k];
-                          int id = windows[massValIdx].getID();
-                          boolean exists = false;
-                          //because of the possibility of a massIndice group > 1, we need to check for repeats
-                          if (massValIds.length != 1){
-                            for (int l = 0; l < i; l++){
-                                if (win_ids[l] == id) exists = true; 
-                            }
-                            if (!exists) {
-                                win_ids[i] = id;
-                                i++;
-                            }
-                          }
-                       }
-                   }
-               }else{
-                   int[] massValIds = getMassIndices(mass, 0.1);
-                       for (int k = 0; k < massValIds.length; k++){
-                          int massValIdx = massValIds[k];
-                          win_ids[i] = windows[massValIdx].getID();
-                          i++;
-                       }
-               }
-
-            }
-          }
-        tileWindows(win_ids, prefs.getTileY());
+      
+        tileWindows();
     }
 
     /**
@@ -2042,9 +1955,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       File file = new File(fileName);
       String directory = file.getParent();
       String name = file.getName();
-      FileOutputStream f_out;
-      ObjectOutputStream obj_out;
       String objectFileName;
+      File final_zip = null;
 
       try {
 
@@ -2104,71 +2016,125 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         if (saveImageOnly)
            return true;
 
-        // Get the base of the file name.
-        String baseFileName = getFilePrefix(dataFile.getAbsolutePath());
+          // Get the base of the file name.
+          String baseFileName = getFilePrefix(dataFile.getAbsolutePath());
+          String onlyFileName = getFilePrefix(dataFile.getName());
+          //create file to save all session info into
+          final_zip = new File(baseFileName + SESSIONS_EXTENSION);
 
-        // Save the ROI files to zip.
-        String roisFileName = baseFileName+ROIS_EXTENSION;
-        Roi[] rois = getRoiManager().getAllROIs();
-        if (rois.length > 0)
-           getRoiManager().saveMultiple(rois, roisFileName, false);
+          // Save the ROI files to zip.
+          String roisFileName = baseFileName + ROIS_EXTENSION;
+          Roi[] rois = getRoiManager().getAllROIs();
+          if (rois.length > 0) {
+              getRoiManager().saveMultiple(rois, roisFileName, false);
+          }
+          // Contruct a unique name for each ratio image and save into a ratios.zip file
+          ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
+          MimsPlus ratio[] = getOpenRatioImages();
+          if (ratio.length > 0) {
+              for (int i = 0; i < ratio.length; i++) {
+                  RatioProps ratioprops = ratio[i].getRatioProps();
+                  ratioprops.setDataFileName(dataFile.getName());
+                  int numIndex = ratioprops.getNumMassIdx();
+                  int denIndex = ratioprops.getDenMassIdx();
+                  int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
+                  int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
+                  objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + RATIO_EXTENSION;
+                  zos.putNextEntry(new ZipEntry(objectFileName));
+                  XMLEncoder e = new XMLEncoder(zos);
+                  //need to modify persistance delegate to deal with constructor in RatioProps which takes parameters
+                  e.setPersistenceDelegate(RatioProps.class,
+                          new DefaultPersistenceDelegate(
+                          new String[]{"numMassIdx",
+                              "denMassIdx"}));
+                  e.writeObject(ratioprops);
+                  e.flush();
+                  //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
+                  //but we cannot close or else the entire ZipOutputstream closes
+                  DataOutputStream d_out = new DataOutputStream(zos);
+                  d_out.writeBytes("</java>");
+                  d_out.flush();
+              }
+          }
 
-        // Contruct a unique name for each ratio image and save.
-        MimsPlus ratio[] = getOpenRatioImages();
-        if (ratio.length > 0){
-        for (int i = 0; i < ratio.length; i++) {
-           RatioProps ratioprops = ratio[i].getRatioProps();
-           ratioprops.setDataFileName(dataFile.getName());
-           int numIndex = ratioprops.getNumMassIdx();
-           int denIndex = ratioprops.getDenMassIdx();
-           int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-           int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-           objectFileName = baseFileName + "_m" + numMass + "_m" + denMass + RATIO_EXTENSION;
-           f_out = new FileOutputStream(objectFileName);
-           obj_out = new ObjectOutputStream(f_out);
-           obj_out.writeObject(ratioprops);
-        }}
+          // Contruct a unique name for each hsi image and save.
+          MimsPlus hsi[] = getOpenHSIImages();
+          if (hsi.length > 0) {
+              for (int i = 0; i < hsi.length; i++) {
+                  HSIProps hsiprops = hsi[i].getHSIProps();
+                  hsiprops.setDataFileName(dataFile.getName());
+                  int numIndex = hsiprops.getNumMassIdx();
+                  int denIndex = hsiprops.getDenMassIdx();
+                  int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
+                  int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
+                  objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + HSI_EXTENSION;
+                  zos.putNextEntry(new ZipEntry(objectFileName));
+                  XMLEncoder e = new XMLEncoder(zos);
+                  //need to modify persistance delegate to deal with constructor in HSIProps which takes parameters
+                  e.setPersistenceDelegate(HSIProps.class,
+                          new DefaultPersistenceDelegate(
+                          new String[]{"numMassIdx",
+                              "denMassIdx"}));
+                  e.writeObject(hsiprops);
+                  e.flush();
+                  //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
+                  //but we cannot close or else the entire ZipOutputstream closes
+                  DataOutputStream d_out = new DataOutputStream(zos);
+                  d_out.writeBytes("</java>");
+                  d_out.flush();
+              }
+          }
 
-        // Contruct a unique name for each hsi image and save.
-        MimsPlus hsi[] = getOpenHSIImages();
-        if (hsi.length > 0){
-        for (int i = 0; i < hsi.length; i++) {
-           HSIProps hsiprops = hsi[i].getHSIProps();
-           hsiprops.setDataFileName(dataFile.getName());
-           int numIndex = hsiprops.getNumMassIdx();
-           int denIndex = hsiprops.getDenMassIdx();
-           int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-           int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-           objectFileName = baseFileName + "_m" + numMass + "_m" + denMass + HSI_EXTENSION;
-           f_out = new FileOutputStream(objectFileName);
-           obj_out = new ObjectOutputStream(f_out);
-           obj_out.writeObject(hsiprops);
-        }}
+          // Contruct a unique name for each sum image and save.
+          MimsPlus sum[] = getOpenSumImages();
+          if (sum.length > 0) {
+              for (int i = 0; i < sum.length; i++) {
+                  SumProps sumProps = sum[i].getSumProps();
+                  sumProps.setDataFileName(dataFile.getName());
+                  if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
+                      int numIndex = sumProps.getNumMassIdx();
+                      int denIndex = sumProps.getDenMassIdx();
+                      int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
+                      int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
+                      objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + SUM_EXTENSION;
+                      zos.putNextEntry(new ZipEntry(objectFileName));
+                      XMLEncoder e = new XMLEncoder(zos);
+                      //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
+                      e.setPersistenceDelegate(SumProps.class,
+                              new DefaultPersistenceDelegate(
+                              new String[]{"numMassIdx",
+                                  "denMassIdx"}));
+                      e.writeObject(sumProps);
+                      e.flush();
+                      //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
+                      //but we cannot close or else the entire ZipOutputstream closes
+                      DataOutputStream d_out = new DataOutputStream(zos);
+                      d_out.writeBytes("</java>");
+                      d_out.flush();
+                  } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
+                      int parentIndex = sumProps.getParentMassIdx();
+                      int parentMass = Math.round(new Float(getOpener().getMassNames()[parentIndex]));
+                      objectFileName = onlyFileName + "_m" + parentMass + SUM_EXTENSION;
+                      zos.putNextEntry(new ZipEntry(objectFileName));
+                      XMLEncoder e = new XMLEncoder(zos);
+                      e.setPersistenceDelegate(SumProps.class,
+                              new DefaultPersistenceDelegate(
+                              new String[]{"parentMassIdx"}));
+                      e.writeObject(sumProps);
+                      e.flush();
+                      //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
+                      //but we cannot close or else the entire ZipOutputstream closes
+                      DataOutputStream d_out = new DataOutputStream(zos);
+                      d_out.writeBytes("</java>");
+                      d_out.flush();
+                  } else {
+                      continue;
+                  }
+              }
 
-        // Contruct a unique name for each sum image and save.
-        MimsPlus sum[] = getOpenSumImages();
-        if (sum.length > 0){
-        for (int i = 0; i < sum.length; i++) {
-           SumProps sumProps = sum[i].getSumProps();
-           sumProps.setDataFileName(dataFile.getName());
-           if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-               int numIndex = sumProps.getNumMassIdx();
-               int denIndex = sumProps.getDenMassIdx();
-               int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-               int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-               objectFileName = baseFileName + "_m" + numMass + "_m" + denMass + SUM_EXTENSION;
-           } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-              int parentIndex = sumProps.getParentMassIdx();
-              int parentMass = Math.round(new Float(getOpener().getMassNames()[parentIndex]));
-              objectFileName = baseFileName + "_m" + parentMass + SUM_EXTENSION;
-           } else {
-              continue;
-           }
-           f_out = new FileOutputStream(objectFileName);
-           obj_out = new ObjectOutputStream(f_out);
-           obj_out.writeObject(sumProps);
-        }}
-
+          }
+          zos.flush();
+          zos.close();
         //getmimsAction().writeAction(new File(baseFileName+ACT_EXTIONSION));
 
       } catch (FileNotFoundException e) {
@@ -2181,7 +2147,73 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       }
       return true;
    }
-
+    /**
+     * Helper function to put files into a zip archive (whether new or existing)
+     * @param zip archive which you are placing the file into
+     * @param file file which you want to place into the archive
+     * @throws IOException 
+     */
+    private void zip(File zip, ArrayList<File> files) throws IOException {
+        ZipOutputStream zos = null;
+        try {
+            zos = new ZipOutputStream(new FileOutputStream(zip));
+            for (File file : files) {
+                String name = file.getName();
+                ZipEntry entry = new ZipEntry(name);
+                zos.putNextEntry(entry);
+                FileInputStream fis = null;
+                try {
+                    fis = new FileInputStream(file);
+                    byte[] byteBuffer = new byte[1024];
+                    int bytesRead = -1;
+                    while ((bytesRead = fis.read(byteBuffer)) != -1) {
+                        zos.write(byteBuffer, 0, bytesRead);
+                    }
+                    zos.flush();
+                    file.delete();
+                } finally {
+                    try {
+                        fis.close();
+                    } catch (Exception e) {
+                    }
+                }
+                zos.closeEntry();
+                zos.flush();
+            }
+        } finally {
+            try {
+                zos.close();
+            } catch (Exception e) {
+            }
+        }
+    }
+    /**
+     * Given a zip file, extracts XML files from within and converts to Objects.
+     *
+     * @param file absolute file path
+     * @return array list containing Objects.
+     */
+    private ArrayList openXMLfromZip(File file) {
+        ArrayList entries = new ArrayList();
+        Object obj;
+        try {
+            ZipFile z_file = new ZipFile(file);
+            ZipInputStream z_in = new ZipInputStream(new FileInputStream(file));
+            ZipEntry entry;
+            XMLDecoder xmlDecoder;
+            while ((entry = z_in.getNextEntry()) != null) {
+                xmlDecoder = new XMLDecoder(z_file.getInputStream(entry));
+                obj = xmlDecoder.readObject();
+                entries.add(obj);
+                xmlDecoder.close();
+            }
+            z_in.close();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            return entries;
+        }
+    }
     /**
      * Action method for File>Open Mims Image menu item. If opening
      */
@@ -3818,20 +3850,131 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     /**
      * This is a copy of imageJ's WindowOrganizer.tileWindows() method.
      *
-     * @param wList windows to be tiled. tileY amount of pixels to offset the vertical position by.
+     * @param tileY amount of pixels to offset the vertical position by.
      */
-    public void tileWindows(int[] wList, int tileY) {
-        final int XSTART=4, XOFFSET=8, YOFFSET=24,MAXSTEP=200,GAP=2;
+    public void tileWindows() {
+        final int XSTART = 4, GAP = 2;
+        int tileY = prefs.getTileY();
         int YSTART = 80 + tileY;
-        int titlebarHeight = IJ.isMacintosh()?40:20;
+        int titlebarHeight = IJ.isMacintosh() ? 40 : 20;
 
         Dimension screen = IJ.getScreenSize();
         int minWidth = Integer.MAX_VALUE;
         int minHeight = Integer.MAX_VALUE;
         boolean allSameSize = true;
-        int width=0, height=0;
+        int width = 0, height = 0;
         double totalWidth = 0;
         double totalHeight = 0;
+        MimsPlus[] windows = getOpenMassImages();
+        double[] massVals = new double[windows.length];
+        int[] win_ids = new int[windows.length];
+        int n = 0;
+        MimsPlus[] sumImages = getOpenSumImages();
+        MimsPlus[] ratioImages = getOpenRatioImages();
+        MimsPlus[] hsiImages = getOpenHSIImages();
+        for (MimsPlus mp : windows) {
+            massVals[n] = mp.getMassValue();
+            n++;
+        }
+        Arrays.sort(massVals);
+        n = 0;
+        /*Change: 6/4/2013
+         * previous code:
+         * for (Double mass : massVals) {
+         *   int massValIdx = getMassIndices(mass, 0.1)[0];
+         *   win_ids[i] = windows[massValIdx].getID();
+         *   i++;
+         *}
+         * 
+         * the problem with that if there are any other values from MassIndices, they are ignored and only window
+         * out of the similar mass images is set in the win_ids array.
+         * 
+         * below are two solutions. For convienance, it seems easier to tile similar mass images in columns
+         * if such a situation is detected where all the groups of similar masses are equal in length, then this sorting
+         * takes place. If this is not the case then it simply orders all the returned ids by the order they are found in.
+         * 
+         * a better way to do this probably exists, as it adds a few seconds to opening up images
+         */
+
+        boolean flip = true;
+        int col_size = 0;
+        //loop through all mass indice groups to see if they all have same length
+        for (Double mass : massVals) {
+            int[] massValIds = getMassIndices(mass, 0.1);
+            if (col_size == 0) {
+                col_size = massValIds.length;
+            } else if (col_size != massValIds.length) {
+                flip = false;
+            }
+        }
+        //if all have same length, sort similar mass indices into columns
+        if (flip == true) {
+            int row_size = win_ids.length / col_size;
+            for (int j = 0; j < massVals.length; j += col_size) {
+                Double mass = massVals[j];
+                int[] massValIds = getMassIndices(mass, 0.1);
+                for (int k = 0; k < massValIds.length; k++) {
+                    int massValIdx = massValIds[k];
+                    win_ids[(j / col_size) + (k * row_size)] = windows[massValIdx].getID();
+                }
+
+            }
+        //else we just order the mass indices in the order we find them.
+        } else {
+            for (int j = 0; j < massVals.length; j++) {
+                Double mass = massVals[j];
+                if (j > 0) {//don't need to do any checking for first group
+                    Double prevMass = massVals[j - 1];
+                    if (prevMass != mass) {
+                        int[] massValIds = getMassIndices(mass, 0.1);
+                        for (int k = 0; k < massValIds.length; k++) {
+                            int massValIdx = massValIds[k];
+                            int id = windows[massValIdx].getID();
+                            boolean exists = false;
+                            //because of the possibility of a massIndice group > 1, we need to check for repeats
+                            if (massValIds.length != 1) {
+                                for (int l = 0; l < n; l++) {
+                                    if (win_ids[l] == id) {
+                                        exists = true;
+                                    }
+                                }
+                                if (!exists) {
+                                    win_ids[n] = id;
+                                    n++;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    int[] massValIds = getMassIndices(mass, 0.1);
+                    for (int k = 0; k < massValIds.length; k++) {
+                        int massValIdx = massValIds[k];
+                        win_ids[n] = windows[massValIdx].getID();
+                        n++;
+                    }
+                }
+
+            }
+        }
+        int[] wList = new int[windows.length + sumImages.length + ratioImages.length + hsiImages.length];
+        int j = 0;
+        //need to add all types of images into win_ids so they are tiled too
+        for (int mp : win_ids) {
+            wList[j] = mp;
+            j++;
+        }
+        for (MimsPlus mp : sumImages) {
+            wList[j] = mp.getID();
+            j++;
+        }
+        for (MimsPlus mp : ratioImages) {
+            wList[j] = mp.getID();
+            j++;
+        }
+        for (MimsPlus mp : hsiImages) {
+            wList[j] = mp.getID();
+            j++;
+        }
         for (int i=0; i<wList.length; i++) {
             //ImageWindow win = getWindow(wList[i]);
             ImageWindow win = null;
@@ -3908,7 +4051,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
               win = imp.getWindow();
             if (win!=null) {
                 win.setLocation(hloc, vloc);
-                //IJ.write(i+" "+w+" "+tileWidth+" "+mag+" "+IJ.d2s(zoomFactor,2)+" "+zoomCount);
                 ImageCanvas canvas = win.getCanvas();
                 while (win.getSize().width*0.85>=tileWidth && canvas.getMagnification()>0.03125)
                     canvas.zoomOut(0, 0);
@@ -4331,7 +4473,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)
                   || fileName.endsWith(RATIO_EXTENSION) || fileName.endsWith(HSI_EXTENSION)
                   || fileName.endsWith(SUM_EXTENSION) || fileName.endsWith(ROIS_EXTENSION)
-                  || fileName.endsWith(ROI_EXTENSION) || fileName.endsWith(NRRD_HEADER_EXTENSION)) {
+                  || fileName.endsWith(ROI_EXTENSION) || fileName.endsWith(NRRD_HEADER_EXTENSION)
+                  || fileName.endsWith(RATIOS_EXTENSION) || fileName.endsWith(HSIS_EXTENSION)
+                  || fileName.endsWith(SUMS_EXTENSION) || fileName.endsWith(SESSIONS_EXTENSION)) {
           } else {
              String fileType;
              int lastIndexOf = fileName.lastIndexOf(".");
@@ -4354,44 +4498,120 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 if(!loadMIMSFile(file))
                    return false;
              } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
-                FileInputStream f_in = new FileInputStream(file);
-                ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                Object obj = obj_in.readObject();
+                Object obj;
+                try{
+                    XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
+                    obj = xmlDecoder.readObject();
+                    xmlDecoder.close();
+                }catch(Exception e){
+                    FileInputStream f_in = new FileInputStream(file);
+                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                    obj = obj_in.readObject();
+                }
                 if (obj instanceof RatioProps) {
                    RatioProps ratioprops = (RatioProps) obj;
-                   String dataFileString = ratioprops.getDataFileName();
-                   File dataFile = new File(file.getParent(), dataFileString);
+                   File dataFile = new File(file.getParent(), ratioprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
                       return false;
+                   doneLoadingFile();
                    MimsPlus mp = new MimsPlus(ui, ratioprops);
                    mp.showWindow();
                 }
              } else if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
-                FileInputStream f_in = new FileInputStream(file);
-                ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                Object obj = obj_in.readObject();
+                Object obj;
+                try{
+                    XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
+                    obj = xmlDecoder.readObject();
+                    xmlDecoder.close();
+                }catch(Exception e){
+                    FileInputStream f_in = new FileInputStream(file);
+                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                    obj = obj_in.readObject();
+                }
                 if (obj instanceof HSIProps) {
                    HSIProps hsiprops = (HSIProps) obj;
-                   String dataFileString = hsiprops.getDataFileName();
-                   File dataFile = new File(file.getParent(), dataFileString);
+                   File dataFile = new File(file.getParent(), hsiprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
                       return false;
+                   doneLoadingFile();
                    MimsPlus mp = new MimsPlus(ui, hsiprops);
                    mp.showWindow();
                 }
              } else if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
-                FileInputStream f_in = new FileInputStream(file);
-                ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                Object obj = obj_in.readObject();
+                Object obj;
+                try{
+                    XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
+                    obj = xmlDecoder.readObject();
+                    xmlDecoder.close();
+                }catch(Exception e){
+                    FileInputStream f_in = new FileInputStream(file);
+                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                    obj = obj_in.readObject();
+                }
                 if (obj instanceof SumProps) {
                    SumProps sumprops = (SumProps) obj;
-                   String dataFileString = sumprops.getDataFileName();
-                   File dataFile = new File(file.getParent(), dataFileString);
+                   File dataFile = new File(file.getParent(), sumprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
                       return false;
+                   doneLoadingFile();
                    MimsPlus sp = new MimsPlus(ui, sumprops, null);
                    sp.showWindow();
                 }
+             } else if (file.getAbsolutePath().endsWith(SESSIONS_EXTENSION)) {
+                  onlyShowDraggedFile = false;
+                  //get all xml objects contained within zip
+                  ArrayList entries = openXMLfromZip(file);
+                  if (entries == null) {
+                      return false;
+                  }
+                  ArrayList<SumProps> sums = new ArrayList<SumProps>();
+                  ArrayList<RatioProps> ratios = new ArrayList<RatioProps>();
+                  ArrayList<HSIProps> hsis = new ArrayList<HSIProps>();
+                  boolean loaded = false;
+                  //sort the objects into props
+                  for (Object entry : entries) {
+                      if (entry instanceof SumProps) {
+                          sums.add((SumProps) entry);
+                      } else if (entry instanceof RatioProps) {
+                          ratios.add((RatioProps) entry);
+                      } else if (entry instanceof HSIProps) {
+                          hsis.add((HSIProps) entry);
+                      }
+                  }
+                  for (int i = 0; i < sums.size(); i++) {
+                      SumProps sumprops = sums.get(i);
+                      if (!loaded) {
+                          if (!loadMIMSFile(new File(file.getParent(), sumprops.getDataFileName()))) {
+                              return false;
+                          }
+                          doneLoadingFile();
+                          loaded = true;
+                      }
+                      MimsPlus sp = new MimsPlus(ui, sumprops, null);
+                      sp.showWindow();
+                  }
+                  for (int i = 0; i < ratios.size(); i++) {
+                      RatioProps ratioprops = ratios.get(i);
+                      if (!loaded) {
+                          if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName())))
+                              return false;
+                          doneLoadingFile();
+                          loaded = true;
+                      }
+                      MimsPlus sp = new MimsPlus(ui, ratioprops);
+                      sp.showWindow();
+                  }
+                  for (int i = 0; i < hsis.size(); i++) {
+                      HSIProps hsiprops = hsis.get(i);
+                      if (!loaded) {
+                          if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
+                              return false;
+                          doneLoadingFile();
+                          loaded = true;
+                      }
+                      MimsPlus sp = new MimsPlus(ui, hsiprops);
+                      sp.showWindow();
+                  }
              } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION)
                      || file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
                 onlyShowDraggedFile = false;
@@ -4416,6 +4636,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
           return true;
        }
+
 
        /**
         * Opens an image file in the .im or .nrrd file format.
@@ -4636,95 +4857,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    if (wpMap.size() > 0 || previousFileCanceled == false) {
                       applyWindowState();
                    } else {
-                      //ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
-                      //wo.run("tile");
-                      MimsPlus[] windows = getOpenImages();
-                      double[] massVals = new double[windows.length];
-                      int[] win_ids = new int[windows.length];
-                      int i = 0;
-                      for (MimsPlus mp : windows) {
-                         massVals[i] = mp.getMassValue();
-                         i++;
-                      }
-                      Arrays.sort(massVals);
-                      i = 0;
-                      /*Change: 6/4/2013
-                       * previous code:
-                       * for (Double mass : massVals) {
-                       *   int massValIdx = getMassIndices(mass, 0.1)[0];
-                       *   win_ids[i] = windows[massValIdx].getID();
-                       *   i++;
-                       *}
-                       * 
-                       * the problem with that if there are any other values from MassIndices, they are ignored and only window
-                       * out of the similar mass images is set in the win_ids array.
-                       * 
-                       * below are two solutions. For convienance, it seems easier to tile similar mass images in columns
-                       * if such a situation is detected where all the groups of similar masses are equal in length, then this sorting
-                       * takes place. If this is not the case then it simply orders all the returned ids by the order they are found in.
-                       * 
-                       * a better way to do this probably exists, as it adds a few seconds to opening up images
-                       */
-                     
-                      boolean flip = true;
-                      int col_size = 0;
-                      //loop through all mass indice groups to see if they all have same length
-                      for (Double mass: massVals) {
-                         int[] massValIds = getMassIndices(mass, 0.1);
-                         if (col_size == 0){
-                             col_size = massValIds.length;
-                         }else if (col_size != massValIds.length){
-                             flip = false;
-                         }
-                      }
-                      //if all have same length, sort similar mass indices into columns
-                      if (flip == true){
-                          int row_size = win_ids.length/col_size;
-                          for (int j = 0; j < massVals.length; j+= col_size) {
-                                Double mass = massVals[j];
-                                int[] massValIds = getMassIndices(mass, 0.1);
-                                    for (int k = 0; k < massValIds.length; k++){
-                                        int massValIdx = massValIds[k];
-                                        win_ids[(j/col_size)+(k*row_size)] = windows[massValIdx].getID();
-                                    }
-                                
-                          }
-                      //else we just order the mass indices in the order we find them.
-                      }else{        
-                        for (int j = 0; j < massVals.length; j++) {
-                           Double mass = massVals[j];
-                           if (j > 0){//don't need to do any checking for first group
-                               Double prevMass = massVals[j-1];
-                               if (prevMass != mass){
-                                   int[] massValIds = getMassIndices(mass, 0.1);
-                                   for (int k = 0; k < massValIds.length; k++){
-                                      int massValIdx = massValIds[k];
-                                      int id = windows[massValIdx].getID();
-                                      boolean exists = false;
-                                      //because of the possibility of a massIndice group > 1, we need to check for repeats
-                                      if (massValIds.length != 1){
-                                        for (int l = 0; l < i; l++){
-                                            if (win_ids[l] == id) exists = true; 
-                                        }
-                                        if (!exists) {
-                                            win_ids[i] = id;
-                                            i++;
-                                        }
-                                      }
-                                   }
-                               }
-                           }else{
-                               int[] massValIds = getMassIndices(mass, 0.1);
-                                   for (int k = 0; k < massValIds.length; k++){
-                                      int massValIdx = massValIds[k];
-                                      win_ids[i] = windows[massValIdx].getID();
-                                      i++;
-                                   }
-                           }
-
-                        }
-                      }
-                      tileWindows(win_ids, prefs.getTileY());
+                      tileWindows();
                    }
                 }
 
