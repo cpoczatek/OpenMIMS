@@ -105,6 +105,16 @@ public class MimsAction implements Cloneable {
                "\t" + imageIndex.get(idx) + 
                "\t" + imageList.get(idx);
     }
+    public ArrayList getActionList(int plane){
+        int idx = plane-1;
+        ArrayList ar = new ArrayList();
+        ar.add(roundTwoDecimals((Double)(xyTranslationList.get(idx)[0])));
+        ar.add(roundTwoDecimals((Double)(xyTranslationList.get(idx)[1])));
+        ar.add(droppedList.get(idx));
+        ar.add(imageIndex.get(idx));
+        ar.add(imageList.get(idx));
+        return ar;
+    }
 
    /**
     * Gets the total size of the currently open image (dropped images included).
