@@ -64,7 +64,7 @@ public class MimsJTable {
    static String ROIGROUP = "Roi group";
    static String ROINAME = "Roi name";
    static String SLICE = "Slice";
-   static String TRUE = "True index";
+   static String TRUE = "True Index";
    static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
    static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
 
