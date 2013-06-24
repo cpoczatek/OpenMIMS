@@ -125,7 +125,12 @@ public class MimsAction implements Cloneable {
         return this.imageList.size();
     }
     public ArrayList<Integer> getDroppedList(){
-        return this.droppedList;
+        ArrayList<Integer> dropped = new ArrayList<Integer>();
+        for (int i = 0; i < droppedList.size(); i++){
+            if (droppedList.get(i).intValue() == 1) 
+                dropped.add(Integer.valueOf(i+1));
+        }
+        return dropped;
     }
 
    /**
