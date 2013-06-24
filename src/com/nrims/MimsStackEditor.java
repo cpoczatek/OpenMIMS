@@ -62,7 +62,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
    public int startSlice = -1;
    private MimsJTable table;
    private ArrayList<Integer> removedList = new ArrayList<Integer>();
-   private HashMap<Integer, Integer> currentToRemoved = null;
 
    /**
     * The MimsStackEditor constructor.
@@ -80,10 +79,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
       images = ui.getMassImages();
       numberMasses = image.getNMasses();
       int numSlices = images[0].getNSlices();
-      currentToRemoved = new HashMap<Integer, Integer> (numSlices);
-      for (int i = 1; i <= numSlices; i++){
-          currentToRemoved.put(Integer.valueOf(i), Integer.valueOf(i));
-      }
       
    }
 
@@ -1595,37 +1590,10 @@ public class MimsStackEditor extends javax.swing.JPanel {
        }
        if (checklist != null){
             if (!checklist.isEmpty()) {
-               liststr = removeSliceList(checklist);
                 for (Integer check : checklist){
-                    removedList.add(currentToRemoved.get(check));
+                    removedList.add(ui.mimsAction.trueIndex(check.intValue()));
                 }
-                int removedIndex = 0;
-                int curSize = images[0].getNSlices();
-                int curSliceIndex = 1;
-                int distance = 0;
-                Collections.sort(removedList);
-                int offset = 0;
-                while (curSliceIndex <= curSize){
-                    if (removedIndex < removedList.size()){
-                         if (removedList.get(removedIndex).compareTo(Integer.valueOf(curSliceIndex + distance)) == 0){
-                            removedIndex++;
-                            distance++;
-                         }else{
-                             offset += distance;
-                             distance = 0;
-                             System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
-                             currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
-                              curSliceIndex++;
-                         }
-                    }else{
-                        offset+= distance;
-                        System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
-                        currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
-                        distance = 0;
-                        curSliceIndex++;
-                    }
-                }
-                
+               liststr = removeSliceList(checklist);
                 ui.getmimsLog().Log("Deleted list: " + liststr);
                 ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
                 MimsTomography tomo = ui.getmimsTomography();
@@ -1679,32 +1647,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
             int distance = 0;
             Collections.sort(removedList);
             int offset = 0;
-            //loop through all current slices
-            while (curSliceIndex <= curSize){
-                //check to see whether or not we've looped through all the removed indices
-                if (removedIndex < removedList.size()){
-                     //increment through removed list by steps of 1 to see what the next non-removed true slice is which we need to assign
-                     if (removedList.get(removedIndex).compareTo(Integer.valueOf(curSliceIndex + distance)) == 0){
-                        removedIndex++;
-                        distance++;
-                     }else{
-                         //increment the offset to the curSliceIndex by distance of next consequetive group of removed integers
-                         offset += distance;
-                         distance = 0;
-                         System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
-                         currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
-                         curSliceIndex++;
-                     }
-                }else{
-                    //increment the offset to the curSliceIndex by distance of next consequetive group of removed integers
-                    offset += distance;
-                    distance = 0;
-                    System.out.println("Slice #" +Integer.valueOf(curSliceIndex) + " assigned to real index " + Integer.valueOf(curSliceIndex+offset));
-                    currentToRemoved.put(Integer.valueOf(curSliceIndex), Integer.valueOf(curSliceIndex+offset));
-                    curSliceIndex++;
-                }
-            }
-                
        }
        
        images[0].setSlice(current);
@@ -2093,7 +2035,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
               ArrayList ar = ui.mimsAction.getActionList(i+1);
               data[i][0] = planes.get(i);
               if (insert) data[i][1] = planes.get(i);
-              else data[i][1] = currentToRemoved.get(Integer.valueOf(i+1));
+              else data[i][1] = ui.mimsAction.trueIndex(i+1);
               data[i][2] = ar.get(0);
               data[i][3] = ar.get(1);
               data[i][4] = ar.get(2);
