@@ -932,6 +932,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     public void pushRoiToIJ(){
         Roi[] lrois = getAllROIsInList();
         RoiManager manager = RoiManager.getInstance();
+        //open RoiManager if it's null
+        if(manager == null) {
+            IJ.run("ROI Manager...");
+            manager = RoiManager.getInstance();
+        }
         if(manager != null){
             for (int i = 0; i < lrois.length; i++){
                 manager.addRoi(lrois[i]);
