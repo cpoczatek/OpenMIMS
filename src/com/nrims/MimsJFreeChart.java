@@ -578,7 +578,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
     }
 
    /**
-    * A static class that returns a double value for a specific
+    * A static method that returns a double value for a specific
     * statistic. The <code> stats </code> parameter must be defined
     * and associated with an image, usually by calling <code>
     * image.getStatistics() </code>.

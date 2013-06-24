@@ -286,6 +286,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       t.start();
       this.ui = this;
         
+      //StartupScript should be DEPRICATED/REMOVED
+      //Better way to initialize state is via a script
+      //need to research...
       // Create and start the thread
       //Thread thread = new StartupScript(this);
       //thread.start();
