@@ -1365,6 +1365,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
       // Get the mass names.
       String[] massNames = ui.getOpener().getMassNames();
+      String[] massSymbols = ui.getOpener().getMassSymbols();
 
       // Create the numerator and denominator panel.
       JPanel numeratorPanel = new JPanel(new GridLayout(0,1));
@@ -1391,9 +1392,9 @@ public class MimsHSIView extends javax.swing.JPanel {
       for (int i = 0; i < massNames.length; i++){
 
          // Must create two instances of the button.
-         JRadioButton jrb_num = new JRadioButton("m"+massNames[i]);
+         JRadioButton jrb_num = new JRadioButton("m"+massNames[i] + " [" + massSymbols[i] + "]");
          jrb_num.setName((new Integer(i)).toString());
-         JRadioButton jrb_den = new JRadioButton("m"+massNames[i]);
+         JRadioButton jrb_den = new JRadioButton("m"+massNames[i] + " [" + massSymbols[i] + "]");
          jrb_den.setName((new Integer(i)).toString());
          
          // Add radiobutton to the group.
@@ -1424,7 +1425,7 @@ public class MimsHSIView extends javax.swing.JPanel {
       add(new JSeparator(JSeparator.HORIZONTAL));
       add(buttonPanel);
 
-      setSize(new Dimension(275, 240+h));
+      setSize(new Dimension(400, 260+h));
    }
 
    public void actionPerformed(ActionEvent e) {
