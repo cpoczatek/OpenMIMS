@@ -124,6 +124,9 @@ public class MimsAction implements Cloneable {
     public int getSize() {
         return this.imageList.size();
     }
+    public ArrayList<Integer> getDroppedList(){
+        return this.droppedList;
+    }
 
    /**
     * Marks a plane as being dropped (assigns

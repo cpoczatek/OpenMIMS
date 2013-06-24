@@ -64,6 +64,7 @@ public class MimsJTable {
    static String ROIGROUP = "Roi group";
    static String ROINAME = "Roi name";
    static String SLICE = "Slice";
+   static String TRUE = "True index";
    static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
    static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
 
@@ -983,7 +984,7 @@ public class MimsJTable {
          formatter.setMinimumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
 
          String colName = table.getColumnName(column);
-         if (colName.startsWith(GROUP) || colName.matches(FILENAME) ||
+         if (colName.startsWith(GROUP) || colName.matches(FILENAME) || colName.matches(TRUE) ||
              colName.matches(ROIGROUP) || colName.matches(ROINAME)  || colName.matches(SLICE)) {
              setHorizontalAlignment(JLabel.LEFT);
          } else if (colName.startsWith(AREA)) {

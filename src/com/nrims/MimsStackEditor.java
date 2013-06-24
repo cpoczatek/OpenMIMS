@@ -61,7 +61,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
    public ArrayList<Integer> includeList = new ArrayList<Integer>();
    public int startSlice = -1;
    private MimsJTable table;
-   private ArrayList<Integer> removedList = new ArrayList<Integer>();
 
    /**
     * The MimsStackEditor constructor.
@@ -78,7 +77,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
       images = ui.getMassImages();
       numberMasses = image.getNMasses();
-      int numSlices = images[0].getNSlices();
       
    }
 
@@ -1554,33 +1552,19 @@ public class MimsStackEditor extends javax.swing.JPanel {
            if (tomo != null){
                MimsJTable tomo_table = tomo.getTable();
                if (tomo_table != null){
-                   //retrieve the selected rows from the tomography table
                     checklist = tomo_table.getSelectedImageRows();
-                    if (checklist == null){
-                       //no rows selected
-                    }
                }else{
-                   //check for previous existing table
                    if (table == null){
                        createTable(false);
-                       int index = ui.getRoiManager().getAllROIs().length-1;
-                       ui.getRoiManager().select(index);
-                       ui.getRoiManager().delete(false);
                    }else{
-                       
                        checklist = table.getSelectedImageRows();
                        table.close();
                        table = null;
-                       
                    }
                }
            }else{
-               //check for previous existing table
                if (table == null){
                    createTable(false);
-                   int index = ui.getRoiManager().getAllROIs().length-1;
-                   ui.getRoiManager().select(index);
-                   ui.getRoiManager().delete(false);
                }else{
                    checklist = table.getSelectedImageRows();
                    table.close();
@@ -1590,15 +1574,11 @@ public class MimsStackEditor extends javax.swing.JPanel {
        }
        if (checklist != null){
             if (!checklist.isEmpty()) {
-                for (Integer check : checklist){
-                    removedList.add(ui.mimsAction.trueIndex(check.intValue()));
-                }
-               liststr = removeSliceList(checklist);
+                liststr = removeSliceList(checklist);
                 ui.getmimsLog().Log("Deleted list: " + liststr);
                 ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
                 MimsTomography tomo = ui.getmimsTomography();
-           //need to check whether both MimTomography and MimsJTable are initialized, else create a new table
-               if (tomo != null){
+                if (tomo != null){
                     MimsJTable tomo_table = tomo.getTable();
                     if (tomo_table != null){
                       tomo_table.close();
@@ -1631,24 +1611,11 @@ public class MimsStackEditor extends javax.swing.JPanel {
              table.close();
              table = null;
          }
-          
        }
        length = checklist.size();
        for (int i = 0; i < length; i++) {
           this.insertSlice(checklist.get(i));
-          removedList.remove(checklist.get(i));
        }
-       if (length > 0) {
-            //added 6/20/2013
-            //in order to get the true indices to show when we open up table view for add/remove slices, we need to store them
-            int curSize = images[0].getNSlices();
-            int removedIndex = 0;
-            int curSliceIndex = 1;
-            int distance = 0;
-            Collections.sort(removedList);
-            int offset = 0;
-       }
-       
        images[0].setSlice(current);
        this.resetTrueIndexLabel();
        this.resetSpinners();
@@ -1921,48 +1888,32 @@ public class MimsStackEditor extends javax.swing.JPanel {
       if (roi == null) {
          return null;
       }
+      ImageProcessor tempProcessor = null;
      ImageProcessor mask = roi.getMask();
       if(mask == null){
-        ImageProcessor tempProcessor = img.getProcessor();
-        ij.process.StackProcessor stackproc = new ij.process.StackProcessor(tempStack, tempProcessor);
-        int width = roi.getBoundingRect().width;
-        int height = roi.getBoundingRect().height;
-        int x = roi.getBoundingRect().x;
-        int y = roi.getBoundingRect().y;
-        img.getProcessor().setRoi(roi);
-        img.setStack("cropped", stackproc.crop(x, y, width, height));
-        img.killRoi();
+        tempProcessor = img.getProcessor();
       }else{
         ImagePlus tempImg = img.duplicate();
         img.killRoi();
-        ImageProcessor tempProcessor = tempImg.getProcessor();
+        tempProcessor = tempImg.getProcessor();
         tempImg.killRoi();
-        //tempProcessor.setRoi(roi);
-        //tempProcessor.setValue(0);
-        //tempProcessor.fillOutside(roi);
-        //tempStack.update(tempProcessor);
-        //tempProcessor.setMask(mask);
-        //tempProcessor.setRoi(roi);
         tempStack = tempImg.getStack();
         int stackSize = tempStack.getSize();
         for (int i = 1; i <= stackSize; i++){
           tempProcessor = tempStack.getProcessor(i);
           tempProcessor.setValue(0);
           tempProcessor.fillOutside(roi);
-          
         }
-        ij.process.StackProcessor stackproc = new ij.process.StackProcessor(tempStack, tempProcessor);
-        int width = roi.getBoundingRect().width;
-        int height = roi.getBoundingRect().height;
-        int x = roi.getBoundingRect().x;
-        int y = roi.getBoundingRect().y;
-        img.getProcessor().setRoi(roi);
-        img.setStack("cropped", stackproc.crop(x, y, width, height));
-        img.killRoi();
-        
-        
-     }
-
+      }
+      ij.process.StackProcessor stackproc = new ij.process.StackProcessor(tempStack, tempProcessor);
+      int width = roi.getBoundingRect().width;
+      int height = roi.getBoundingRect().height;
+      int x = roi.getBoundingRect().x;
+      int y = roi.getBoundingRect().y;
+      img.getProcessor().setRoi(roi);
+      img.setStack("cropped", stackproc.crop(x, y, width, height));
+      img.killRoi();
+      
       return img;
    }
 
@@ -2025,9 +1976,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
              planes.add(Integer.valueOf(i));
           }
        }else{
-           for (int i = 1; i <= ui.getOpenMassImages()[0].getNSlices(); i++) {
-             planes = removedList;
-          }
+          planes = ui.mimsAction.getDroppedList();
+          Collections.sort(planes);
        }
           int numPlanes = planes.size();
           Object[][] data = new Object[numPlanes][7];
@@ -2040,15 +1990,13 @@ public class MimsStackEditor extends javax.swing.JPanel {
               data[i][3] = ar.get(1);
               data[i][4] = ar.get(2);
               data[i][5] = ar.get(3);
-              data[i][6] = ar.get(4);  
-              System.out.println (data[i][0] + " " + data[i][1] + " " + data[i][2] + " " + data[i][3] + " " + data[i][4] + " " + data[i][5] + " " + data[i][6] + " ");
+              data[i][6] = ar.get(4);
           }
           table = new MimsJTable(ui);
           table.setImages(ui.getOpenMassImages());
           String[] columnNames = {"Slice", "True Index", "x", "y", "drop", "image index", "file"};
           table.createCustomTable(data, columnNames);
           table.showFrame();
-         
    }
 
    /**
