@@ -917,19 +917,26 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      */
     @Override
     public void show() {
-        super.show() ;
-        if(getWindow() != null) {
-            if(!(getWindow().getCanvas() instanceof MimsCanvas )) {
-                if (getStackSize() > 1) {
-                    new StackWindow(this, new MimsCanvas(this, ui));
-                } else {
-                    new ImageWindow(this, new MimsCanvas(this, ui));
+        while (this.lockSilently() == false){
+            
+        }
+        try{
+            super.show() ;
+            if(getWindow() != null) {
+                if(!(getWindow().getCanvas() instanceof MimsCanvas )) {
+                    if (getStackSize() > 1) {
+                        new StackWindow(this, new MimsCanvas(this, ui));
+                    } else {
+                        new ImageWindow(this, new MimsCanvas(this, ui));
+                    }
                 }
+                getWindow().addWindowListener(this);
+                getWindow().getCanvas().addMouseListener(this);
+                getWindow().getCanvas().addMouseMotionListener(this);
+                getWindow().getCanvas().addMouseWheelListener(this);
             }
-            getWindow().addWindowListener(this);
-            getWindow().getCanvas().addMouseListener(this);
-            getWindow().getCanvas().addMouseMotionListener(this);
-            getWindow().getCanvas().addMouseWheelListener(this);
+        } finally{
+            this.unlock();
         }
     }
 
@@ -1898,14 +1905,20 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      */
     @Override
     public void close() {
-        if (allowClose) {
-            ui.imageClosed(this);
-            ui.getCBControl().removeWindowfromList(this);
-            ui.getmimsTomography().resetImageNamesList();
-            super.close();
-        } else {
-            this.hide();
-            ui.massImageClosed(this);
+        while (this.lockSilently() == false){
+        }
+        try {
+            if (allowClose) {
+                ui.imageClosed(this);
+                ui.getCBControl().removeWindowfromList(this);
+                ui.getmimsTomography().resetImageNamesList();
+                super.close();
+            } else {
+                this.hide();
+                ui.massImageClosed(this);
+            }
+        } finally{
+            this.unlock();
         }
     }
 
