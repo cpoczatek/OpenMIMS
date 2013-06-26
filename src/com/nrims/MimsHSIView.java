@@ -35,7 +35,7 @@ public class MimsHSIView extends javax.swing.JPanel {
         this.ui = ui;
         initComponents();
         initComponentsCustom();
-        updateImage();    
+        updateImage(true);    
     }
 
     /**
@@ -1010,7 +1010,7 @@ public class MimsHSIView extends javax.swing.JPanel {
     * Updates the list of possible ratio
     * and HSI images in the JList.
     */
-    public void updateImage() {
+    public void updateImage(boolean delete) {
         if(ui == null)
             return;
 
@@ -1021,65 +1021,66 @@ public class MimsHSIView extends javax.swing.JPanel {
         bUpdating = true ;
 
         // Clear the list.
-        listModel.removeAllElements();
+        if (delete){
+            listModel.removeAllElements();
 
-        // Get all the mass names.
-        String [] massNames = image.getMassNames();
+            // Get all the mass names.
+            String [] massNames = image.getMassNames();
 
-        // Maximum difference between atomic weight
-        // to appear by defualt on the ratio list.
-        double maxDiff = ui.getPreferences().getRatioSpan();
-        boolean reciprocals = ui.getPreferences().getRatioReciprocals();
+            // Maximum difference between atomic weight
+            // to appear by defualt on the ratio list.
+            double maxDiff = ui.getPreferences().getRatioSpan();
+            boolean reciprocals = ui.getPreferences().getRatioReciprocals();
 
-        // Populate the list with default ratio images.
-        for(int i=massNames.length-1; i >= 1; i--) {
-           Double d1 = new Double(massNames[i]);
-           for(int j=i-1; j >= 0; j--) {
-              Double d2 = new Double(massNames[j]);
-              if (Math.abs(d2-d1) <= maxDiff) {
-                 listModel.addElement(i+":"+j);
-                 if(reciprocals) {
-                     listModel.addElement(j+":"+i);
+            // Populate the list with default ratio images.
+            for(int i=massNames.length-1; i >= 1; i--) {
+               Double d1 = new Double(massNames[i]);
+               for(int j=i-1; j >= 0; j--) {
+                  Double d2 = new Double(massNames[j]);
+                  if (Math.abs(d2-d1) <= maxDiff) {
+                     listModel.addElement(i+":"+j);
+                     if(reciprocals) {
+                         listModel.addElement(j+":"+i);
+                     }
+                  }
+               }
+            }
+
+           // Populate the list with user added ratio images.
+           maxDiff = ui.getPreferences().getMassDiff();
+           String[] numValues = ui.getPreferences().getNumerators();
+           String[] denValues = ui.getPreferences().getDenominators();
+
+           if (numValues.length != denValues.length) {
+              numValues = new String[0];
+              denValues = new String[0];
+           }
+
+           double prefNumVal, prefDenVal;
+           for (int j = 0; j < numValues.length; j++) {
+
+              try {
+                 prefNumVal = new Double(numValues[j]);
+                 prefDenVal = new Double(denValues[j]);
+              } catch(NumberFormatException nfe) {
+                 continue;
+              }
+              int[] numIndices = ui.getMassIndices(prefNumVal, maxDiff);
+              int[] denIndices = ui.getMassIndices(prefDenVal, maxDiff);
+
+              for (int k = 0; k < numIndices.length; k++) {
+                 for (int l = 0; l < denIndices.length; l++) {
+                    double numMass = ui.getMassValue(numIndices[k]);
+                    double denMass = ui.getMassValue(denIndices[l]);
+                    if (numIndices[k] == denIndices[l])
+                       continue;
+                    String listElement = numIndices[k] + ":" + denIndices[l];
+                    if (numMass != denMass /*&& ((prefNumVal > prefDenVal) && (numMass > denMass))*/ && !listModel.contains(listElement))
+                       listModel.addElement(listElement);
                  }
               }
            }
-        }
-
-       // Populate the list with user added ratio images.
-       maxDiff = ui.getPreferences().getMassDiff();
-       String[] numValues = ui.getPreferences().getNumerators();
-       String[] denValues = ui.getPreferences().getDenominators();
-
-       if (numValues.length != denValues.length) {
-          numValues = new String[0];
-          denValues = new String[0];
-       }
-
-       double prefNumVal, prefDenVal;
-       for (int j = 0; j < numValues.length; j++) {
-
-          try {
-             prefNumVal = new Double(numValues[j]);
-             prefDenVal = new Double(denValues[j]);
-          } catch(NumberFormatException nfe) {
-             continue;
-          }
-          int[] numIndices = ui.getMassIndices(prefNumVal, maxDiff);
-          int[] denIndices = ui.getMassIndices(prefDenVal, maxDiff);
-
-          for (int k = 0; k < numIndices.length; k++) {
-             for (int l = 0; l < denIndices.length; l++) {
-                double numMass = ui.getMassValue(numIndices[k]);
-                double denMass = ui.getMassValue(denIndices[l]);
-                if (numIndices[k] == denIndices[l])
-                   continue;
-                String listElement = numIndices[k] + ":" + denIndices[l];
-                if (numMass != denMass /*&& ((prefNumVal > prefDenVal) && (numMass > denMass))*/ && !listModel.contains(listElement))
-                   listModel.addElement(listElement);
-             }
-          }
-       }
-
+        } 
         // Clear selection by default
         jList1.clearSelection();
 
