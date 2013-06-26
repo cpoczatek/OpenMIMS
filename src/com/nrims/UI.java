@@ -4593,7 +4593,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                   //get all xml objects contained within zip
                   ArrayList entries = openXMLfromZip(file);
                   if (entries == null) {
+                      JOptionPane.showMessageDialog(ui, ".session.zip is empty/corrupt", "File Read Error", JOptionPane.ERROR_MESSAGE);
                       return false;
+                  }else if (entries.isEmpty()){
+                       JOptionPane.showMessageDialog(ui, ".session.zip is empty/corrupt", "File Read Error", JOptionPane.ERROR_MESSAGE);
+                       return false;
                   }
                   ArrayList<SumProps> sums = new ArrayList<SumProps>();
                   ArrayList<RatioProps> ratios = new ArrayList<RatioProps>();
@@ -4941,7 +4945,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 jTabbedPane1.setComponentAt(5, segmentation);
 
                 mimsData.setMimsImage(image);
-                hsiControl.updateImage();
+                hsiControl.updateImage(false);
              }
 
              jTabbedPane1.addChangeListener(new ChangeListener() {
