@@ -149,8 +149,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private ij.ImageJ ijapp = null;
     private FileDrop mimsDrop;
     private HashMap wpMap = new HashMap<Double, Point>();
+    private HashMap wpiMap = new HashMap<Integer, Point>();
     private HashMap hwMap = new HashMap<Double, Boolean>();
     private HashMap zmMap = new HashMap<Double, Double>();
+    private HashMap hwiMap = new HashMap<Double, Boolean>();
+    private HashMap zmiMap = new HashMap<Double, Double>();
     protected MimsLineProfile lineProfile;
     protected MimsAction mimsAction = null; 
     private imageNotes imgNotes;
@@ -535,8 +538,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             zoom = 1.0;
          }
          wpMap.put(mass, point);
+         wpiMap.put(i, point);
          hwMap.put(mass, isVisible);
          zmMap.put(mass, zoom);
+         hwiMap.put(i, isVisible);
+         zmiMap.put(i, zoom);
       }
    }
 
@@ -571,9 +577,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       for (int i = 0; i < massImages.length; i++) {
          if (massImages[i] != null) {
             massVal = massImages[i].getMassValue();
-            point = getWindowLocation(massVal);
-            isVisible = getWindowVisible(massVal);
-            zoom = getWindowZoom(massVal);
+            point = getWindowLocationIdx(i);
+            isVisible = getWindowVisibleIdx(i);
+            zoom = getWindowZoomIdx(i);
             
             if (point !=  null) {
                massImages[i].getWindow().setLocation(point);
@@ -608,6 +614,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
        return null;
     }
+    /**
+    * Gets the window position of the mass image
+    * with value <code>massValIdx</code> from the previous session.
+    *
+    * @param massValIdx the mass value.
+    * @return the position.
+    */
+    public Point getWindowLocationIdx(Integer massValIdx) {
+       return (Point)wpiMap.get(massValIdx);
+    }
 
    /**
     * Gets the window visibility of the mass image
@@ -626,6 +642,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
        return true;
     }
+    /**
+    * Gets the window visibility of the mass image
+    * with value <code>massVal1</code> from the previous session.
+    *
+    * @param massVal1 the mass index value.
+    * @return the visibility.
+    */
+    public Boolean getWindowVisibleIdx(Integer massVal1) {
+       return (Boolean)hwiMap.get(massVal1);
+    }
 
    /**
     * Gets the window zoom level of the mass image
@@ -643,6 +669,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
              return (Double)zmMap.get(key);
        }
        return 1.0;
+    }
+    /**
+    * Gets the window zoom level of the mass image
+    * with value <code>massVal1</code> from the previous session.
+    *
+    * @param massVal1 the mass value.
+    * @return the zoom level.
+    */
+    public Double getWindowZoomIdx(Integer massVal1) {
+       return (Double)zmiMap.get(massVal1);
     }
 
     /**
@@ -760,6 +796,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             Double mass = mp.getMassValue();
             Point point = mp.getWindow().getLocation();
             wpMap.put(mass, point);
+            wpiMap.put(index, point);
             mp.hide();
          }
     }
@@ -2263,13 +2300,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        MimsPlus mp;
        // Generate ratio images.
        for (int i=0; i<rto_props.length; i++){
-          int nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
-          int didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+          int nidx = rto_props[i].getNumMassIdx();
+          int didx = rto_props[i].getDenMassIdx();
           if (nidx == -1 || didx == -1)
              continue;
-
-          rto_props[i].setNumMassIdx(nidx);
-          rto_props[i].setDenMassIdx(didx);
           if (!same_size)
                 rto_props[i].setMag(1.0);
           mp = new MimsPlus(this, rto_props[i]);
@@ -2278,33 +2312,28 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
        
        // Generate hsi images.
+       System.out.println(hsi_props.length);
        for (int i=0; i<hsi_props.length; i++){
-          int nidx = getClosestMassIndices(hsi_props[i].getNumMassValue(), 0.49);
-          int didx = getClosestMassIndices(hsi_props[i].getDenMassValue(), 0.49);
+          int nidx = hsi_props[i].getNumMassIdx();
+          int didx = hsi_props[i].getDenMassIdx();
           if (nidx == -1 || didx == -1)
              continue;
-
-          hsi_props[i].setNumMassIdx(nidx);
-          hsi_props[i].setDenMassIdx(didx);
           if (!same_size) 
              hsi_props[i].setMag(1.0);
 
           mp = new MimsPlus(this, hsi_props[i]);
           mp.showWindow();
-          mp.getHSIProcessor().setProps(hsi_props[i]);
-          mp.hsiProps = hsi_props[i];          
+          //mp.getHSIProcessor().setProps(hsi_props[i]);
+          //mp.hsiProps = hsi_props[i];          
        }
 
        // Generate sum images.
        for (int i=0; i<sum_props.length; i++){
           if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {             
-               int nidx = getClosestMassIndices(sum_props[i].getNumMassValue(), 0.49);
-               int didx = getClosestMassIndices(sum_props[i].getDenMassValue(), 0.49);
+               int nidx = sum_props[i].getNumMassIdx();
+               int didx = sum_props[i].getDenMassIdx();
                if (nidx == -1 || didx == -1)
                   continue;
-
-                sum_props[i].setNumMassIdx(nidx);
-                sum_props[i].setDenMassIdx(didx);
                 if (!same_size)
                    sum_props[i].setMag(1.0);
                 mp = new MimsPlus(this, sum_props[i], null);
@@ -2312,7 +2341,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
 
           } else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
-                int pidx = getClosestMassIndices(sum_props[i].getParentMassValue(), 0.49);
+                int pidx = sum_props[i].getParentMassIdx();
                 if (pidx == -1)
                   continue;
 
@@ -3920,7 +3949,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     int massValIdx = massValIds[k];
                     win_ids[(j / col_size) + (k * row_size)] = windows[massValIdx].getID();
                 }
-
             }
         //else we just order the mass indices in the order we find them.
         } else {
@@ -4581,6 +4609,17 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                           hsis.add((HSIProps) entry);
                       }
                   }
+                   for (int i = 0; i < hsis.size(); i++) {
+                      HSIProps hsiprops = hsis.get(i);
+                      if (!loaded) {
+                          if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
+                              return false;
+                          doneLoadingFile();
+                          loaded = true;
+                      }
+                      MimsPlus sp = new MimsPlus(ui, hsiprops);
+                      sp.showWindow();
+                  }
                   for (int i = 0; i < sums.size(); i++) {
                       SumProps sumprops = sums.get(i);
                       if (!loaded) {
@@ -4604,17 +4643,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       MimsPlus sp = new MimsPlus(ui, ratioprops);
                       sp.showWindow();
                   }
-                  for (int i = 0; i < hsis.size(); i++) {
-                      HSIProps hsiprops = hsis.get(i);
-                      if (!loaded) {
-                          if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
-                              return false;
-                          doneLoadingFile();
-                          loaded = true;
-                      }
-                      MimsPlus sp = new MimsPlus(ui, hsiprops);
-                      sp.showWindow();
-                  }
+                 
              } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION)
                      || file.getAbsolutePath().endsWith(ROI_EXTENSION)) {
                 onlyShowDraggedFile = false;
