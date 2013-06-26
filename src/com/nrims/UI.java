@@ -2011,7 +2011,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 numBefore++;
             }
         }
-        String titleString = massValueString;
+        String titleString = "m" + massValueString;
         if (numBefore > 0){
             titleString = "(" + numBefore + ") " + titleString;
         }
