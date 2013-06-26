@@ -321,21 +321,36 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        return InetAddress.getLocalHost().getHostName();
    }
    public boolean addToImagesList(MimsPlus mp) {
-      int i = 0; int ii = 0; boolean inserted=false;
+      int i = 0; int ii = 0; boolean inserted=false; int numBefore = 0;
       while (i < maxMasses) {
-         if (mp.getMimsType() == MimsPlus.RATIO_IMAGE && ratioImages[i] == null) {
-            inserted = true;
-            ratioImages[i] = mp;
-            getCBControl().addWindowtoList(mp);
-            getmimsTomography().resetImageNamesList();
-            return true;
-         }
-         if (mp.getMimsType() == MimsPlus.HSI_IMAGE && hsiImages[i] == null) {
-            inserted = true;
-            hsiImages[i] = mp;
-            getmimsTomography().resetImageNamesList();
-            return true;
-         }
+          if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
+              if (ratioImages[i] == null) {
+                  inserted = true;
+                  if (numBefore > 0) {
+                      mp.setTitle("(" + numBefore + ") " + mp.getTitle());
+                  }
+                  ratioImages[i] = mp;
+                  getCBControl().addWindowtoList(mp);
+                  getmimsTomography().resetImageNamesList();
+                  return true;
+              } else if (ratioImages[i].getRatioProps().equals(mp.getRatioProps())) {
+                  numBefore++;
+              }
+              
+          }
+          if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+              if (hsiImages[i] == null) {
+                  inserted = true;
+                  if (numBefore > 0) {
+                      mp.setTitle("(" + numBefore + ") " + mp.getTitle());
+                  }
+                  hsiImages[i] = mp;
+                  getmimsTomography().resetImageNamesList();
+                  return true;
+              } else if (hsiImages[i].getHSIProps().equals(mp.getHSIProps())) {
+                   numBefore++;
+              }
+          }
          if (mp.getMimsType() == MimsPlus.SEG_IMAGE && segImages[i] == null) {
             inserted = true;
             segImages[i] = mp;
@@ -346,18 +361,32 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       
       // Sum and composite images has a larger array size.
       while (ii < 2 * maxMasses) {
-         if (mp.getMimsType() == MimsPlus.SUM_IMAGE && sumImages[ii] == null) {
-            inserted = true;
-            sumImages[ii] = mp;
-            getCBControl().addWindowtoList(mp);
-            this.mimsTomography.resetImageNamesList();
-            return true;
-         }
-         if (mp.getMimsType() == MimsPlus.COMPOSITE_IMAGE && compImages[ii] == null) {
-            inserted = true;
-            compImages[ii] = mp;
-            return true;
-         }
+         if (mp.getMimsType() == MimsPlus.SUM_IMAGE) {
+              if (sumImages[ii] == null) {
+                  inserted = true;
+                  if (numBefore > 0) {
+                      mp.setTitle("(" + numBefore + ") " + mp.getTitle());
+                  }
+                  sumImages[ii] = mp;
+                  getCBControl().addWindowtoList(mp);
+                  this.mimsTomography.resetImageNamesList();
+                  return true;
+              } else if (sumImages[ii].getSumProps().equals(mp.getSumProps())) {
+                  numBefore++;
+              }
+          }
+          if (mp.getMimsType() == MimsPlus.COMPOSITE_IMAGE) {
+              if (compImages[ii] == null) {
+                  inserted = true;
+                  if (numBefore > 0) {
+                      mp.setTitle("(" + numBefore + ") " + mp.getTitle());
+                  }
+                  compImages[ii] = mp;
+                  return true;
+              } else if (compImages[ii].getCompositeProps().equals(mp.getCompositeProps())) {
+                  numBefore++;
+              }
+          }
          ii++;
       }
       if (!inserted) System.out.println("Too many open images");
@@ -1956,6 +1985,37 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         for (int i = 0; i < trace.length; i++) {
             IJ.log(trace[i].toString());
         }
+    }
+    /**
+     * method to return title for particular mass index, including symbol
+     * @param index
+     * @return string containing mass value + symbol
+     */
+    public String getTitleStringSymbol(int index){
+        String massValueString = this.getOpener().getMassNames()[index];
+        String massSymbol = this.getOpener().getMassSymbols()[index];
+        String titleString = massValueString + "[" + massSymbol + "]";
+        return titleString;
+    }
+    /**
+     * method to return title for particular mass index, including duplicate number
+     * @param index
+     * @return string containing mass value + duplicate number
+     */
+    public String getTitleStringNum(int index){
+       String[] names = this.getOpener().getMassNames();
+        String massValueString = names[index];
+        int numBefore = 0;
+        for (int i = 0; i < index; i++){
+            if (i != index && names[i].equals(massValueString)){
+                numBefore++;
+            }
+        }
+        String titleString = massValueString;
+        if (numBefore > 0){
+            titleString = "(" + numBefore + ") " + titleString;
+        }
+        return titleString;
     }
 
     /** An action method for the Edit>Preferences... menu item.*/

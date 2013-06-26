@@ -845,7 +845,8 @@ public class MimsHSIView extends javax.swing.JPanel {
              continue;
           }
           // Bring to front if already exists.
-          int ri = ui.getRatioImageIndex(numerator, denomator);
+          //int ri = ui.getRatioImageIndex(numerator, denomator);
+          int ri = -1;
           if (ri > -1) {
              MimsPlus mps = ui.getRatioImage(ri);
              mps.getWindow().toFront();
@@ -939,7 +940,8 @@ public class MimsHSIView extends javax.swing.JPanel {
           }
 
           // Bring to front if already exists.
-          int ri = ui.getHsiImageIndex(numerator, denomator);
+          //int ri = ui.getHsiImageIndex(numerator, denomator);
+          int ri = -1;
           if (ri > -1) {
              MimsPlus mps = ui.getHSIImage(ri);
              mps.getWindow().toFront();
