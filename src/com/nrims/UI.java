@@ -183,14 +183,21 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public UI(boolean silentMode) {
       super("OpenMIMS");
       
-      this.silentMode = silentMode;
-      System.out.println("Ui constructor: id=" + System.identityHashCode(this));
-      System.out.println(System.getProperty("java.version") + " : " + System.getProperty("java.vendor"));
-    try{
-      System.out.println(getMachineName());
-    }catch(Exception e){
-        System.out.println("Could not retrieve machine name");
-    }
+        this.silentMode = silentMode;
+        System.out.println("Ui constructor: id=" + System.identityHashCode(this));
+        System.out.println("java.version: " + System.getProperty("java.version"));
+        System.out.println("java.vendor: " + System.getProperty("java.vendor"));
+        System.out.println("java.vendor.url: " + System.getProperty("java.vendor.url"));
+        System.out.println("java.home: " + System.getProperty("java.home"));
+        System.out.println("os.arch: " + System.getProperty("os.arch"));
+        System.out.println("os.name: " + System.getProperty("os.name"));
+        System.out.println("os.version: " + System.getProperty("os.version"));
+        
+        try {
+            System.out.println("machine name: " + getMachineName());
+        } catch (Exception e) {
+            System.out.println("Error: could not retrieve machine name");
+        }
       revisionNumber = extractRevisionNumber();
       System.out.println("revisionNumber: "+revisionNumber);
       
@@ -312,14 +319,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       });
    }
 
+    private String getMachineName() throws UnknownHostException {
+        return InetAddress.getLocalHost().getHostName();
+    }
+    
     /**
      * Insertion status of the current MimsPlus object
      * @param mp object to be inserted.
      * @return success/failure of insertion.
      */
-   private String getMachineName() throws UnknownHostException {
-       return InetAddress.getLocalHost().getHostName();
-   }
    public boolean addToImagesList(MimsPlus mp) {
       int i = 0; int ii = 0; boolean inserted=false; int numBefore = 0;
       while (i < maxMasses) {
