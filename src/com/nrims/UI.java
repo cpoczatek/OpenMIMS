@@ -1995,36 +1995,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
     /**
-     * method to return title for particular mass index, including symbol
-     * @param index
-     * @return string containing mass value + symbol
+     * Find the number of masses before this one that have the same value
+     * @param index index of the mass
+     * @return the number of masses before this one
      */
-    public String getTitleStringSymbol(int index){
-        String massValueString = this.getOpener().getMassNames()[index];
-        String massSymbol = this.getOpener().getMassSymbols()[index];
-        String titleString = massValueString + "[" + massSymbol + "]";
-        return titleString;
-    }
-    /**
-     * method to return title for particular mass index, including duplicate number
-     * @param index
-     * @return string containing mass value + duplicate number
-     */
-    public String getTitleStringNum(int index){
-       String[] names = this.getOpener().getMassNames();
-        String massValueString = names[index];
-        int numBefore = 0;
-        for (int i = 0; i < index; i++){
-            if (i != index && names[i].equals(massValueString)){
-                numBefore++;
-            }
-        }
-        String titleString = "m" + massValueString;
-        if (numBefore > 0){
-            titleString = "(" + numBefore + ") " + titleString;
-        }
-        return titleString;
-    }
     public int getNumBefore(int index){
        String[] names = this.getOpener().getMassNames();
         String massValueString = names[index];
@@ -2039,7 +2013,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * Method to return title for a single image based on formatString in preferences
      * @param index the index of the image/parent of image you want title for
-     * @return the formatted title
+     * @return a formatted title string according to user preferences
      */
     public String formatTitle(int index){
         char[] formatArray = prefs.getFormatString().toCharArray();
@@ -2065,6 +2039,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
         return curString;
     }
+    /**
+     * Method to return title for a double image (ie ratio, hsi) based on formatString in preferences
+     * @param numIndex index of the numerator
+     * @param denIndex index of the denominator
+     * @return a formatted title string according to user preferences
+     */
     public String formatTitle(int numIndex, int denIndex){
         char[] formatArray = prefs.getFormatString().toCharArray();
         String[] names = this.getOpener().getMassNames();
@@ -2132,8 +2112,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       File file = new File(fileName);
       String directory = file.getParent();
       String name = file.getName();
-      String objectFileName;
-      File final_zip = null;
 
       try {
 
@@ -2195,9 +2173,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           // Get the base of the file name.
           String baseFileName = getFilePrefix(dataFile.getAbsolutePath());
           String onlyFileName = getFilePrefix(dataFile.getName());
-          //create file to save all session info into
-          final_zip = new File(baseFileName + SESSIONS_EXTENSION);
-
+          String[] names = getOpener().getMassNames();
           // Save the ROI files to zip.
           String roisFileName = baseFileName + ROIS_EXTENSION;
           Roi[] rois = getRoiManager().getAllROIs();
@@ -2212,31 +2188,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
               for (int i = 0; i < ratio.length; i++) {
                   RatioProps ratioprops = ratio[i].getRatioProps();
                   ratioprops.setDataFileName(dataFile.getName());
-                  int numIndex = ratioprops.getNumMassIdx();
-                  int denIndex = ratioprops.getDenMassIdx();
-                  int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-                  int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-                  objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + RATIO_EXTENSION;
-                  int numBefore = 0;
-                  String filePostfix = "";
-                  for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
-                  if (numBefore > 0) filePostfix = "(" + numBefore + ")";
-                  filenames[i] = objectFileName;
-                  objectFileName += filePostfix + RATIO_EXTENSION;
-                  zos.putNextEntry(new ZipEntry(objectFileName));
-                  XMLEncoder e = new XMLEncoder(zos);
-                  //need to modify persistance delegate to deal with constructor in RatioProps which takes parameters
-                  e.setPersistenceDelegate(RatioProps.class,
-                          new DefaultPersistenceDelegate(
-                          new String[]{"numMassIdx",
-                              "denMassIdx"}));
-                  e.writeObject(ratioprops);
-                  e.flush();
-                  //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
-                  //but we cannot close or else the entire ZipOutputstream closes
-                  DataOutputStream d_out = new DataOutputStream(zos);
-                  d_out.writeBytes("</java>");
-                  d_out.flush();
+                  if (!saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                          RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i))
+                      return false;
               }
           }
 
@@ -2247,31 +2201,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
               for (int i = 0; i < hsi.length; i++) {
                   HSIProps hsiprops = hsi[i].getHSIProps();
                   hsiprops.setDataFileName(dataFile.getName());
-                  int numIndex = hsiprops.getNumMassIdx();
-                  int denIndex = hsiprops.getDenMassIdx();
-                  int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-                  int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-                  objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + HSI_EXTENSION;
-                  int numBefore = 0;
-                  String filePostfix = "";
-                  for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
-                  if (numBefore > 0) filePostfix = "(" + numBefore + ")";
-                  filenames[i] = objectFileName;
-                  objectFileName += filePostfix + HSI_EXTENSION;
-                  zos.putNextEntry(new ZipEntry(objectFileName));
-                  XMLEncoder e = new XMLEncoder(zos);
-                  //need to modify persistance delegate to deal with constructor in HSIProps which takes parameters
-                  e.setPersistenceDelegate(HSIProps.class,
-                          new DefaultPersistenceDelegate(
-                          new String[]{"numMassIdx",
-                              "denMassIdx"}));
-                  e.writeObject(hsiprops);
-                  e.flush();
-                  //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
-                  //but we cannot close or else the entire ZipOutputstream closes
-                  DataOutputStream d_out = new DataOutputStream(zos);
-                  d_out.writeBytes("</java>");
-                  d_out.flush();
+                  if (!saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx","denMassIdx"}, filenames,
+                           HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName,  i))
+                      return false;
               }
           }
 
@@ -2283,53 +2215,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   SumProps sumProps = sum[i].getSumProps();
                   sumProps.setDataFileName(dataFile.getName());
                   if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-                      int numIndex = sumProps.getNumMassIdx();
-                      int denIndex = sumProps.getDenMassIdx();
-                      int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
-                      int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
-                      objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + SUM_EXTENSION;
-                      int numBefore = 0;
-                      String filePostfix = "";
-                      for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
-                      if (numBefore > 0) filePostfix = "(" + numBefore + ")";
-                      filenames[i] = objectFileName;
-                      objectFileName += filePostfix + SUM_EXTENSION;
-                      zos.putNextEntry(new ZipEntry(objectFileName));
-                      XMLEncoder e = new XMLEncoder(zos);
-                      //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
-                      e.setPersistenceDelegate(SumProps.class,
-                              new DefaultPersistenceDelegate(
-                              new String[]{"numMassIdx",
-                                  "denMassIdx"}));
-                      e.writeObject(sumProps);
-                      e.flush();
-                      //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
-                      //but we cannot close or else the entire ZipOutputstream closes
-                      DataOutputStream d_out = new DataOutputStream(zos);
-                      d_out.writeBytes("</java>");
-                      d_out.flush();
+                      if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx","denMassIdx"}, filenames, 
+                              SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i))
+                          return false;
                   } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-                      int parentIndex = sumProps.getParentMassIdx();
-                      int parentMass = Math.round(new Float(getOpener().getMassNames()[parentIndex]));
-                      objectFileName = onlyFileName + "_m" + parentMass;
-                      int numBefore = 0;
-                      String filePostfix = "";
-                      for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
-                      if (numBefore > 0) filePostfix = "(" + numBefore + ")";
-                      filenames[i] = objectFileName;
-                      objectFileName+= filePostfix + SUM_EXTENSION;
-                      zos.putNextEntry(new ZipEntry(objectFileName));
-                      XMLEncoder e = new XMLEncoder(zos);
-                      e.setPersistenceDelegate(SumProps.class,
-                              new DefaultPersistenceDelegate(
-                              new String[]{"parentMassIdx"}));
-                      e.writeObject(sumProps);
-                      e.flush();
-                      //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
-                      //but we cannot close or else the entire ZipOutputstream closes
-                      DataOutputStream d_out = new DataOutputStream(zos);
-                      d_out.writeBytes("</java>");
-                      d_out.flush();
+                      if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames, 
+                              SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i))
+                          return false;
                   } else {
                       continue;
                   }
@@ -2349,50 +2241,50 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          return false;
       }
       return true;
-   }
-    /**
-     * Helper function to put files into a zip archive (whether new or existing)
-     * @param zip archive which you are placing the file into
-     * @param file file which you want to place into the archive
-     * @throws IOException 
-     */
-    private void zip(File zip, ArrayList<File> files) throws IOException {
-        ZipOutputStream zos = null;
+   }/**
+    * Takes a props object and adds it to a zip.
+    * Used in Save Session.
+    * @param zos the ZipOutputStream for the final zip
+    * @param toWrite the props object to be written
+    * @param cls the class of the props object
+    * @param params the parameters for the constructor of the props object
+    * @param filenames the filenames of similar props objects
+    * @param extension the extension for the props object
+    * @param numName mass string for the numerator (or if a sum of a mass image, the parent)
+    * @param denName mass string for the numerator (or if a sum of a mass image, -1)
+    * @param filename the name of the .nrrd file
+    * @param i index of the object in filenames
+    * @return true if save succeeded, or false if an error was thrown
+    */
+    private boolean saveToXML(ZipOutputStream zos, Object toWrite, Class<?> cls, String[] params, String[] filenames, String extension, String numName, String denName, String filename, int i){
         try {
-            zos = new ZipOutputStream(new FileOutputStream(zip));
-            for (File file : files) {
-                String name = file.getName();
-                ZipEntry entry = new ZipEntry(name);
-                zos.putNextEntry(entry);
-                FileInputStream fis = null;
-                try {
-                    fis = new FileInputStream(file);
-                    byte[] byteBuffer = new byte[1024];
-                    int bytesRead = -1;
-                    while ((bytesRead = fis.read(byteBuffer)) != -1) {
-                        zos.write(byteBuffer, 0, bytesRead);
-                    }
-                    zos.flush();
-                    file.delete();
-                } finally {
-                    try {
-                        fis.close();
-                    } catch (Exception e) {
-                    }
-                }
-                zos.closeEntry();
-                zos.flush();
-            }
-        } finally {
-            try {
-                zos.close();
-            } catch (Exception e) {
-            }
+            int numMass = Math.round(new Float(numName));
+            int denMass = Math.round(new Float(denName));
+            if (denMass != -1) filenames[i] = filename + "_m" + numMass + "_m" + denMass;
+            else filenames[i] = filename + "_m" + numMass;
+            int numBefore = 0;
+            for (int j = 0; j < i; j++) if (filenames[i].equals(filenames[j])) numBefore++;
+            String post = "";
+            if (numBefore > 0) post = "(" + numBefore + ")";
+            zos.putNextEntry(new ZipEntry(filenames[i] + post + extension));
+            XMLEncoder e = new XMLEncoder(zos);
+            //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
+            e.setPersistenceDelegate(cls, new DefaultPersistenceDelegate(params));
+            e.writeObject(toWrite);
+            e.flush();
+            //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
+            //but we cannot close or else the entire ZipOutputstream closes
+            DataOutputStream d_out = new DataOutputStream(zos);
+            d_out.writeBytes("</java>");
+            d_out.flush();
+            return true;
+        } catch (Exception ex) {
+            return false;
         }
     }
     /**
      * Given a zip file, extracts XML files from within and converts to Objects.
-     *
+     * Used in opening .session.zip files
      * @param file absolute file path
      * @return array list containing Objects.
      */
@@ -2438,6 +2330,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           openFileInBackground(file);
        }
     }
+    /**
+     * check whether the numerator mass and denominator mass referred to by indices are within the range of the ones supplied in arguments.
+     * Used in restoreState to check HSI/Ratio/Sum-Ratio images indices/masses
+     * @param nidx numerator index to check
+     * @param didx denominator index to check
+     * @param tolerance range to be considered
+     * @param numMass numerator mass to check against index
+     * @param denMass denominator mass to check against index
+     * @return true if within range, and false if not
+     */
     public boolean withinMassRange(int nidx, int didx, double tolerance, double numMass, double denMass){
         String[] names = this.getOpener().getMassNames();
         double massVal1, numDiff, denDiff;
@@ -2451,9 +2353,17 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return true;
         else return false;
     }
+    /**
+     * check whether the mass referred to by an index are within the range of one supplied in the argument.
+     * Used in restoreState to check Sum-Mass Images indices/masses
+     * @param nidx index to check
+     * @param tolerance range to be considered
+     * @param numMass mass to check against index
+     * @return true if within range, and false if not
+     */
     public boolean withinMassRange(int nidx, double tolerance, double numMass){
         String[] names = this.getOpener().getMassNames();
-        double massVal1, numDiff, denDiff;
+        double numDiff;
         double mindiff = Double.MAX_VALUE;
         if (nidx == -1) return false;
         double nMass = Double.valueOf(names[nidx]);

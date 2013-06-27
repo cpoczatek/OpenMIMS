@@ -1182,7 +1182,7 @@ public class MimsHSIView extends javax.swing.JPanel {
            numThresholdjSpinner.setEnabled(false);
            denThresholdjSpinner.setEnabled(false);
         }
-        imagejLabel.setText("Image: " + mp.title);
+        imagejLabel.setText("Image: " + mp.getWindow().getTitle());
     }
 
     /**
