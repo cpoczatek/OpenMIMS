@@ -2189,7 +2189,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         for (int i = 0; i < imp.length; i++) {
            imp[i].setTitle((new MimsPlus(this, i)).getTitle());
         }
-
         if (saveImageOnly)
            return true;
 
@@ -2209,6 +2208,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
           MimsPlus ratio[] = getOpenRatioImages();
           if (ratio.length > 0) {
+              String[] filenames = new String[ratio.length];
               for (int i = 0; i < ratio.length; i++) {
                   RatioProps ratioprops = ratio[i].getRatioProps();
                   ratioprops.setDataFileName(dataFile.getName());
@@ -2217,6 +2217,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
                   int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
                   objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + RATIO_EXTENSION;
+                  int numBefore = 0;
+                  String filePostfix = "";
+                  for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
+                  if (numBefore > 0) filePostfix = "(" + numBefore + ")";
+                  filenames[i] = objectFileName;
+                  objectFileName += filePostfix + RATIO_EXTENSION;
                   zos.putNextEntry(new ZipEntry(objectFileName));
                   XMLEncoder e = new XMLEncoder(zos);
                   //need to modify persistance delegate to deal with constructor in RatioProps which takes parameters
@@ -2237,6 +2243,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           // Contruct a unique name for each hsi image and save.
           MimsPlus hsi[] = getOpenHSIImages();
           if (hsi.length > 0) {
+              String[] filenames = new String[hsi.length];
               for (int i = 0; i < hsi.length; i++) {
                   HSIProps hsiprops = hsi[i].getHSIProps();
                   hsiprops.setDataFileName(dataFile.getName());
@@ -2245,6 +2252,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
                   int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
                   objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + HSI_EXTENSION;
+                  int numBefore = 0;
+                  String filePostfix = "";
+                  for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
+                  if (numBefore > 0) filePostfix = "(" + numBefore + ")";
+                  filenames[i] = objectFileName;
+                  objectFileName += filePostfix + HSI_EXTENSION;
                   zos.putNextEntry(new ZipEntry(objectFileName));
                   XMLEncoder e = new XMLEncoder(zos);
                   //need to modify persistance delegate to deal with constructor in HSIProps which takes parameters
@@ -2265,6 +2278,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           // Contruct a unique name for each sum image and save.
           MimsPlus sum[] = getOpenSumImages();
           if (sum.length > 0) {
+              String[] filenames = new String[sum.length];
               for (int i = 0; i < sum.length; i++) {
                   SumProps sumProps = sum[i].getSumProps();
                   sumProps.setDataFileName(dataFile.getName());
@@ -2274,6 +2288,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                       int numMass = Math.round(new Float(getOpener().getMassNames()[numIndex]));
                       int denMass = Math.round(new Float(getOpener().getMassNames()[denIndex]));
                       objectFileName = onlyFileName + "_m" + numMass + "_m" + denMass + SUM_EXTENSION;
+                      int numBefore = 0;
+                      String filePostfix = "";
+                      for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
+                      if (numBefore > 0) filePostfix = "(" + numBefore + ")";
+                      filenames[i] = objectFileName;
+                      objectFileName += filePostfix + SUM_EXTENSION;
                       zos.putNextEntry(new ZipEntry(objectFileName));
                       XMLEncoder e = new XMLEncoder(zos);
                       //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
@@ -2291,7 +2311,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
                       int parentIndex = sumProps.getParentMassIdx();
                       int parentMass = Math.round(new Float(getOpener().getMassNames()[parentIndex]));
-                      objectFileName = onlyFileName + "_m" + parentMass + SUM_EXTENSION;
+                      objectFileName = onlyFileName + "_m" + parentMass;
+                      int numBefore = 0;
+                      String filePostfix = "";
+                      for (int j = 0; j < i; j++) if (objectFileName.equals(filenames[j])) numBefore++;
+                      if (numBefore > 0) filePostfix = "(" + numBefore + ")";
+                      filenames[i] = objectFileName;
+                      objectFileName+= filePostfix + SUM_EXTENSION;
                       zos.putNextEntry(new ZipEntry(objectFileName));
                       XMLEncoder e = new XMLEncoder(zos);
                       e.setPersistenceDelegate(SumProps.class,
