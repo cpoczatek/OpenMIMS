@@ -4044,42 +4044,39 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         MimsPlus[] sumImages = getOpenSumImages();
         MimsPlus[] ratioImages = getOpenRatioImages();
         MimsPlus[] hsiImages = getOpenHSIImages();
-        for (MimsPlus mp : windows) {
-            massVals[n] = mp.getMassValue();
-            n++;
-        }
-        Arrays.sort(massVals);
         n = 0;
         int row = 0;
-        sortedMassImages.add(massImages[0]);
+        MimsPlus curZero = null;
+        if (massImages[0].getMassValue() != 0) 
+            sortedMassImages.add(massImages[0]);
+        else
+            curZero = massImages[0];
         for (int i = 1; i < massImages.length; i++){
             MimsPlus cur = massImages[i];
             MimsPlus prev = massImages[i-1];
+            if (prev.getMassValue() == 0 && i > 1) prev = massImages[i-2];
             if (prev.getMassValue() > cur.getMassValue()){ 
-                 if (row == 0){
-                     row = sortedMassImages.size();
-                 }
+                 if (cur.getMassValue() != 0){
+                    if (curZero != null) sortedMassImages.add(curZero);
+                    if (row == 0) row = sortedMassImages.size();
+                 }else curZero = cur;
             }
-            sortedMassImages.add(cur);
+            if (cur.getMassValue() != 0) sortedMassImages.add(cur);
+            if (i == massImages.length-1 && curZero != null) sortedMassImages.add(curZero);
         }
-        int[] wList = new int[massImages.length + sumImages.length + ratioImages.length + hsiImages.length];
+        int[] wList = new int[sortedMassImages.size() + sumImages.length + ratioImages.length + hsiImages.length];
         int j = 0;
         //need to add all types of images into win_ids so they are tiled too
-        for (int i = 0; i < massImages.length; i++) {
-            wList[j] = massImages[i].getID();
-            j++;
-        }
+        for (int i = 0; i < sortedMassImages.size(); i++) 
+            wList[j++] = sortedMassImages.get(i).getID();
         for (MimsPlus mp : sumImages) {
-            wList[j] = mp.getID();
-            j++;
+            wList[j++] = mp.getID();
         }
         for (MimsPlus mp : ratioImages) {
-            wList[j] = mp.getID();
-            j++;
+            wList[j++] = mp.getID();
         }
         for (MimsPlus mp : hsiImages) {
-            wList[j] = mp.getID();
-            j++;
+            wList[j++] = mp.getID();
         }
         for (int i=0; i<wList.length; i++) {
             //ImageWindow win = getWindow(wList[i]);
