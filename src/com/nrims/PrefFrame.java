@@ -34,6 +34,7 @@ public class PrefFrame extends PlugInJFrame {
     int numDecimalPlaces = 2;
     int tileY = 0;
     int autoSaveInterval = 120;
+    String formatString = "M[S]:F";
 
     final String PREFS_KEY = "openmims.";
 
@@ -73,6 +74,8 @@ public class PrefFrame extends PlugInJFrame {
         jLabel9 = new javax.swing.JLabel();
         AutoSaveIntervalTextField = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
+        formatStringTextField = new javax.swing.JTextField();
+        jLabel11 = new javax.swing.JLabel();
 
         jLabel5.setText("Percent turnover, background:");
 
@@ -120,6 +123,8 @@ public class PrefFrame extends PlugInJFrame {
 
         jLabel10.setText("ROI Autosave (in sec)");
 
+        jLabel11.setText("Title Format String(single)");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -130,7 +135,7 @@ public class PrefFrame extends PlugInJFrame {
                         .addGap(181, 181, 181)
                         .addComponent(jButton1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE))
+                        .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -164,18 +169,24 @@ public class PrefFrame extends PlugInJFrame {
                         .addContainerGap()
                         .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(numDecimalPlacesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(numDecimalPlacesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel9)
+                            .addComponent(jLabel10))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(AutoSaveIntervalTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE)
+                            .addComponent(tileYTextField))
+                        .addGap(113, 113, 113)))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel9)
-                    .addComponent(jLabel10))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(AutoSaveIntervalTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE)
-                    .addComponent(tileYTextField))
-                .addGap(125, 125, 125))
+                .addComponent(jLabel11)
+                .addGap(28, 28, 28)
+                .addComponent(formatStringTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -220,7 +231,11 @@ public class PrefFrame extends PlugInJFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(AutoSaveIntervalTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel10))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(formatStringTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel11))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton2)
                     .addComponent(jButton1))
@@ -255,6 +270,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         this.numDecimalPlacesSpinner.setValue(numDecimalPlaces);
         this.tileYTextField.setText(new Integer(tileY).toString());
         this.AutoSaveIntervalTextField.setText(new Integer(autoSaveInterval).toString());
+        this.formatStringTextField.setText(formatString);
     }
 
     /** Reads the preferences and sets member variables accordingly.*/
@@ -273,6 +289,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         numDecimalPlaces = (int)Prefs.get(PREFS_KEY + "numDecimalPlaces", numDecimalPlaces);
         tileY = (int)Prefs.get(PREFS_KEY + "tileY", tileY);
         autoSaveInterval = (int)Prefs.get(PREFS_KEY + "autoSaveInterval", autoSaveInterval);
+        formatString = Prefs.get(PREFS_KEY + "formatString", formatString);
     }
 
     /** Saves the preferences file.*/
@@ -333,6 +350,12 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
            IJ.error("Malformed \"Autosave Interval\" value.");
            return;
         }
+        try {
+           formatString = formatStringTextField.getText();
+        } catch (Exception e) {
+           IJ.error("Malformed \"formatString\" value.");
+           return;
+        }
         Prefs.set(PREFS_KEY + "includeHSI", includeHSI);
         Prefs.set(PREFS_KEY + "includeSum", includeSum);
         Prefs.set(PREFS_KEY + "includeMass", includeMass);
@@ -347,6 +370,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         Prefs.set(PREFS_KEY + "numDecimalPlaces", numDecimalPlaces);
         Prefs.set(PREFS_KEY + "tileY", tileY);
         Prefs.set(PREFS_KEY + "autoSaveInterval", autoSaveInterval);
+        Prefs.set(PREFS_KEY + "formatString", formatString);
         Prefs.savePreferences();
         close();
     }
@@ -470,6 +494,13 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
        return autoSaveInterval;
     }
     /**
+     * Get the format string used to determine format of image titles
+     * @return 
+     */
+    String getFormatString(){
+        return formatString;
+    }
+    /**
      * Get the list of ratio images preferred by the user.
      */
     String[] getNumerators() {
@@ -568,10 +599,12 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     private javax.swing.JTextField AutoSaveIntervalTextField;
     private javax.swing.JCheckBox HSIcheckbox;
     private javax.swing.JTextField backgroundTextField;
+    private javax.swing.JTextField formatStringTextField;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

@@ -2025,7 +2025,76 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
         return titleString;
     }
-
+    public int getNumBefore(int index){
+       String[] names = this.getOpener().getMassNames();
+        String massValueString = names[index];
+        int numBefore = 0;
+        for (int i = 0; i < index; i++){
+            if (i != index && names[i].equals(massValueString)){
+                numBefore++;
+            }
+        }
+        return numBefore;
+    }
+    /**
+     * Method to return title for a single image based on formatString in preferences
+     * @param index the index of the image/parent of image you want title for
+     * @return the formatted title
+     */
+    public String formatTitle(int index){
+        char[] formatArray = prefs.getFormatString().toCharArray();
+        String curString = "";
+        String returnedValue;
+        for (int i = 0; i < formatArray.length; i++) {
+            char curChar = formatArray[i];
+            if (curChar == 'M') {
+                curString+= String.valueOf(this.getOpener().getMassNames()[index]);
+            } else if (curChar == 'F') {
+                curString+= this.getImageFilePrefix();
+            } else if (curChar == 'S') {
+                if (this.getOpener().getMassSymbols() != null) {
+                    curString += String.valueOf(this.getOpener().getMassSymbols()[index]);
+                }
+            }else {
+                curString+= String.valueOf(curChar);
+            }
+        }
+        int numBefore;
+        if ((numBefore = ui.getNumBefore(index)) > 0){
+            curString = "(" + numBefore + ") " + curString;
+        }
+        return curString;
+    }
+    public String formatTitle(int numIndex, int denIndex){
+        char[] formatArray = prefs.getFormatString().toCharArray();
+        String[] names = this.getOpener().getMassNames();
+        String[] symbols = this.getOpener().getMassSymbols();
+        String curString = "";
+        int numBefore;
+        for (int i = 0; i < formatArray.length; i++) {
+            char curChar = formatArray[i];
+            if (curChar == 'M') {
+                if ((numBefore = ui.getNumBefore(numIndex)) > 0) {
+                    curString = "(" + numBefore + ")" + curString;
+                }
+                curString += String.valueOf(names[numIndex]) + "/";
+                if ((numBefore = ui.getNumBefore(denIndex)) > 0) {
+                    curString = "(" + numBefore + ")" + curString;
+                }
+                curString += String.valueOf(names[denIndex]);
+            } else if (curChar == 'F') {
+                curString += this.getImageFilePrefix();
+            } else if (curChar == 'S') {
+                if (symbols != null) {
+                    curString += String.valueOf(symbols[numIndex]) + "/" + String.valueOf(symbols[denIndex]);
+                }
+            }else {
+                curString+= String.valueOf(curChar);
+            }
+        }
+        return curString;
+    }
+    
     /** An action method for the Edit>Preferences... menu item.*/
     private void preferencesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_preferencesMenuItemActionPerformed
       
@@ -2322,6 +2391,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return entries;
         }
     }
+    
     /**
      * Action method for File>Open Mims Image menu item. If opening
      */
@@ -3969,6 +4039,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         double[] massVals = new double[windows.length];
         int[] win_ids = new int[windows.length];
         int n = 0;
+        MimsPlus[] massImages = windows;
+        ArrayList<MimsPlus> sortedMassImages = new ArrayList<MimsPlus>();
         MimsPlus[] sumImages = getOpenSumImages();
         MimsPlus[] ratioImages = getOpenRatioImages();
         MimsPlus[] hsiImages = getOpenHSIImages();
@@ -3978,88 +4050,23 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
         Arrays.sort(massVals);
         n = 0;
-        /*Change: 6/4/2013
-         * previous code:
-         * for (Double mass : massVals) {
-         *   int massValIdx = getMassIndices(mass, 0.1)[0];
-         *   win_ids[i] = windows[massValIdx].getID();
-         *   i++;
-         *}
-         * 
-         * the problem with that if there are any other values from MassIndices, they are ignored and only window
-         * out of the similar mass images is set in the win_ids array.
-         * 
-         * below are two solutions. For convienance, it seems easier to tile similar mass images in columns
-         * if such a situation is detected where all the groups of similar masses are equal in length, then this sorting
-         * takes place. If this is not the case then it simply orders all the returned ids by the order they are found in.
-         * 
-         * a better way to do this probably exists, as it adds a few seconds to opening up images
-         */
-
-        boolean flip = true;
-        int col_size = 0;
-        //loop through all mass indice groups to see if they all have same length
-        for (Double mass : massVals) {
-            int[] massValIds = getMassIndices(mass, 0.1);
-            if (col_size == 0) {
-                col_size = massValIds.length;
-            } else if (col_size != massValIds.length) {
-                flip = false;
+        int row = 0;
+        sortedMassImages.add(massImages[0]);
+        for (int i = 1; i < massImages.length; i++){
+            MimsPlus cur = massImages[i];
+            MimsPlus prev = massImages[i-1];
+            if (prev.getMassValue() > cur.getMassValue()){ 
+                 if (row == 0){
+                     row = sortedMassImages.size();
+                 }
             }
+            sortedMassImages.add(cur);
         }
-        //if all have same length, sort similar mass indices into columns
-        if (flip == true) {
-            int row_size = win_ids.length / col_size;
-            for (int j = 0; j < massVals.length; j += col_size) {
-                Double mass = massVals[j];
-                int[] massValIds = getMassIndices(mass, 0.1);
-                for (int k = 0; k < massValIds.length; k++) {
-                    int massValIdx = massValIds[k];
-                    win_ids[(j / col_size) + (k * row_size)] = windows[massValIdx].getID();
-                }
-            }
-        //else we just order the mass indices in the order we find them.
-        } else {
-            for (int j = 0; j < massVals.length; j++) {
-                Double mass = massVals[j];
-                if (j > 0) {//don't need to do any checking for first group
-                    Double prevMass = massVals[j - 1];
-                    if (prevMass != mass) {
-                        int[] massValIds = getMassIndices(mass, 0.1);
-                        for (int k = 0; k < massValIds.length; k++) {
-                            int massValIdx = massValIds[k];
-                            int id = windows[massValIdx].getID();
-                            boolean exists = false;
-                            //because of the possibility of a massIndice group > 1, we need to check for repeats
-                            if (massValIds.length != 1) {
-                                for (int l = 0; l < n; l++) {
-                                    if (win_ids[l] == id) {
-                                        exists = true;
-                                    }
-                                }
-                                if (!exists) {
-                                    win_ids[n] = id;
-                                    n++;
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    int[] massValIds = getMassIndices(mass, 0.1);
-                    for (int k = 0; k < massValIds.length; k++) {
-                        int massValIdx = massValIds[k];
-                        win_ids[n] = windows[massValIdx].getID();
-                        n++;
-                    }
-                }
-
-            }
-        }
-        int[] wList = new int[windows.length + sumImages.length + ratioImages.length + hsiImages.length];
+        int[] wList = new int[massImages.length + sumImages.length + ratioImages.length + hsiImages.length];
         int j = 0;
         //need to add all types of images into win_ids so they are tiled too
-        for (int mp : win_ids) {
-            wList[j] = mp;
+        for (int i = 0; i < massImages.length; i++) {
+            wList[j] = massImages[i].getID();
             j++;
         }
         for (MimsPlus mp : sumImages) {
@@ -4138,11 +4145,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             nRows++;
         hloc = XSTART;
         vloc = YSTART;
-
+        int currentlyInRow = 0;
         for (int i=0; i<nPics; i++) {
-            if (hloc+tileWidth>screen.width) {
+            if (hloc+tileWidth>screen.width || (row != 0 && currentlyInRow >= row)) {
                 hloc = XSTART;
                 vloc = vloc + tileHeight;
+                currentlyInRow = 0;
             }
             ImageWindow win = null;
             ImagePlus imp = WindowManager.getImage(wList[i]);
@@ -4155,6 +4163,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     canvas.zoomOut(0, 0);
                 win.toFront();
             }
+            currentlyInRow++;
             hloc += tileWidth + GAP;
         }
     }

@@ -109,6 +109,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         super();
         this.ui = ui;
         this.massIndex = index ;
+        
         this.nType = MASS_IMAGE;
 
         // Get a copy of the opener and setup image parameters.
@@ -116,6 +117,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         int w = op.getWidth();
         int h = op.getHeight();        
         op.setStackIndex(0);
+        this.massValue = Double.parseDouble(op.getMassNames()[index]);
 
         // Set processor.
         ij.process.ImageProcessor ipp = null;
@@ -130,7 +132,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
            ipp = new ij.process.FloatProcessor(w, h, pixels);
         }
         //String titleString = "m" + ui.getTitleStringSymbol(index) + ": " + ui.getImageFilePrefix();
-        String titleString = ui.getTitleStringNum(index) + ": " + ui.getImageFilePrefix();
+        String titleString = ui.formatTitle(index);
         
         setProcessor(titleString, ipp);
         
@@ -187,23 +189,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
          if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length)
             title += "1";
          else 
-            //title += "m" + ui.getTitleStringSymbol(sumProps.getParentMassIdx()) + " : " + op.getImageFile().getName();
-         title += ui.getTitleStringNum(sumProps.getParentMassIdx()) + " : " + op.getImageFile().getName();
+         title += ui.formatTitle(sumProps.getParentMassIdx());
       } else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-         String numString, denString;
-         
-       
-         if (sumProps.getNumMassIdx() == ui.getOpenMassImages().length)
-            numString = "1";
-         else
-             //numString = "m" + ui.getTitleStringSymbol(sumProps.getNumMassIdx());
-             numString = ui.getTitleStringNum(sumProps.getNumMassIdx());
-         if (sumProps.getDenMassIdx() == ui.getOpenMassImages().length)
-            denString = "1";
-         else
-             //denString = "m" + ui.getTitleStringSymbol(sumProps.getDenMassIdx());
-             denString = ui.getTitleStringNum(sumProps.getDenMassIdx());
-         title += numString + "/" + denString + " : " + op.getImageFile().getName();
+         title += ui.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx());
       }
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
@@ -253,18 +241,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       ImageProcessor ipp = new FloatProcessor(w, h, pixels, null);
       ipp.setMinAndMax(0, 1.0);
       String numName, denName;
-      
-      if (props.getNumMassIdx() == ui.getOpenMassImages().length)
-         numName = "1";
-       else 
-          //numName = "m" + ui.getTitleStringSymbol(ratioProps.getNumMassIdx());
-             numName = ui.getTitleStringNum(ratioProps.getNumMassIdx());
-       if (props.getDenMassIdx() == ui.getOpenMassImages().length)
-           denName = "1";
-       else
-           //denName = "m" + ui.getTitleStringSymbol(ratioProps.getDenMassIdx());
-             denName = ui.getTitleStringNum(ratioProps.getDenMassIdx());
-      title = numName + "/" + denName + " : " + ui.getImageFilePrefix();
+      title += ui.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx());
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
       //before listeners were added in compute...
@@ -370,11 +347,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       String numName;
       String denName;
       ImageProcessor ipp = new ColorProcessor(w, h, rgbPixels);
-        //numName = "m" + ui.getTitleStringSymbol(hsiProps.getNumMassIdx());
-        numName = ui.getTitleStringNum(hsiProps.getNumMassIdx());
-        //denName = "m" + ui.getTitleStringSymbol(hsiProps.getDenMassIdx());
-        denName = ui.getTitleStringNum(hsiProps.getDenMassIdx());
-      title = "HSI : " + numName +"/"+ denName + " : " + ui.getImageFilePrefix();
+      title = "HSI : " + ui.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx());
       setProcessor(title, ipp);
       getProcessor().setMinAndMax(0, 255);
       fStateListeners = new EventListenerList();
