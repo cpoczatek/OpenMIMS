@@ -2438,6 +2438,30 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           openFileInBackground(file);
        }
     }
+    public boolean withinMassRange(int nidx, int didx, double tolerance, double numMass, double denMass){
+        String[] names = this.getOpener().getMassNames();
+        double massVal1, numDiff, denDiff;
+        double mindiff = Double.MAX_VALUE;
+        if (nidx == -1 || didx == -1) return false;
+        double nMass = Double.valueOf(names[nidx]);
+        double dMass = Double.valueOf(names[didx]);
+        numDiff = Math.abs(numMass - nMass);
+        denDiff = Math.abs(denMass - dMass);
+        if (numDiff < mindiff && numDiff < tolerance && denDiff < mindiff && denDiff < tolerance)
+            return true;
+        else return false;
+    }
+    public boolean withinMassRange(int nidx, double tolerance, double numMass){
+        String[] names = this.getOpener().getMassNames();
+        double massVal1, numDiff, denDiff;
+        double mindiff = Double.MAX_VALUE;
+        if (nidx == -1) return false;
+        double nMass = Double.valueOf(names[nidx]);
+        numDiff = Math.abs(numMass - nMass);
+        if (numDiff < mindiff && numDiff < tolerance)
+            return true;
+        else return false;
+    }
 
     /**
      * Regenerates the ratio images, hsi images and sum images with
@@ -2466,8 +2490,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        for (int i=0; i<rto_props.length; i++){
           int nidx = rto_props[i].getNumMassIdx();
           int didx = rto_props[i].getDenMassIdx();
+          if (!withinMassRange(nidx, didx, 0.49, rto_props[i].getNumMassValue(), rto_props[i].getDenMassValue())){
+              nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
+              didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+          }
           if (nidx == -1 || didx == -1)
              continue;
+          rto_props[i].setNumMassIdx(nidx);
+          rto_props[i].setDenMassIdx(didx);
           if (!same_size)
                 rto_props[i].setMag(1.0);
           mp = new MimsPlus(this, rto_props[i]);
@@ -2476,12 +2506,17 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
        
        // Generate hsi images.
-       System.out.println(hsi_props.length);
        for (int i=0; i<hsi_props.length; i++){
           int nidx = hsi_props[i].getNumMassIdx();
           int didx = hsi_props[i].getDenMassIdx();
+          if (!withinMassRange(nidx, didx, 0.49, hsi_props[i].getNumMassValue(), hsi_props[i].getDenMassValue())){
+              nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
+              didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+          }
           if (nidx == -1 || didx == -1)
              continue;
+          hsi_props[i].setNumMassIdx(nidx);
+          hsi_props[i].setDenMassIdx(didx);
           if (!same_size) 
              hsi_props[i].setMag(1.0);
 
@@ -2493,22 +2528,28 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
        // Generate sum images.
        for (int i=0; i<sum_props.length; i++){
-          if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {             
+           if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {
                int nidx = sum_props[i].getNumMassIdx();
                int didx = sum_props[i].getDenMassIdx();
-               if (nidx == -1 || didx == -1)
-                  continue;
-                if (!same_size)
-                   sum_props[i].setMag(1.0);
-                mp = new MimsPlus(this, sum_props[i], null);
-                mp.showWindow();
-                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
+               if (!withinMassRange(nidx, didx, 0.49, sum_props[i].getNumMassValue(), sum_props[i].getDenMassValue())) {
+                   nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
+                   didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+               }
+               if (nidx == -1 || didx == -1) continue;
+               hsi_props[i].setNumMassIdx(nidx);
+               hsi_props[i].setDenMassIdx(didx);
+               if (!same_size) sum_props[i].setMag(1.0);
+               mp = new MimsPlus(this, sum_props[i], null);
+               mp.showWindow();
+               mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
 
           } else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
                 int pidx = sum_props[i].getParentMassIdx();
                 if (pidx == -1)
                   continue;
-
+                if (!withinMassRange(pidx, 0.49, sum_props[i].getParentMassValue())) {
+                   pidx = getClosestMassIndices(sum_props[i].getParentMassValue(), 0.49);
+               }
                 sum_props[i].setParentMassIdx(pidx);
                 if (!same_size)
                    sum_props[i].setMag(1.0);
