@@ -69,7 +69,10 @@ public class MIMSFileFilter extends FileFilter {
 	    String extension = getExtension(f);
 	    if(extension != null && filters.get(getExtension(f)) != null) {
 		return true;
-	    };
+	    }else if ((extension = getDoubleExtension(f)) != null && filters.get(getDoubleExtension(f)) != null){
+                System.out.println(f.getName() + " true");
+                return true;
+            };
 	}
 	return false;
     }
@@ -86,6 +89,24 @@ public class MIMSFileFilter extends FileFilter {
 	    int i = filename.lastIndexOf('.');
 	    if(i>0 && i<filename.length()-1) {
 		return filename.substring(i+1).toLowerCase();
+	    };
+	}
+	return null;
+    }
+         /**
+     * Return the double extension portion of the file's name .
+     *
+     * @see #getExtension
+     * @see FileFilter#accept
+     */
+     public String getDoubleExtension(File f) {
+	if(f != null) {
+	    String filename = f.getName();
+	    int i = filename.lastIndexOf('.');
+            i = filename.lastIndexOf('.', i-1);
+	    if(i>0 && i<filename.length()-1) {
+		return filename.substring(i+1).toLowerCase();
+                
 	    };
 	}
 	return null;

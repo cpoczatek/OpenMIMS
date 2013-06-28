@@ -162,6 +162,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private static String im_file_path = null;
     private static Boolean single_instance_mode = false;
     public static UI ui = null;
+    public boolean sessionOpened = false;
     /*
      * Private stings for option parsing
      */
@@ -2112,6 +2113,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       File file = new File(fileName);
       String directory = file.getParent();
       String name = file.getName();
+      String baseFileName = "";
+      String onlyFileName = "";
+      MimsPlus ratio[] = getOpenRatioImages();
+       MimsPlus hsi[] = getOpenHSIImages();
+       MimsPlus sum[] = getOpenSumImages();
 
       try {
 
@@ -2145,91 +2151,110 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            nrrdFileName = name+NRRD_EXTENSION;        
 
         // Save the file.
-        ImagePlus[] imp = getOpenMassImages();		 
-		  if (imp == null) return false;
-		  Nrrd_Writer nw = new Nrrd_Writer(this);
-        File dataFile = nw.save(imp, directory, nrrdFileName);
+          if (ui.getmimsAction().isImageModified()) {
+              ImagePlus[] imp = getOpenMassImages();
+              if (imp == null) {
+                  return false;
+              }
+              Nrrd_Writer nw = new Nrrd_Writer(this);
+              File dataFile = nw.save(imp, directory, nrrdFileName);
 
-        // Update the Opener object.
-        image.close();
-        image = new Nrrd_Reader(dataFile);
-        openers.clear();
-        openers.put(nrrdFileName, image);
+              // Update the Opener object.
+              image.close();
+              image = new Nrrd_Reader(dataFile);
+              openers.clear();
+              openers.put(nrrdFileName, image);
 
-        // Update the Action object.
-        mimsAction = new MimsAction(image);
+              // Update the Action object.
+              mimsAction = new MimsAction(image);
 
-        // Update the Data tab
-        mimsData = new MimsData(this, image);
-        jTabbedPane1.setComponentAt(0, mimsData);
+              // Update the Data tab
+              mimsData = new MimsData(this, image);
+              jTabbedPane1.setComponentAt(0, mimsData);
 
-        // Update the image titles.
-        for (int i = 0; i < imp.length; i++) {
-           imp[i].setTitle((new MimsPlus(this, i)).getTitle());
-        }
-        if (saveImageOnly)
-           return true;
-
-          // Get the base of the file name.
-          String baseFileName = getFilePrefix(dataFile.getAbsolutePath());
-          String onlyFileName = getFilePrefix(dataFile.getName());
+              // Update the image titles.
+              for (int i = 0; i < imp.length; i++) {
+                  imp[i].setTitle((new MimsPlus(this, i)).getTitle());
+              }
+              baseFileName = getFilePrefix(dataFile.getAbsolutePath());
+              onlyFileName = getFilePrefix(dataFile.getName());
+          } else {
+              baseFileName = this.getLastFolder() + "/" + this.getImageFilePrefix();
+              onlyFileName = this.getImageFilePrefix();
+          }
+          if (saveImageOnly) 
+              return true;
+          String dataFileName = this.getImageFilePrefix() + NRRD_EXTENSION;
+          File sessionFile = null;
           String[] names = getOpener().getMassNames();
           // Save the ROI files to zip.
-          String roisFileName = baseFileName + ROIS_EXTENSION;
           Roi[] rois = getRoiManager().getAllROIs();
           if (rois.length > 0) {
-              getRoiManager().saveMultiple(rois, roisFileName, false);
-          }
-          // Contruct a unique name for each ratio image and save into a ratios.zip file
-          ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
-          MimsPlus ratio[] = getOpenRatioImages();
-          if (ratio.length > 0) {
-              String[] filenames = new String[ratio.length];
-              for (int i = 0; i < ratio.length; i++) {
-                  RatioProps ratioprops = ratio[i].getRatioProps();
-                  ratioprops.setDataFileName(dataFile.getName());
-                  if (!saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                          RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i))
-                      return false;
+              System.out.println("ROIS exist, going to open window");
+              if ((sessionFile = checkForExistingFiles(ROIS_EXTENSION, baseFileName, "Mims roi zips"))!= null) {
+                  baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
+                  getRoiManager().saveMultiple(rois, baseFileName + ROIS_EXTENSION, false);
+              } else {
+                  System.out.println("Saving roi.zip canceled.");
               }
           }
-
-          // Contruct a unique name for each hsi image and save.
-          MimsPlus hsi[] = getOpenHSIImages();
-          if (hsi.length > 0) {
-              String[] filenames = new String[hsi.length];
-              for (int i = 0; i < hsi.length; i++) {
-                  HSIProps hsiprops = hsi[i].getHSIProps();
-                  hsiprops.setDataFileName(dataFile.getName());
-                  if (!saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx","denMassIdx"}, filenames,
-                           HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName,  i))
-                      return false;
+          if (ratio.length + hsi.length + sum.length > 0){
+              if ((sessionFile = checkForExistingFiles(SESSIONS_EXTENSION, baseFileName, "Mims session files")) != null) {
+                  baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
+                  onlyFileName = getFilePrefix(getFilePrefix(sessionFile.getName()));
+              } else {
+                  System.out.println("Saving session.zip canceled.");
               }
-          }
+              // Contruct a unique name for each ratio image and save into a ratios.zip file
+              ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
 
-          // Contruct a unique name for each sum image and save.
-          MimsPlus sum[] = getOpenSumImages();
-          if (sum.length > 0) {
-              String[] filenames = new String[sum.length];
-              for (int i = 0; i < sum.length; i++) {
-                  SumProps sumProps = sum[i].getSumProps();
-                  sumProps.setDataFileName(dataFile.getName());
-                  if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-                      if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx","denMassIdx"}, filenames, 
-                              SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i))
+              if (ratio.length > 0) {
+                  String[] filenames = new String[ratio.length];
+                  for (int i = 0; i < ratio.length; i++) {
+                      RatioProps ratioprops = ratio[i].getRatioProps();
+                      ratioprops.setDataFileName(dataFileName);
+                      if (!saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                              RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i))
                           return false;
-                  } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-                      if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames, 
-                              SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i))
-                          return false;
-                  } else {
-                      continue;
                   }
               }
 
+              // Contruct a unique name for each hsi image and save.
+
+              if (hsi.length > 0) {
+                  String[] filenames = new String[hsi.length];
+                  for (int i = 0; i < hsi.length; i++) {
+                      HSIProps hsiprops = hsi[i].getHSIProps();
+                      hsiprops.setDataFileName(dataFileName);
+                      if (!saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                              HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName, i))
+                          return false;
+                  }
+              }
+
+              // Contruct a unique name for each sum image and save.
+
+              if (sum.length > 0) {
+                  String[] filenames = new String[sum.length];
+                  for (int i = 0; i < sum.length; i++) {
+                      SumProps sumProps = sum[i].getSumProps();
+                      sumProps.setDataFileName(dataFileName);
+                      if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
+                          if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                                  SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i))
+                              return false;
+                      } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
+                          if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
+                                  SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i))
+                              return false;
+                      } else continue;
+                  }
+
+              }
+
+              zos.flush();
+              zos.close();
           }
-          zos.flush();
-          zos.close();
         //getmimsAction().writeAction(new File(baseFileName+ACT_EXTIONSION));
 
       } catch (FileNotFoundException e) {
@@ -2256,6 +2281,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * @param i index of the object in filenames
     * @return true if save succeeded, or false if an error was thrown
     */
+    
     private boolean saveToXML(ZipOutputStream zos, Object toWrite, Class<?> cls, String[] params, String[] filenames, String extension, String numName, String denName, String filename, int i){
         try {
             int numMass = Math.round(new Float(numName));
@@ -2308,6 +2334,36 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         } finally {
             return entries;
         }
+    }
+    private File checkForExistingFiles(String extension, String filename, String description){
+        String baseFileName = filename;
+        File f = new File(baseFileName + extension);
+        int counter = 0;
+        if (f.exists()){
+            while (f.exists()) {
+                counter++;
+                f = new File(baseFileName + "(" + counter + ")" + extension);
+            }
+            baseFileName += "(" + counter + ")";
+            MimsJFileChooser fc = new MimsJFileChooser(this);
+            MIMSFileFilter session = new MIMSFileFilter(extension.substring(1));
+            session.setDescription(description);
+            fc.setFileFilter(session);
+            fc.setSelectedFile(new java.io.File(baseFileName + extension));
+
+            int returnVal = fc.showSaveDialog(jTabbedPane1);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                if (extension == SESSIONS_EXTENSION || extension == ROIS_EXTENSION) {
+                    baseFileName = getFilePrefix(getFilePrefix(fc.getSelectedFile().getAbsolutePath()));
+                } else {
+                    baseFileName = getFilePrefix(fc.getSelectedFile().getAbsolutePath());
+                }
+            } else {
+                return null;
+            }
+            f = new File(baseFileName + extension);
+        }
+        return f;
     }
     
     /**
@@ -2813,25 +2869,34 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
 private boolean saveMIMS(java.awt.event.ActionEvent evt) {
    String fileName;
    try {
-      // User sets file prefix name
-      MimsJFileChooser fc = new MimsJFileChooser(this);
-      if (this.getImageFilePrefix() != null) {
-         fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
-      }
-      int returnVal = fc.showSaveDialog(jTabbedPane1);
-      if (returnVal == JFileChooser.APPROVE_OPTION) {
-         fileName = fc.getSelectedFile().getAbsolutePath();
-         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         // Determine if we save just the mass images or the entire session.
-         // (e.g. Mass images, Rois, HSIs, ratio image)
-         boolean saveImageOnly = true;
-         if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)) {
-            saveImageOnly = false;
-         }
-         saveSession(fileName, saveImageOnly);
-      } else {
-         return false;
-      }
+       // User sets file prefix name
+       boolean saveImageOnly = true;
+       if ((evt != null && !evt.getActionCommand().equals(SAVE_SESSION)) || 
+               (evt.getActionCommand().equals(SAVE_SESSION) && getmimsAction().isImageModified())) {
+           saveImageOnly = false;
+
+           MimsJFileChooser fc = new MimsJFileChooser(this);
+           if (this.getImageFilePrefix() != null) {
+               fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
+           }
+
+
+           int returnVal = fc.showSaveDialog(jTabbedPane1);
+           if (returnVal == JFileChooser.APPROVE_OPTION) {
+               fileName = fc.getSelectedFile().getAbsolutePath();
+               setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+               // Determine if we save just the mass images or the entire session.
+               // (e.g. Mass images, Rois, HSIs, ratio image)
+
+
+               saveSession(fileName, saveImageOnly);
+           } else {
+               return false;
+           }
+       }else if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)){
+           saveImageOnly = false;           System.out.println("Image not modified and saving the session.zips");
+           saveSession(this.getLastFolder() + "/" + this.getImageFilePrefix() + NRRD_EXTENSION, saveImageOnly);
+       }
    } catch (Exception e) {
       if (!silentMode) {
          ij.IJ.error("Save Error", "Error saving file:" + e.getMessage());
@@ -4596,6 +4661,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    if(!loadMIMSFile(dataFile))
                       return false;
                    doneLoadingFile();
+                   sessionOpened = true;
                    MimsPlus mp = new MimsPlus(ui, ratioprops);
                    mp.showWindow();
                 }
@@ -4616,6 +4682,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    if(!loadMIMSFile(dataFile))
                       return false;
                    doneLoadingFile();
+                   sessionOpened = true;
                    MimsPlus mp = new MimsPlus(ui, hsiprops);
                    mp.showWindow();
                 }
@@ -4636,6 +4703,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    if(!loadMIMSFile(dataFile))
                       return false;
                    doneLoadingFile();
+                   sessionOpened = true;
                    MimsPlus sp = new MimsPlus(ui, sumprops, null);
                    sp.showWindow();
                 }
@@ -4670,6 +4738,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                           if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
                               return false;
                           doneLoadingFile();
+                          sessionOpened = true;
                           loaded = true;
                       }
                       MimsPlus sp = new MimsPlus(ui, hsiprops);
@@ -4682,6 +4751,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                               return false;
                           }
                           doneLoadingFile();
+                          sessionOpened = true;
                           loaded = true;
                       }
                       MimsPlus sp = new MimsPlus(ui, sumprops, null);
@@ -4693,6 +4763,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                           if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName())))
                               return false;
                           doneLoadingFile();
+                          sessionOpened = true;
                           loaded = true;
                       }
                       MimsPlus sp = new MimsPlus(ui, ratioprops);
@@ -4899,135 +4970,137 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
         public void doneLoadingFile() {
+            if (!sessionOpened){
+                Toolkit.getDefaultToolkit().beep();
 
-            Toolkit.getDefaultToolkit().beep();
-            
-            jProgressBar1.setValue(0);
+                jProgressBar1.setValue(0);
 
-            
-            if (ui.single_instance_mode == true) {
-                java.awt.Point p = ui.getLocation();
-                java.awt.Point q = IJ.getInstance().getLocation();
 
-                System.out.println(p.getX() + "," + p.getY());
-                System.out.println(q.getX() + "," + q.getY());
+                if (ui.single_instance_mode == true) {
+                    java.awt.Point p = ui.getLocation();
+                    java.awt.Point q = IJ.getInstance().getLocation();
 
-                ui.setVisible(false);
-                ui.setLocation(p);
-                ui.setVisible(true);
-                ui.setExtendedState(javax.swing.JFrame.NORMAL);
-                ui.show();
-                
-                System.out.println("location after: " + ui.getLocation());
+                    System.out.println(p.getX() + "," + p.getY());
+                    System.out.println(q.getX() + "," + q.getY());
 
-                IJ.getInstance().setVisible(false);
-                IJ.getInstance().setLocation(q);
-                IJ.getInstance().setVisible(true);
-                IJ.getInstance().setExtendedState(java.awt.Frame.NORMAL);
+                    ui.setVisible(false);
+                    ui.setLocation(p);
+                    ui.setVisible(true);
+                    ui.setExtendedState(javax.swing.JFrame.NORMAL);
+                    ui.show();
 
-            }
-            
+                    System.out.println("location after: " + ui.getLocation());
 
-            for (int i = 0; i < image.getNMasses(); i++) {
-                   if (bOpenMass[i]) {
-                      if (image.getNImages() > 1) {
-                         massImages[i].setIsStack(true);
-                         massImages[i].setSlice(1);
-                      }
-                      if (isSilentMode() == false) {
-                         massImages[i].show();
-                      }
-                   }
+                    IJ.getInstance().setVisible(false);
+                    IJ.getInstance().setLocation(q);
+                    IJ.getInstance().setVisible(true);
+                    IJ.getInstance().setExtendedState(java.awt.Frame.NORMAL);
+
+                }
+
+
+                for (int i = 0; i < image.getNMasses(); i++) {
+                    if (bOpenMass[i]) {
+                        if (image.getNImages() > 1) {
+                            massImages[i].setIsStack(true);
+                            massImages[i].setSlice(1);
+                        }
+                        if (isSilentMode() == false) {
+                            massImages[i].show();
+                        }
+                    }
                 }
 
                 if (isSilentMode() == false) {
-                   if (wpMap.size() > 0 || previousFileCanceled == false) {
-                      applyWindowState();
-                   } else {
-                      tileWindows();
-                   }
+                    if (wpMap.size() > 0 || previousFileCanceled == false) {
+                        applyWindowState();
+                    } else {
+                        tileWindows();
+                    }
                 }
 
-             for (int i = 0; i < image.getNMasses(); i++) {
-                if (bOpenMass[i]) {
-                   massImages[i].addListener(ui);
+                for (int i = 0; i < image.getNMasses(); i++) {
+                    if (bOpenMass[i]) {
+                        massImages[i].addListener(ui);
+                    } else {
+                        massImages[i] = null;
+                    }
+                }
+
+                jTabbedPane1.setEnabled(true);
+                if (mimsData == null) {
+                    initializeViewMenu();
+                    mimsData = new com.nrims.MimsData(ui, image);
+                    hsiControl = new MimsHSIView(ui);
+                    mimsLog = new MimsLog();
+                    mimsStackEditing = new MimsStackEditor(ui, image);
+                    mimsTomography = new MimsTomography(ui);
+                    mimsAction = new MimsAction(image);
+                    segmentation = new SegmentationForm(ui);
+
+                    jTabbedPane1.setComponentAt(0, mimsData);
+                    jTabbedPane1.setTitleAt(0, "MIMS Data");
+                    jTabbedPane1.add("Process", hsiControl);
+                    jTabbedPane1.add("Contrast", cbControl);
+                    jTabbedPane1.add("Stack Editing", mimsStackEditing);
+                    jTabbedPane1.add("Tomography", mimsTomography);
+                    jTabbedPane1.add("Segmentation", segmentation);
+                    jTabbedPane1.add("MIMS Log", mimsLog);
+
                 } else {
-                   massImages[i] = null;
+                    resetViewMenu();
+                    mimsData = new com.nrims.MimsData(ui, image);
+                    cbControl = new MimsCBControl(ui);
+                    mimsStackEditing = new MimsStackEditor(ui, image);
+                    int[] indices = mimsTomography.getSelectedStatIndices();
+                    mimsTomography = new MimsTomography(ui);
+                    mimsTomography.setSelectedStatIndices(indices);
+                    mimsAction = new MimsAction(image);
+                    segmentation = new SegmentationForm(ui);
+
+                    jTabbedPane1.setComponentAt(0, mimsData);
+                    jTabbedPane1.setTitleAt(0, "MIMS Data");
+                    jTabbedPane1.setComponentAt(1, hsiControl);
+                    jTabbedPane1.setComponentAt(2, cbControl);
+                    jTabbedPane1.setComponentAt(3, mimsStackEditing);
+                    jTabbedPane1.setComponentAt(4, mimsTomography);
+                    jTabbedPane1.setComponentAt(5, segmentation);
+
+                    mimsData.setMimsImage(image);
+                    hsiControl.updateImage(false);
                 }
-             }
 
-             jTabbedPane1.setEnabled(true);
-             if (mimsData == null) {
-                initializeViewMenu();
-                mimsData = new com.nrims.MimsData(ui, image);
-                hsiControl = new MimsHSIView(ui);
-                mimsLog = new MimsLog();
-                mimsStackEditing = new MimsStackEditor(ui, image);
-                mimsTomography = new MimsTomography(ui);
-                mimsAction = new MimsAction(image);
-                segmentation = new SegmentationForm(ui);
+                jTabbedPane1.addChangeListener(new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        int selected = jTabbedPane1.getSelectedIndex();
+                        if (selected == 2) {
+                            cbControl.updateHistogram();
+                        }
+                    }
+                });
 
-                jTabbedPane1.setComponentAt(0, mimsData);
-                jTabbedPane1.setTitleAt(0, "MIMS Data");
-                jTabbedPane1.add("Process", hsiControl);
-                jTabbedPane1.add("Contrast", cbControl);
-                jTabbedPane1.add("Stack Editing", mimsStackEditing);
-                jTabbedPane1.add("Tomography", mimsTomography);
-                jTabbedPane1.add("Segmentation", segmentation);
-                jTabbedPane1.add("MIMS Log", mimsLog);
+                mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
 
-             } else {
-                resetViewMenu();
-                mimsData = new com.nrims.MimsData(ui, image);
-                cbControl = new MimsCBControl(ui);
-                mimsStackEditing = new MimsStackEditor(ui, image);
-                int[] indices = mimsTomography.getSelectedStatIndices();
-                mimsTomography = new MimsTomography(ui);
-                mimsTomography.setSelectedStatIndices(indices);
-                mimsAction = new MimsAction(image);
-                segmentation = new SegmentationForm(ui);
+                // Calculate theoretical duration
+                double duration = image.getCountTime() * (double) image.getNImages();
+                mimsLog.Log("Theoretical duration (s): " + Double.toString(duration));
 
-                jTabbedPane1.setComponentAt(0, mimsData);
-                jTabbedPane1.setTitleAt(0, "MIMS Data");
-                jTabbedPane1.setComponentAt(1, hsiControl);
-                jTabbedPane1.setComponentAt(2, cbControl);
-                jTabbedPane1.setComponentAt(3, mimsStackEditing);
-                jTabbedPane1.setComponentAt(4, mimsTomography);
-                jTabbedPane1.setComponentAt(5, segmentation);
+                mimsTomography.resetImageNamesList();
+                mimsStackEditing.resetSpinners();
 
-                mimsData.setMimsImage(image);
-                hsiControl.updateImage(false);
-             }
+                openers.clear();
+                String fName = file.getName();
+                openers.put(fName, image);
 
-             jTabbedPane1.addChangeListener(new ChangeListener() {
-
-                public void stateChanged(ChangeEvent e) {
-                   int selected = jTabbedPane1.getSelectedIndex();
-                   if (selected == 2) {
-                      cbControl.updateHistogram();
-                   }
+                // Add the windows to the combobox in CBControl.
+                MimsPlus[] mp = getOpenMassImages();
+                for (int i = 0; i < mp.length; i++) {
+                    cbControl.addWindowtoList(mp[i]);
                 }
-             });
-
-             mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
-             
-             // Calculate theoretical duration
-             double duration = image.getCountTime() * (double)image.getNImages();
-             mimsLog.Log("Theoretical duration (s): " + Double.toString(duration));
-
-             mimsTomography.resetImageNamesList();
-             mimsStackEditing.resetSpinners();
-
-             openers.clear();
-             String fName = file.getName();
-             openers.put(fName, image);
-
-             // Add the windows to the combobox in CBControl.
-             MimsPlus[] mp = getOpenMassImages();
-             for (int i = 0; i < mp.length; i++) {
-                cbControl.addWindowtoList(mp[i]);
-             }
-              previousFileCanceled = false;
+                previousFileCanceled = false;
+            }else{
+                sessionOpened = false;
+            }
         }
 
       private void openProcessFailedOrCanceled() {         
