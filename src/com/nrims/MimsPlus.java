@@ -497,7 +497,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     * Computes sum values.
     * @param sumlist
     */
-    private synchronized void computeSum(ArrayList<Integer> sumlist) {
+    public synchronized void computeSum(ArrayList<Integer> sumlist) {
 
        // initialize variables.
        double[] sumPixels = null;

@@ -1073,7 +1073,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         }
     }
-
+    public void recomputeAllImages() {
+        recomputeAllHSI();
+        recomputeAllRatio();
+        recomputeAllComposite();
+        ArrayList<Integer> sumlist = new ArrayList<Integer>();
+        for(int i = 1; i <= ui.getmimsAction().getSize(); i++)
+            sumlist.add(i);
+        recomputeAllSum(sumlist);
+    }
     /**
      * Updates the scroll bar size/placement.
      *
@@ -1136,6 +1144,27 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     }
                 }
             }
+        }
+    }
+        /**
+     * Recomputes all composite images.
+     */
+    public void recomputeAllComposite() {
+        MimsPlus[] openComp = this.getOpenCompositeImages();
+        for (int i = 0; i < openComp.length; i++) {
+            openComp[i].computeComposite();
+            openComp[i].updateAndDraw();
+        }
+    }
+    /**
+     * Recomputes all sum images
+     * @param sumlist list of slices to add in sum
+     */
+    public void recomputeAllSum(ArrayList<Integer> sumlist) {
+        MimsPlus[] openSum = this.getOpenSumImages();
+        for (int i = 0; i < openSum.length; i++) {
+            openSum[i].computeSum(sumlist);
+            openSum[i].updateAndDraw();
         }
     }
 
@@ -1389,6 +1418,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         sumAllMenuItem = new javax.swing.JMenuItem();
         importIMListMenuItem = new javax.swing.JMenuItem();
         captureImageMenuItem = new javax.swing.JMenuItem();
+        RecomputeAllMenuItem = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JSeparator();
         batch2nrrdMenuItem = new javax.swing.JMenuItem();
         exportjMenu = new javax.swing.JMenu();
@@ -1601,6 +1631,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(captureImageMenuItem);
+
+        RecomputeAllMenuItem.setText("Recompute All");
+        RecomputeAllMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                RecomputeAllMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(RecomputeAllMenuItem);
         utilitiesMenu.add(jSeparator3);
 
         batch2nrrdMenuItem.setText("Batch covert to nrrd");
@@ -3202,6 +3240,10 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private void openNextMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNextMenuItemActionPerformed
         openNext();
     }//GEN-LAST:event_openNextMenuItemActionPerformed
+
+    private void RecomputeAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RecomputeAllMenuItemActionPerformed
+        recomputeAllImages();
+    }//GEN-LAST:event_RecomputeAllMenuItemActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -5114,6 +5156,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
     public javax.swing.JCheckBoxMenuItem QSACorrectionMenuItem;
+    private javax.swing.JMenuItem RecomputeAllMenuItem;
     private javax.swing.JMenuItem aboutMenuItem;
     private javax.swing.JMenuItem batch2nrrdMenuItem;
     private javax.swing.JMenuItem captureImageMenuItem;
