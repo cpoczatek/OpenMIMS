@@ -1338,17 +1338,24 @@ public class MimsHSIView extends javax.swing.JPanel {
              numSymbol = "";
          } else {
              numLabel = massNames[num];
-             numSymbol = massSymbols[num];
+             if (massSymbols != null)
+                numSymbol = massSymbols[num];
+             else
+                 numSymbol = "";
          }
          if (den == massNames.length) {
              denLabel = "1";
              denSymbol = "";
          } else {
              denLabel = massNames[den];
-             denSymbol = massSymbols[den];
+             if (massSymbols != null)
+                denSymbol = massSymbols[den];
+             else
+                 denSymbol = "";
          }
 
-        String label = numLabel+" / "+denLabel + " : " + numSymbol+" / "+denSymbol;
+        String label = numLabel+" / "+denLabel;
+        if (massSymbols != null) label += " : " + numSymbol+" / "+denSymbol;
 
         
         
@@ -1420,11 +1427,18 @@ public class MimsHSIView extends javax.swing.JPanel {
       int h = 0;
       // Loop over masses and create buttons
       for (int i = 0; i < massNames.length; i++){
-
+          String name = "";
+          if (massSymbols != null)
+              name = "m"+massNames[i] + " [" + massSymbols[i] + "]";
+          else
+              name = "m"+massNames[i] + " []";
          // Must create two instances of the button.
-         JRadioButton jrb_num = new JRadioButton("m"+massNames[i] + " [" + massSymbols[i] + "]");
+          if (massSymbols != null){
+          
+          }
+         JRadioButton jrb_num = new JRadioButton(name);
          jrb_num.setName((new Integer(i)).toString());
-         JRadioButton jrb_den = new JRadioButton("m"+massNames[i] + " [" + massSymbols[i] + "]");
+         JRadioButton jrb_den = new JRadioButton(name);
          jrb_den.setName((new Integer(i)).toString());
          
          // Add radiobutton to the group.
