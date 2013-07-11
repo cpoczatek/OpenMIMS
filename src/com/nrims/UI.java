@@ -2718,7 +2718,10 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     message += "\n\n";
     message += "http://www.nrims.hms.harvard.edu/";
     message += "\n\n";
-    message += "OpenMIMS is an Open Source software project that is funded through \n";
+    message += "OpenMIMS is a plugin for ImageJ, a public domain, Java-based\n";
+    message += "image processing program developed at the NIH by Wayne Rasband.";
+    message += "\n\n";
+    message += "OpenMIMS is an open source software project that is funded through \n";
     message += "the NIH/NIBIB National Resource for Imaging Mass Spectrometry. \n";
     message += "Please use the following acknowledgment and send us references to \n";
     message += "any publications, presentations, or successful funding applications \n";
@@ -2728,11 +2731,13 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
  	 message += "    whose development is funded by the NIH/NIBIB National Resource \n";
  	 message += "    for Imaging Mass Spectrometry, NIH/NIBIB 5P41 EB001974-10.\"";
     message += "\n\n";
-    message += "Developed by:\n Doug Benson, Collin Poczatek \n ";
+    message += "Developed by:\n Doug Benson (RIP), Collin Poczatek \n ";
     message += "Boris Epstein, Philipp Gormanns\n Stefan Reckow, ";
-    message += "Rob Gonzales,\n Zeke Kaufman.";
+    message += "Zeke Kaufman, \n Farah Kashem, William Ang.";
     message += "\n\n";
     message += "OpenMIMS has modified, uses, or depends upon: \n";
+    message += "    ImageJ: http://rsbweb.nih.gov/ij/\n";
+    message += "    Fiji: http://fiji.sc/Fiji\n";
     message += "    TurboReg:  http://bigwww.epfl.ch/thevenaz/turboreg/ \n";
     message += "    libSVM: http://www.csie.ntu.edu.tw/~cjlin/libsvm/ \n";
     message += "    NRRD file format: http://teem.sourceforge.net/nrrd/ \n";
