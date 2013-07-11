@@ -827,6 +827,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
     /** layout method.*/
     private void addPopupMenu() {
+        //The strings below must match those in the if-else block
+        //in actionPerformed() below.
         pm = new JPopupMenu();
         pm.setBorderPainted(true);
         pm.setBorder(new javax.swing.border.LineBorder(Color.BLACK));
@@ -834,7 +836,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         addPopupItem("Intersection (and)");
         addPopupItem("Combine (or)");
         addPopupItem("Complement (not)");
-        addPopupItem("Exclusive (xor)");
+        addPopupItem("Exclusive pixels");
         addPopupItem("Split");
         addPopupItem("Particles");
         addPopupItem("Squares");
