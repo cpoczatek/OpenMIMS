@@ -2189,7 +2189,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            nrrdFileName = name+NRRD_EXTENSION;        
 
         // Save the file.
-          if (ui.getmimsAction().isImageModified()) {
+          if (saveImageOnly || ui.getmimsAction().isImageModified()) {
               ImagePlus[] imp = getOpenMassImages();
               if (imp == null) {
                   return false;
@@ -2903,54 +2903,61 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
  */
 private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveMIMSjMenuItemActionPerformed
    saveMIMS(evt);
+   //TODO should add check if return false show error message
 }//GEN-LAST:event_saveMIMSjMenuItemActionPerformed
 
 /**
  * Called by the saveMIMSjMenuItemActionPerformed method and can be used to 
  * programatically save the current image. Brings up a file chooser.
  */
-private boolean saveMIMS(java.awt.event.ActionEvent evt) {
-   String fileName;
-   try {
-       // User sets file prefix name
-       boolean saveImageOnly = true;
-       if ((evt != null && !evt.getActionCommand().equals(SAVE_SESSION)) || 
-               (evt.getActionCommand().equals(SAVE_SESSION) && getmimsAction().isImageModified())) {
-           saveImageOnly = false;
+    private boolean saveMIMS(java.awt.event.ActionEvent evt) {
+        String fileName;
+        try {
+            // User sets file prefix name
+            boolean saveImageOnly = true;
+            boolean sucess = false;
+            //Save only image, enter save from gui because evt != null
+            if (evt != null && evt.getActionCommand().equals(SAVE_IMAGE)) {
+                saveImageOnly = true;
+                System.out.println("Save image only.");
 
-           MimsJFileChooser fc = new MimsJFileChooser(this);
-           if (this.getImageFilePrefix() != null) {
-               fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
-           }
+                //Save session, enter save from gui because evt != null
+            } else if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)) {
+                saveImageOnly = false;
+                System.out.println("Save session.");
 
+                //saveMIMS(null) called
+                //only called from checkCurrentFileStatusBeforeOpening()
+            } else if (evt == null) {
+                saveImageOnly = true;
+                System.out.println("Force save image only.");
+            }
 
-           int returnVal = fc.showSaveDialog(jTabbedPane1);
-           if (returnVal == JFileChooser.APPROVE_OPTION) {
-               fileName = fc.getSelectedFile().getAbsolutePath();
-               setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-               // Determine if we save just the mass images or the entire session.
-               // (e.g. Mass images, Rois, HSIs, ratio image)
+            //Show Filechooser to get possible new name.
+            MimsJFileChooser fc = new MimsJFileChooser(this);
+            if (this.getImageFilePrefix() != null) {
+                fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
+            }
 
+            int returnVal = fc.showSaveDialog(jTabbedPane1);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                fileName = fc.getSelectedFile().getAbsolutePath();
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-               saveSession(fileName, saveImageOnly);
-           } else {
-               return false;
-           }
-       }else if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)){
-           saveImageOnly = false;           System.out.println("Image not modified and saving the session.zips");
-           saveSession(this.getLastFolder() + "/" + this.getImageFilePrefix() + NRRD_EXTENSION, saveImageOnly);
-       }
-   } catch (Exception e) {
-      if (!silentMode) {
-         ij.IJ.error("Save Error", "Error saving file:" + e.getMessage());
-      } else
-         e.printStackTrace();
-      return false;
-   } finally {
-      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-   }
-   return true;
-}
+                sucess = saveSession(fileName, saveImageOnly);
+            }
+            return sucess;
+        } catch (Exception e) {
+            if (!silentMode) {
+                ij.IJ.error("Save Error", "Error saving file:" + e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
+            return false;
+        } finally {
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+    }
 
 /**
  * Action method for the Utilities>Close>Close All Ratio Images.

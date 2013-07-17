@@ -515,10 +515,13 @@ public class MimsAction implements Cloneable {
     */
    public boolean isImageModified() {
 
-      // Check if any translation was applied.
+      // Check if any translation was applied,
+      // Or any deletion,
+      // Or any concatination.
       String originalImage = imageList.get(0);
       for (int i = 0; i < xyTranslationList.size(); i++) {
-         if (xyTranslationList.get(i)[0] > 0 || xyTranslationList.get(i)[1] > 0)
+         if (xyTranslationList.get(i)[0] != 0.0 ||
+             xyTranslationList.get(i)[1] != 0.0)
             return true;
          if (droppedList.get(i) != 0)
             return true;
