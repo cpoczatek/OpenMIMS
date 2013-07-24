@@ -1412,12 +1412,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         roiManagerMenuItem = new javax.swing.JMenuItem();
         jSeparator8 = new javax.swing.JSeparator();
         utilitiesMenu = new javax.swing.JMenu();
-        imageNotesMenuItem = new javax.swing.JMenuItem();
         generateReportMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         sumAllMenuItem = new javax.swing.JMenuItem();
         importIMListMenuItem = new javax.swing.JMenuItem();
         captureImageMenuItem = new javax.swing.JMenuItem();
+        imageNotesMenuItem = new javax.swing.JMenuItem();
         RecomputeAllMenuItem = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JSeparator();
         batch2nrrdMenuItem = new javax.swing.JMenuItem();
@@ -1590,14 +1590,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         utilitiesMenu.setText("Utilities");
 
-        imageNotesMenuItem.setText("Image Notes");
-        imageNotesMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                imageNotesMenuItemActionPerformed(evt);
-            }
-        });
-        utilitiesMenu.add(imageNotesMenuItem);
-
         generateReportMenuItem.setText("Generate Report");
         generateReportMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1631,6 +1623,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(captureImageMenuItem);
+
+        imageNotesMenuItem.setText("Image Notes");
+        imageNotesMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                imageNotesMenuItemActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(imageNotesMenuItem);
 
         RecomputeAllMenuItem.setText("Recompute All");
         RecomputeAllMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -2052,9 +2052,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * Method to return title for a single image based on formatString in preferences
      * @param index the index of the image/parent of image you want title for
+     * @param extension whether or not to include the file extension in the name
      * @return a formatted title string according to user preferences
      */
-    public String formatTitle(int index){
+    public String formatTitle(int index, boolean extension){
         char[] formatArray = prefs.getFormatString().toCharArray();
         String curString = "";
         String returnedValue;
@@ -2063,7 +2064,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (curChar == 'M') {
                 curString+= String.valueOf(this.getOpener().getMassNames()[index]);
             } else if (curChar == 'F') {
-                curString+= this.getImageFilePrefix();
+                if (!extension){
+                    curString+= this.getImageFilePrefix();
+                }else{
+                    curString += image.getImageFile().getName().toString();
+                }
             } else if (curChar == 'S') {
                 if (this.getOpener().getMassSymbols() != null) {
                     curString += String.valueOf(this.getOpener().getMassSymbols()[index]);
@@ -2082,9 +2087,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Method to return title for a double image (ie ratio, hsi) based on formatString in preferences
      * @param numIndex index of the numerator
      * @param denIndex index of the denominator
+     * @param extension whether or not to include the file extension in the name
      * @return a formatted title string according to user preferences
      */
-    public String formatTitle(int numIndex, int denIndex){
+    public String formatTitle(int numIndex, int denIndex, boolean extension){
         char[] formatArray = prefs.getFormatString().toCharArray();
         String[] names = this.getOpener().getMassNames();
         String[] symbols = this.getOpener().getMassSymbols();
@@ -2102,7 +2108,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 }
                 curString += String.valueOf(names[denIndex]);
             } else if (curChar == 'F') {
-                curString += this.getImageFilePrefix();
+                if (!extension){
+                    curString+= this.getImageFilePrefix();
+                }else{
+                    curString += image.getImageFile().getName().toString();
+                }
             } else if (curChar == 'S') {
                 if (symbols != null) {
                     curString += String.valueOf(symbols[numIndex]) + "/" + String.valueOf(symbols[denIndex]);
@@ -2258,7 +2268,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
               }
 
               // Contruct a unique name for each hsi image and save.
-
               if (hsi.length > 0) {
                   String[] filenames = new String[hsi.length];
                   for (int i = 0; i < hsi.length; i++) {
@@ -2271,7 +2280,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
               }
 
               // Contruct a unique name for each sum image and save.
-
               if (sum.length > 0) {
                   String[] filenames = new String[sum.length];
                   for (int i = 0; i < sum.length; i++) {
@@ -2289,11 +2297,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   }
 
               }
-
               zos.flush();
               zos.close();
           }
-        //getmimsAction().writeAction(new File(baseFileName+ACT_EXTIONSION));
 
       } catch (FileNotFoundException e) {
           JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -2307,6 +2313,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
    }/**
     * Takes a props object and adds it to a zip.
     * Used in Save Session.
+    * depends on no globals, can probably move to new helper class
     * @param zos the ZipOutputStream for the final zip
     * @param toWrite the props object to be written
     * @param cls the class of the props object
@@ -2349,6 +2356,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * Given a zip file, extracts XML files from within and converts to Objects.
      * Used in opening .session.zip files
+     * Depends on no globals, can probably move to new helper class
      * @param file absolute file path
      * @return array list containing Objects.
      */
@@ -2373,6 +2381,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return entries;
         }
     }
+    /**
+     * checks within folder of filename if filename exists.
+     * Depends on no globals, can probably move to new helper class
+     * @param extension which extension we want to save ass
+     * @param filename the filename we want to save as (Ex. "/tmp/test_file"
+     * @param description description of the type of file (Ex. "Mims session file")
+     * @return a File representing the new file (which has not been created yet)
+     */
     private File checkForExistingFiles(String extension, String filename, String description){
         String baseFileName = filename;
         File f = new File(baseFileName + extension);
@@ -2427,6 +2443,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * check whether the numerator mass and denominator mass referred to by indices are within the range of the ones supplied in arguments.
      * Used in restoreState to check HSI/Ratio/Sum-Ratio images indices/masses
+     * Depends on no globals, can probably move to new helper class
      * @param nidx numerator index to check
      * @param didx denominator index to check
      * @param tolerance range to be considered
@@ -2436,7 +2453,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     public boolean withinMassRange(int nidx, int didx, double tolerance, double numMass, double denMass){
         String[] names = this.getOpener().getMassNames();
-        double massVal1, numDiff, denDiff;
+        double numDiff, denDiff;
         double mindiff = Double.MAX_VALUE;
         if (nidx == -1 || didx == -1) return false;
         double nMass = Double.valueOf(names[nidx]);
@@ -2450,6 +2467,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * check whether the mass referred to by an index are within the range of one supplied in the argument.
      * Used in restoreState to check Sum-Mass Images indices/masses
+     * Depends on no globals, can probably move to new helper class
      * @param nidx index to check
      * @param tolerance range to be considered
      * @param numMass mass to check against index
@@ -2526,8 +2544,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
           mp = new MimsPlus(this, hsi_props[i]);
           mp.showWindow();
-          //mp.getHSIProcessor().setProps(hsi_props[i]);
-          //mp.hsiProps = hsi_props[i];          
        }
 
        // Generate sum images.
@@ -3501,7 +3517,13 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        } catch (Exception e) {}
        return mass;
     }
-
+    /**
+     * Get the description of the file in a single String. 
+     * @return string of the description
+     */
+    public String getDescription(){
+        return mimsData.getText();
+    }
     /**
      * Gets the ratio image with index <code>i</code>.
      *
@@ -4558,6 +4580,29 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
     }
     /**
+     * Helper function for reading .sum/.ratio/.hsi files from xml.
+     * @param file the file to read
+     * @return the object read from the file
+     */
+    public Object readObjectFromXML(File file){
+        Object obj = null;
+        try {
+            XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
+            obj = xmlDecoder.readObject();
+            xmlDecoder.close();
+        } catch (Exception e) {
+            try{
+            FileInputStream f_in = new FileInputStream(file);
+            ObjectInputStream obj_in = new ObjectInputStream(f_in);
+            obj = obj_in.readObject();
+            }catch(Exception ex){
+                obj = null;
+            }
+        }finally {
+            return obj;
+        }
+    }
+    /**
      * The FileOpenTask will open image files either in the background or
      * inline. To open a file in the background, use the following code sequence:
      *
@@ -4691,7 +4736,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
           lastFolder = file.getParent();
           setIJDefaultDir(lastFolder);
-
+          Object obj;
           try {
              if (file.getAbsolutePath().endsWith(NRRD_EXTENSION)
                      || file.getAbsolutePath().endsWith(MIMS_EXTENSION) || file.getAbsolutePath().endsWith(NRRD_HEADER_EXTENSION)) {
@@ -4699,17 +4744,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 if(!loadMIMSFile(file))
                    return false;
              } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
-                Object obj;
-                try{
-                    XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
-                    obj = xmlDecoder.readObject();
-                    xmlDecoder.close();
-                }catch(Exception e){
-                    FileInputStream f_in = new FileInputStream(file);
-                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                    obj = obj_in.readObject();
-                }
-                if (obj instanceof RatioProps) {
+                if ((obj = readObjectFromXML(file))instanceof RatioProps) {
                    RatioProps ratioprops = (RatioProps) obj;
                    File dataFile = new File(file.getParent(), ratioprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
@@ -4720,17 +4755,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    mp.showWindow();
                 }
              } else if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
-                Object obj;
-                try{
-                    XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
-                    obj = xmlDecoder.readObject();
-                    xmlDecoder.close();
-                }catch(Exception e){
-                    FileInputStream f_in = new FileInputStream(file);
-                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                    obj = obj_in.readObject();
-                }
-                if (obj instanceof HSIProps) {
+                if ((obj = readObjectFromXML(file)) instanceof HSIProps) {
                    HSIProps hsiprops = (HSIProps) obj;
                    File dataFile = new File(file.getParent(), hsiprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
@@ -4741,17 +4766,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    mp.showWindow();
                 }
              } else if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
-                Object obj;
-                try{
-                    XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
-                    obj = xmlDecoder.readObject();
-                    xmlDecoder.close();
-                }catch(Exception e){
-                    FileInputStream f_in = new FileInputStream(file);
-                    ObjectInputStream obj_in = new ObjectInputStream(f_in);
-                    obj = obj_in.readObject();
-                }
-                if (obj instanceof SumProps) {
+                if ((obj = readObjectFromXML(file)) instanceof SumProps) {
                    SumProps sumprops = (SumProps) obj;
                    File dataFile = new File(file.getParent(), sumprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
@@ -4765,64 +4780,45 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                   onlyShowDraggedFile = false;
                   //get all xml objects contained within zip
                   ArrayList entries = openXMLfromZip(file);
-                  if (entries == null) {
+                  if (entries == null || entries.isEmpty()) {
                       JOptionPane.showMessageDialog(ui, ".session.zip is empty/corrupt", "File Read Error", JOptionPane.ERROR_MESSAGE);
                       return false;
-                  }else if (entries.isEmpty()){
-                       JOptionPane.showMessageDialog(ui, ".session.zip is empty/corrupt", "File Read Error", JOptionPane.ERROR_MESSAGE);
-                       return false;
                   }
-                  ArrayList<SumProps> sums = new ArrayList<SumProps>();
-                  ArrayList<RatioProps> ratios = new ArrayList<RatioProps>();
-                  ArrayList<HSIProps> hsis = new ArrayList<HSIProps>();
-                  boolean loaded = false;
                   //sort the objects into props
-                  for (Object entry : entries) {
-                      if (entry instanceof SumProps) {
-                          sums.add((SumProps) entry);
-                      } else if (entry instanceof RatioProps) {
-                          ratios.add((RatioProps) entry);
-                      } else if (entry instanceof HSIProps) {
-                          hsis.add((HSIProps) entry);
-                      }
-                  }
-                   for (int i = 0; i < hsis.size(); i++) {
-                      HSIProps hsiprops = hsis.get(i);
-                      if (!loaded) {
-                          if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
-                              return false;
-                          doneLoadingFile();
-                          sessionOpened = true;
-                          loaded = true;
-                      }
-                      MimsPlus sp = new MimsPlus(ui, hsiprops);
-                      sp.showWindow();
-                  }
-                  for (int i = 0; i < sums.size(); i++) {
-                      SumProps sumprops = sums.get(i);
-                      if (!loaded) {
-                          if (!loadMIMSFile(new File(file.getParent(), sumprops.getDataFileName()))) {
-                              return false;
-                          }
-                          doneLoadingFile();
-                          sessionOpened = true;
-                          loaded = true;
-                      }
-                      MimsPlus sp = new MimsPlus(ui, sumprops, null);
-                      sp.showWindow();
-                  }
-                  for (int i = 0; i < ratios.size(); i++) {
-                      RatioProps ratioprops = ratios.get(i);
-                      if (!loaded) {
-                          if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName())))
-                              return false;
-                          doneLoadingFile();
-                          sessionOpened = true;
-                          loaded = true;
-                      }
-                      MimsPlus sp = new MimsPlus(ui, ratioprops);
-                      sp.showWindow();
-                  }
+                  MimsPlus sp;
+                 for (Object entry : entries) {
+                     if (entry instanceof SumProps) {
+                         SumProps sumprops = (SumProps) entry;
+                         if (!sessionOpened) {
+                             if (!loadMIMSFile(new File(file.getParent(), sumprops.getDataFileName())))
+                                 return false;
+                             doneLoadingFile();
+                             sessionOpened = true;
+                         }
+                         sp = new MimsPlus(ui, sumprops, null);
+                         sp.showWindow();
+                     } else if (entry instanceof RatioProps) {
+                         RatioProps ratioprops = (RatioProps) entry;
+                         if (!sessionOpened) {
+                             if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName())))
+                                 return false;
+                             doneLoadingFile();
+                             sessionOpened = true;
+                         }
+                         sp = new MimsPlus(ui, ratioprops);
+                         sp.showWindow();
+                     } else if (entry instanceof HSIProps) {
+                         HSIProps hsiprops = (HSIProps) entry;
+                         if (!sessionOpened) {
+                             if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
+                                 return false;
+                             doneLoadingFile();
+                             sessionOpened = true;
+                         }
+                         sp = new MimsPlus(ui, hsiprops);
+                         sp.showWindow();
+                     }
+                 }
                  
              } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION)
                      || file.getAbsolutePath().endsWith(ROI_EXTENSION)) {

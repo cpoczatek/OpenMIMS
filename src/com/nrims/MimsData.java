@@ -264,7 +264,30 @@ public class MimsData extends javax.swing.JPanel {
     public void setHasStack(boolean bOn) {
         syncjCheckBox.setEnabled(bOn);
     }
-
+    /**
+     * Export all information in a single string
+     * @return a string of all information
+     */
+    public String getText(){
+        String output = "";
+        output += "File: " + jLabel9.getText() + "\n";
+        output += "Path: " + jLabel24.getText() + "\n";
+        output += "No. of masses: " + jLabel18.getText() + "\n";
+        output += "Symbols: " + jLabel26.getText() + "\n";
+        output += "Images/Mass: " + jLabel10.getText() + "\n";
+        output += "Position: " + jLabel11.getText() + "\n";
+        output += "Z Position: " + jLabel9.getText() + "\n";
+        output += "Date: " + jLabel12.getText() + "\n";
+        output += "User: " + jLabel13.getText() + "\n";
+        output += "Dwell Time: " + jLabel15.getText() + "\n";
+        output += "Duration: " + jLabel20.getText() + "\n";
+        output += "Raster: " + jLabel16.getText() + "\n";
+        output += "Pixels: " + jLabel22.getText() + "\n";
+        output += "DT Corrected: " + jLabel27.getText() + "\n";
+        output += "QSA Corrected: " + jLabel30.getText() + "\n";
+        
+        return output;
+    }
     /**
      * Set the meta -data fields based on the contents
      * of the <code>Opener</code> object.

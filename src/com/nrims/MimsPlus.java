@@ -67,6 +67,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     // Other member variables.
     public String title = "";
+    public String titleExtension = "";
     private boolean allowClose =true;
     private boolean bIgnoreClose = false ;
     boolean bMoving = false;
@@ -132,9 +133,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
            ipp = new ij.process.FloatProcessor(w, h, pixels);
         }
         //String titleString = "m" + ui.getTitleStringSymbol(index) + ": " + ui.getImageFilePrefix();
-        String titleString = ui.formatTitle(index);
-        
-        setProcessor(titleString, ipp);
+        title = ui.formatTitle(index, false);
+        titleExtension = ui.formatTitle(index, true);
+        setProcessor(title, ipp);
         
         fStateListeners = new EventListenerList() ;
     }
@@ -185,13 +186,18 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       double sumPixels[] = new double[w*h];
       ImageProcessor ipp = new FloatProcessor(w, h, sumPixels);
       title = "Sum : ";
+      titleExtension = "Sum : ";
       if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-         if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length)
+         if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length){
             title += "1";
-         else 
-         title += ui.formatTitle(sumProps.getParentMassIdx());
+            titleExtension += "1";
+         }else{
+            title += ui.formatTitle(sumProps.getParentMassIdx(), false);
+            titleExtension += ui.formatTitle(sumProps.getParentMassIdx(), true);
+         }
       } else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-         title += ui.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx());
+         title += ui.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), false);
+         titleExtension += ui.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), true);
       }
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
@@ -241,7 +247,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       ImageProcessor ipp = new FloatProcessor(w, h, pixels, null);
       ipp.setMinAndMax(0, 1.0);
       String numName, denName;
-      title += ui.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx());
+      title += ui.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(), false);
+      titleExtension += ui.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(), true);
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
       //before listeners were added in compute...
@@ -347,7 +354,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       String numName;
       String denName;
       ImageProcessor ipp = new ColorProcessor(w, h, rgbPixels);
-      title = "HSI : " + ui.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx());
+      title = "HSI : " + ui.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), false);
+       titleExtension = "HSI : " + ui.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), true);
       setProcessor(title, ipp);
       getProcessor().setMinAndMax(0, 255);
       fStateListeners = new EventListenerList();
@@ -1173,54 +1181,66 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void mouseReleased(MouseEvent e) {
-      if (bStateChanging) {
-         return;
-      }
-      if (bMoving) {
-        Roi thisroi = getRoi();
-        if(thisroi==null) return;
-        // Prevent duplicate roi at same location
-        Rectangle r = thisroi.getBounds();
-        x2 = r.x; y2 = r.y; w2 = r.width; h2 = r.height;
-        if (x1 == x2 && y1 == y2 && w1 == w2 && h1 == h2) return;
+      if (!IJ.getToolName().equals("Drag To Writer tool")){
+          if (bStateChanging) {
+              return;
+          }
+          if (bMoving) {
+              Roi thisroi = getRoi();
+              if (thisroi == null) {
+                  return;
+              }
+              // Prevent duplicate roi at same location
+              Rectangle r = thisroi.getBounds();
+              x2 = r.x;
+              y2 = r.y;
+              w2 = r.width;
+              h2 = r.height;
+              if (x1 == x2 && y1 == y2 && w1 == w2 && h1 == h2) {
+                  return;
+              }
 
-        stateChanged(getRoi(), MimsPlusEvent.ATTR_ROI_MOVED);
+              stateChanged(getRoi(), MimsPlusEvent.ATTR_ROI_MOVED);
 
-        ui.getRoiManager().resetSpinners(thisroi);
-        updateHistogram(true);
-        bMoving = false;
-        return;
-      }
-      
-      
-      if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE) && e.isShiftDown()) {
-          int endX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
-          int endY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
-          int deltaX = endX - pressX;
-          int deltaY = endY - pressY;
-          
-          int current = getCurrentSlice() + 1;
-          int total = getNSlices();
+              ui.getRoiManager().resetSpinners(thisroi);
+              updateHistogram(true);
+              bMoving = false;
+              return;
+          }
 
-          ui.getmimsStackEditing().translateStack(deltaX, deltaY, current, total);
-      }
 
-      switch (Toolbar.getToolId()) {
-         case Toolbar.RECTANGLE:
-         case Toolbar.OVAL:
-         case Toolbar.LINE:
-         case Toolbar.FREELINE:
-         case Toolbar.FREEROI:
-         case Toolbar.POINT:
-         case Toolbar.POLYGON:
-         case Toolbar.POLYLINE:
-            stateChanged(getRoi(), MimsPlusEvent.ATTR_MOUSE_RELEASE);
-            break;
-         case Toolbar.WAND:
-            if (getRoi() != null) {
-               stateChanged(getRoi(), MimsPlusEvent.ATTR_MOUSE_RELEASE);
-            }
-            break;
+          if (IJ.getToolName().equals("OpenMIMS tool") && (this.nType == MimsPlus.MASS_IMAGE) && e.isShiftDown()) {
+              int endX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
+              int endY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
+              int deltaX = endX - pressX;
+              int deltaY = endY - pressY;
+
+              int current = getCurrentSlice() + 1;
+              int total = getNSlices();
+
+              ui.getmimsStackEditing().translateStack(deltaX, deltaY, current, total);
+          }
+
+          switch (Toolbar.getToolId()) {
+              case Toolbar.RECTANGLE:
+              case Toolbar.OVAL:
+              case Toolbar.LINE:
+              case Toolbar.FREELINE:
+              case Toolbar.FREEROI:
+              case Toolbar.POINT:
+              case Toolbar.POLYGON:
+              case Toolbar.POLYLINE:
+                  stateChanged(getRoi(), MimsPlusEvent.ATTR_MOUSE_RELEASE);
+                  break;
+              case Toolbar.WAND:
+                  if (getRoi() != null) {
+                      stateChanged(getRoi(), MimsPlusEvent.ATTR_MOUSE_RELEASE);
+                  }
+                  break;
+          }
+      }else{
+          MimsUno mimsUno = new MimsUno();
+          mimsUno.dropImage(this.getImage(), titleExtension, titleExtension, ui.getDescription());
       }
    }
 
@@ -1456,157 +1476,161 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     		default: return("");
 		}
     }
-
+    
     @Override
     // Display statistics while dragging or creating ROIs.
     public void mouseDragged(MouseEvent e) {
-        
-        if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE)) {
-            //Get spinners
-            javax.swing.JSpinner xSpin = ui.getmimsStackEditing().getTranslateX();
-            javax.swing.JSpinner ySpin = ui.getmimsStackEditing().getTranslateY();
-            
-            //Get mouse position
+        if (!IJ.getToolName().equals("Drag To Writer tool")){
+            if (IJ.getToolName().equals("OpenMIMS tool") && (this.nType == MimsPlus.MASS_IMAGE)) {
+                //Get spinners
+                javax.swing.JSpinner xSpin = ui.getmimsStackEditing().getTranslateX();
+                javax.swing.JSpinner ySpin = ui.getmimsStackEditing().getTranslateY();
+
+                //Get mouse position
+                int x = (int) e.getPoint().getX();
+                int y = (int) e.getPoint().getY();
+                int mX = getWindow().getCanvas().offScreenX(x);
+                int mY = getWindow().getCanvas().offScreenY(y);
+
+
+                //Calculate deltas
+                int xDelta = mX - startX;
+                int yDelta = mY - startY;
+
+                //Spinner numbers
+                Double xVal = (Double) xSpin.getModel().getValue() + xDelta;
+                Double yVal = (Double) ySpin.getModel().getValue() + yDelta;
+
+                //Update spinners
+                xSpin.getModel().setValue(xVal);
+                ySpin.getModel().setValue(yVal);
+
+                //Update start points
+                startX = mX;
+                startY = mY;
+                return;
+            }
+            //cannot hit return below, confused as to why this is here
+            if (Toolbar.getBrushSize() != 0 && Toolbar.getToolId() == Toolbar.OVAL) {
+                return;
+            }
+
+            // get mouse poistion
             int x = (int) e.getPoint().getX();
             int y = (int) e.getPoint().getY();
             int mX = getWindow().getCanvas().offScreenX(x);
             int mY = getWindow().getCanvas().offScreenY(y);
-            
-            
-            //Calculate deltas
-            int xDelta = mX - startX;
-            int yDelta = mY - startY;
-            
-            //Spinner numbers
-            Double xVal = (Double) xSpin.getModel().getValue() + xDelta;
-            Double yVal = (Double) ySpin.getModel().getValue() + yDelta;
-            
-            //Update spinners
-            xSpin.getModel().setValue(xVal);
-            ySpin.getModel().setValue(yVal);
-            
-            //Update start points
-            startX = mX;
-            startY = mY;
-            return;
-        }
-        //cannot hit return below, confused as to why this is here
-        if( Toolbar.getBrushSize() != 0 && Toolbar.getToolId()==Toolbar.OVAL) 
-            return;
+            String msg = "" + mX + "," + mY;
 
-       // get mouse poistion
-       int x = (int) e.getPoint().getX();
-       int y = (int) e.getPoint().getY();
-       int mX = getWindow().getCanvas().offScreenX(x);
-       int mY = getWindow().getCanvas().offScreenY(y);
-       String msg = "" + mX + "," + mY;
-
-        int cslice = getCurrentSlice();
-        String cstring = Integer.toString(cslice);
-        boolean stacktest = isStack();
-        if (this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) {
-            stacktest = stacktest || this.getNumeratorImage().isStack();
+            int cslice = getCurrentSlice();
+            String cstring = Integer.toString(cslice);
+            boolean stacktest = isStack();
+            if (this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) {
+                stacktest = stacktest || this.getNumeratorImage().isStack();
+                if (stacktest) {
+                    if (ui.getIsSum()) {
+                        //if it's a sum HSI/ratio show the whole range of z values
+                        cstring = "[1-" + this.getNumeratorImage().getStackSize() + "]";
+                    } else if (ui.getIsWindow() && (ui.getWindowRange() > 0)) {
+                        //if there's a non-zero radius window used show the range
+                        //covered by the window, need to check edges too
+                        int r = ui.getWindowRange();
+                        int min = java.lang.Math.max(1, this.getNumeratorImage().getSlice() - r);
+                        int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r, this.getNumeratorImage().getStackSize());
+                        cstring = "[" + min + "-" + max + "]";
+                    } else {
+                        cstring = "" + this.getNumeratorImage().getCurrentSlice();
+                    }
+                }
+            }
             if (stacktest) {
-                if (ui.getIsSum()) {
-                    //if it's a sum HSI/ratio show the whole range of z values
-                    cstring = "[1-" + this.getNumeratorImage().getStackSize() + "]";
-                } else if (ui.getIsWindow() && (ui.getWindowRange() > 0)) {
-                    //if there's a non-zero radius window used show the range
-                    //covered by the window, need to check edges too
-                    int r = ui.getWindowRange();
-                    int min = java.lang.Math.max(1, this.getNumeratorImage().getSlice() - r);
-                    int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r, this.getNumeratorImage().getStackSize());
-                    cstring = "[" + min + "-" + max + "]";
+                msg += "," + cstring + " = ";
+            } else {
+                msg += " = ";
+            }
+
+            if ((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && (this.internalDenominator != null && this.internalNumerator != null)) {
+                float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
+                float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
+                double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
+                String opstring = "";
+                if (ui.getMedianFilterRatios()) {
+                    opstring = "-med->";
                 } else {
-                    cstring = "" + this.getNumeratorImage().getCurrentSlice();
+                    opstring = "=";
+                }
+                msg += "S (" + (int) ngl + " / " + (int) dgl + ") " + opstring + " " + IJ.d2s(ratio, 4);
+            } else if (this.nType == SUM_IMAGE) {
+                float ngl, dgl;
+                if (internalNumerator != null && internalDenominator != null) {
+                    ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
+                    dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
+                    msg += " S (" + ngl + " / " + dgl + ") = ";
+                }
+                int[] gl = getPixel(mX, mY);
+                float s = Float.intBitsToFloat(gl[0]);
+                msg += IJ.d2s(s, 0);
+            } else {
+                MimsPlus[] ml = ui.getOpenMassImages();
+                for (int i = 0; i < ml.length; i++) {
+                    int[] gl = ml[i].getPixel(mX, mY);
+                    msg += gl[0];
+                    if (i + 1 < ml.length) {
+                        msg += ", ";
+                    }
                 }
             }
-        }
-        if (stacktest) {
-            msg += "," + cstring + " = ";
-        } else {
-            msg += " = ";
-        }
 
-       if((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && (this.internalDenominator!=null && this.internalNumerator!=null) ) {
-            float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
-            float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
-            double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
-            String opstring = "";
-            if(ui.getMedianFilterRatios()) { opstring = "-med->"; } else { opstring = "=";}
-            msg += "S (" + (int)ngl + " / " + (int)dgl + ") " + opstring + " " + IJ.d2s(ratio, 4);
-        }
-        else if(this.nType == SUM_IMAGE) {
-            float ngl, dgl;
-            if (internalNumerator != null && internalDenominator != null) {
-               ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
-               dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
-               msg += " S (" + ngl + " / " + dgl + ") = ";
+            // precision
+            int displayDigits = 3;
+
+            // Get the ROI, (the area in yellow).
+            Roi lroi = getRoi();
+
+            double sf = 1.0;
+            if (this.getMimsType() == HSI_IMAGE) {
+                sf = this.getHSIProps().getRatioScaleFactor();
             }
-            int[] gl = getPixel(mX, mY);
-            float s = Float.intBitsToFloat(gl[0]);
-            msg += IJ.d2s(s,0);
-        }
-        else {
-            MimsPlus[] ml = ui.getOpenMassImages() ;
-            for(int i = 0 ; i < ml.length ; i++ ) {
-                int [] gl = ml[i].getPixel(mX,mY);
-                msg += gl[0] ;
-                if( i+1 < ml.length ) {
-                    msg += ", ";
+            if (this.getMimsType() == RATIO_IMAGE) {
+                sf = this.getRatioProps().getRatioScaleFactor();
+            }
+
+            // Display stats in the message bar.
+            if (lroi != null) {
+                ij.process.ImageStatistics stats = this.getStatistics();
+                ij.process.ImageStatistics numeratorStats = null;
+                ij.process.ImageStatistics denominatorStats = null;
+
+                if (this.getMimsType() == MimsPlus.HSI_IMAGE || this.getMimsType() == MimsPlus.RATIO_IMAGE) {
+                    this.internalRatio.setRoi(lroi);
+                    stats = this.internalRatio.getStatistics();
+                    msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
+                } else {
+                    msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
                 }
+
+                //get numerator denominator stats
+                if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE) && internalNumerator != null && internalDenominator != null) {
+                    internalNumerator.setRoi(lroi);
+                    numeratorStats = internalNumerator.getStatistics();
+                    internalNumerator.killRoi();
+
+                    internalDenominator.setRoi(lroi);
+                    denominatorStats = internalDenominator.getStatistics();
+                    internalDenominator.killRoi();
+
+                    double ratio_means = sf * numeratorStats.mean / denominatorStats.mean;
+                    msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
+                }
+                ui.updateStatus(msg);
+
+                setRoi(lroi);
+
+                updateHistogram(false);
+                updateLineProfile();
+
             }
         }
-
-       // precision
-       int displayDigits = 3;
-
-       // Get the ROI, (the area in yellow).
-       Roi lroi = getRoi();
-
-        double sf = 1.0;
-        if (this.getMimsType() == HSI_IMAGE) {
-            sf = this.getHSIProps().getRatioScaleFactor();
-        }
-        if (this.getMimsType() == RATIO_IMAGE) {
-            sf = this.getRatioProps().getRatioScaleFactor();
-        }
-
-      // Display stats in the message bar.
-      if (lroi != null) {
-          ij.process.ImageStatistics stats = this.getStatistics();
-          ij.process.ImageStatistics numeratorStats = null;
-          ij.process.ImageStatistics denominatorStats = null;
-
-         if (this.getMimsType() == MimsPlus.HSI_IMAGE || this.getMimsType() == MimsPlus.RATIO_IMAGE) {
-             this.internalRatio.setRoi(lroi);
-             stats =  this.internalRatio.getStatistics();
-            msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
-         } else {
-            msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
-         }
-
-          //get numerator denominator stats
-          if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE) && internalNumerator != null && internalDenominator != null) {
-              internalNumerator.setRoi(lroi);
-              numeratorStats = internalNumerator.getStatistics();
-              internalNumerator.killRoi();
-
-              internalDenominator.setRoi(lroi);
-              denominatorStats = internalDenominator.getStatistics();
-              internalDenominator.killRoi();
-
-              double ratio_means = sf*numeratorStats.mean/denominatorStats.mean;
-              msg += ", N/D=" + IJ.d2s(ratio_means, displayDigits);
-          }
-         ui.updateStatus(msg);
-
-         setRoi(lroi);
-
-         updateHistogram(false);
-         updateLineProfile();
-
-      }
    }
 
     @Override
