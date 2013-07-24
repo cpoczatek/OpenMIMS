@@ -41,6 +41,7 @@ import javax.swing.table.TableModel;
  * MimsJTable class creates a frame containing a <code>JTable</code>.
  * This class is used to generate frame that contain data, usually
  * statistical data associated with images.
+ * extra commit
  *
  * @author zkaufman
  */
