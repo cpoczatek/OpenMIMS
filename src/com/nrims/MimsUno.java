@@ -8,67 +8,32 @@ package com.nrims;
 import java.awt.image.BufferedImage;
 import java.awt.Image;
 import java.io.ByteArrayOutputStream;
-import com.sun.star.awt.MouseEvent;
-import java.io.File;
 import javax.imageio.ImageIO;
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import com.sun.star.accessibility.AccessibleRole;
-import com.sun.star.accessibility.XAccessible;
-import com.sun.star.accessibility.XAccessibleComponent;
-import com.sun.star.accessibility.XAccessibleContext;
-import java.io.ByteArrayInputStream;
-import com.sun.star.io.BufferSizeExceededException;
-import com.sun.star.io.NotConnectedException;
-import com.sun.star.io.XInputStream;
-import com.sun.star.io.XSeekable;
 import com.sun.star.awt.Point;
 import com.sun.star.awt.Size;
-import com.sun.star.awt.XMouseListener;
-import com.sun.star.awt.XWindow;
-import com.sun.star.beans.XPropertySet;
 import com.sun.star.comp.helper.Bootstrap;
-import com.sun.star.container.XNameContainer;
 import com.sun.star.drawing.XShape;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XDesktop;
 import com.sun.star.graphic.XGraphic;
 import com.sun.star.graphic.XGraphicProvider;
 import com.sun.star.lang.XComponent;
-import com.sun.star.frame.XController;
 import com.sun.star.lang.XMultiComponentFactory;
-import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.text.XText;
 import com.sun.star.text.XTextContent;
 import com.sun.star.text.XTextCursor;
 import com.sun.star.text.XTextDocument;
-import com.sun.star.text.XTextViewCursor;
 import com.sun.star.text.XTextRange;
 import com.sun.star.text.WrapTextMode;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.text.TextContentAnchorType;
-import com.sun.star.text.XTextViewCursorSupplier;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.container.XNameAccess;
 import com.sun.star.lib.uno.adapter.ByteArrayToXInputStreamAdapter;
 import com.sun.star.container.XNamed;
-import com.sun.star.datatransfer.XTransferable;
-import com.sun.star.awt.XMouseClickHandler;
-import com.sun.star.datatransfer.DataFlavor;
-import com.sun.star.datatransfer.UnsupportedFlavorException;
-import com.sun.star.datatransfer.clipboard.XClipboard;
-import com.sun.star.datatransfer.clipboard.XClipboardOwner;
-import com.sun.star.document.XEventBroadcaster;
-import com.sun.star.frame.XFrame;
-import com.sun.star.lang.EventObject;
-import com.sun.star.document.XEventListener;
 import com.sun.star.text.XTextFrame;
 import com.sun.star.text.XTextFramesSupplier;
-import com.sun.star.uno.Type;
-import com.sun.star.uno.XInterface;
-import ij.ImagePlus;
-import java.io.InputStream;
-import java.util.Collection;
 import com.sun.star.accessibility.XAccessible;
 import com.sun.star.accessibility.XAccessibleComponent;
 import com.sun.star.accessibility.XAccessibleContext;
@@ -180,21 +145,10 @@ public class MimsUno {
                         xChildAccessibleContext = xAccessible.getAccessibleContext();
                         if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.GRAPHIC && withinRange(xChildAccessibleContext)) {
                             //if we are over the image, then we insert a new image scaled to the width of the one we're dropping on
-                            XTextGraphicObjectsSupplier xGraphicSupplier =
-                                    (XTextGraphicObjectsSupplier) UnoRuntime.queryInterface(
-                                    XTextGraphicObjectsSupplier.class, xTextDocument);
-
-                            //get the graphic objects
-                            XNameAccess xNameAccess = xGraphicSupplier.getGraphicObjects();
-
-                            //get the desired image by name
-                            Object graphic = xNameAccess.getByName(xChildAccessibleContext.getAccessibleName());
-
-                            //retrieve the property set, get the width, and insert the new image according to that
-                            com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
-                                    com.sun.star.beans.XPropertySet.class, graphic);
-                            String widthString = "" + xPropSet.getPropertyValue("Width");
-                            int width = Integer.parseInt(widthString);
+                            XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
+                                XAccessibleComponent.class, xChildAccessibleContext);
+                            int width = xAccessibleComponent.getSize().Width;
+                            System.out.println(width);
                             boolean result = insertContent(image, width, xTextFrame, text, title, description);
                             if (result) {
                                 return true;
@@ -340,8 +294,14 @@ public class MimsUno {
                 com.sun.star.beans.XPropertySet.class, graphic);
 
         //calculate the width and height
-        int ratio =  width/ (int) Math.round(image.getWidth(null) * 26.4583);
-        int height = ratio*(int) Math.round(image.getHeight(null) * 26.4583);
+        System.out.println(image.getWidth(null));
+        System.out.println((int) Math.round(image.getWidth(null) * 26.4583));
+        double ratio =  (double)width/(double) image.getWidth(null);
+        width = (int) Math.round(width * 26.4583);
+        System.out.println(ratio);
+        System.out.println(image.getHeight(null));
+        int height = (int) Math.round(ratio*image.getHeight(null) * 26.4583);
+        System.out.println(height);
 
         //if the image is greater than the width, then we scale it down the barely fit in the page
 
@@ -359,7 +319,7 @@ public class MimsUno {
             exception.printStackTrace(System.err);
             return false;
         }
-        return insertImageIntoTextFrame(height, width, xImage, xTextFrame, text);
+        return insertImageIntoTextFrame((int) height, width, xImage, xTextFrame, text);
     }
     /**
      * Find a named text frame within current Writer doc
