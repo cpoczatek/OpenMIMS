@@ -148,7 +148,6 @@ public class MimsUno {
                             XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
                                 XAccessibleComponent.class, xChildAccessibleContext);
                             int width = xAccessibleComponent.getSize().Width;
-                            System.out.println(width);
                             boolean result = insertContent(image, width, xTextFrame, text, title, description);
                             if (result) {
                                 return true;
@@ -294,14 +293,9 @@ public class MimsUno {
                 com.sun.star.beans.XPropertySet.class, graphic);
 
         //calculate the width and height
-        System.out.println(image.getWidth(null));
-        System.out.println((int) Math.round(image.getWidth(null) * 26.4583));
         double ratio =  (double)width/(double) image.getWidth(null);
         width = (int) Math.round(width * 26.4583);
-        System.out.println(ratio);
-        System.out.println(image.getHeight(null));
         int height = (int) Math.round(ratio*image.getHeight(null) * 26.4583);
-        System.out.println(height);
 
         //if the image is greater than the width, then we scale it down the barely fit in the page
 
