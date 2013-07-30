@@ -4467,11 +4467,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             for (;;){
                 try {
                     // Save the ROI files to zip.
-                    String roisFileName = "/tmp/"+getImageFilePrefix();
+                    String roisFileName = System.getProperty("java.io.tmpdir")+"/"+getImageFilePrefix();
                     Roi[] rois = getRoiManager().getAllROIs();
                     if (rois.length > 0){
                        getRoiManager().saveMultiple(rois, roisFileName, false);
-                       //threadMessage("Autosaved at "+roisFileName);
+                       threadMessage("Autosaved at "+ roisFileName);
                     }else{
                         //threadMessage("Nothing to autosave");
                     }
