@@ -656,6 +656,10 @@ public class MimsJTable {
       mff_txt.setDescription("Text file");
       fc.addChoosableFileFilter(mff_txt);
       fc.setFileFilter(mff_txt);
+      MIMSFileFilter mff_csv = new MIMSFileFilter("csv");
+      mff_csv.setDescription("Comma seperated value");
+      fc.addChoosableFileFilter(mff_csv);
+      fc.setFileFilter(mff_csv);
       fc.setPreferredSize(new java.awt.Dimension(650, 500));
       String lastFolder = gui.getLastFolder();
 
@@ -685,9 +689,9 @@ public class MimsJTable {
 
          // Write column headers
          for (int i = 0; i < table.getColumnCount(); i++) {
-            out.print(table.getColumnName(i));
+            out.print('"' + table.getColumnName(i) + '"');
             if (i < table.getColumnCount() - 1)
-               out.print("\t");
+               out.print(",");
          }
          out.println();
 
@@ -700,9 +704,9 @@ public class MimsJTable {
                   value = "null";
                else
                   value = objVal.toString();
-               out.print(value);
+               out.print('"' + value + '"');
                if (j < table.getColumnCount() - 1)
-                  out.print("\t");
+                  out.print(",");
             }
             out.println();
          }
@@ -714,7 +718,6 @@ public class MimsJTable {
          IJ.error("Unable to write data. Possible permissions error.");
       }
    }
-
   /**
    * Determines if the number of columns is the same.
    */
