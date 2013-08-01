@@ -1942,7 +1942,26 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     public SquaresManager getSquaresManager() {
         return squaresManager;
     }
-
+    public boolean checkSave(String toSave, String filename, int n) {
+        File file = new File(toSave);
+        String newFilename = filename + "(" + n + ")" + ".zip";
+        // File (or directory) with new name
+        File file2 = new File(newFilename);
+        System.out.println("File at " + file2.getAbsolutePath() + " is " + file2.exists());
+        if (file2.getAbsoluteFile().exists() && n < 10) {
+            checkSave(newFilename, filename, n + 1);
+        }
+        System.out.println("File at " + file.getAbsolutePath() + " is " + file.exists());
+        if (file.exists()) {
+            boolean success = file.renameTo(file2);
+            if (success) {
+                System.out.println("Renamed");
+                file = new File(toSave);
+                file.delete();
+            }
+        }
+        return true;
+    }
     /**
      * Saves all ROIs.
      *
@@ -1987,8 +2006,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            MimsJFileChooser mfc = new MimsJFileChooser(ui);
            mfc.setSelectedFile(new File(defaultname));
            MIMSFileFilter mff_rois = new MIMSFileFilter("rois.zip");
-           mff_rois.addExtension("zip");
-           mff_rois.setDescription("Roi file");
+           mff_rois.addExtension("rois.zip");
+           mff_rois.setDescription("Roi archive");
            mfc.addChoosableFileFilter(mff_rois);
            mfc.setFileFilter(mff_rois);
            int returnVal = mfc.showSaveDialog(this);

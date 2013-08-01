@@ -1389,6 +1389,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         jMenuItem9 = new javax.swing.JMenuItem();
         jPopupMenu1 = new javax.swing.JPopupMenu();
+        jMenuItem2 = new javax.swing.JMenuItem();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         stopButton = new javax.swing.JButton();
@@ -1438,6 +1439,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         emptyTestMenuItem = new javax.swing.JMenuItem();
 
         jMenuItem9.setText("Export all images");
+
+        jMenuItem2.setText("jMenuItem2");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("OpenMIMS");
@@ -2391,7 +2394,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     private File checkForExistingFiles(String extension, String filename, String description){
         String baseFileName = filename;
+        System.out.println(filename);
+        System.out.println(baseFileName + extension);
         File f = new File(baseFileName + extension);
+        System.out.println(f.getPath());
+        System.out.println(f.getAbsolutePath());
+        System.out.println(f.exists());
         int counter = 0;
         if (f.exists()){
             while (f.exists()) {
@@ -2411,7 +2419,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     baseFileName = getFilePrefix(getFilePrefix(fc.getSelectedFile().getAbsolutePath()));
                 } else {
                     baseFileName = getFilePrefix(fc.getSelectedFile().getAbsolutePath());
-                }
+                } 
             } else {
                 return null;
             }
@@ -4470,18 +4478,36 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     String roisFileName = System.getProperty("java.io.tmpdir")+"/"+getImageFilePrefix();
                     Roi[] rois = getRoiManager().getAllROIs();
                     if (rois.length > 0){
-                       getRoiManager().saveMultiple(rois, roisFileName, false);
-                       threadMessage("Autosaved at "+ roisFileName);
+                       checkSave(roisFileName + ROIS_EXTENSION, roisFileName, 1);
+                       getRoiManager().saveMultiple(rois, roisFileName + ROIS_EXTENSION, false);
+                       threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
                     }else{
                         //threadMessage("Nothing to autosave");
                     }
-                    Thread.sleep(getInterval());
+                    Thread.sleep(getInterval());    
                 } catch (InterruptedException e){
                     threadMessage("Autosave thread interrupted");
                     break;
                 }
             }
         }
+    }
+    public boolean checkSave(String toSave, String filename, int n) {
+        File file = new File(toSave);
+        String newFilename = filename + "(" + n + ")" + ROIS_EXTENSION;
+        // File (or directory) with new name
+        File file2 = new File(newFilename);
+        if (file2.exists() && n < 10) {
+            checkSave(newFilename, filename, n + 1);
+        }
+        if (file.exists()) {
+            boolean success = file.renameTo(file2);
+            if (success) {
+                file = new File(toSave);
+                file.delete();
+            }
+        }
+        return true;
     }
     /**
      * threadMessage will output a thread and it's message to the console
@@ -5187,6 +5213,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuItem importIMListMenuItem;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;
