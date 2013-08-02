@@ -39,9 +39,13 @@ import com.sun.star.accessibility.XAccessible;
 import com.sun.star.accessibility.XAccessibleComponent;
 import com.sun.star.accessibility.XAccessibleContext;
 import com.sun.star.awt.XWindow;
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XIndexAccess;
+import com.sun.star.drawing.FillStyle;
 import com.sun.star.drawing.XDrawPage;
 import com.sun.star.drawing.XDrawPagesSupplier;
+import com.sun.star.drawing.XShapeGrouper;
+import com.sun.star.drawing.XShapes;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XModel;
@@ -74,6 +78,24 @@ public class MimsUno {
             System.out.println("Failure to connect");
         }
         return null;
+    }
+    public boolean newDoc(){
+        try {
+        context = Bootstrap.bootstrap();
+            xMCF = context.getServiceManager();
+            Object oDesktop = xMCF.createInstanceWithContext(
+                    "com.sun.star.frame.Desktop", context);
+            XDesktop desktop = (com.sun.star.frame.XDesktop) UnoRuntime.queryInterface(
+                    com.sun.star.frame.XDesktop.class, oDesktop);
+        XComponentLoader xComponentLoader = (XComponentLoader) UnoRuntime.queryInterface(
+                        XComponentLoader.class, desktop);
+                PropertyValue[] loadProps = new PropertyValue[0];
+                 XComponent currentDocument = xComponentLoader.loadComponentFromURL("private:factory/swriter", "_blank", 0, loadProps);
+                 return true;
+        }catch(Exception e){
+            System.out.println("Failure to create new document");
+            return false;
+        }
     }
     /**
      * Method to handle dropping images in LibreOffice.
@@ -268,44 +290,45 @@ public class MimsUno {
         }
     }
     private boolean insertDrawContent(ImageInfo image, XComponent xComponent){
+        Size size = null;
         try {
-        int height;
-        int width;
-        //create blank graphic in document
-        Object graphic = createBlankGraphic(xComponent);
-        
-        //query for the interface XTextContent on the GraphicObject 
-        image.xShape = (XShape) UnoRuntime.queryInterface(
-                XShape.class, graphic);
-        
-        //query for the properties of the graphic
-        com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
-                com.sun.star.beans.XPropertySet.class, graphic);
-        if (image.width > 0){
-            //calculate the width and height
-            double ratio = (double) image.width / (double) image.image.getWidth(null);
-            width = (int) Math.round(image.width * 26.4583);
-            height = (int) Math.round(ratio * image.image.getHeight(null) * 26.4583);
-        }else{
-            //calculate the width and height
-            width = (int) Math.round(image.image.getWidth(null) * 26.4583);
-            height = (int) Math.round(image.image.getHeight(null) * 26.4583);
-        }
-        //if the image is greater than the width, then we scale it down the barely fit in the page
-        if (width > 165100) {
-            int ratio = width;
-            width = 165100 - 1000;
-            ratio = width / ratio;
-            height = height * ratio;
-        }
-        Size size = new Size();
-        image.height = size.Height = height;
-        image.width = size.Width = width;
-        image.xShape.setSize(size);
-        Point point = new Point();
-        point.X = 0;
-        point.Y = 0;
-        image.xShape.setPosition(point);
+            int height;
+            int width;
+            //create blank graphic in document
+            Object graphic = createBlankGraphic(xComponent);
+
+            //query for the interface XTextContent on the GraphicObject 
+            image.xShape = (XShape) UnoRuntime.queryInterface(
+                    XShape.class, graphic);
+
+            //query for the properties of the graphic
+            com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
+                    com.sun.star.beans.XPropertySet.class, graphic);
+            if (image.width > 0){
+                //calculate the width and height
+                double ratio = (double) image.width / (double) image.image.getWidth(null);
+                width = (int) Math.round(image.width * 26.4583);
+                height = (int) Math.round(ratio * image.image.getHeight(null) * 26.4583);
+            }else{
+                //calculate the width and height
+                width = (int) Math.round(image.image.getWidth(null) * 26.4583);
+                height = (int) Math.round(image.image.getHeight(null) * 26.4583);
+            }
+            //if the image is greater than the width, then we scale it down the barely fit in the page
+            if (width > 165100) {
+                int ratio = width;
+                width = 165100 - 1000;
+                ratio = width / ratio;
+                height = height * ratio;
+            }
+            size = new Size();
+            image.height = size.Height = height;
+            image.width = size.Width = width;
+            image.xShape.setSize(size);
+            Point point = new Point();
+            point.X = 0;
+            point.Y = 0;
+            image.xShape.setPosition(point);
             xPropSet.setPropertyValue("Graphic", convertImage(image.image));
             xPropSet.setPropertyValue("Title", image.title);
             xPropSet.setPropertyValue("Description", image.description);
@@ -315,6 +338,17 @@ public class MimsUno {
             return false;
         }
         try{
+            XMultiServiceFactory xDrawFactory =
+                (XMultiServiceFactory)UnoRuntime.queryInterface(
+                    XMultiServiceFactory.class, xComponent);
+            Object drawShape = xDrawFactory.createInstance("com.sun.star.drawing.RectangleShape");
+            XShape xDrawShape = (XShape)UnoRuntime.queryInterface(XShape.class, drawShape);
+            xDrawShape.setSize(new Size(size.Width, 1000));
+            xDrawShape.setPosition(new Point(0, size.Height));
+            
+
+            // wrap text inside shape
+            
             XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
                     XDrawPagesSupplier.class, xComponent);
             if (xDrawPagesSupplier != null) {
@@ -325,10 +359,36 @@ public class MimsUno {
                 XDrawPage xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
                 if (xDrawPage != null) {
                     xDrawPage.add(image.xShape);
+
+                    XPropertySet xShapeProps = (XPropertySet) UnoRuntime.queryInterface(
+                            XPropertySet.class, drawShape);
+                    xShapeProps.setPropertyValue("TextAutoGrowHeight", true);
+                    xShapeProps.setPropertyValue("TextContourFrame", true);
+                    xShapeProps.setPropertyValue("FillStyle", FillStyle.NONE);
+                    xDrawPage.add(xDrawShape);
+                    XText xShapeText = (XText) UnoRuntime.queryInterface(XText.class, drawShape);
+                    XTextCursor xTextCursor = xShapeText.createTextCursor();
+                    XTextRange xTextRange = xTextCursor.getStart();
+                    XPropertySet xTextProps = (XPropertySet) UnoRuntime.queryInterface(
+                            XPropertySet.class, xTextRange);
+                    xTextProps.setPropertyValue("CharHeight", new Float(11));
+                    xTextRange.setString(image.text);
+                    /*Object xObj = xDrawFactory.createInstance("com.sun.star.drawing.ShapeCollection");
+                    XShapes xToGroup = (XShapes) UnoRuntime.queryInterface(XShapes.class, xObj);
+                    // query for the shape collection of xDrawPage
+
+                    // test if the shape collection of the page has at least two shapes
+                    xToGroup.add(image.xShape);
+                    xToGroup.add(xDrawShape);
+                    // now group the shapes we have collected by using the XShapeGrouper
+                    XShapeGrouper xShapeGrouper = (XShapeGrouper) UnoRuntime.queryInterface(
+                            XShapeGrouper.class, xDrawPage);
+                    xShapeGrouper.group(xToGroup);*/
                 }
             }
         }catch (Exception e){
-            
+            System.out.println("Couldn't insert image");
+            e.printStackTrace(System.err);
         }
         return true;
     }
