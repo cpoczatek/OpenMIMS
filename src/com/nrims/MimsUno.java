@@ -62,9 +62,11 @@ import java.awt.MouseInfo;
  * @author wang2
  */
 public class MimsUno {
+
     private XComponentContext context;
     private XMultiComponentFactory xMCF;
-    private XComponent getCurrentDocument(){
+
+    private XComponent getCurrentDocument() {
         try {
             context = Bootstrap.bootstrap();
             xMCF = context.getServiceManager();
@@ -75,45 +77,51 @@ public class MimsUno {
             //Get the document with focus here
             XComponent currentDocument = desktop.getCurrentComponent();
             return currentDocument;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Failure to connect");
         }
         return null;
     }
-    public boolean newDoc(){
+
+    public boolean newDoc() {
         try {
-        context = Bootstrap.bootstrap();
+            context = Bootstrap.bootstrap();
             xMCF = context.getServiceManager();
             Object oDesktop = xMCF.createInstanceWithContext(
                     "com.sun.star.frame.Desktop", context);
             XDesktop desktop = (com.sun.star.frame.XDesktop) UnoRuntime.queryInterface(
                     com.sun.star.frame.XDesktop.class, oDesktop);
-        XComponentLoader xComponentLoader = (XComponentLoader) UnoRuntime.queryInterface(
-                        XComponentLoader.class, desktop);
-                PropertyValue[] loadProps = new PropertyValue[0];
-                 XComponent currentDocument = xComponentLoader.loadComponentFromURL("private:factory/swriter", "_blank", 0, loadProps);
-                 return true;
-        }catch(Exception e){
+            XComponentLoader xComponentLoader = (XComponentLoader) UnoRuntime.queryInterface(
+                    XComponentLoader.class, desktop);
+            PropertyValue[] loadProps = new PropertyValue[0];
+            XComponent currentDocument = xComponentLoader.loadComponentFromURL("private:factory/swriter", "_blank", 0, loadProps);
+            return true;
+        } catch (Exception e) {
             System.out.println("Failure to create new document");
             return false;
         }
     }
+
     /**
-     * Method to handle dropping images in LibreOffice.
-     * If the user drops outside a text frame, nothing happens.
-     * If the user drops inside a text frame, and over no images, a new image is inserted into the text frame
-     * If the user drops inside a text frame and over an image, the existing image is replaced with the new one, albeit with same size and position
+     * Method to handle dropping images in LibreOffice. If the user drops
+     * outside a text frame, nothing happens. If the user drops inside a text
+     * frame, and over no images, a new image is inserted into the text frame If
+     * the user drops inside a text frame and over an image, the existing image
+     * is replaced with the new one, albeit with same size and position
+     *
      * @param image the java.awt.image to be inserted
-     * @return true if an image was inserted/replaced/no action needed to be taken, false if an error occured
+     * @return true if an image was inserted/replaced/no action needed to be
+     * taken, false if an error occured
      */
     public boolean dropImage(Image i, String text, String title, String description) {
         ImageInfo image = new ImageInfo(i, text, title, description);
         XComponent currentDocument = getCurrentDocument();
         if (currentDocument == null) {
+            //no current document open
             return false;
         }
         try {
-             // Querying for the text interface
+            // Querying for the text interface
             XTextDocument xTextDocument = (XTextDocument) UnoRuntime.queryInterface(
                     XTextDocument.class, currentDocument);
             //current document is not a writer
@@ -121,29 +129,33 @@ public class MimsUno {
                 //check if an draw doc
                 XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
                         XDrawPagesSupplier.class, currentDocument);
-                if (xDrawPagesSupplier != null){
-                    
+                if (xDrawPagesSupplier != null) {
+                    //check to see if there are drawpages
                     Object drawPages = xDrawPagesSupplier.getDrawPages();
                     XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
                             XIndexAccess.class, drawPages);
                     Object drawPage = xIndexedDrawPages.getByIndex(0);
                     XDrawPage xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
-                    if (xDrawPage != null) System.out.println("Current document is a draw");
+                    if (xDrawPage != null) {
+                        System.out.println("Current document is a draw");
+                    }
                     insertIntoDraw(currentDocument, image);
                 }
-            }else{
+            } else {
                 System.out.println("Current document is a writer");
                 insertIntoWriter(xTextDocument, image);
             }
-            
+
         } catch (Exception e) {
-            System.out.println("error reading frames");
+            System.out.println("Error reading frames");
             e.printStackTrace(System.err);
+            return false;
         }
-        return false;
+        return true;
     }
-     private boolean insertIntoWriter(XTextDocument xTextDocument, ImageInfo image){
-        try{
+
+    private boolean insertIntoWriter(XTextDocument xTextDocument, ImageInfo image) {
+        try {
             // Querying for the text service factory
             XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xTextDocument);
@@ -158,7 +170,7 @@ public class MimsUno {
             //get the document object
             xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
-            
+
             int numChildren = xAccessibleContext.getAccessibleChildCount();
             //loop through all the children of the document and find the text frames
             for (int i = 0; i < numChildren; i++) {
@@ -166,10 +178,8 @@ public class MimsUno {
                 XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
                 System.out.println(xChildAccessibleContext.getAccessibleRole());
                 if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.TEXT_FRAME && withinRange(xChildAccessibleContext)) {
-                    //get text frame
-                    XTextFrame xTextFrame = getFrame(xChildAccessibleContext.getAccessibleName(), xTextDocument);
-                    
                     //loop through all images in text frame to see if we are over any of them
+                    XTextFrame xTextFrame = getFrame(xChildAccessibleContext.getAccessibleName(), xTextDocument); 
                     numChildren = xChildAccessibleContext.getAccessibleChildCount();
                     for (int j = 0; j < numChildren; j++) {
                         xAccessible = xAccessibleContext.getAccessibleChild(j);
@@ -177,18 +187,20 @@ public class MimsUno {
                         if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.GRAPHIC && withinRange(xChildAccessibleContext)) {
                             //if we are over the image, then we insert a new image scaled to the width of the one we're dropping on
                             XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
-                                XAccessibleComponent.class, xChildAccessibleContext);
+                                    XAccessibleComponent.class, xChildAccessibleContext);
                             image.width = xAccessibleComponent.getSize().Width;
                             j = numChildren;
                         }
                     }
                     return insertTextContent(image, xTextFrame, xTextDocument);
-                }else if(xChildAccessibleContext.getAccessibleRole() == AccessibleRole.EMBEDDED_OBJECT && withinRange(xChildAccessibleContext)){
+                } else if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.EMBEDDED_OBJECT && withinRange(xChildAccessibleContext)) {
+                    //user is over an OLE embedded object
                     XComponent xComponent = getOLE(xChildAccessibleContext.getAccessibleName(), xTextDocument);
                     insertDrawContent(image, xComponent);
                 }
             }
-            if (withinRange(xAccessibleContext)){
+            if (withinRange(xAccessibleContext)) {
+                //else we are just inserting it onto the page
                 xAccessible = xAccessibleContext.getAccessibleChild(0);
                 xAccessibleContext = xAccessible.getAccessibleContext();
                 XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
@@ -199,36 +211,60 @@ public class MimsUno {
                 image.y = (int) Math.round((location.getY() - point.Y) * 26.4583);
                 insertTextContent(image, null, xTextDocument);
             }
-        }catch (Exception e){
-            
+        } catch (Exception e) {
+            System.out.println("Error with accessibility api");
+            e.printStackTrace(System.err);
+            return false;
         }
         return true;
     }
-    private boolean insertIntoDraw(XComponent xComponent, ImageInfo image){
-        try{
-        XModel xModel = (XModel) UnoRuntime.queryInterface(XModel.class, xComponent);
-        XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
+
+    private boolean insertIntoDraw(XComponent xComponent, ImageInfo image) {
+        try {
+            XModel xModel = (XModel) UnoRuntime.queryInterface(XModel.class, xComponent);
+            XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xModel);
             XAccessible mXRoot = makeRoot(xMSF, xModel);
             XAccessibleContext xAccessibleContext = mXRoot.getAccessibleContext();
+            System.out.println(findAccessibleShape(xAccessibleContext));
             withinRange(xAccessibleContext);
             XAccessible xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
             withinRange(xAccessibleContext);
             xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
-            if (withinRange(xAccessibleContext)){
-                insertDrawContent(image, xComponent);
+            xAccessible = xAccessibleContext.getAccessibleChild(0);
+            xAccessibleContext = xAccessible.getAccessibleContext();
+            if (withinRange(xAccessibleContext)) {
+                int numChildren = xAccessibleContext.getAccessibleChildCount();
+                //loop through all the children of the document and find the text frames
+                for (int i = 0; i < numChildren; i++) {
+                    xAccessible = xAccessibleContext.getAccessibleChild(i);
+                    XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
+                    if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.LIST_ITEM
+                            && !xChildAccessibleContext.getAccessibleDescription().isEmpty()
+                            && withinRange(xChildAccessibleContext)) {
+                        XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
+                                XAccessibleComponent.class, xChildAccessibleContext);
+                        image.width = xAccessibleComponent.getSize().Width;
+                        break;
+                    }
+                }
+            insertDrawContent(image, xComponent);
             }
-        System.out.println(xModel == null);
-        }catch(Exception e){
-            
+            System.out.println(xModel == null);
+        } catch (Exception e) {
+            System.out.println("Error with accessibility api");
+            e.printStackTrace(System.err);
+            return false;
         }
         return true;
-        
+
     }
+
     /**
      * Convert and insert image and relevant info into Writer doc
+     *
      * @param image java.awt.image to insert
      * @param xTextFrame text frame we are inserting into
      * @param text caption for image
@@ -236,25 +272,25 @@ public class MimsUno {
      * @param description description of image
      * @return true if succeeded, false if not
      */
-    private boolean insertTextContent(ImageInfo image, XTextFrame xTextFrame, XTextDocument xTextDocument){
+    private boolean insertTextContent(ImageInfo image, XTextFrame xTextFrame, XTextDocument xTextDocument) {
         int height;
         int width;
         //create blank graphic in document
         Object graphic = createBlankGraphic(xTextDocument);
-        
+
         //query for the interface XTextContent on the GraphicObject 
         image.xImage = (com.sun.star.text.XTextContent) UnoRuntime.queryInterface(
                 com.sun.star.text.XTextContent.class, graphic);
-        
+
         //query for the properties of the graphic
         com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
                 com.sun.star.beans.XPropertySet.class, graphic);
-        if (image.width > 0){
+        if (image.width > 0) {
             //calculate the width and height
             double ratio = (double) image.width / (double) image.image.getWidth(null);
             width = (int) Math.round(image.width * 26.4583);
             height = (int) Math.round(ratio * image.image.getHeight(null) * 26.4583);
-        }else{
+        } else {
             //calculate the width and height
             width = (int) Math.round(image.image.getWidth(null) * 26.4583);
             height = (int) Math.round(image.image.getHeight(null) * 26.4583);
@@ -283,14 +319,15 @@ public class MimsUno {
             exception.printStackTrace(System.err);
             return false;
         }
-        if (xTextFrame != null){
-        //insert the content
+        if (xTextFrame != null) {
+            //insert the content
             return insertImageIntoTextFrame(image, xTextFrame, xTextDocument);
-        }else{
+        } else {
             return insertImageAtCoords(image, xTextDocument);
         }
     }
-    private boolean insertDrawContent(ImageInfo image, XComponent xComponent){
+
+    private boolean insertDrawContent(ImageInfo image, XComponent xComponent) {
         Size size = null;
         try {
             int height;
@@ -305,12 +342,12 @@ public class MimsUno {
             //query for the properties of the graphic
             com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
                     com.sun.star.beans.XPropertySet.class, graphic);
-            if (image.width > 0){
+            if (image.width > 0) {
                 //calculate the width and height
                 double ratio = (double) image.width / (double) image.image.getWidth(null);
                 width = (int) Math.round(image.width * 26.4583);
                 height = (int) Math.round(ratio * image.image.getHeight(null) * 26.4583);
-            }else{
+            } else {
                 //calculate the width and height
                 width = (int) Math.round(image.image.getWidth(null) * 26.4583);
                 height = (int) Math.round(image.image.getHeight(null) * 26.4583);
@@ -338,36 +375,42 @@ public class MimsUno {
             exception.printStackTrace(System.err);
             return false;
         }
-        try{
+        try {
             XMultiServiceFactory xDrawFactory =
-                (XMultiServiceFactory)UnoRuntime.queryInterface(
+                    (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xComponent);
             Object drawShape = xDrawFactory.createInstance("com.sun.star.drawing.RectangleShape");
-            XShape xDrawShape = (XShape)UnoRuntime.queryInterface(XShape.class, drawShape);
+            XShape xDrawShape = (XShape) UnoRuntime.queryInterface(XShape.class, drawShape);
             xDrawShape.setSize(new Size(size.Width, 1000));
             xDrawShape.setPosition(new Point(0, size.Height));
-            
 
-            // wrap text inside shape
-            
+            //get all draw pages
             XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
                     XDrawPagesSupplier.class, xComponent);
             if (xDrawPagesSupplier != null) {
                 Object drawPages = xDrawPagesSupplier.getDrawPages();
                 XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
                         XIndexAccess.class, drawPages);
+
+                //get current draw page
                 Object drawPage = xIndexedDrawPages.getByIndex(0);
                 XDrawPage xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
                 if (xDrawPage != null) {
+                    //add OpenMims Image
                     xDrawPage.add(image.xShape);
 
+                    //get properties of text shape and modify them
                     XPropertySet xShapeProps = (XPropertySet) UnoRuntime.queryInterface(
                             XPropertySet.class, drawShape);
                     xShapeProps.setPropertyValue("TextAutoGrowHeight", true);
                     xShapeProps.setPropertyValue("TextContourFrame", true);
                     xShapeProps.setPropertyValue("FillStyle", FillStyle.NONE);
                     xShapeProps.setPropertyValue("LineTransparence", 100);
+
+                    //add text shape
                     xDrawPage.add(xDrawShape);
+
+                    //add text into text shape and set text size
                     XText xShapeText = (XText) UnoRuntime.queryInterface(XText.class, drawShape);
                     XTextCursor xTextCursor = xShapeText.createTextCursor();
                     XTextRange xTextRange = xTextCursor.getStart();
@@ -375,32 +418,39 @@ public class MimsUno {
                             XPropertySet.class, xTextRange);
                     xTextProps.setPropertyValue("CharHeight", new Float(11));
                     xTextRange.setString(image.text);
-                    XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory)UnoRuntime.queryInterface(XMultiServiceFactory.class, xMCF);
+
+                    //get XShapes interface to group images
+                    XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory) UnoRuntime.queryInterface(XMultiServiceFactory.class, xMCF);
                     Object xObj = xMultiServiceFactory.createInstance("com.sun.star.drawing.ShapeCollection");
                     XShapes xToGroup = (XShapes) UnoRuntime.queryInterface(XShapes.class, xObj);
-                    // query for the shape collection of xDrawPage
 
-                    // test if the shape collection of the page has at least two shapes
+                    //add images to XShapes
                     xToGroup.add(image.xShape);
                     xToGroup.add(xDrawShape);
-                    // now group the shapes we have collected by using the XShapeGrouper
+
+                    //Group the shapes by using the XShapeGrouper
                     XShapeGrouper xShapeGrouper = (XShapeGrouper) UnoRuntime.queryInterface(
                             XShapeGrouper.class, xDrawPage);
                     XShapeGroup xShapeGroup = (XShapeGroup) xShapeGrouper.group(xToGroup);
+
+                    //set title and description of grouped image
                     com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
-                    com.sun.star.beans.XPropertySet.class, xShapeGroup);
+                            com.sun.star.beans.XPropertySet.class, xShapeGroup);
                     xPropSet.setPropertyValue("Title", image.title);
                     xPropSet.setPropertyValue("Description", image.description);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Couldn't insert image");
             e.printStackTrace(System.err);
+            return false;
         }
         return true;
     }
+
     /**
      * Method to insert a textframe and image together into a text document
+     *
      * @param height height of the image
      * @param width width of the image
      * @param xImage image to insert
@@ -408,28 +458,28 @@ public class MimsUno {
      * @param text caption of image
      * @return true if succeeded, false if not
      */
-    private boolean insertImageIntoTextFrame(ImageInfo image, XTextFrame destination, XTextDocument xTextDocument){
-         XTextFrame xTextFrame = null;
-        try{
+    private boolean insertImageIntoTextFrame(ImageInfo image, XTextFrame destination, XTextDocument xTextDocument) {
+        XTextFrame xTextFrame = null;
+        try {
             XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xTextDocument);
             //create a new text frame
             Object frame = xMSF.createInstance("com.sun.star.text.TextFrame");
             xTextFrame = (com.sun.star.text.XTextFrame) UnoRuntime.queryInterface(
                     com.sun.star.text.XTextFrame.class, frame);
-            
+
             //set the dimensions of the new text frame
             XShape xTextFrameShape = (com.sun.star.drawing.XShape) UnoRuntime.queryInterface(
                     com.sun.star.drawing.XShape.class, frame);
             com.sun.star.awt.Size aSize = new com.sun.star.awt.Size();
             aSize.Height = image.height;
             aSize.Width = image.width;
-             System.out.println(image.height);
+            System.out.println(image.height);
             System.out.println(image.width);
             System.out.println(aSize.Height);
             System.out.println(aSize.Width);
             xTextFrameShape.setSize(aSize);
-            
+
             //Set the properties of the textframe
             int[] blank = new int[]{0, 0, 0, 0};
             com.sun.star.beans.XPropertySet xTFPS = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
@@ -441,38 +491,39 @@ public class MimsUno {
             xTFPS.setPropertyValue("RightBorder", blank);
             xTFPS.setPropertyValue("TopBorder", blank);
             xTFPS.setPropertyValue("BottomBorder", blank);
-            
+
             //insert the textframe
             XText xText = destination.getText();
             XTextCursor xTextCursor = xText.createTextCursor();
             XTextRange xTextRange = xTextCursor.getStart();
             xText.insertTextContent(xTextRange, xTextFrame, true);
-            
+
             //insert the image into the textframe
             xText = xTextFrame.getText();
             xTextCursor = xText.createTextCursor();
             xTextRange = xTextCursor.getStart();
             xText.insertTextContent(xTextRange, image.xImage, true);
-            
+
             //insert the caption
             xTextRange.setString(image.text);
-        }catch (Exception exception){
+        } catch (Exception exception) {
             System.out.println("Couldn't insert image");
             exception.printStackTrace(System.err);
             return false;
         }
         return true;
-    } 
-        private boolean insertImageAtCoords(ImageInfo image, XTextDocument xTextDocument){
-         XTextFrame xTextFrame = null;
-        try{
+    }
+
+    private boolean insertImageAtCoords(ImageInfo image, XTextDocument xTextDocument) {
+        XTextFrame xTextFrame = null;
+        try {
             XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xTextDocument);
             //create a new text frame
             Object frame = xMSF.createInstance("com.sun.star.text.TextFrame");
             xTextFrame = (com.sun.star.text.XTextFrame) UnoRuntime.queryInterface(
                     com.sun.star.text.XTextFrame.class, frame);
-            
+
             //set the dimensions of the new text frame
             XShape xTextFrameShape = (com.sun.star.drawing.XShape) UnoRuntime.queryInterface(
                     com.sun.star.drawing.XShape.class, frame);
@@ -480,8 +531,8 @@ public class MimsUno {
             aSize.Height = image.height;
             aSize.Width = image.width;
             xTextFrameShape.setSize(aSize);
-            int x = image.x- (image.width/2);
-            int y = image.y - (image.height/2);
+            int x = image.x - (image.width / 2);
+            int y = image.y - (image.height / 2);
             //Set the properties of the textframe
             int[] blank = new int[]{0, 0, 0, 0};
             com.sun.star.beans.XPropertySet xTFPS = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
@@ -493,7 +544,7 @@ public class MimsUno {
             xTFPS.setPropertyValue("RightBorder", blank);
             xTFPS.setPropertyValue("TopBorder", blank);
             xTFPS.setPropertyValue("BottomBorder", blank);
-            
+
             xTFPS.setPropertyValue("VertOrient", com.sun.star.text.VertOrientation.NONE);
             xTFPS.setPropertyValue("HoriOrient", com.sun.star.text.HoriOrientation.NONE);
             xTFPS.setPropertyValue("HoriOrientRelation", com.sun.star.text.RelOrientation.PAGE_FRAME);
@@ -505,60 +556,63 @@ public class MimsUno {
             XTextCursor xTextCursor = xText.createTextCursor();
             XTextRange xTextRange = xTextCursor.getStart();
             xText.insertTextContent(xTextRange, xTextFrame, true);
-            
+
             //insert the image into the textframe
             xText = xTextFrame.getText();
             xTextCursor = xText.createTextCursor();
             xTextRange = xTextCursor.getStart();
             xText.insertTextContent(xTextRange, image.xImage, true);
-            
+
             //insert the caption
             xTextRange.setString(image.text);
-            
-        }catch (Exception exception){
+
+        } catch (Exception exception) {
             System.out.println("Couldn't insert image");
             exception.printStackTrace(System.err);
             return false;
         }
         return true;
     }
+
     /**
      * Find a named text frame within current Writer doc
+     *
      * @param name the name of the text frame
      * @return XTextFrame interface
      */
-    private XTextFrame getFrame(String name, XTextDocument xTextDocument){
+    private XTextFrame getFrame(String name, XTextDocument xTextDocument) {
         XTextFrame xTextFrame = null;
-        try{
+        try {
             //get the text frame supplier from the document
             XTextFramesSupplier xTextFrameSupplier =
                     (XTextFramesSupplier) UnoRuntime.queryInterface(
                     XTextFramesSupplier.class, xTextDocument);
-            
+
             //get text frame objects
             XNameAccess xNameAccess = xTextFrameSupplier.getTextFrames();
 
             //query for the object with the desired name
             Object frame = xNameAccess.getByName(name);
-            
+
             //get the XTextFrame interface
             xTextFrame = (XTextFrame) UnoRuntime.queryInterface(
                     com.sun.star.text.XTextFrame.class, frame);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Could not find frame with name " + name);
             e.printStackTrace(System.err);
         }
         return xTextFrame;
-        
+
     }
-        private XComponent getOLE(String name, XTextDocument xTextDocument){
+
+    private XComponent getOLE(String name, XTextDocument xTextDocument) {
         XComponent xComponent = null;
-        try{
+        try {
             //get the text frame supplier from the document
             XTextEmbeddedObjectsSupplier xTextEmbeddedObjectsSupplier =
                     (XTextEmbeddedObjectsSupplier) UnoRuntime.queryInterface(
                     XTextEmbeddedObjectsSupplier.class, xTextDocument);
-            
+
             //get text frame objects
             XNameAccess xNameAccess = xTextEmbeddedObjectsSupplier.getEmbeddedObjects();
 
@@ -566,54 +620,57 @@ public class MimsUno {
             Object xTextEmbeddedObject = xNameAccess.getByName(name);
             XTextContent xTextContent = (XTextContent) UnoRuntime.queryInterface(XTextContent.class, xTextEmbeddedObject);
             //get the XTextFrame interface
-            com.sun.star.document.XEmbeddedObjectSupplier xEOS = (com.sun.star.document.XEmbeddedObjectSupplier)
-             UnoRuntime.queryInterface(com.sun.star.document.XEmbeddedObjectSupplier.class, xTextContent);
-             com.sun.star.lang.XComponent xModel = xEOS.getEmbeddedObject();
-             return xModel;
-        }catch (Exception e){
+            com.sun.star.document.XEmbeddedObjectSupplier xEOS = (com.sun.star.document.XEmbeddedObjectSupplier) UnoRuntime.queryInterface(com.sun.star.document.XEmbeddedObjectSupplier.class, xTextContent);
+            com.sun.star.lang.XComponent xModel = xEOS.getEmbeddedObject();
+            return xModel;
+        } catch (Exception e) {
             System.out.println("Could not find frame with name " + name);
             e.printStackTrace(System.err);
         }
         return xComponent;
-        
+
     }
+
     /**
      * Convert an image into a XGraphic
+     *
      * @param image the java.awt.image to convert
      * @return an XGraphic which can be placed into a XTextContent
      */
-    private XGraphic convertImage(Image image){
+    private XGraphic convertImage(Image image) {
         XGraphic xGraphic = null;
         try {
             ByteArrayToXInputStreamAdapter xSource = new ByteArrayToXInputStreamAdapter(imageToByteArray(image));
             PropertyValue[] sourceProps = new PropertyValue[2];
-            
+
             //specify the byte array source
             sourceProps[0] = new PropertyValue();
             sourceProps[0].Name = "InputStream";
             sourceProps[0].Value = xSource;
-            
+
             //specify the image type
             sourceProps[1] = new PropertyValue();
             sourceProps[1].Name = "MimeType";
             sourceProps[1].Value = "image/png";
-            
+
             //get the graphic object
             XGraphicProvider xGraphicProvider = (XGraphicProvider) UnoRuntime.queryInterface(
                     XGraphicProvider.class,
                     xMCF.createInstanceWithContext("com.sun.star.graphic.GraphicProvider", context));
             xGraphic = xGraphicProvider.queryGraphic(sourceProps);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Failed to convert image into LibreOffice graphic");
             e.printStackTrace(System.err);
         }
         return xGraphic;
     }
+
     /**
      * Create a blank graphic for insertion
+     *
      * @return Object representing a blank Graphic
      */
-    private Object createBlankGraphic(XTextDocument xTextDocument){
+    private Object createBlankGraphic(XTextDocument xTextDocument) {
         Object graphic = null;
         try {
             //create unique name based on timestamp
@@ -630,7 +687,8 @@ public class MimsUno {
         };
         return graphic;
     }
-    private Object createBlankGraphic(XComponent xDrawPage){
+
+    private Object createBlankGraphic(XComponent xDrawPage) {
         Object graphic = null;
         try {
             //create unique name based on timestamp
@@ -647,34 +705,38 @@ public class MimsUno {
         };
         return graphic;
     }
+
     private static XWindow getCurrentWindow(XMultiServiceFactory msf,
-        XModel xModel) {
+            XModel xModel) {
         return getWindow(msf, xModel, false);
     }
+
     /**
      * Check if the mouse pointer is within range of particular component
+     *
      * @param xAccessibleContext the context of particular component
      * @return true if within, false if not
      */
-    private boolean withinRange(XAccessibleContext xAccessibleContext){
+    private boolean withinRange(XAccessibleContext xAccessibleContext) {
         //get the accessible component
         XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
                 XAccessibleComponent.class, xAccessibleContext);
-       
+
         //get the bounds and check whether cursor is within it
         Point point = xAccessibleComponent.getLocationOnScreen();
         Size size = xAccessibleComponent.getSize();
         java.awt.Point location = MouseInfo.getPointerInfo().getLocation();
         if (point.X + size.Width < location.getX() || location.getX() < point.X || point.Y + size.Height < location.getY() || point.Y > location.getY()) {
-            System.out.println("Not within range of " + xAccessibleContext.getAccessibleRole());
+            //System.out.println("Not within range of " + xAccessibleContext.getAccessibleRole());
             return false;
         } else {
-             System.out.println("Within range of " + xAccessibleContext.getAccessibleRole());
-             System.out.println(point.X);
-             System.out.println(point.Y);
+            //System.out.println("Within range of " + xAccessibleContext.getAccessibleRole());
+            //System.out.println(point.X);
+           // System.out.println(point.Y);
             return true;
         }
     }
+
     private static XWindow getWindow(XMultiServiceFactory msf, XModel xModel, boolean containerWindow) {
         XWindow xWindow = null;
         try {
@@ -702,6 +764,7 @@ public class MimsUno {
         }
         return xWindow;
     }
+
     private static XAccessible getAccessibleObject(XInterface xObject) {
         XAccessible xAccessible = null;
         try {
@@ -713,11 +776,13 @@ public class MimsUno {
         }
         return xAccessible;
     }
+
     private static XAccessible makeRoot(XMultiServiceFactory msf, XModel aModel) {
         XWindow xWindow = getCurrentWindow(msf, aModel);
         return getAccessibleObject(xWindow);
     }
-        /**
+
+    /**
      * method to convert a java Image to a byte array representing a PNG image
      *
      * @param image desired image to convert
@@ -739,7 +804,9 @@ public class MimsUno {
             return null;
         }
     }
+
     public class ImageInfo {
+
         public int x;
         public int y;
         public Image image;
@@ -750,14 +817,41 @@ public class MimsUno {
         public String text;
         public String title;
         public String description;
-        public ImageInfo(Image i){
+
+        public ImageInfo(Image i) {
             this.image = i;
         }
-        public ImageInfo(Image i, String n, String t, String d){
+
+        public ImageInfo(Image i, String n, String t, String d) {
             this.image = i;
             this.text = n;
             this.title = t;
             this.description = d;
+        }
+    }
+
+    public String findAccessibleShape(XAccessibleContext xAccessibleContext) {
+        try {
+            int numChildren = xAccessibleContext.getAccessibleChildCount();
+            for (int i = 0; i < numChildren; i++) {
+                XAccessible xAccessible = xAccessibleContext.getAccessibleChild(i);
+                XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
+                if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.LIST_ITEM) {
+                    XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
+                                    XAccessibleComponent.class, xChildAccessibleContext);
+                } else {
+                    String result = findAccessibleShape(xChildAccessibleContext);
+                    /*if (result != "") {
+                        return result + " < " + xChildAccessibleContext.getAccessibleRole();
+                    } else {
+                        return result;
+                    }*/
+                }
+            }
+            return "";
+
+        } catch (Exception e) {
+            return "";
         }
     }
 }
