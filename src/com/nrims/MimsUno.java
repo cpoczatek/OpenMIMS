@@ -44,6 +44,7 @@ import com.sun.star.container.XIndexAccess;
 import com.sun.star.drawing.FillStyle;
 import com.sun.star.drawing.XDrawPage;
 import com.sun.star.drawing.XDrawPagesSupplier;
+import com.sun.star.drawing.XShapeGroup;
 import com.sun.star.drawing.XShapeGrouper;
 import com.sun.star.drawing.XShapes;
 import com.sun.star.frame.XController;
@@ -365,6 +366,7 @@ public class MimsUno {
                     xShapeProps.setPropertyValue("TextAutoGrowHeight", true);
                     xShapeProps.setPropertyValue("TextContourFrame", true);
                     xShapeProps.setPropertyValue("FillStyle", FillStyle.NONE);
+                    xShapeProps.setPropertyValue("LineTransparence", 100);
                     xDrawPage.add(xDrawShape);
                     XText xShapeText = (XText) UnoRuntime.queryInterface(XText.class, drawShape);
                     XTextCursor xTextCursor = xShapeText.createTextCursor();
@@ -373,7 +375,8 @@ public class MimsUno {
                             XPropertySet.class, xTextRange);
                     xTextProps.setPropertyValue("CharHeight", new Float(11));
                     xTextRange.setString(image.text);
-                    /*Object xObj = xDrawFactory.createInstance("com.sun.star.drawing.ShapeCollection");
+                    XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory)UnoRuntime.queryInterface(XMultiServiceFactory.class, xMCF);
+                    Object xObj = xMultiServiceFactory.createInstance("com.sun.star.drawing.ShapeCollection");
                     XShapes xToGroup = (XShapes) UnoRuntime.queryInterface(XShapes.class, xObj);
                     // query for the shape collection of xDrawPage
 
@@ -383,7 +386,11 @@ public class MimsUno {
                     // now group the shapes we have collected by using the XShapeGrouper
                     XShapeGrouper xShapeGrouper = (XShapeGrouper) UnoRuntime.queryInterface(
                             XShapeGrouper.class, xDrawPage);
-                    xShapeGrouper.group(xToGroup);*/
+                    XShapeGroup xShapeGroup = (XShapeGroup) xShapeGrouper.group(xToGroup);
+                    com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
+                    com.sun.star.beans.XPropertySet.class, xShapeGroup);
+                    xPropSet.setPropertyValue("Title", image.title);
+                    xPropSet.setPropertyValue("Description", image.description);
                 }
             }
         }catch (Exception e){
