@@ -1414,6 +1414,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jSeparator8 = new javax.swing.JSeparator();
         utilitiesMenu = new javax.swing.JMenu();
         generateReportMenuItem = new javax.swing.JMenuItem();
+        jMenu1 = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        jMenuItem4 = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         sumAllMenuItem = new javax.swing.JMenuItem();
         importIMListMenuItem = new javax.swing.JMenuItem();
@@ -1600,6 +1603,26 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(generateReportMenuItem);
+
+        jMenu1.setText("LibreOffice");
+
+        jMenuItem3.setText("Open new writer doc");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem3);
+
+        jMenuItem4.setText("Insert picture frame");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem4);
+
+        utilitiesMenu.add(jMenu1);
         utilitiesMenu.add(jSeparator1);
 
         sumAllMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.ALT_MASK));
@@ -3280,6 +3303,16 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private void RecomputeAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RecomputeAllMenuItemActionPerformed
         recomputeAllImages();
     }//GEN-LAST:event_RecomputeAllMenuItemActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        MimsUno mimsUno = new MimsUno();
+        mimsUno.newDoc();
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        MimsUno mimsUno = new MimsUno();
+        mimsUno.insertEmptyOLEObject();
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -5211,9 +5244,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuItem generateReportMenuItem;
     private javax.swing.JMenuItem imageNotesMenuItem;
     private javax.swing.JMenuItem importIMListMenuItem;
+    private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;

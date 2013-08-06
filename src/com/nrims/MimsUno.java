@@ -101,7 +101,32 @@ public class MimsUno {
             return false;
         }
     }
-
+    public void insertEmptyOLEObject(){
+        try {
+            XComponent currentDocument = getCurrentDocument();
+            XTextDocument xTextDocument = (XTextDocument) UnoRuntime.queryInterface(
+                    XTextDocument.class, currentDocument);
+            //current document is not a writer
+            if (xTextDocument != null) {
+            XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                    XMultiServiceFactory.class, xTextDocument);
+            XTextContent xt = (XTextContent) UnoRuntime.queryInterface( XTextContent.class,
+               xMSF.createInstance("com.sun.star.text.TextEmbeddedObject"));
+            XPropertySet xps = (XPropertySet) UnoRuntime.queryInterface(XPropertySet.class, xt);
+            xps.setPropertyValue("CLSID", "4BAB8970-8A3B-45B3-991c-cbeeac6bd5e3");
+            //xps.setPropertyValue("AnchorType", TextContentAnchorType.AT_PAGE);
+            //xps.setPropertyValue("Height", new Integer(1275*10));
+            //xps.setPropertyValue("Width", new Integer(2016*8));
+            xps.setPropertyValue("HoriOrientPosition", new Integer(0));
+            xps.setPropertyValue("VertOrientPosition", new Integer(0));
+            XTextCursor cursor = xTextDocument.getText().createTextCursor();
+            XTextRange xTextRange = (XTextRange) UnoRuntime.queryInterface(XTextRange.class, cursor);
+            xTextDocument.getText().insertTextContent(xTextRange, xt, false);
+            }
+        } catch (Exception ex) {
+            System.out.println("Could not insert OLE object");
+        }
+    }
     /**
      * Method to handle dropping images in LibreOffice. If the user drops
      * outside a text frame, nothing happens. If the user drops inside a text
@@ -196,7 +221,7 @@ public class MimsUno {
                 } else if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.EMBEDDED_OBJECT && withinRange(xChildAccessibleContext)) {
                     //user is over an OLE embedded object
                     XComponent xComponent = getOLE(xChildAccessibleContext.getAccessibleName(), xTextDocument);
-                    insertDrawContent(image, xComponent);
+                    return insertDrawContent(image, xComponent);
                 }
             }
             if (withinRange(xAccessibleContext)) {
@@ -379,7 +404,7 @@ public class MimsUno {
             XMultiServiceFactory xDrawFactory =
                     (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xComponent);
-            Object drawShape = xDrawFactory.createInstance("com.sun.star.drawing.RectangleShape");
+            Object drawShape = xDrawFactory.createInstance("com.sun.star.drawing.TextShape");
             XShape xDrawShape = (XShape) UnoRuntime.queryInterface(XShape.class, drawShape);
             xDrawShape.setSize(new Size(size.Width, 1000));
             xDrawShape.setPosition(new Point(0, size.Height));
