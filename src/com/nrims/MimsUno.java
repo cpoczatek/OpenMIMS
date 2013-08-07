@@ -262,6 +262,7 @@ public class MimsUno {
                     XMultiServiceFactory.class, xModel);
             XAccessible mXRoot = makeRoot(xMSF, xModel);
             XAccessibleContext xAccessibleContext = mXRoot.getAccessibleContext();
+            XAccessibleContext xA = mXRoot.getAccessibleContext();
             //go into AccessibleRole 40 (panel)
             XAccessible xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
@@ -291,7 +292,7 @@ public class MimsUno {
                         break;
                     }
                 }
-            insertDrawContent(image, xComponent, xAccessibleContext);
+            insertDrawContent(image, xComponent, xA);
             }
         } catch (Exception e) {
             System.out.println("Error with accessibility api");
@@ -411,12 +412,23 @@ public class MimsUno {
                 width = (int) Math.round(image.image.getWidth(null) * 26.4583);
                 height = (int) Math.round(image.image.getHeight(null) * 26.4583);
             }
-            //if the image is greater than the width, then we scale it down the barely fit in the page
-            if (width > 165100) {
-                int ratio = width;
-                width = 165100 - 1000;
+            XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
+                                    XAccessibleComponent.class, xAccessibleContext);
+            int windowWidth = (int) Math.round(xAccessibleComponent.getSize().Width * 26.4583);
+            int windowHeight = (int) Math.round(xAccessibleComponent.getSize().Height * 26.4583);
+            //if the image is greater than the width, then we scale it down to fit in the page
+            if (width >= windowWidth) {
+                double ratio = width;
+                width = windowWidth;
                 ratio = width / ratio;
-                height = height * ratio;
+                height = (int) Math.round(height * ratio);
+                //if greater than height, do the same thing to descale it
+                if (height >= windowHeight){
+                    ratio = height;
+                    height = windowHeight-2500;
+                    ratio = height/ratio;
+                    width = (int) Math.round(width * ratio);
+                }
             }
             size = new Size();
             image.height = size.Height = height;
@@ -425,17 +437,19 @@ public class MimsUno {
             point = new Point();
             point.X = 0;
             point.Y = 0;
-            XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
-                                    XAccessibleComponent.class, xAccessibleContext);
-            int windowWidth = (int) Math.round(xAccessibleComponent.getSize().Width * 26.4583);
+            
+
             while (intersects(point, size, xDrawPage)){
-                if ((point.X+size.Width+200) < windowWidth){
+                if ((point.X+size.Width*2+200) < windowWidth){
                     point.X+= (size.Width+200);
                 }else{
                    point.X = 0;
                   point.Y += (size.Height + 1200); 
                 }
             }
+            
+            System.out.println(((point.X + +size.Width) < windowWidth));
+            System.out.println(point.X +size.Width);
             image.xShape.setPosition(point);
             xPropSet.setPropertyValue("Graphic", convertImage(image.image));
             xPropSet.setPropertyValue("Title", image.title);
@@ -810,7 +824,6 @@ public class MimsUno {
         for (int i = 0; i < xShapes.getCount(); i++) {
             try {
                 XShape xShape = (XShape)UnoRuntime.queryInterface(XShape.class, xShapes.getByIndex(i));
-                System.out.println("Testing " + i);
                 
                 //get the bounds and check whether cursor is within it
                 Point point = xShape.getPosition();
