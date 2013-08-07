@@ -8,6 +8,7 @@ package com.nrims;
 
 import java.awt.image.BufferedImage;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 import com.sun.star.accessibility.AccessibleRole;
@@ -65,7 +66,11 @@ public class MimsUno {
 
     private XComponentContext context;
     private XMultiComponentFactory xMCF;
-
+    /**
+     * Method called to get current LibreOffice document.
+     * Gets currently opened document, in the form of a XComponent
+     * @return XComponent of currently opened document, null if none is open
+     */
     private XComponent getCurrentDocument() {
         try {
             context = Bootstrap.bootstrap();
@@ -82,7 +87,10 @@ public class MimsUno {
         }
         return null;
     }
-
+    /**
+     * Open a new writer document for taking notes.
+     * @return true on success, false otherwise
+     */
     public boolean newDoc() {
         try {
             context = Bootstrap.bootstrap();
@@ -101,6 +109,9 @@ public class MimsUno {
             return false;
         }
     }
+    /**
+     * 
+     */
     public void insertEmptyOLEObject(){
         try {
             XComponent currentDocument = getCurrentDocument();
@@ -221,7 +232,7 @@ public class MimsUno {
                 } else if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.EMBEDDED_OBJECT && withinRange(xChildAccessibleContext)) {
                     //user is over an OLE embedded object
                     XComponent xComponent = getOLE(xChildAccessibleContext.getAccessibleName(), xTextDocument);
-                    return insertDrawContent(image, xComponent);
+                    return insertDrawContent(image, xComponent, xChildAccessibleContext);
                 }
             }
             if (withinRange(xAccessibleContext)) {
@@ -251,21 +262,26 @@ public class MimsUno {
                     XMultiServiceFactory.class, xModel);
             XAccessible mXRoot = makeRoot(xMSF, xModel);
             XAccessibleContext xAccessibleContext = mXRoot.getAccessibleContext();
-            System.out.println(findAccessibleShape(xAccessibleContext));
-            withinRange(xAccessibleContext);
+            //go into AccessibleRole 40 (panel)
             XAccessible xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
-            withinRange(xAccessibleContext);
+            
+            //go into AccessibleRole 51 (scroll pane)
             xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
+            
+            //go into AccessibleRole 13 (document)
             xAccessible = xAccessibleContext.getAccessibleChild(0);
             xAccessibleContext = xAccessible.getAccessibleContext();
+            
+            //check to see whether if in range of document
             if (withinRange(xAccessibleContext)) {
                 int numChildren = xAccessibleContext.getAccessibleChildCount();
-                //loop through all the children of the document and find the text frames
+                //loop through all the children of the document
                 for (int i = 0; i < numChildren; i++) {
                     xAccessible = xAccessibleContext.getAccessibleChild(i);
                     XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
+                    //if we are over an image and it has a description (so from OpenMIMS), adjust our height
                     if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.LIST_ITEM
                             && !xChildAccessibleContext.getAccessibleDescription().isEmpty()
                             && withinRange(xChildAccessibleContext)) {
@@ -275,9 +291,8 @@ public class MimsUno {
                         break;
                     }
                 }
-            insertDrawContent(image, xComponent);
+            insertDrawContent(image, xComponent, xAccessibleContext);
             }
-            System.out.println(xModel == null);
         } catch (Exception e) {
             System.out.println("Error with accessibility api");
             e.printStackTrace(System.err);
@@ -352,9 +367,28 @@ public class MimsUno {
         }
     }
 
-    private boolean insertDrawContent(ImageInfo image, XComponent xComponent) {
+    private boolean insertDrawContent(ImageInfo image, XComponent xComponent, XAccessibleContext xAccessibleContext) {
         Size size = null;
+        Point point = null;
+        XDrawPage xDrawPage = null;
         try {
+        XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
+                    XDrawPagesSupplier.class, xComponent);
+            if (xDrawPagesSupplier != null) {
+                Object drawPages = xDrawPagesSupplier.getDrawPages();
+                XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
+                        XIndexAccess.class, drawPages);
+
+                //get current draw page
+                Object drawPage = xIndexedDrawPages.getByIndex(0);
+                xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
+                if (xDrawPage == null) return false;
+            }
+        }catch(Exception e){
+            return false;
+        }
+        try {
+            
             int height;
             int width;
             //create blank graphic in document
@@ -388,9 +422,20 @@ public class MimsUno {
             image.height = size.Height = height;
             image.width = size.Width = width;
             image.xShape.setSize(size);
-            Point point = new Point();
+            point = new Point();
             point.X = 0;
             point.Y = 0;
+            XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
+                                    XAccessibleComponent.class, xAccessibleContext);
+            int windowWidth = (int) Math.round(xAccessibleComponent.getSize().Width * 26.4583);
+            while (intersects(point, size, xDrawPage)){
+                if ((point.X+size.Width+200) < windowWidth){
+                    point.X+= (size.Width+200);
+                }else{
+                   point.X = 0;
+                  point.Y += (size.Height + 1200); 
+                }
+            }
             image.xShape.setPosition(point);
             xPropSet.setPropertyValue("Graphic", convertImage(image.image));
             xPropSet.setPropertyValue("Title", image.title);
@@ -407,20 +452,10 @@ public class MimsUno {
             Object drawShape = xDrawFactory.createInstance("com.sun.star.drawing.TextShape");
             XShape xDrawShape = (XShape) UnoRuntime.queryInterface(XShape.class, drawShape);
             xDrawShape.setSize(new Size(size.Width, 1000));
-            xDrawShape.setPosition(new Point(0, size.Height));
+            xDrawShape.setPosition(new Point(point.X, point.Y + size.Height));
 
             //get all draw pages
-            XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
-                    XDrawPagesSupplier.class, xComponent);
-            if (xDrawPagesSupplier != null) {
-                Object drawPages = xDrawPagesSupplier.getDrawPages();
-                XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
-                        XIndexAccess.class, drawPages);
-
-                //get current draw page
-                Object drawPage = xIndexedDrawPages.getByIndex(0);
-                XDrawPage xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
-                if (xDrawPage != null) {
+            
                     //add OpenMims Image
                     xDrawPage.add(image.xShape);
 
@@ -463,8 +498,6 @@ public class MimsUno {
                             com.sun.star.beans.XPropertySet.class, xShapeGroup);
                     xPropSet.setPropertyValue("Title", image.title);
                     xPropSet.setPropertyValue("Description", image.description);
-                }
-            }
         } catch (Exception e) {
             System.out.println("Couldn't insert image");
             e.printStackTrace(System.err);
@@ -474,7 +507,7 @@ public class MimsUno {
     }
 
     /**
-     * Method to insert a textframe and image together into a text document
+     * Method to insert a textframe and image together into a text document's textframe
      *
      * @param height height of the image
      * @param width width of the image
@@ -538,7 +571,12 @@ public class MimsUno {
         }
         return true;
     }
-
+    /**
+     * Method to insert textframe and image together at specific coordinates
+     * @param image
+     * @param xTextDocument
+     * @return 
+     */
     private boolean insertImageAtCoords(ImageInfo image, XTextDocument xTextDocument) {
         XTextFrame xTextFrame = null;
         try {
@@ -712,7 +750,11 @@ public class MimsUno {
         };
         return graphic;
     }
-
+    /**
+     * Create a graphic object on specified page
+     * @param xDrawPage
+     * @return 
+     */
     private Object createBlankGraphic(XComponent xDrawPage) {
         Object graphic = null;
         try {
@@ -760,6 +802,30 @@ public class MimsUno {
            // System.out.println(point.Y);
             return true;
         }
+    }
+    private boolean intersects(Point p, Size s, XDrawPage xDrawPage) {
+        Rectangle rectangle = new Rectangle(p.X, p.Y, s.Width, s.Height);
+        XShapes xShapes = (XShapes)UnoRuntime.queryInterface(XShapes.class, xDrawPage);
+        //get the accessible component
+        for (int i = 0; i < xShapes.getCount(); i++) {
+            try {
+                XShape xShape = (XShape)UnoRuntime.queryInterface(XShape.class, xShapes.getByIndex(i));
+                System.out.println("Testing " + i);
+                
+                //get the bounds and check whether cursor is within it
+                Point point = xShape.getPosition();
+                Size size = xShape.getSize();
+                Rectangle targetRectangle = new Rectangle( point.X, point.Y ,size.Width, size.Height);
+                if (rectangle.intersects(targetRectangle)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                System.out.println("Exception caught");
+                return false;
+            }
+
+        }
+        return false;
     }
 
     private static XWindow getWindow(XMultiServiceFactory msf, XModel xModel, boolean containerWindow) {
@@ -862,15 +928,14 @@ public class MimsUno {
                 XAccessible xAccessible = xAccessibleContext.getAccessibleChild(i);
                 XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
                 if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.LIST_ITEM) {
-                    XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
-                                    XAccessibleComponent.class, xChildAccessibleContext);
+                    return AccessibleRole.LIST_ITEM + "";
                 } else {
                     String result = findAccessibleShape(xChildAccessibleContext);
-                    /*if (result != "") {
+                    if (result != "") {
                         return result + " < " + xChildAccessibleContext.getAccessibleRole();
                     } else {
                         return result;
-                    }*/
+                    }
                 }
             }
             return "";
