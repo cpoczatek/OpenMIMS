@@ -37,7 +37,9 @@ import com.sun.star.text.XTextFramesSupplier;
 import com.sun.star.accessibility.XAccessible;
 import com.sun.star.accessibility.XAccessibleComponent;
 import com.sun.star.accessibility.XAccessibleContext;
+import com.sun.star.awt.XUnitConversion;
 import com.sun.star.awt.XWindow;
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XIndexAccess;
 import com.sun.star.drawing.FillStyle;
@@ -53,6 +55,7 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.text.XTextEmbeddedObjectsSupplier;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XInterface;
+import com.sun.star.util.MeasureUnit;
 import java.awt.MouseInfo;
 
 /**
@@ -110,6 +113,9 @@ public class MimsUno {
             return false;
         }
     }
+    /**
+     * Insert a new OLE object into the writer document to place images into
+     */
     public void insertEmptyOLEObject() {
         try {
             XComponent currentDocument = getCurrentDocument();
@@ -123,9 +129,6 @@ public class MimsUno {
                         xMSF.createInstance("com.sun.star.text.TextEmbeddedObject"));
                 XPropertySet xps = (XPropertySet) UnoRuntime.queryInterface(XPropertySet.class, xt);
                 xps.setPropertyValue("CLSID", "4BAB8970-8A3B-45B3-991c-cbeeac6bd5e3");
-                //xps.setPropertyValue("AnchorType", TextContentAnchorType.AT_PAGE);
-                //xps.setPropertyValue("Height", new Integer(1275*10));
-                //xps.setPropertyValue("Width", new Integer(2016*8));
                 xps.setPropertyValue("HoriOrientPosition", new Integer(0));
                 xps.setPropertyValue("VertOrientPosition", new Integer(0));
                 XTextCursor cursor = xTextDocument.getText().createTextCursor();
@@ -143,16 +146,16 @@ public class MimsUno {
      * frame, and over no images, a new image is inserted into the text frame If
      * the user drops inside a text frame and over an image, the existing image
      * is replaced with the new one, albeit with same size and position
-     *
-     * @param image the java.awt.image to be inserted
-     * @return true if an image was inserted/replaced/no action needed to be
-     * taken, false if an error occured
+     * @param i java.awt.image to be inserted
+     * @param text caption for the image
+     * @param title title for the image, under "Description..."
+     * @param description description for the image, under "Description..."
+     * @return true if succeeded, false if not
      */
     public boolean dropImage(Image i, String text, String title, String description) {
         ImageInfo image = new ImageInfo(i, text, title, description);
         XComponent currentDocument = getCurrentDocument();
         if (currentDocument == null) {
-            //no current document open
             return false;
         }
         try {
@@ -162,23 +165,14 @@ public class MimsUno {
             //current document is not a writer
             if (xTextDocument == null) {
                 //check if an draw doc
-                XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
-                        XDrawPagesSupplier.class, currentDocument);
-                if (xDrawPagesSupplier != null) {
-                    //check to see if there are drawpages
-                    Object drawPages = xDrawPagesSupplier.getDrawPages();
-                    XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
-                            XIndexAccess.class, drawPages);
-                    Object drawPage = xIndexedDrawPages.getByIndex(0);
-                    XDrawPage xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
-                    if (xDrawPage != null) {
-                        System.out.println("Current document is a draw");
-                    }
+                XDrawPage xDrawPage = getXDrawPage(currentDocument);
+                if (xDrawPage != null) {
+                    System.out.println("Current document is a draw");
                     insertIntoDraw(currentDocument, image);
                 }
             } else {
                 System.out.println("Current document is a writer");
-                insertIntoWriter(xTextDocument, image);
+                insertIntoWriter(image, currentDocument);
             }
 
         } catch (Exception e) {
@@ -188,63 +182,67 @@ public class MimsUno {
         }
         return true;
     }
-
-    private boolean insertIntoWriter(XTextDocument xTextDocument, ImageInfo image) {
+    /**
+     * Find where to insert into the writer document.
+     * Also find if we need to copy an image's dimensions.
+     * @param image image to insert
+     * @param xComponent component of main window
+     * @return true if succeeded, false if not
+     */
+    private boolean insertIntoWriter(ImageInfo image, XComponent xComponent) {
         try {
+            XTextDocument xTextDocument = (XTextDocument) UnoRuntime.queryInterface(
+                    XTextDocument.class, xComponent);
             // Querying for the text service factory
             XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xTextDocument);
             XAccessible mXRoot = makeRoot(xMSF, xTextDocument);
-            XAccessibleContext xAccessibleContext = mXRoot.getAccessibleContext();
+            XAccessibleContext xAccessibleRoot = mXRoot.getAccessibleContext();
 
-            //scope looks like this: xTextDocument -> ScrollPane -> Document
+            //scope: xTextDocument -> ScrollPane -> Document
             //get the scroll pane object
-            XAccessible xAccessible = xAccessibleContext.getAccessibleChild(0);
-            xAccessibleContext = xAccessible.getAccessibleContext();
+            XAccessibleContext xAccessibleContext = getNextContext(xAccessibleRoot, 0);
 
             //get the document object
-            xAccessible = xAccessibleContext.getAccessibleChild(0);
-            xAccessibleContext = xAccessible.getAccessibleContext();
+            xAccessibleContext = getNextContext(xAccessibleContext, 0);
 
             int numChildren = xAccessibleContext.getAccessibleChildCount();
             //loop through all the children of the document and find the text frames
             for (int i = 0; i < numChildren; i++) {
-                xAccessible = xAccessibleContext.getAccessibleChild(i);
-                XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
-                System.out.println(xChildAccessibleContext.getAccessibleRole());
+                XAccessibleContext xChildAccessibleContext = getNextContext(xAccessibleContext, i);
                 if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.TEXT_FRAME && withinRange(xChildAccessibleContext)) {
                     //loop through all images in text frame to see if we are over any of them
                     XTextFrame xTextFrame = getFrame(xChildAccessibleContext.getAccessibleName(), xTextDocument);
                     numChildren = xChildAccessibleContext.getAccessibleChildCount();
                     for (int j = 0; j < numChildren; j++) {
-                        xAccessible = xAccessibleContext.getAccessibleChild(j);
-                        xChildAccessibleContext = xAccessible.getAccessibleContext();
+                        xChildAccessibleContext = getNextContext(xAccessibleContext, j);
                         if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.GRAPHIC && withinRange(xChildAccessibleContext)) {
                             //if we are over the image, then we insert a new image scaled to the width of the one we're dropping on
                             XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
                                     XAccessibleComponent.class, xChildAccessibleContext);
-                            image.width = xAccessibleComponent.getSize().Width;
+                            image.size.Width = xAccessibleComponent.getSize().Width;
                             j = numChildren;
                         }
                     }
-                    return insertTextContent(image, xTextFrame, xTextDocument);
+                    return insertTextContent(image, xTextFrame, xComponent, xChildAccessibleContext);
                 } else if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.EMBEDDED_OBJECT && withinRange(xChildAccessibleContext)) {
                     //user is over an OLE embedded object
-                    XComponent xComponent = getOLE(xChildAccessibleContext.getAccessibleName(), xTextDocument);
-                    return insertDrawContent(image, xComponent, xChildAccessibleContext);
+                    XComponent xcomponent = getOLE(xChildAccessibleContext.getAccessibleName(), xTextDocument);
+                    return insertDrawContent(image, xcomponent, xChildAccessibleContext, xComponent);
                 }
             }
+            //if we hit here, this means we did not hit a text frame or OLE object
             if (withinRange(xAccessibleContext)) {
-                //else we are just inserting it onto the page
-                xAccessible = xAccessibleContext.getAccessibleChild(0);
-                xAccessibleContext = xAccessible.getAccessibleContext();
+                XUnitConversion xUnitConversion = getXUnitConversion(xComponent);
+                xAccessibleContext = getNextContext(xAccessibleContext, 0);
                 XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
                         XAccessibleComponent.class, xAccessibleContext);
                 Point point = xAccessibleComponent.getLocationOnScreen();
                 java.awt.Point location = MouseInfo.getPointerInfo().getLocation();
-                image.x = (int) Math.round((location.getX() - point.X) * 26.4583);
-                image.y = (int) Math.round((location.getY() - point.Y) * 26.4583);
-                insertTextContent(image, null, xTextDocument);
+                image.p = xUnitConversion.convertPointToLogic(
+                        new Point((int) Math.round(location.getX() - point.X), (int) Math.round(location.getY() - point.Y)),
+                        MeasureUnit.MM_100TH);
+                insertTextContent(image, null, xComponent, xAccessibleContext);
             }
         } catch (Exception e) {
             System.out.println("Error with accessibility api");
@@ -253,45 +251,46 @@ public class MimsUno {
         }
         return true;
     }
-
+    /**
+     * Find where to insert into the draw document.
+     * Also find if we need to copy an image's dimensions.
+     * @param xComponent component of draw window
+     * @param image image to insert 
+     * @return true if succeeded, false if not
+     */
     private boolean insertIntoDraw(XComponent xComponent, ImageInfo image) {
         try {
             XModel xModel = (XModel) UnoRuntime.queryInterface(XModel.class, xComponent);
             XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xModel);
             XAccessible mXRoot = makeRoot(xMSF, xModel);
-            XAccessibleContext xAccessibleContext = mXRoot.getAccessibleContext();
-            XAccessibleContext xA = mXRoot.getAccessibleContext();
+            XAccessibleContext xAccessibleRoot = mXRoot.getAccessibleContext();
             //go into AccessibleRole 40 (panel)
-            XAccessible xAccessible = xAccessibleContext.getAccessibleChild(0);
-            xAccessibleContext = xAccessible.getAccessibleContext();
+            XAccessibleContext xAccessibleContext = getNextContext(xAccessibleRoot, 0);
 
             //go into AccessibleRole 51 (scroll pane)
-            xAccessible = xAccessibleContext.getAccessibleChild(0);
-            xAccessibleContext = xAccessible.getAccessibleContext();
+            xAccessibleContext = getNextContext(xAccessibleContext, 0);
 
             //go into AccessibleRole 13 (document)
-            xAccessible = xAccessibleContext.getAccessibleChild(0);
-            xAccessibleContext = xAccessible.getAccessibleContext();
+            xAccessibleContext = getNextContext(xAccessibleContext, 0);
 
             //check to see whether if in range of document
             if (withinRange(xAccessibleContext)) {
                 int numChildren = xAccessibleContext.getAccessibleChildCount();
                 //loop through all the children of the document
                 for (int i = 0; i < numChildren; i++) {
-                    xAccessible = xAccessibleContext.getAccessibleChild(i);
-                    XAccessibleContext xChildAccessibleContext = xAccessible.getAccessibleContext();
+                    XAccessibleContext xChildAccessibleContext = getNextContext(xAccessibleContext, i);
                     //if we are over an image and it has a description (so from OpenMIMS), adjust our height
                     if (xChildAccessibleContext.getAccessibleRole() == AccessibleRole.LIST_ITEM
                             && !xChildAccessibleContext.getAccessibleDescription().isEmpty()
                             && withinRange(xChildAccessibleContext)) {
                         XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
                                 XAccessibleComponent.class, xChildAccessibleContext);
-                        image.width = xAccessibleComponent.getSize().Width;
+                        image.size.Width = xAccessibleComponent.getSize().Width;
                         break;
                     }
                 }
-                insertDrawContent(image, xComponent, xA);
+                insertDrawContent(image, xComponent, xAccessibleRoot, null);
             }
         } catch (Exception e) {
             System.out.println("Error with accessibility api");
@@ -301,55 +300,59 @@ public class MimsUno {
         return true;
 
     }
-
     /**
      * Convert and insert image and relevant info into Writer doc
-     *
-     * @param image java.awt.image to insert
-     * @param xTextFrame text frame we are inserting into
-     * @param text caption for image
-     * @param title title of image
-     * @param description description of image
+     * @param image image and info to insert
+     * @param xTextFrame textframe to insert into, null if none
+     * @param xComponent component of writer window
+     * @param xAccessibleContext accessible context of what we are inserting into
      * @return true if succeeded, false if not
      */
-    private boolean insertTextContent(ImageInfo image, XTextFrame xTextFrame, XTextDocument xTextDocument) {
-        int height;
-        int width;
-        //create blank graphic in document
-        Object graphic = createBlankGraphic(xTextDocument);
-
-        //query for the interface XTextContent on the GraphicObject 
-        image.xImage = (com.sun.star.text.XTextContent) UnoRuntime.queryInterface(
-                com.sun.star.text.XTextContent.class, graphic);
-
-        //query for the properties of the graphic
-        com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
-                com.sun.star.beans.XPropertySet.class, graphic);
-        if (image.width > 0) {
-            //calculate the width and height
-            double ratio = (double) image.width / (double) image.image.getWidth(null);
-            width = (int) Math.round(image.width * 26.4583);
-            height = (int) Math.round(ratio * image.image.getHeight(null) * 26.4583);
-        } else {
-            //calculate the width and height
-            width = (int) Math.round(image.image.getWidth(null) * 26.4583);
-            height = (int) Math.round(image.image.getHeight(null) * 26.4583);
-        }
-
-        //if the image is greater than the width, then we scale it down the barely fit in the page
-        if (width > 165100) {
-            int ratio = width;
-            width = 165100 - 1000;
-            ratio = width / ratio;
-            height = height * ratio;
-        }
-        image.width = width;
-        image.height = height;
-        //set the TextContent properties
+    private boolean insertTextContent(ImageInfo image, XTextFrame xTextFrame, XComponent xComponent, XAccessibleContext xAccessibleContext) {
+        XTextDocument xTextDocument;
         try {
+            //create blank graphic in document
+            xTextDocument = (XTextDocument) UnoRuntime.queryInterface(
+                    XTextDocument.class, xComponent);
+            Object graphic = createBlankGraphic(xTextDocument);
+
+            //query for the interface XTextContent on the GraphicObject 
+            image.xImage = (com.sun.star.text.XTextContent) UnoRuntime.queryInterface(
+                    com.sun.star.text.XTextContent.class, graphic);
+
+            //query for the properties of the graphic
+            XUnitConversion xUnitConversion = getXUnitConversion(xComponent);
+            if (image.size.Width > 0) {
+                //calculate the width and height
+                double ratio = (double) image.size.Width / (double) image.image.getWidth(null);
+                image.size.Height = (int) Math.round(ratio * image.image.getHeight(null));
+            } else {
+                image.size = new Size(image.image.getWidth(null), image.image.getHeight(null));
+            }
+            image.size = xUnitConversion.convertSizeToLogic(image.size, MeasureUnit.MM_100TH);
+            XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
+                    XAccessibleComponent.class, xAccessibleContext);
+            Size windowSize = xUnitConversion.convertSizeToLogic(xAccessibleComponent.getSize(), MeasureUnit.MM_100TH);
+            //if the image is greater than the width, then we scale it down the barely fit in the page
+            if (image.size.Width > windowSize.Width) {
+                int ratio = image.size.Width;
+                image.size.Width = 165100 - 1000;
+                ratio = image.size.Width / ratio;
+                image.size.Height = image.size.Height * ratio;
+            }
+            //if greater than height, do the same thing to descale it
+            if (image.size.Height >= windowSize.Height) {
+                double ratio = image.size.Height;
+                image.size.Height = windowSize.Height - 2500;
+                ratio = image.size.Height / ratio;
+                image.size.Width = (int) Math.round(image.size.Width * ratio);
+            }
+            //set the TextContent properties
+            com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
+                    com.sun.star.beans.XPropertySet.class, graphic);
             xPropSet.setPropertyValue("AnchorType", TextContentAnchorType.AT_FRAME);
-            xPropSet.setPropertyValue("Width", width);
-            xPropSet.setPropertyValue("Height", height);
+            xPropSet.setPropertyValue("Width", image.size.Width);
+            xPropSet.setPropertyValue("Height", image.size.Height);
             xPropSet.setPropertyValue("Graphic", convertImage(image.image));
             xPropSet.setPropertyValue("TextWrap", WrapTextMode.NONE);
             xPropSet.setPropertyValue("Title", image.title);
@@ -359,48 +362,32 @@ public class MimsUno {
             exception.printStackTrace(System.err);
             return false;
         }
-        if (xTextFrame != null) {
-            //insert the content
-            return insertImageIntoTextFrame(image, xTextFrame, xTextDocument);
-        } else {
-            return insertImageAtCoords(image, xTextDocument);
-        }
+        //insert the content
+        return insertImageIntoTextFrame(image, xTextFrame, xTextDocument);
+
     }
-
     /**
-     * Inserts content into a draw page
-     *
-     * @param image
-     * @param xComponent
-     * @param xAccessibleContext
-     * @return
+     * Inserts content and info into a draw page.
+     * @param image image and info to insert
+     * @param xComponent component of draw page
+     * @param xAccessibleContext accessiblecontext of draw page
+     * @param parentComponent parent component of draw page, if one exists
+     * @return true if succeeded, false if not
      */
-    private boolean insertDrawContent(ImageInfo image, XComponent xComponent, XAccessibleContext xAccessibleContext) {
-        Size size = null;
-        Point point = null;
-        XDrawPage xDrawPage = null;
-        try {
-            XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
-                    XDrawPagesSupplier.class, xComponent);
-            if (xDrawPagesSupplier != null) {
-                Object drawPages = xDrawPagesSupplier.getDrawPages();
-                XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
-                        XIndexAccess.class, drawPages);
-
-                //get current draw page
-                Object drawPage = xIndexedDrawPages.getByIndex(0);
-                xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
-                if (xDrawPage == null) {
-                    return false;
-                }
-            }
-        } catch (Exception e) {
+    private boolean insertDrawContent(ImageInfo image, XComponent xComponent, XAccessibleContext xAccessibleContext, XComponent parentComponent) {
+        Size size;
+        Point point;
+        XDrawPage xDrawPage = getXDrawPage(xComponent);
+        XUnitConversion xUnitConversion;
+        if (xDrawPage == null) {
             return false;
         }
         try {
-
-            int height;
-            int width;
+            if (parentComponent == null) {
+                xUnitConversion = getXUnitConversion(xComponent);
+            } else {
+                xUnitConversion = getXUnitConversion(parentComponent);
+            }
             //create blank graphic in document
             Object graphic = createBlankGraphic(xComponent);
 
@@ -411,46 +398,42 @@ public class MimsUno {
             //query for the properties of the graphic
             com.sun.star.beans.XPropertySet xPropSet = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
                     com.sun.star.beans.XPropertySet.class, graphic);
-            if (image.width > 0) {
+
+            size = image.size;
+            if (size.Width > 0) {
                 //calculate the width and height
-                double ratio = (double) image.width / (double) image.image.getWidth(null);
-                width = (int) Math.round(image.width * 26.4583);
-                height = (int) Math.round(ratio * image.image.getHeight(null) * 26.4583);
+                double ratio = (double) size.Width / (double) image.image.getWidth(null);
+                size.Height = (int) Math.round(ratio * image.image.getHeight(null));
             } else {
-                //calculate the width and height
-                width = (int) Math.round(image.image.getWidth(null) * 26.4583);
-                height = (int) Math.round(image.image.getHeight(null) * 26.4583);
+                size = new Size(image.image.getWidth(null), image.image.getHeight(null));
             }
+            size = xUnitConversion.convertSizeToLogic(size, MeasureUnit.MM_100TH);
             XAccessibleComponent xAccessibleComponent = UnoRuntime.queryInterface(
                     XAccessibleComponent.class, xAccessibleContext);
-            int windowWidth = (int) Math.round(xAccessibleComponent.getSize().Width * 26.4583);
-            int windowHeight = (int) Math.round(xAccessibleComponent.getSize().Height * 26.4583);
+            Size windowSize = xUnitConversion.convertSizeToLogic(xAccessibleComponent.getSize(), MeasureUnit.MM_100TH);
             //if the image is greater than the width, then we scale it down to fit in the page
-            if (width >= windowWidth) {
-                double ratio = width;
-                width = windowWidth;
-                ratio = width / ratio;
-                height = (int) Math.round(height * ratio);
-                //if greater than height, do the same thing to descale it
+            if (size.Width >= windowSize.Width) {
+                double ratio = size.Width;
+                size.Width = windowSize.Width;
+                ratio = size.Width / ratio;
+                size.Height = (int) Math.round(size.Height * ratio);
+            }
+            //if greater than height, do the same thing to descale it
+            if (size.Height >= windowSize.Height) {
+                double ratio = size.Height;
+                size.Height = windowSize.Height - 2500;
+                ratio = size.Height / ratio;
+                size.Width = (int) Math.round(size.Width * ratio);
+            }
 
-            }
-            if (height >= windowHeight) {
-                double ratio = height;
-                height = windowHeight - 2500;
-                ratio = height / ratio;
-                width = (int) Math.round(width * ratio);
-            }
-            size = new Size();
-            image.height = size.Height = height;
-            image.width = size.Width = width;
+            image.size = size;
             image.xShape.setSize(size);
             point = new Point();
             point.X = 0;
             point.Y = 0;
-
-
+            //tile the images, and make sure they do not go beyond the limit of the window
             while (intersects(point, size, xDrawPage)) {
-                if ((point.X + size.Width * 2 + 200) < windowWidth) {
+                if ((point.X + (size.Width * 2) + 200) < windowSize.Width) {
                     point.X += (size.Width + 200);
                 } else {
                     point.X = 0;
@@ -458,8 +441,6 @@ public class MimsUno {
                 }
             }
 
-            System.out.println(((point.X + +size.Width) < windowWidth));
-            System.out.println(point.X + size.Width);
             image.xShape.setPosition(point);
             xPropSet.setPropertyValue("Graphic", convertImage(image.image));
             xPropSet.setPropertyValue("Title", image.title);
@@ -477,8 +458,6 @@ public class MimsUno {
             XShape xDrawShape = (XShape) UnoRuntime.queryInterface(XShape.class, drawShape);
             xDrawShape.setSize(new Size(size.Width, 1000));
             xDrawShape.setPosition(new Point(point.X, point.Y + size.Height));
-
-            //get all draw pages
 
             //add OpenMims Image
             xDrawPage.add(image.xShape);
@@ -531,18 +510,18 @@ public class MimsUno {
     }
 
     /**
-     * Method to insert a textframe and image together into a text document's
-     * textframe
-     *
-     * @param height height of the image
-     * @param width width of the image
-     * @param xImage image to insert
-     * @param destination textframe we are inserting into
-     * @param text caption of image
-     * @return true if succeeded, false if not
+     * Method to insert a textframe and image together into a text document's textframe.
+     * 
+     * @param image image and info to insert
+     * @param destination textframe to insert into
+     * @param xTextDocument document to insert into
+     * @return 
      */
     private boolean insertImageIntoTextFrame(ImageInfo image, XTextFrame destination, XTextDocument xTextDocument) {
-        XTextFrame xTextFrame = null;
+        XTextFrame xTextFrame;
+        XText xText;
+        XTextCursor xTextCursor;
+        XTextRange xTextRange;
         try {
             XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
                     XMultiServiceFactory.class, xTextDocument);
@@ -555,10 +534,10 @@ public class MimsUno {
             XShape xTextFrameShape = (com.sun.star.drawing.XShape) UnoRuntime.queryInterface(
                     com.sun.star.drawing.XShape.class, frame);
             com.sun.star.awt.Size aSize = new com.sun.star.awt.Size();
-            aSize.Height = image.height;
-            aSize.Width = image.width;
-            System.out.println(image.height);
-            System.out.println(image.width);
+            aSize.Height = image.size.Height;
+            aSize.Width = image.size.Width;
+            System.out.println(image.size.Height);
+            System.out.println(image.size.Width);
             System.out.println(aSize.Height);
             System.out.println(aSize.Width);
             xTextFrameShape.setSize(aSize);
@@ -567,85 +546,36 @@ public class MimsUno {
             int[] blank = new int[]{0, 0, 0, 0};
             com.sun.star.beans.XPropertySet xTFPS = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
                     com.sun.star.beans.XPropertySet.class, xTextFrame);
-            xTFPS.setPropertyValue("AnchorType",
+            
+            xTFPS.setPropertyValue("FrameIsAutomaticHeight", true);
+            xTFPS.setPropertyValue("LeftBorder", blank);
+            xTFPS.setPropertyValue("RightBorder", blank);
+            xTFPS.setPropertyValue("TopBorder", blank);
+            xTFPS.setPropertyValue("BottomBorder", blank);
+            if (destination != null) {
+                xTFPS.setPropertyValue("AnchorType",
                     com.sun.star.text.TextContentAnchorType.AT_FRAME);
-            xTFPS.setPropertyValue("FrameIsAutomaticHeight", true);
-            xTFPS.setPropertyValue("LeftBorder", blank);
-            xTFPS.setPropertyValue("RightBorder", blank);
-            xTFPS.setPropertyValue("TopBorder", blank);
-            xTFPS.setPropertyValue("BottomBorder", blank);
-
-            //insert the textframe
-            XText xText = destination.getText();
-            XTextCursor xTextCursor = xText.createTextCursor();
-            XTextRange xTextRange = xTextCursor.getStart();
-            xText.insertTextContent(xTextRange, xTextFrame, true);
-
-            //insert the image into the textframe
-            xText = xTextFrame.getText();
-            xTextCursor = xText.createTextCursor();
-            xTextRange = xTextCursor.getStart();
-            xText.insertTextContent(xTextRange, image.xImage, true);
-
-            //insert the caption
-            xTextRange.setString(image.text);
-        } catch (Exception exception) {
-            System.out.println("Couldn't insert image");
-            exception.printStackTrace(System.err);
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Method to insert textframe and image together at specific coordinates
-     *
-     * @param image
-     * @param xTextDocument
-     * @return
-     */
-    private boolean insertImageAtCoords(ImageInfo image, XTextDocument xTextDocument) {
-        XTextFrame xTextFrame = null;
-        try {
-            XMultiServiceFactory xMSF = (XMultiServiceFactory) UnoRuntime.queryInterface(
-                    XMultiServiceFactory.class, xTextDocument);
-            //create a new text frame
-            Object frame = xMSF.createInstance("com.sun.star.text.TextFrame");
-            xTextFrame = (com.sun.star.text.XTextFrame) UnoRuntime.queryInterface(
-                    com.sun.star.text.XTextFrame.class, frame);
-
-            //set the dimensions of the new text frame
-            XShape xTextFrameShape = (com.sun.star.drawing.XShape) UnoRuntime.queryInterface(
-                    com.sun.star.drawing.XShape.class, frame);
-            com.sun.star.awt.Size aSize = new com.sun.star.awt.Size();
-            aSize.Height = image.height;
-            aSize.Width = image.width;
-            xTextFrameShape.setSize(aSize);
-            int x = image.x - (image.width / 2);
-            int y = image.y - (image.height / 2);
-            //Set the properties of the textframe
-            int[] blank = new int[]{0, 0, 0, 0};
-            com.sun.star.beans.XPropertySet xTFPS = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
-                    com.sun.star.beans.XPropertySet.class, xTextFrame);
-            xTFPS.setPropertyValue("AnchorType",
+                //insert the textframe
+                xText = destination.getText();
+                xTextCursor = xText.createTextCursor();
+                xTextRange = xTextCursor.getStart();
+                xText.insertTextContent(xTextRange, xTextFrame, true);
+            } else {
+                int x = image.p.X - (image.size.Width / 2);
+                int y = image.p.Y - (image.size.Height / 2);
+                xTFPS.setPropertyValue("AnchorType",
                     com.sun.star.text.TextContentAnchorType.AT_PAGE);
-            xTFPS.setPropertyValue("FrameIsAutomaticHeight", true);
-            xTFPS.setPropertyValue("LeftBorder", blank);
-            xTFPS.setPropertyValue("RightBorder", blank);
-            xTFPS.setPropertyValue("TopBorder", blank);
-            xTFPS.setPropertyValue("BottomBorder", blank);
-
-            xTFPS.setPropertyValue("VertOrient", com.sun.star.text.VertOrientation.NONE);
-            xTFPS.setPropertyValue("HoriOrient", com.sun.star.text.HoriOrientation.NONE);
-            xTFPS.setPropertyValue("HoriOrientRelation", com.sun.star.text.RelOrientation.PAGE_FRAME);
-            xTFPS.setPropertyValue("VertOrientRelation", com.sun.star.text.RelOrientation.PAGE_FRAME);
-            xTFPS.setPropertyValue("HoriOrientPosition", x);
-            xTFPS.setPropertyValue("VertOrientPosition", y);
-            //insert the textframe
-            XText xText = xTextDocument.getText();
-            XTextCursor xTextCursor = xText.createTextCursor();
-            XTextRange xTextRange = xTextCursor.getStart();
-            xText.insertTextContent(xTextRange, xTextFrame, true);
+                xTFPS.setPropertyValue("VertOrient", com.sun.star.text.VertOrientation.NONE);
+                xTFPS.setPropertyValue("HoriOrient", com.sun.star.text.HoriOrientation.NONE);
+                xTFPS.setPropertyValue("HoriOrientRelation", com.sun.star.text.RelOrientation.PAGE_FRAME);
+                xTFPS.setPropertyValue("VertOrientRelation", com.sun.star.text.RelOrientation.PAGE_FRAME);
+                xTFPS.setPropertyValue("HoriOrientPosition", x);
+                xTFPS.setPropertyValue("VertOrientPosition", y);
+                xText = xTextDocument.getText();
+                xTextCursor = xText.createTextCursor();
+                xTextRange = xTextCursor.getStart();
+                xText.insertTextContent(xTextRange, xTextFrame, true);
+            }
 
             //insert the image into the textframe
             xText = xTextFrame.getText();
@@ -655,7 +585,6 @@ public class MimsUno {
 
             //insert the caption
             xTextRange.setString(image.text);
-
         } catch (Exception exception) {
             System.out.println("Couldn't insert image");
             exception.printStackTrace(System.err);
@@ -774,7 +703,7 @@ public class MimsUno {
         } catch (Exception exception) {
             System.out.println("Could not create image");
             exception.printStackTrace(System.err);
-        };
+        }
         return graphic;
     }
 
@@ -798,7 +727,7 @@ public class MimsUno {
         } catch (Exception exception) {
             System.out.println("Could not create image");
             exception.printStackTrace(System.err);
-        };
+        }
         return graphic;
     }
 
@@ -897,9 +826,40 @@ public class MimsUno {
         return xAccessible;
     }
 
+    private XDrawPage getXDrawPage(XComponent xComponent) {
+        XDrawPage xDrawPage = null;
+        try {
+            XDrawPagesSupplier xDrawPagesSupplier = (XDrawPagesSupplier) UnoRuntime.queryInterface(
+                    XDrawPagesSupplier.class, xComponent);
+            if (xDrawPagesSupplier != null) {
+                Object drawPages = xDrawPagesSupplier.getDrawPages();
+                XIndexAccess xIndexedDrawPages = (XIndexAccess) UnoRuntime.queryInterface(
+                        XIndexAccess.class, drawPages);
+                //get current draw page
+                Object drawPage = xIndexedDrawPages.getByIndex(0);
+                xDrawPage = (XDrawPage) UnoRuntime.queryInterface(XDrawPage.class, drawPage);
+            }
+        } catch (Exception e) {
+            System.out.println("Error trying to retrieve draw page" + e);
+            e.printStackTrace(System.err);
+        } finally {
+            return xDrawPage;
+        }
+    }
+
     private static XAccessible makeRoot(XMultiServiceFactory msf, XModel aModel) {
         XWindow xWindow = getCurrentWindow(msf, aModel);
         return getAccessibleObject(xWindow);
+    }
+
+    private XAccessibleContext getNextContext(XAccessibleContext xAccessibleContext, int i) {
+        try {
+            XAccessible xAccessible = xAccessibleContext.getAccessibleChild(i);
+            return xAccessible.getAccessibleContext();
+        } catch (Exception e) {
+             System.out.println("Error trying to retrieve draw page" + e);
+            return null;
+        }
     }
 
     /**
@@ -919,21 +879,37 @@ public class MimsUno {
             baos.close();
             return res;
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             System.out.println("Failure to convert image to byte array");
             return null;
         }
     }
 
+    private XUnitConversion getXUnitConversion(XComponent xComponent) {
+        XUnitConversion xUnitConversion = null;
+        try {
+            XModel xModel = (XModel) UnoRuntime.queryInterface(XModel.class, xComponent);
+            XMultiServiceFactory xMultiServiceFactory =
+                    (XMultiServiceFactory) UnoRuntime.queryInterface(
+                    XMultiServiceFactory.class, xComponent);
+            XWindow xWindow = getCurrentWindow(xMultiServiceFactory, xModel);
+            XWindowPeer xWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, xWindow);
+            xUnitConversion = UnoRuntime.queryInterface(XUnitConversion.class, xWindowPeer);
+        } catch (Exception e) {
+            System.out.println("Error trying to get XUnitConversion" + e);
+            e.printStackTrace(System.err);
+        } finally {
+            return xUnitConversion;
+        }
+    }
+
     public class ImageInfo {
 
-        public int x;
-        public int y;
+        public Point p;
         public Image image;
         public XTextContent xImage;
         public XShape xShape;
-        public int height;
-        public int width;
+        public Size size;
         public String text;
         public String title;
         public String description;
@@ -947,6 +923,8 @@ public class MimsUno {
             this.text = n;
             this.title = t;
             this.description = d;
+            size = new Size(0, 0);
+            p = new Point(0, 0);
         }
     }
 
