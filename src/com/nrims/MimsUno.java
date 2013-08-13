@@ -131,6 +131,7 @@ public class MimsUno {
                 xps.setPropertyValue("CLSID", "4BAB8970-8A3B-45B3-991c-cbeeac6bd5e3");
                 xps.setPropertyValue("HoriOrientPosition", new Integer(0));
                 xps.setPropertyValue("VertOrientPosition", new Integer(0));
+                xps.setPropertyValue("AnchorType", TextContentAnchorType.AT_PAGE);
                 XTextCursor cursor = xTextDocument.getText().createTextCursor();
                 XTextRange xTextRange = (XTextRange) UnoRuntime.queryInterface(XTextRange.class, cursor);
                 xTextDocument.getText().insertTextContent(xTextRange, xt, false);
@@ -623,7 +624,12 @@ public class MimsUno {
         return xTextFrame;
 
     }
-
+    /**
+     * Get an OLE object based on it's name within a text document
+     * @param name
+     * @param xTextDocument
+     * @return 
+     */
     private XComponent getOLE(String name, XTextDocument xTextDocument) {
         XComponent xComponent = null;
         try {
