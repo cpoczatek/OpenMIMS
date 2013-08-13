@@ -52,8 +52,6 @@ public class massCorrection {
         for (int m = 0; m < nmasses; m++) {
             for (int p = 0; p < nplanes; p++) {
                 massimgs[m].setSlice(p + 1);
-                //this works, setting below does not
-                //float[] pix = (float[])massimgs[m].getStack().getProcessor(p+1).getPixels();
                 float[] pix = (float[]) massimgs[m].getProcessor().getPixels();
                 float[] newpix = new float[pix.length];
 
@@ -62,10 +60,6 @@ public class massCorrection {
                     newpix[i] = dtCorrect(pix[i], dwelltime);
                 }
 
-
-                //set new pix
-                //why doesn't this work?
-                //massimgs[m].getStack().getProcessor(p+1).setPixels(newpix);
                 massimgs[m].getProcessor().setPixels(newpix);
             }
         }
@@ -110,23 +104,14 @@ public class massCorrection {
         for (int m = 0; m < nmasses; m++) {
             for (int p = 0; p < nplanes; p++) {
                 massimgs[m].setSlice(p + 1);
-                //this works, setting below does not
-                //float[] pix = (float[])massimgs[m].getStack().getProcessor(p+1).getPixels();
                 float[] pix = (float[]) massimgs[m].getProcessor().getPixels();
                 float[] newpix = new float[pix.length];
 
                 //compute new pix
                 for (int i = 0; i < pix.length; i++) {
-                    if((m==2) && (p==2) && (pix[i]>30)) {
-                        int bar = 999;
-                    }
                     newpix[i] = QSACorrect(pix[i], beta[m], dwelltime, FCObj);
                 }
 
-
-                //set new pix
-                //why doesn't this work?
-                //massimgs[m].getStack().getProcessor(p+1).setPixels(newpix);
                 massimgs[m].getProcessor().setPixels(newpix);
             }
         }
