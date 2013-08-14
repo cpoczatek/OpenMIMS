@@ -48,11 +48,13 @@ import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -296,7 +298,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       Thread t = new Thread(new AutoSaveROI());
       t.start();
       this.ui = this;
-        
+      
+      //install macros for OpenMIMS tools and DragDrop
+
+        String pluginPath = IJ.getDirectory("macros");
+        File file = new File(pluginPath + "/openmims_tools.fiji.ijm");
+        if (file.exists()) {
+            IJ.run("Install...", "install=" + pluginPath + "/openmims_tools.fiji.ijm");
+        } else {
+            IJ.error("Error: openmims_tools.fiji.ijm does not exist. Please try updating.");
+        }
       //StartupScript should be DEPRICATED/REMOVED
       //Better way to initialize state is via a script
       //need to research...
@@ -314,6 +325,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (IJ.getInstance() != null) {
                prefs.savePreferences();
             }
+            String pluginPath = IJ.getDirectory("macros");
+            IJ.run("Install...", "install=" + pluginPath + "/StartupMacros.fiji.ijm");
             closeCurrentImage();
             close();
          }
@@ -4513,7 +4526,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     if (rois.length > 0){
                        checkSave(roisFileName + ROIS_EXTENSION, roisFileName, 1);
                        getRoiManager().saveMultiple(rois, roisFileName + ROIS_EXTENSION, false);
-                       threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
+                       //threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
                     }else{
                         //threadMessage("Nothing to autosave");
                     }
