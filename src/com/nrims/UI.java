@@ -326,7 +326,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                prefs.savePreferences();
             }
             String pluginPath = IJ.getDirectory("macros");
-            IJ.run("Install...", "install=" + pluginPath + "/StartupMacros.fiji.ijm");
+             File file = new File(pluginPath + "/StartupMacros.fiji.ijm");
+             if (file.exists()) {
+                 IJ.run("Install...", "install=" + pluginPath + "/StartupMacros.fiji.ijm");
+             }
             closeCurrentImage();
             close();
          }
@@ -2073,22 +2076,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
     /**
-     * Find the number of masses before this one that have the same value
-     * @param index index of the mass
-     * @return the number of masses before this one
-     */
-    public int getNumBefore(int index){
-       String[] names = this.getOpener().getMassNames();
-        String massValueString = names[index];
-        int numBefore = 0;
-        for (int i = 0; i < index; i++){
-            if (i != index && names[i].equals(massValueString)){
-                numBefore++;
-            }
-        }
-        return numBefore;
-    }
-    /**
      * Method to return title for a single image based on formatString in preferences
      * @param index the index of the image/parent of image you want title for
      * @param extension whether or not to include the file extension in the name
@@ -2117,7 +2104,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         }
         int numBefore;
-        if ((numBefore = ui.getNumBefore(index)) > 0){
+        if ((numBefore = DataUtilities.determineSeries(index, image)) > 0){
             curString = "(" + numBefore + ") " + curString;
         }
         return curString;
@@ -2138,11 +2125,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         for (int i = 0; i < formatArray.length; i++) {
             char curChar = formatArray[i];
             if (curChar == 'M') {
-                if ((numBefore = ui.getNumBefore(numIndex)) > 0) {
+                if ((numBefore = DataUtilities.determineSeries(numIndex, image)) > 0) {
                     curString = "(" + numBefore + ")" + curString;
                 }
                 curString += String.valueOf(names[numIndex]) + "/";
-                if ((numBefore = ui.getNumBefore(denIndex)) > 0) {
+                if ((numBefore = DataUtilities.determineSeries(denIndex, image)) > 0) {
                     curString = "(" + numBefore + ")" + curString;
                 }
                 curString += String.valueOf(names[denIndex]);
@@ -3590,6 +3577,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
         return null;
     }
+    
 
     /**
      * Gets the HSI image with index <code>i</code>.

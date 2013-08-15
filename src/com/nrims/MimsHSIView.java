@@ -1,5 +1,6 @@
 package com.nrims;
 
+import com.nrims.data.DataUtilities;
 import ij.IJ;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -1034,13 +1035,14 @@ public class MimsHSIView extends javax.swing.JPanel {
             // to appear by defualt on the ratio list.
             double maxDiff = ui.getPreferences().getRatioSpan();
             boolean reciprocals = ui.getPreferences().getRatioReciprocals();
-
             // Populate the list with default ratio images.
             for(int i=massNames.length-1; i >= 1; i--) {
                Double d1 = new Double(massNames[i]);
+               int iSeries = DataUtilities.determineSeries(i, image);
                for(int j=i-1; j >= 0; j--) {
+                   int jSeries = DataUtilities.determineSeries(j, image);
                   Double d2 = new Double(massNames[j]);
-                  if (Math.abs(d2-d1) <= maxDiff) {
+                  if (Math.abs(d2-d1) <= maxDiff && iSeries == jSeries) {
                      listModel.addElement(i+":"+j);
                      if(reciprocals) {
                          listModel.addElement(j+":"+i);
@@ -1327,7 +1329,6 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         String label = numLabel+" / "+denLabel;
 */
-         
          String[] massNames = ui.getOpener().getMassNames();
          String[] massSymbols = ui.getOpener().getMassSymbols();
 
@@ -1355,8 +1356,10 @@ public class MimsHSIView extends javax.swing.JPanel {
          }
 
         String label = numLabel+" / "+denLabel;
+        int numSeries = DataUtilities.determineSeries(num, ui.getOpener());
+        int denSeries = DataUtilities.determineSeries(den, ui.getOpener());
         if (massSymbols != null) label += " : " + numSymbol+" / "+denSymbol;
-
+        if (numSeries == denSeries) label += ": " + numSeries;
         
         
         // set text
@@ -1432,6 +1435,10 @@ public class MimsHSIView extends javax.swing.JPanel {
               name = "m"+massNames[i] + " [" + massSymbols[i] + "]";
           else
               name = "m"+massNames[i] + " []";
+          int series = DataUtilities.determineSeries(i, ui.getOpener());
+          if (series != 0){
+              name = "(" + series + ") " + name; 
+          }
          // Must create two instances of the button.
           if (massSymbols != null){
           
@@ -1508,9 +1515,22 @@ public class MimsHSIView extends javax.swing.JPanel {
             else {
                Integer numIdx = new Integer(num.getName());
                Integer denIdx = new Integer(den.getName());
-               hsiview.addToRatioList(numIdx, denIdx);
-               ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
-               ui.getPreferences().savePreferences();
+               if (DataUtilities.determineSeries(numIdx, ui.getOpener()) == DataUtilities.determineSeries(denIdx, ui.getOpener())){
+                   hsiview.addToRatioList(numIdx, denIdx);
+                   ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
+                   ui.getPreferences().savePreferences();
+               }else{
+                   int n = JOptionPane.showConfirmDialog(
+                           this,
+                           "These masses are not in the same series. Do you still wish to add the ratio?",
+                           "Conflicting series",
+                           JOptionPane.YES_NO_OPTION);
+                   if (n == JOptionPane.YES_OPTION){
+                       hsiview.addToRatioList(numIdx, denIdx);
+                       ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
+                       ui.getPreferences().savePreferences();
+                   }
+               }
             }
          }
 
