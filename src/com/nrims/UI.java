@@ -2104,7 +2104,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         }
         int numBefore;
-        if ((numBefore = DataUtilities.determineSeries(index, image)) > 0){
+        if ((numBefore = ImageDataUtilities.determineSeries(index, image)) > 0){
             curString = "(" + numBefore + ") " + curString;
         }
         return curString;
@@ -2125,11 +2125,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         for (int i = 0; i < formatArray.length; i++) {
             char curChar = formatArray[i];
             if (curChar == 'M') {
-                if ((numBefore = DataUtilities.determineSeries(numIndex, image)) > 0) {
+                if ((numBefore = ImageDataUtilities.determineSeries(numIndex, image)) > 0) {
                     curString = "(" + numBefore + ")" + curString;
                 }
                 curString += String.valueOf(names[numIndex]) + "/";
-                if ((numBefore = DataUtilities.determineSeries(denIndex, image)) > 0) {
+                if ((numBefore = ImageDataUtilities.determineSeries(denIndex, image)) > 0) {
                     curString = "(" + numBefore + ")" + curString;
                 }
                 curString += String.valueOf(names[denIndex]);

@@ -1,6 +1,6 @@
 package com.nrims;
 
-import com.nrims.data.DataUtilities;
+import com.nrims.data.ImageDataUtilities;
 import ij.IJ;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -1038,9 +1038,9 @@ public class MimsHSIView extends javax.swing.JPanel {
             // Populate the list with default ratio images.
             for(int i=massNames.length-1; i >= 1; i--) {
                Double d1 = new Double(massNames[i]);
-               int iSeries = DataUtilities.determineSeries(i, image);
+               int iSeries = ImageDataUtilities.determineSeries(i, image);
                for(int j=i-1; j >= 0; j--) {
-                   int jSeries = DataUtilities.determineSeries(j, image);
+                   int jSeries = ImageDataUtilities.determineSeries(j, image);
                   Double d2 = new Double(massNames[j]);
                   if (Math.abs(d2-d1) <= maxDiff && iSeries == jSeries) {
                      listModel.addElement(i+":"+j);
@@ -1356,8 +1356,8 @@ public class MimsHSIView extends javax.swing.JPanel {
          }
 
         String label = numLabel+" / "+denLabel;
-        int numSeries = DataUtilities.determineSeries(num, ui.getOpener());
-        int denSeries = DataUtilities.determineSeries(den, ui.getOpener());
+        int numSeries = ImageDataUtilities.determineSeries(num, ui.getOpener());
+        int denSeries = ImageDataUtilities.determineSeries(den, ui.getOpener());
         if (massSymbols != null) label += " : " + numSymbol+" / "+denSymbol;
         if (numSeries == denSeries) label += ": " + numSeries;
         
@@ -1435,7 +1435,7 @@ public class MimsHSIView extends javax.swing.JPanel {
               name = "m"+massNames[i] + " [" + massSymbols[i] + "]";
           else
               name = "m"+massNames[i] + " []";
-          int series = DataUtilities.determineSeries(i, ui.getOpener());
+          int series = ImageDataUtilities.determineSeries(i, ui.getOpener());
           if (series != 0){
               name = "(" + series + ") " + name; 
           }
@@ -1515,7 +1515,7 @@ public class MimsHSIView extends javax.swing.JPanel {
             else {
                Integer numIdx = new Integer(num.getName());
                Integer denIdx = new Integer(den.getName());
-               if (DataUtilities.determineSeries(numIdx, ui.getOpener()) == DataUtilities.determineSeries(denIdx, ui.getOpener())){
+               if (ImageDataUtilities.determineSeries(numIdx, ui.getOpener()) == ImageDataUtilities.determineSeries(denIdx, ui.getOpener())){
                    hsiview.addToRatioList(numIdx, denIdx);
                    ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
                    ui.getPreferences().savePreferences();

@@ -10,7 +10,7 @@ import com.nrims.MimsPlus;
  *
  * @author wang2
  */
-public class DataUtilities {
+public class ImageDataUtilities {
     public static int getSeriesSize(Opener op){
         String[] massNames = op.getMassNames();
         //ArrayList<MimsPlus> sortedMassImages = new ArrayList<MimsPlus>();
