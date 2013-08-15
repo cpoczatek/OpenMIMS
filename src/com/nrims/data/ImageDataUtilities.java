@@ -32,7 +32,6 @@ public class ImageDataUtilities {
             }
             if (row == 0 && i+1 == massNames.length) row = i+1;
         }
-        System.out.println(row);
         return row;
     }
     public static int determineSeries(int index, Opener op){
