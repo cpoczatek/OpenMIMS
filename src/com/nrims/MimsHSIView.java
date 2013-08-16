@@ -1115,12 +1115,12 @@ public class MimsHSIView extends javax.swing.JPanel {
                    int jSeries = ImageDataUtilities.determineSeries(j, image);
                   Double d2 = new Double(massNames[j]);
                   if (Math.abs(d2-d1) <= maxDiff && iSeries == jSeries) {
-                      if (isIsotopicPair(i, j)) {
-                          listModel.addElement(i + ":" + j);
+                      if (isIsotopicPair(j, i)) {
+                          listModel.addElement(j + ":" + i);
                       }
                      if(reciprocals) {
-                         if (isIsotopicPair(j, i)) {
-                             listModel.addElement(j + ":" + i);
+                         if (isIsotopicPair(i, j)) {
+                             listModel.addElement(i + ":" + j);
                          }
                      }
                   }
