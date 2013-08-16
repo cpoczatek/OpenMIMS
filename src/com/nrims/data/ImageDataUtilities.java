@@ -15,19 +15,17 @@ public class ImageDataUtilities {
         String[] massNames = op.getMassNames();
         //ArrayList<MimsPlus> sortedMassImages = new ArrayList<MimsPlus>();
         int row = 0;
-        //MimsPlus curZero = null;
-        /*if (massImages[0].getMassValue() != 0) 
-            sortedMassImages.add(massImages[0]);
-        else
-            curZero = massImages[0];*/
         for (int i = 1; i < massNames.length; i++){
             Double cur = new Double(massNames[i]);
             Double prev = new Double(massNames[i-1]);
-            //if (prev.getMassValue() == 0 && i > 1) prev = massImages[i-2];
+            if (prev == 0 && i > 1) {
+                prev = new Double(massNames[i-2]);
+            }
             if (prev > cur){ 
-                 if (cur != 0){
-                    //f (curZero != null) sortedMassImages.add(curZero);
-                    if (row == 0) row = i;
+                //check if cur is zero (in which case we may not be at the end of the row)
+                //also check if row has already been set
+                 if (cur != 0 && row == 0){
+                    row = i;
                  }
             }
             if (row == 0 && i+1 == massNames.length) row = i+1;

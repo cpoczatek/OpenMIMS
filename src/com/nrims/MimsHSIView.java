@@ -1009,6 +1009,76 @@ public class MimsHSIView extends javax.swing.JPanel {
       // Adjust processor
       currentImage.getHSIProcessor().setProps(currentImage.getHSIProps());
    }
+   /**
+    * Determine if a pair of masses are an isotopic pair
+    * TODO: This is a false positive for something
+    * @param num
+    * @param den
+    * @return 
+    */
+   public boolean isIsotopicPair(int num, int den){
+       String[] massNames = ui.getOpener().getMassNames();
+       String[] massSymbols = ui.getOpener().getMassSymbols();
+
+       String numSymbol, denSymbol;
+       if (num == massNames.length) {
+           numSymbol = "";
+       } else {
+           if (massSymbols != null) {
+               numSymbol = massSymbols[num];
+           } else {
+               numSymbol = "";
+           }
+       }
+       if (den == massNames.length) {
+           denSymbol = "";
+       } else {
+           if (massSymbols != null) {
+               denSymbol = massSymbols[den];
+           } else {
+               denSymbol = "";
+           }
+       }
+       if (!numSymbol.equals("") && !denSymbol.equals("")) {
+           char numChar;
+           String numLastSym = "";
+           for (int i = numSymbol.length() - 1; i >= 0; i--) {
+               numChar = numSymbol.charAt(i);
+               if (!Character.isLetter(numChar)) {
+                   if (i != numSymbol.length() - 1) {
+                       numLastSym = numSymbol.substring(i + 1);
+                       break;
+                   } else {
+                       return false;
+                   }
+               } else {
+                   numChar = 0;
+               }
+           }
+           numLastSym.toUpperCase();
+           char denChar;
+           String denLastSym = "";
+           for (int i = denSymbol.length() - 1; i >= 0; i--) {
+               denChar = denSymbol.charAt(i);
+               if (!Character.isLetter(denChar)) {
+                   if (i != numSymbol.length() - 1) {
+                       denLastSym = denSymbol.substring(i + 1);
+                       break;
+                   } else {
+                       return false;
+                   }
+               } else {
+                   denChar = 0;
+               }
+           }
+           denLastSym.toUpperCase();
+           if (numLastSym.equals(denLastSym)) {
+               return true;
+           }
+       }
+       return false;
+       
+   }
 
    /**
     * Updates the list of possible ratio
@@ -1026,6 +1096,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         // Clear the list.
         if (delete){
+            
             listModel.removeAllElements();
 
             // Get all the mass names.
@@ -1036,23 +1107,27 @@ public class MimsHSIView extends javax.swing.JPanel {
             double maxDiff = ui.getPreferences().getRatioSpan();
             boolean reciprocals = ui.getPreferences().getRatioReciprocals();
             // Populate the list with default ratio images.
-            for(int i=massNames.length-1; i >= 1; i--) {
+            for(int i= 0; i < massNames.length-1; i++) {
                Double d1 = new Double(massNames[i]);
                int iSeries = ImageDataUtilities.determineSeries(i, image);
-               for(int j=i-1; j >= 0; j--) {
+               for(int j=i+1; j < massNames.length; j++) {
                    int jSeries = ImageDataUtilities.determineSeries(j, image);
                   Double d2 = new Double(massNames[j]);
                   if (Math.abs(d2-d1) <= maxDiff && iSeries == jSeries) {
-                     listModel.addElement(i+":"+j);
+                      if (isIsotopicPair(i, j)) {
+                          listModel.addElement(i + ":" + j);
+                      }
                      if(reciprocals) {
-                         listModel.addElement(j+":"+i);
+                         if (isIsotopicPair(j, i)) {
+                             listModel.addElement(j + ":" + i);
+                         }
                      }
                   }
                }
             }
 
            // Populate the list with user added ratio images.
-           maxDiff = ui.getPreferences().getMassDiff();
+           /*maxDiff = ui.getPreferences().getMassDiff();
            String[] numValues = ui.getPreferences().getNumerators();
            String[] denValues = ui.getPreferences().getDenominators();
 
@@ -1080,12 +1155,12 @@ public class MimsHSIView extends javax.swing.JPanel {
                     if (numIndices[k] == denIndices[l])
                        continue;
                     String listElement = numIndices[k] + ":" + denIndices[l];
-                    if (numMass != denMass /*&& ((prefNumVal > prefDenVal) && (numMass > denMass))*/ && !listModel.contains(listElement))
+                    if (numMass != denMass && ((prefNumVal > prefDenVal) && (numMass > denMass)) && !listModel.contains(listElement))
                        listModel.addElement(listElement);
                  }
               }
-           }
-        } 
+           }*/
+        }
         // Clear selection by default
         jList1.clearSelection();
 
@@ -1094,7 +1169,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
     /** Add an element to the list of avaiable ratio and HSI images. */
     private void addToRatioList(int a, int b){
-       listModel.addElement(a+":"+b);
+       //listModel.addElement(a+":"+b);
     }
 
     /**
@@ -1355,10 +1430,11 @@ public class MimsHSIView extends javax.swing.JPanel {
                  denSymbol = "";
          }
 
-        String label = numLabel+" / "+denLabel;
+        String label = "";
         int numSeries = ImageDataUtilities.determineSeries(num, ui.getOpener());
         int denSeries = ImageDataUtilities.determineSeries(den, ui.getOpener());
-        if (massSymbols != null) label += " : " + numSymbol+" / "+denSymbol;
+        if (massSymbols != null) label += numSymbol+" / "+denSymbol + "   ";
+        label+= numLabel+" / "+denLabel;
         if (numSeries == denSeries) label += ": " + numSeries;
         
         
@@ -1376,6 +1452,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         return this;
      }
+     
    }
 
   /**
@@ -1432,12 +1509,12 @@ public class MimsHSIView extends javax.swing.JPanel {
       for (int i = 0; i < massNames.length; i++){
           String name = "";
           if (massSymbols != null)
-              name = "m"+massNames[i] + " [" + massSymbols[i] + "]";
+              name =  massSymbols[i] + "   m"+massNames[i];
           else
-              name = "m"+massNames[i] + " []";
+              name = "m"+massNames[i];
           int series = ImageDataUtilities.determineSeries(i, ui.getOpener());
           if (series != 0){
-              name = "(" + series + ") " + name; 
+              name += " (" + series + ")"; 
           }
          // Must create two instances of the button.
           if (massSymbols != null){
@@ -1455,7 +1532,7 @@ public class MimsHSIView extends javax.swing.JPanel {
          // Add radiobutton to the panel.
          numeratorPanel.add(jrb_num);
          denomatorPanel.add(jrb_den);
-         h+= jrb_num.getHeight()+15;
+         h+= jrb_num.getHeight()+20;
       }
 
       // Add "1" to both numerator and denominator options.
