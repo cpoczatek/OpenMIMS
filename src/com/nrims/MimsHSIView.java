@@ -1011,7 +1011,8 @@ public class MimsHSIView extends javax.swing.JPanel {
    }
    /**
     * Determine if a pair of masses are an isotopic pair
-    * TODO: This is a false positive for something
+    * TODO: Currently this is checking that the last element in ions match.
+    * This is a false positive for things like oxides, eg FO/SnO would appear.
     * @param num
     * @param den
     * @return 
@@ -1167,9 +1168,9 @@ public class MimsHSIView extends javax.swing.JPanel {
         bUpdating = false;
     }
 
-    /** Add an element to the list of avaiable ratio and HSI images. */
+    /** Add an element to the list of available ratio and HSI images. */
     private void addToRatioList(int a, int b){
-       //listModel.addElement(a+":"+b);
+       listModel.addElement(a+":"+b);
     }
 
     /**
