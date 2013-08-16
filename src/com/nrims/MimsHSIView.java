@@ -473,7 +473,7 @@ public class MimsHSIView extends javax.swing.JPanel {
     private void initComponentsCustom(){
         medianRadiusjSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.5d), null, Double.valueOf(0.5d)));
         hsiWindowjSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(0), Integer.valueOf(0), null, Integer.valueOf(1)));
-        ratioSFjSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, 99999.0d, 1.0d));
+        ratioSFjSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, 1000000.0d, 1.0d));
         ratioSFjSpinner.setValue((double)ui.getPreferences().getscaleFactor());
         rartioMaxjSpinner.setModel(new SpinnerNumberModel(1.0, -65535, 65535.0, 1));
         ratioMinjSpinner.setModel(new SpinnerNumberModel(1.0, -65535, 65535.0, 1));
