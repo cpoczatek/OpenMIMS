@@ -1104,7 +1104,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
             // Maximum difference between atomic weight
             // to appear by defualt on the ratio list.
-            double maxDiff = ui.getPreferences().getRatioSpan();
+            double maxDiff = /*ui.getPreferences().getRatioSpan();*/ 1.5;
             boolean reciprocals = ui.getPreferences().getRatioReciprocals();
             // Populate the list with default ratio images.
             for(int i= 0; i < massNames.length-1; i++) {
