@@ -812,8 +812,8 @@ public class MimsHSIView extends javax.swing.JPanel {
           }
           numd = ui.getMassValue(num);
           dend = ui.getMassValue(den);
-          ui.getPreferences().removeRatioImage(numd, dend);
-          ui.getPreferences().savePreferences();
+          //ui.getPreferences().removeRatioImage(numd, dend);
+          //ui.getPreferences().savePreferences();
        }
 }//GEN-LAST:event_removeRatiojButtonActionPerformed
 
@@ -1594,8 +1594,8 @@ public class MimsHSIView extends javax.swing.JPanel {
                Integer denIdx = new Integer(den.getName());
                if (ImageDataUtilities.determineSeries(numIdx, ui.getOpener()) == ImageDataUtilities.determineSeries(denIdx, ui.getOpener())){
                    hsiview.addToRatioList(numIdx, denIdx);
-                   ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
-                   ui.getPreferences().savePreferences();
+                   //ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
+                   //ui.getPreferences().savePreferences();
                }else{
                    int n = JOptionPane.showConfirmDialog(
                            this,
@@ -1604,8 +1604,8 @@ public class MimsHSIView extends javax.swing.JPanel {
                            JOptionPane.YES_NO_OPTION);
                    if (n == JOptionPane.YES_OPTION){
                        hsiview.addToRatioList(numIdx, denIdx);
-                       ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
-                       ui.getPreferences().savePreferences();
+                       //ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
+                       //ui.getPreferences().savePreferences();
                    }
                }
             }
