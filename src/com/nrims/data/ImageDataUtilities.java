@@ -11,9 +11,19 @@ import com.nrims.MimsPlus;
  * @author wang2
  */
 public class ImageDataUtilities {
+    /**
+     *
+     * @param op
+     * @return 
+     */
     public static int getSeriesSize(Opener op){
         String[] massNames = op.getMassNames();
-        //ArrayList<MimsPlus> sortedMassImages = new ArrayList<MimsPlus>();
+        
+        //Special case of single mass image files
+        if(op.getNMasses()==1) {
+            return 1;
+        }
+        
         int row = 0;
         for (int i = 1; i < massNames.length; i++){
             Double cur = new Double(massNames[i]);
@@ -32,6 +42,18 @@ public class ImageDataUtilities {
         }
         return row;
     }
+    /**
+     * Determines which "series" the mass image at index is from.  If electric
+     * peak-switching was not used, should all ways return 0.  An example, if 
+     * electric peak-switching was used, 4 detectors were used, and the peaks 
+     * switch once, then:
+     * - there will be 8 mass images
+     * - this method returns 0 for images at indices 0,1,2,3
+     * - this method returns 1 for images at indices 4,5,6,7
+     * @param index
+     * @param op
+     * @return
+     */
     public static int determineSeries(int index, Opener op){
        int series =  getSeriesSize(op);
        return ((index-(index%series))/series);
