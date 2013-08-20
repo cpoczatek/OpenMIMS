@@ -9,6 +9,7 @@ import com.nrims.managers.OpenerManager;
 import com.nrims.data.*;
 import com.nrims.managers.QSAcorrectionManager;
 import com.nrims.managers.convertManager;
+import com.nrims.unoplugin.UnoPlugin;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -197,7 +198,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         System.out.println("os.version: " + System.getProperty("os.version"));
         
         try {
-            System.out.println("machine name: " + getMachineName());
+            System.out.println("machine name: " + FileUtilities.getMachineName());
         } catch (Exception e) {
             System.out.println("Error: could not retrieve machine name");
         }
@@ -295,7 +296,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          }
       });
       //Start Auto save thread for ROI
-      Thread t = new Thread(new AutoSaveROI());
+      Thread t = new Thread(new FileUtilities.AutoSaveROI(this));
       t.start();
       this.ui = this;
       
@@ -306,7 +307,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         if (file.exists()) {
             IJ.run("Install...", "install=" + pluginPath + "/openmims_tools.fiji.ijm");
         } else {
-            IJ.error("Error: openmims_tools.fiji.ijm does not exist. Please try updating.");
+            //IJ.error("Error: openmims_tools.fiji.ijm does not exist. Please try updating.");
         }
       //StartupScript should be DEPRICATED/REMOVED
       //Better way to initialize state is via a script
@@ -336,9 +337,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       });
    }
 
-    private String getMachineName() throws UnknownHostException {
-        return InetAddress.getLocalHost().getHostName();
-    }
+    
     
     /**
      * Insertion status of the current MimsPlus object
@@ -993,66 +992,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
-    /**
-     * Gets the information stored in the header of the image file
-     * and returns it as a string. Currently used as debug data
-     * output only.
-     *
-     * @param im a pointer to the <code>Opener</code>.
-     * @return a String containing the metadata.
-     */
-    public static String getImageHeader(Opener im) {
-
-        // WE HAVE TO DECIDE WHAT WE WANT.
-        String[] names = im.getMassNames();
-        String[] symbols = im.getMassSymbols();
-
-        String str = "\nHeader: \n";
-        str += "Path: " + im.getImageFile().getAbsolutePath() + "\n";
-        str += "Masses: ";
-        for (int i = 0; i < im.getNMasses(); i++) {str += names[i] + " ";}
-        str += "\n";
-
-        str += "Symbols: ";
-        if(symbols!=null) {
-            for (int i = 0; i < im.getNMasses(); i++) {str += symbols[i] + " ";}
-        }
-        str += "\n";
-
-        str += "Pixels: " + im.getWidth() + "x" + im.getHeight() + "\n";
-        
-        str += "Raster (nm): " + im.getRaster() + "\n";
-        str += "Duration (s): " + im.getDuration() + "\n";
-        str += "Dwell time (ms/xy): " + im.getDwellTime() + "\n";
-        str += "Stage Position: " + im.getPosition() + "\n";
-        str += "Z Position: " + im.getZPosition() + "\n";
-        str += "Sample date: " + im.getSampleDate() + "\n";
-        str += "Sample hour: " + im.getSampleHour() + "\n";
-        str += "Pixel width (nm): " + im.getPixelWidth() + "\n";
-        str += "Pixel height (nm): " + im.getPixelHeight() + "\n";
-
-        str += "Dead time Corrected: " + im.isDTCorrected() + "\n";
-        str += "QSA Corrected: " + im.isQSACorrected() + "\n";
-        if (im.isQSACorrected()) {
-           if (im.getBetas() != null) {
-              str += "\tBetas: ";
-              for (int i = 0; i < im.getBetas().length; i++) {
-                 str += im.getBetas()[i];
-                 if (i < im.getBetas().length -1)
-                    str += ", ";
-              }
-              str += "\n";
-           }
-
-           if (im.getFCObjective() > 0)
-              str += "\tFC Objective: " + im.getFCObjective() + "\n";
-           
-        }
-
-        
-        str += "End header.\n\n";
-        return str;
-    }
+   
 
     /**
      * Updates all images and kills any active
@@ -2075,81 +2015,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             IJ.log(trace[i].toString());
         }
     }
-    /**
-     * Method to return title for a single image based on formatString in preferences
-     * @param index the index of the image/parent of image you want title for
-     * @param extension whether or not to include the file extension in the name
-     * @return a formatted title string according to user preferences
-     */
-    public String formatTitle(int index, boolean extension){
-        char[] formatArray = prefs.getFormatString().toCharArray();
-        String curString = "";
-        String returnedValue;
-        for (int i = 0; i < formatArray.length; i++) {
-            char curChar = formatArray[i];
-            if (curChar == 'M') {
-                curString+= String.valueOf(this.getOpener().getMassNames()[index]);
-            } else if (curChar == 'F') {
-                if (!extension){
-                    curString+= this.getImageFilePrefix();
-                }else{
-                    curString += image.getImageFile().getName().toString();
-                }
-            } else if (curChar == 'S') {
-                if (this.getOpener().getMassSymbols() != null) {
-                    curString += String.valueOf(this.getOpener().getMassSymbols()[index]);
-                }
-            }else {
-                curString+= String.valueOf(curChar);
-            }
-        }
-        int numBefore;
-        if ((numBefore = ImageDataUtilities.determineSeries(index, image)) > 0){
-            curString = "(" + numBefore + ") " + curString;
-        }
-        return curString;
-    }
-    /**
-     * Method to return title for a double image (ie ratio, hsi) based on formatString in preferences
-     * @param numIndex index of the numerator
-     * @param denIndex index of the denominator
-     * @param extension whether or not to include the file extension in the name
-     * @return a formatted title string according to user preferences
-     */
-    public String formatTitle(int numIndex, int denIndex, boolean extension){
-        char[] formatArray = prefs.getFormatString().toCharArray();
-        String[] names = this.getOpener().getMassNames();
-        String[] symbols = this.getOpener().getMassSymbols();
-        String curString = "";
-        int numBefore;
-        for (int i = 0; i < formatArray.length; i++) {
-            char curChar = formatArray[i];
-            if (curChar == 'M') {
-                if ((numBefore = ImageDataUtilities.determineSeries(numIndex, image)) > 0) {
-                    curString = "(" + numBefore + ")" + curString;
-                }
-                curString += String.valueOf(names[numIndex]) + "/";
-                if ((numBefore = ImageDataUtilities.determineSeries(denIndex, image)) > 0) {
-                    curString = "(" + numBefore + ")" + curString;
-                }
-                curString += String.valueOf(names[denIndex]);
-            } else if (curChar == 'F') {
-                if (!extension){
-                    curString+= this.getImageFilePrefix();
-                }else{
-                    curString += image.getImageFile().getName().toString();
-                }
-            } else if (curChar == 'S') {
-                if (symbols != null) {
-                    curString += String.valueOf(symbols[numIndex]) + "/" + String.valueOf(symbols[denIndex]);
-                }
-            }else {
-                curString+= String.valueOf(curChar);
-            }
-        }
-        return curString;
-    }
-    
     /** An action method for the Edit>Preferences... menu item.*/
     private void preferencesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_preferencesMenuItemActionPerformed
       
@@ -2287,7 +2152,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   for (int i = 0; i < ratio.length; i++) {
                       RatioProps ratioprops = ratio[i].getRatioProps();
                       ratioprops.setDataFileName(dataFileName);
-                      if (!saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                      if (!FileUtilities.saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
                               RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i))
                           return false;
                   }
@@ -2299,7 +2164,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                   for (int i = 0; i < hsi.length; i++) {
                       HSIProps hsiprops = hsi[i].getHSIProps();
                       hsiprops.setDataFileName(dataFileName);
-                      if (!saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                      if (!FileUtilities.saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
                               HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName, i))
                           return false;
                   }
@@ -2312,11 +2177,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                       SumProps sumProps = sum[i].getSumProps();
                       sumProps.setDataFileName(dataFileName);
                       if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-                          if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                          if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
                                   SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i))
                               return false;
                       } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-                          if (!saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
+                          if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
                                   SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i))
                               return false;
                       } else continue;
@@ -2336,77 +2201,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          return false;
       }
       return true;
-   }/**
-    * Takes a props object and adds it to a zip.
-    * Used in Save Session.
-    * depends on no globals, can probably move to new helper class
-    * @param zos the ZipOutputStream for the final zip
-    * @param toWrite the props object to be written
-    * @param cls the class of the props object
-    * @param params the parameters for the constructor of the props object
-    * @param filenames the filenames of similar props objects
-    * @param extension the extension for the props object
-    * @param numName mass string for the numerator (or if a sum of a mass image, the parent)
-    * @param denName mass string for the numerator (or if a sum of a mass image, -1)
-    * @param filename the name of the .nrrd file
-    * @param i index of the object in filenames
-    * @return true if save succeeded, or false if an error was thrown
-    */
-    
-    private boolean saveToXML(ZipOutputStream zos, Object toWrite, Class<?> cls, String[] params, String[] filenames, String extension, String numName, String denName, String filename, int i){
-        try {
-            int numMass = Math.round(new Float(numName));
-            int denMass = Math.round(new Float(denName));
-            if (denMass != -1) filenames[i] = filename + "_m" + numMass + "_m" + denMass;
-            else filenames[i] = filename + "_m" + numMass;
-            int numBefore = 0;
-            for (int j = 0; j < i; j++) if (filenames[i].equals(filenames[j])) numBefore++;
-            String post = "";
-            if (numBefore > 0) post = "(" + numBefore + ")";
-            zos.putNextEntry(new ZipEntry(filenames[i] + post + extension));
-            XMLEncoder e = new XMLEncoder(zos);
-            //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
-            e.setPersistenceDelegate(cls, new DefaultPersistenceDelegate(params));
-            e.writeObject(toWrite);
-            e.flush();
-            //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
-            //but we cannot close or else the entire ZipOutputstream closes
-            DataOutputStream d_out = new DataOutputStream(zos);
-            d_out.writeBytes("</java>");
-            d_out.flush();
-            return true;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-    /**
-     * Given a zip file, extracts XML files from within and converts to Objects.
-     * Used in opening .session.zip files
-     * Depends on no globals, can probably move to new helper class
-     * @param file absolute file path
-     * @return array list containing Objects.
-     */
-    private ArrayList openXMLfromZip(File file) {
-        ArrayList entries = new ArrayList();
-        Object obj;
-        try {
-            ZipFile z_file = new ZipFile(file);
-            ZipInputStream z_in = new ZipInputStream(new FileInputStream(file));
-            ZipEntry entry;
-            XMLDecoder xmlDecoder;
-            while ((entry = z_in.getNextEntry()) != null) {
-                xmlDecoder = new XMLDecoder(z_file.getInputStream(entry));
-                obj = xmlDecoder.readObject();
-                entries.add(obj);
-                xmlDecoder.close();
-            }
-            z_in.close();
-        } catch (Exception e) {
-            return null;
-        } finally {
-            return entries;
-        }
-    }
+   }
+
     /**
      * checks within folder of filename if filename exists.
      * Depends on no globals, can probably move to new helper class
@@ -2417,12 +2213,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     private File checkForExistingFiles(String extension, String filename, String description){
         String baseFileName = filename;
-        System.out.println(filename);
-        System.out.println(baseFileName + extension);
         File f = new File(baseFileName + extension);
-        System.out.println(f.getPath());
-        System.out.println(f.getAbsolutePath());
-        System.out.println(f.exists());
         int counter = 0;
         if (f.exists()){
             while (f.exists()) {
@@ -2939,7 +2730,7 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
         return;
     }
 
-    generateStack(img);
+    ImageDataUtilities.generateStack(img, this);
 
 }//GEN-LAST:event_genStackMenuItemActionPerformed
                                                                                          
@@ -3305,13 +3096,11 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     }//GEN-LAST:event_RecomputeAllMenuItemActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-        MimsUno mimsUno = new MimsUno();
-        mimsUno.newDoc();
+        UnoPlugin.newDoc();
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
-        MimsUno mimsUno = new MimsUno();
-        mimsUno.insertEmptyOLEObject();
+        UnoPlugin.insertEmptyOLEObject();
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
    /**
@@ -3353,55 +3142,6 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
       return true;
    }
-/**
- * Generates a new MimsPlus image that is a stack. Whereas ratio
- * image and HSI images are single plane images by design, this method
- * will turn it into a scrollable stack.
- *
- * @param img the image (ratio or HSI images only)/
- */
-public void generateStack(MimsPlus img) {
-    //do a few checks
-    if(img==null)
-        return;
-    
-    //need some reference image that's a stack
-    if(this.massImages[0]==null)
-        return;
-
-    ImagePlus refimp = this.massImages[0];
-    int currentslice = refimp.getSlice();
-
-    //return is there's no stack
-    if(refimp.getStackSize()==1)
-        return;
-    //return if it's not a computed image, ie ratio/hsi
-    if( !(img.getMimsType()==MimsPlus.RATIO_IMAGE || img.getMimsType()==MimsPlus.HSI_IMAGE) )
-        return;
-
-    ij.ImageStack stack = img.getStack();
-    java.awt.image.ColorModel cm = stack.getColorModel();
-    ij.ImageStack ims = new ij.ImageStack(stack.getWidth(), stack.getHeight(), cm);
-    int numImages = refimp.getStackSize();
-
-    for (int i = 1; i <= numImages; i++) {
-        refimp.setSlice(i);
-        if(img.getMimsType()==MimsPlus.HSI_IMAGE)
-        while(img.getHSIProcessor().isRunning()){}
-        
-        ims.addSlice(refimp.getStack().getSliceLabel(i), img.getProcessor().duplicate());
-    }
-
-    // Create new image
-    ImagePlus newimp = new ImagePlus("Stack : "+img.getTitle(), ims);
-    newimp.setCalibration(img.getCalibration());
-
-    // Display this new stack
-    newimp.show();
-    newimp.setSlice(currentslice);
-    refimp.setSlice(currentslice);
-
-}
 
 /**
  * Updates the line profile to reflect the data stored in <code>newdata</code>.
@@ -4501,59 +4241,6 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        }
        return true;
    }
-   /**
-    * AutoSaveROI is the thread which is responsible for autosaving the ROI's
-    */
-    class AutoSaveROI implements Runnable {
-        public void run(){
-            for (;;){
-                try {
-                    // Save the ROI files to zip.
-                    String roisFileName = System.getProperty("java.io.tmpdir")+"/"+getImageFilePrefix();
-                    Roi[] rois = getRoiManager().getAllROIs();
-                    if (rois.length > 0){
-                       checkSave(roisFileName + ROIS_EXTENSION, roisFileName, 1);
-                       getRoiManager().saveMultiple(rois, roisFileName + ROIS_EXTENSION, false);
-                       //threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
-                    }else{
-                        //threadMessage("Nothing to autosave");
-                    }
-                    Thread.sleep(getInterval());    
-                } catch (InterruptedException e){
-                    threadMessage("Autosave thread interrupted");
-                    break;
-                }
-            }
-        }
-    }
-    public boolean checkSave(String toSave, String filename, int n) {
-        File file = new File(toSave);
-        String newFilename = filename + "(" + n + ")" + ROIS_EXTENSION;
-        // File (or directory) with new name
-        File file2 = new File(newFilename);
-        if (file2.exists() && n < 10) {
-            checkSave(newFilename, filename, n + 1);
-        }
-        if (file.exists()) {
-            boolean success = file.renameTo(file2);
-            if (success) {
-                file = new File(toSave);
-                file.delete();
-            }
-        }
-        return true;
-    }
-    /**
-     * threadMessage will output a thread and it's message to the console
-     * @param message 
-     */
-    static void threadMessage(String message) {
-        String threadName =
-            Thread.currentThread().getName();
-        System.out.format("%s: %s%n",
-                          threadName,
-                          message);
-    }
     public int getInterval(){
         if (prefs != null){
             return 1000*prefs.getAutoSaveInterval();
@@ -4562,70 +4249,13 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
     }
     /**
-     * getNext: modified version of getNext function from NextImageOpener plugin in ImageJ, modified for OpenMIMS
-     * @param path
-     * @param imageName
-     * @param forward
-     * @return 
-     */
-    public String getNext(String path, String imageName, boolean forward){
-        File dir = new File(path);
-        if (!dir.isDirectory()) return null;
-        String[] names = dir.list();
-        ij.util.StringSorter.sort(names);
-        int thisfile = -1;
-        for (int i=0; i<names.length; i++) {
-            if (names[i].equals(imageName)) {
-                thisfile = i;
-                break;
-            }
-        }
-         //System.out.println("OpenNext.thisfile:" + thisfile);
-        if(thisfile == -1) return null;// can't find current image
-        
-        // make candidate the index of the next file
-        int candidate = thisfile + 1;
-        if (!forward) candidate = thisfile - 1;
-        if (candidate<0) candidate = names.length - 1;
-        if (candidate==names.length) candidate = 0;
-        // keep on going until an image file is found or we get back to beginning
-        while (candidate!=thisfile) {
-            String nextPath = path + "/" + names[candidate];
-             //System.out.println("OpenNext: "+ candidate + "  " + names[candidate]);
-            File nextFile = new File(nextPath);
-            boolean canOpen = true;
-            if (names[candidate].startsWith(".") || nextFile.isDirectory())
-                canOpen = false;
-            if (canOpen) {
-                 String fileName = nextFile.getName();
-                    if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)) {
-                    }else{
-                        canOpen = false;
-                    }
-            }
-            if (canOpen)
-                    return nextPath;
-            else {// increment again
-                if (forward)
-                    candidate = candidate + 1;
-                else
-                    candidate = candidate - 1;
-                if (candidate<0) candidate = names.length - 1;
-                if (candidate == names.length) candidate = 0;
-            }
-            
-        }
-        //System.out.println("OpenNext: Search failed");
-        return null;
-    }
-    /**
      * openNext(): called to open next file in same folder as current image.
      */
     public void openNext(){
         if (image != null){
             String imageName = image.getImageFile().getName();
             String path = getLastFolder();
-            String nextPath = getNext(path, imageName, true);
+            String nextPath = FileUtilities.getNext(path, imageName, true);
              File nextFile = new File(nextPath);
             if(nextFile != null){
                  System.out.println(nextFile.getName());
@@ -4639,29 +4269,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
             JOptionPane.showMessageDialog(this, "No image loaded", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    /**
-     * Helper function for reading .sum/.ratio/.hsi files from xml.
-     * @param file the file to read
-     * @return the object read from the file
-     */
-    public Object readObjectFromXML(File file){
-        Object obj = null;
-        try {
-            XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
-            obj = xmlDecoder.readObject();
-            xmlDecoder.close();
-        } catch (Exception e) {
-            try{
-            FileInputStream f_in = new FileInputStream(file);
-            ObjectInputStream obj_in = new ObjectInputStream(f_in);
-            obj = obj_in.readObject();
-            }catch(Exception ex){
-                obj = null;
-            }
-        }finally {
-            return obj;
-        }
-    }
+   
     /**
      * The FileOpenTask will open image files either in the background or
      * inline. To open a file in the background, use the following code sequence:
@@ -4804,7 +4412,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 if(!loadMIMSFile(file))
                    return false;
              } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
-                if ((obj = readObjectFromXML(file))instanceof RatioProps) {
+                if ((obj = FileUtilities.readObjectFromXML(file))instanceof RatioProps) {
                    RatioProps ratioprops = (RatioProps) obj;
                    File dataFile = new File(file.getParent(), ratioprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
@@ -4815,7 +4423,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    mp.showWindow();
                 }
              } else if (file.getAbsolutePath().endsWith(HSI_EXTENSION)) {
-                if ((obj = readObjectFromXML(file)) instanceof HSIProps) {
+                if ((obj = FileUtilities.readObjectFromXML(file)) instanceof HSIProps) {
                    HSIProps hsiprops = (HSIProps) obj;
                    File dataFile = new File(file.getParent(), hsiprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
@@ -4826,7 +4434,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                    mp.showWindow();
                 }
              } else if (file.getAbsolutePath().endsWith(SUM_EXTENSION)) {
-                if ((obj = readObjectFromXML(file)) instanceof SumProps) {
+                if ((obj = FileUtilities.readObjectFromXML(file)) instanceof SumProps) {
                    SumProps sumprops = (SumProps) obj;
                    File dataFile = new File(file.getParent(), sumprops.getDataFileName());
                    if(!loadMIMSFile(dataFile))
@@ -4839,7 +4447,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              } else if (file.getAbsolutePath().endsWith(SESSIONS_EXTENSION)) {
                   onlyShowDraggedFile = false;
                   //get all xml objects contained within zip
-                  ArrayList entries = openXMLfromZip(file);
+                  ArrayList entries = FileUtilities.openXMLfromZip(file);
                   if (entries == null || entries.isEmpty()) {
                       JOptionPane.showMessageDialog(ui, ".session.zip is empty/corrupt", "File Read Error", JOptionPane.ERROR_MESSAGE);
                       return false;
@@ -5189,7 +4797,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     }
                 });
 
-                mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + getImageHeader(image));
+                mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + ImageDataUtilities.getImageHeader(image));
 
                 // Calculate theoretical duration
                 double duration = image.getCountTime() * (double) image.getNImages();

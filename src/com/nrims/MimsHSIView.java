@@ -1436,7 +1436,7 @@ public class MimsHSIView extends javax.swing.JPanel {
         int denSeries = ImageDataUtilities.determineSeries(den, ui.getOpener());
         if (massSymbols != null) label += numSymbol+" / "+denSymbol + "   ";
         label+= numLabel+" / "+denLabel;
-        if (numSeries == denSeries) label += ": " + numSeries;
+        if (numSeries == denSeries && ImageDataUtilities.isPeakSwitching(ui.getOpener())) label += ": " + (numSeries + 1);
         
         
         // set text
@@ -1505,6 +1505,7 @@ public class MimsHSIView extends javax.swing.JPanel {
       // Create the button group.
       numeratorGroup = new ButtonGroup();
       denomatorGroup = new ButtonGroup();
+      boolean isPeakSwitching = ImageDataUtilities.isPeakSwitching(ui.getOpener());
       int h = 0;
       // Loop over masses and create buttons
       for (int i = 0; i < massNames.length; i++){
@@ -1513,8 +1514,8 @@ public class MimsHSIView extends javax.swing.JPanel {
               name =  massSymbols[i] + "   m"+massNames[i];
           else
               name = "m"+massNames[i];
-          int series = ImageDataUtilities.determineSeries(i, ui.getOpener());
-          if (series != 0){
+          int series = ImageDataUtilities.determineSeries(i, ui.getOpener()) + 1;
+          if (isPeakSwitching){
               name += " (" + series + ")"; 
           }
          // Must create two instances of the button.
