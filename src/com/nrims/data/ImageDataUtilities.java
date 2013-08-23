@@ -185,11 +185,15 @@ public class ImageDataUtilities {
                     curString = "(" + (numBefore + 1) + ")" + curString;
                 }
                 curString += String.valueOf(names[numIndex]) + "/";
-                if (isPeakSwitching) {
-                    numBefore = determineSeries(denIndex, image) + 1;
-                    curString = "(" + (numBefore + 1) + ")" + curString;
+                if (denIndex < image.getNMasses()){
+                    if (isPeakSwitching) {
+                        numBefore = determineSeries(denIndex, image) + 1;
+                        curString = "(" + (numBefore + 1) + ")" + curString;
+                    }
+                    curString += String.valueOf(names[denIndex]);
+                }else{
+                    curString += "1";
                 }
-                curString += String.valueOf(names[denIndex]);
             } else if (curChar == 'F') {
                 if (!extension){
                     curString+= name.substring(0, name.lastIndexOf("."));
@@ -198,7 +202,10 @@ public class ImageDataUtilities {
                 }
             } else if (curChar == 'S') {
                 if (symbols != null) {
-                    curString += String.valueOf(symbols[numIndex]) + "/" + String.valueOf(symbols[denIndex]);
+                    curString += String.valueOf(symbols[numIndex]);
+                    if (denIndex < image.getNMasses()){
+                            curString+= "/" + String.valueOf(symbols[denIndex]);
+                    }
                 }
             }else {
                 curString+= String.valueOf(curChar);
