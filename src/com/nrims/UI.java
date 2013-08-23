@@ -2048,200 +2048,91 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     public boolean saveSession(String fileName, boolean saveImageOnly) {
 
-      // Initialize variables.
-      File file = new File(fileName);
-      String directory = file.getParent();
-      String name = file.getName();
-      String baseFileName = "";
-      String onlyFileName = "";
-      MimsPlus ratio[] = getOpenRatioImages();
-       MimsPlus hsi[] = getOpenHSIImages();
-       MimsPlus sum[] = getOpenSumImages();
+        // Initialize variables.
+        File file = new File(fileName);
+        String directory = file.getParent();
+        String name = file.getName();
+        String baseFileName;
+        String onlyFileName;
 
-      try {
+        try {
 
-        if (imgNotes != null)
-           getOpener().setNotes(imgNotes.getOutputFormatedText());
-
-        if (mimsAction.getIsTracked()) {
-           double max_delta = mimsAction.getMaxDelta();
-           DecimalFormat twoDForm = new DecimalFormat("#.##");
-           insertMetaData(Opener.Max_Tracking_Delta, twoDForm.format(max_delta));
-        }
-
-        if (!metaData.isEmpty())
-           getOpener().setMetaDataKeyValuePairs(metaData);
-
-        // Set DT correction flag.
-        getOpener().setIsDTCorrected(isDTCorrected);
-
-        // Set QSA correction flag.
-        getOpener().setIsQSACorrected(isQSACorrected);
-
-        // Set QSA correction parameters.
-        if (isQSACorrected) {
-           getOpener().setBetas(betas);
-           getOpener().setFCObjective(fc_objective);
-        }
-
-        // Save the original .im file to a new file of the .nrrd file type.
-        String nrrdFileName = name;
-        if (!name.endsWith(NRRD_EXTENSION))
-           nrrdFileName = name+NRRD_EXTENSION;        
-
-        // Save the file.
-          if (saveImageOnly || ui.getmimsAction().isImageModified()) {
-              ImagePlus[] imp = getOpenMassImages();
-              if (imp == null) {
-                  return false;
-              }
-              Nrrd_Writer nw = new Nrrd_Writer(this);
-              File dataFile = nw.save(imp, directory, nrrdFileName);
-
-              // Update the Opener object.
-              image.close();
-              image = new Nrrd_Reader(dataFile);
-              openers.clear();
-              openers.put(nrrdFileName, image);
-
-              // Update the Action object.
-              mimsAction = new MimsAction(image);
-
-              // Update the Data tab
-              mimsData = new MimsData(this, image);
-              jTabbedPane1.setComponentAt(0, mimsData);
-
-              // Update the image titles.
-              for (int i = 0; i < imp.length; i++) {
-                  imp[i].setTitle((new MimsPlus(this, i)).getTitle());
-              }
-              baseFileName = getFilePrefix(dataFile.getAbsolutePath());
-              onlyFileName = getFilePrefix(dataFile.getName());
-          } else {
-              baseFileName = this.getLastFolder() + "/" + this.getImageFilePrefix();
-              onlyFileName = this.getImageFilePrefix();
-          }
-          if (saveImageOnly) 
-              return true;
-          String dataFileName = this.getImageFilePrefix() + NRRD_EXTENSION;
-          File sessionFile = null;
-          String[] names = getOpener().getMassNames();
-          // Save the ROI files to zip.
-          Roi[] rois = getRoiManager().getAllROIs();
-          if (rois.length > 0) {
-              System.out.println("ROIS exist, going to open window");
-              if ((sessionFile = checkForExistingFiles(ROIS_EXTENSION, baseFileName, "Mims roi zips"))!= null) {
-                  baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
-                  getRoiManager().saveMultiple(rois, baseFileName + ROIS_EXTENSION, false);
-              } else {
-                  System.out.println("Saving roi.zip canceled.");
-              }
-          }
-          if (ratio.length + hsi.length + sum.length > 0){
-              if ((sessionFile = checkForExistingFiles(SESSIONS_EXTENSION, baseFileName, "Mims session files")) != null) {
-                  baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
-                  onlyFileName = getFilePrefix(getFilePrefix(sessionFile.getName()));
-              } else {
-                  System.out.println("Saving session.zip canceled.");
-              }
-              // Contruct a unique name for each ratio image and save into a ratios.zip file
-              ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
-
-              if (ratio.length > 0) {
-                  String[] filenames = new String[ratio.length];
-                  for (int i = 0; i < ratio.length; i++) {
-                      RatioProps ratioprops = ratio[i].getRatioProps();
-                      ratioprops.setDataFileName(dataFileName);
-                      if (!FileUtilities.saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                              RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i))
-                          return false;
-                  }
-              }
-
-              // Contruct a unique name for each hsi image and save.
-              if (hsi.length > 0) {
-                  String[] filenames = new String[hsi.length];
-                  for (int i = 0; i < hsi.length; i++) {
-                      HSIProps hsiprops = hsi[i].getHSIProps();
-                      hsiprops.setDataFileName(dataFileName);
-                      if (!FileUtilities.saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                              HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName, i))
-                          return false;
-                  }
-              }
-
-              // Contruct a unique name for each sum image and save.
-              if (sum.length > 0) {
-                  String[] filenames = new String[sum.length];
-                  for (int i = 0; i < sum.length; i++) {
-                      SumProps sumProps = sum[i].getSumProps();
-                      sumProps.setDataFileName(dataFileName);
-                      if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-                          if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                                  SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i))
-                              return false;
-                      } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-                          if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
-                                  SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i))
-                              return false;
-                      } else continue;
-                  }
-
-              }
-              zos.flush();
-              zos.close();
-          }
-
-      } catch (FileNotFoundException e) {
-          JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-         e.printStackTrace();
-         return false;
-      } catch (IOException e) {
-         e.printStackTrace();
-         return false;
-      }
-      return true;
-   }
-
-    /**
-     * checks within folder of filename if filename exists.
-     * Depends on no globals, can probably move to new helper class
-     * @param extension which extension we want to save ass
-     * @param filename the filename we want to save as (Ex. "/tmp/test_file"
-     * @param description description of the type of file (Ex. "Mims session file")
-     * @return a File representing the new file (which has not been created yet)
-     */
-    private File checkForExistingFiles(String extension, String filename, String description){
-        String baseFileName = filename;
-        File f = new File(baseFileName + extension);
-        int counter = 0;
-        if (f.exists()){
-            while (f.exists()) {
-                counter++;
-                f = new File(baseFileName + "(" + counter + ")" + extension);
+            if (imgNotes != null) {
+                getOpener().setNotes(imgNotes.getOutputFormatedText());
             }
-            baseFileName += "(" + counter + ")";
-            MimsJFileChooser fc = new MimsJFileChooser(this);
-            MIMSFileFilter session = new MIMSFileFilter(extension.substring(1));
-            session.setDescription(description);
-            fc.setFileFilter(session);
-            fc.setSelectedFile(new java.io.File(baseFileName + extension));
+            if (mimsAction.getIsTracked()) {
+                double max_delta = mimsAction.getMaxDelta();
+                DecimalFormat twoDForm = new DecimalFormat("#.##");
+                insertMetaData(Opener.Max_Tracking_Delta, twoDForm.format(max_delta));
+            }
+            if (!metaData.isEmpty()) {
+                getOpener().setMetaDataKeyValuePairs(metaData);
+            }
+            // Set DT correction flag.
+            getOpener().setIsDTCorrected(isDTCorrected);
 
-            int returnVal = fc.showSaveDialog(jTabbedPane1);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                if (extension == SESSIONS_EXTENSION || extension == ROIS_EXTENSION) {
-                    baseFileName = getFilePrefix(getFilePrefix(fc.getSelectedFile().getAbsolutePath()));
-                } else {
-                    baseFileName = getFilePrefix(fc.getSelectedFile().getAbsolutePath());
-                } 
+            // Set QSA correction flag.
+            getOpener().setIsQSACorrected(isQSACorrected);
+
+            // Set QSA correction parameters.
+            if (isQSACorrected) {
+                getOpener().setBetas(betas);
+                getOpener().setFCObjective(fc_objective);
+            }
+
+            // Save the original .im file to a new file of the .nrrd file type.
+            String nrrdFileName = name;
+            if (!name.endsWith(NRRD_EXTENSION)) {
+                nrrdFileName = name + NRRD_EXTENSION;
+            }
+
+            // Save the file.
+            if (saveImageOnly || ui.getmimsAction().isImageModified()) {
+                ImagePlus[] imp = getOpenMassImages();
+                if (imp == null) {
+                    return false;
+                }
+                Nrrd_Writer nw = new Nrrd_Writer(this);
+                File dataFile = nw.save(imp, directory, nrrdFileName);
+
+                // Update the Opener object.
+                image.close();
+                image = new Nrrd_Reader(dataFile);
+                openers.clear();
+                openers.put(nrrdFileName, image);
+
+                // Update the Action object.
+                mimsAction = new MimsAction(image);
+
+                // Update the Data tab
+                mimsData = new MimsData(this, image);
+                jTabbedPane1.setComponentAt(0, mimsData);
+
+                // Update the image titles.
+                for (int i = 0; i < imp.length; i++) {
+                    imp[i].setTitle((new MimsPlus(this, i)).getTitle());
+                }
+                baseFileName = getFilePrefix(dataFile.getAbsolutePath());
+                onlyFileName = getFilePrefix(dataFile.getName());
             } else {
-                return null;
+                baseFileName = this.getLastFolder() + "/" + this.getImageFilePrefix();
+                onlyFileName = this.getImageFilePrefix();
             }
-            f = new File(baseFileName + extension);
+            if (saveImageOnly) {
+                return true;
+            }
+            //save additional images (sum, ratio, etc) and rois
+            FileUtilities.saveAdditionalData(baseFileName, onlyFileName, this);
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
-        return f;
+        return true;
     }
-    
     /**
      * Action method for File>Open Mims Image menu item. If opening
      */

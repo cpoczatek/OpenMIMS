@@ -5,6 +5,7 @@
 package com.nrims.data;
 
 import com.nrims.HSIProps;
+import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
 import com.nrims.RatioProps;
 import com.nrims.SumProps;
@@ -34,6 +35,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import javax.swing.JFileChooser;
 
 /**
  *
@@ -250,72 +252,127 @@ public class FileUtilities {
       String prefix = fileName.substring(0, fileName.lastIndexOf("."));
       return prefix;
    }
-   /* public static boolean saveAdditionalData(String dataFileName, Opener image, MimsRoiManager roiM, MimsPlus[] ratio, MimsPlus[] hsi, MimsPlus[] sum){
-          File sessionFile = null;
-          String[] names = image.getMassNames();
-          // Save the ROI files to zip.
-          if (rois.length > 0) {
-              System.out.println("ROIS exist, going to open window");
-              if ((sessionFile = checkForExistingFiles(ROIS_EXTENSION, baseFileName, "Mims roi zips"))!= null) {
-                  baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
-                  getRoiManager().saveMultiple(rois, baseFileName + ROIS_EXTENSION, false);
-              } else {
-                  System.out.println("Saving roi.zip canceled.");
-              }
-          }
-          if (ratio.length + hsi.length + sum.length > 0){
-              if ((sessionFile = checkForExistingFiles(SESSIONS_EXTENSION, baseFileName, "Mims session files")) != null) {
-                  baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
-                  onlyFileName = getFilePrefix(getFilePrefix(sessionFile.getName()));
-              } else {
-                  System.out.println("Saving session.zip canceled.");
-              }
-              // Contruct a unique name for each ratio image and save into a ratios.zip file
-              ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
+    public static boolean saveAdditionalData(String baseFileName, String onlyFileName, UI ui) {
+        String dataFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
+        File sessionFile = null;
+        Opener image = ui.getOpener();
+        Roi[] rois = ui.getRoiManager().getAllROIs();
+        MimsPlus ratio[] = ui.getOpenRatioImages();
+        MimsPlus hsi[] = ui.getOpenHSIImages();
+        MimsPlus sum[] = ui.getOpenSumImages();
+        String[] names = image.getMassNames();
+        // Save the ROI files to zip.
+        if (rois.length > 0) {
+            System.out.println("ROIS exist, going to open window");
+            if ((sessionFile = checkForExistingFiles(ROIS_EXTENSION, baseFileName, "Mims roi zips", ui)) != null) {
+                baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
+                ui.getRoiManager().saveMultiple(rois, baseFileName + ROIS_EXTENSION, false);
+            } else {
+                System.out.println("Saving roi.zip canceled.");
+            }
+        }
+        if (ratio.length + hsi.length + sum.length > 0) {
+            if ((sessionFile = checkForExistingFiles(SESSIONS_EXTENSION, baseFileName, "Mims session files", ui)) != null) {
+                baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
+                onlyFileName = getFilePrefix(getFilePrefix(sessionFile.getName()));
+            } else {
+                System.out.println("Saving session.zip canceled.");
+            }
+            try {
+                // Contruct a unique name for each ratio image and save into a ratios.zip file
+                ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
 
-              if (ratio.length > 0) {
-                  String[] filenames = new String[ratio.length];
-                  for (int i = 0; i < ratio.length; i++) {
-                      RatioProps ratioprops = ratio[i].getRatioProps();
-                      ratioprops.setDataFileName(dataFileName);
-                      if (!FileUtilities.saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                              RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i))
-                          return false;
-                  }
-              }
+                if (ratio.length > 0) {
+                    String[] filenames = new String[ratio.length];
+                    for (int i = 0; i < ratio.length; i++) {
+                        RatioProps ratioprops = ratio[i].getRatioProps();
+                        ratioprops.setDataFileName(dataFileName);
+                        if (!FileUtilities.saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                                RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i)) {
+                            return false;
+                        }
+                    }
+                }
 
-              // Contruct a unique name for each hsi image and save.
-              if (hsi.length > 0) {
-                  String[] filenames = new String[hsi.length];
-                  for (int i = 0; i < hsi.length; i++) {
-                      HSIProps hsiprops = hsi[i].getHSIProps();
-                      hsiprops.setDataFileName(dataFileName);
-                      if (!FileUtilities.saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                              HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName, i))
-                          return false;
-                  }
-              }
+                // Contruct a unique name for each hsi image and save.
+                if (hsi.length > 0) {
+                    String[] filenames = new String[hsi.length];
+                    for (int i = 0; i < hsi.length; i++) {
+                        HSIProps hsiprops = hsi[i].getHSIProps();
+                        hsiprops.setDataFileName(dataFileName);
+                        if (!FileUtilities.saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                                HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName, i)) {
+                            return false;
+                        }
+                    }
+                }
 
-              // Contruct a unique name for each sum image and save.
-              if (sum.length > 0) {
-                  String[] filenames = new String[sum.length];
-                  for (int i = 0; i < sum.length; i++) {
-                      SumProps sumProps = sum[i].getSumProps();
-                      sumProps.setDataFileName(dataFileName);
-                      if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-                          if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
-                                  SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i))
-                              return false;
-                      } else if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
-                          if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
-                                  SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i))
-                              return false;
-                      } else continue;
-                  }
+                // Contruct a unique name for each sum image and save.
+                if (sum.length > 0) {
+                    String[] filenames = new String[sum.length];
+                    for (int i = 0; i < sum.length; i++) {
+                        SumProps sumProps = sum[i].getSumProps();
+                        sumProps.setDataFileName(dataFileName);
+                        if (sumProps.getSumType() == 1) {
+                            if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                                    SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i)) {
+                                return false;
+                            }
+                        } else if (sumProps.getSumType() == 0) {
+                            if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
+                                    SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i)) {
+                                return false;
+                            }
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+                zos.flush();
+                zos.close();
+            } catch (Exception e) {
+                System.out.println("Error saving session file");
+                return false;
+            }
+        }
+        return true;
+    }
+   /**
+     * checks within folder of filename if filename exists.
+     * Depends on no globals, can probably move to new helper class
+     * @param extension which extension we want to save ass
+     * @param filename the filename we want to save as (Ex. "/tmp/test_file"
+     * @param description description of the type of file (Ex. "Mims session file")
+     * @return a File representing the new file (which has not been created yet)
+     */
+    private static File checkForExistingFiles(String extension, String filename, String description, UI ui){
+        String baseFileName = filename;
+        File f = new File(baseFileName + extension);
+        int counter = 0;
+        if (f.exists()){
+            while (f.exists()) {
+                counter++;
+                f = new File(baseFileName + "(" + counter + ")" + extension);
+            }
+            baseFileName += "(" + counter + ")";
+            MimsJFileChooser fc = new MimsJFileChooser(ui);
+            MIMSFileFilter session = new MIMSFileFilter(extension.substring(1));
+            session.setDescription(description);
+            fc.setFileFilter(session);
+            fc.setSelectedFile(new java.io.File(baseFileName + extension));
 
-              }
-              zos.flush();
-              zos.close();
-          }
-    }*/
+            int returnVal = fc.showSaveDialog(ui);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                if (extension == SESSIONS_EXTENSION || extension == ROIS_EXTENSION) {
+                    baseFileName = getFilePrefix(getFilePrefix(fc.getSelectedFile().getAbsolutePath()));
+                } else {
+                    baseFileName = getFilePrefix(fc.getSelectedFile().getAbsolutePath());
+                } 
+            } else {
+                return null;
+            }
+            f = new File(baseFileName + extension);
+        }
+        return f;
+    }
 }
