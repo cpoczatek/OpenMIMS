@@ -136,6 +136,7 @@ public class ImageDataUtilities {
         char[] formatArray = formatString.toCharArray();
         String curString = "";
         String name = image.getImageFile().getName().toString();
+        String[] symbols = image.getMassSymbols();
         for (int i = 0; i < formatArray.length; i++) {
             char curChar = formatArray[i];
             if (curChar == 'M') {
@@ -148,10 +149,18 @@ public class ImageDataUtilities {
                 }
             } else if (curChar == 'S') {
                 if (image.getMassSymbols() != null) {
-                    curString += String.valueOf(image.getMassSymbols()[index]);
+                    curString += String.valueOf(symbols[index]);
                 }
             }else {
-                curString+= String.valueOf(curChar);
+                if (i > 0 && (String.valueOf(curChar).equals("]") || String.valueOf(curChar).equals(")")) && symbols == null
+                        && formatArray[i-1] == 'S'){
+                    //dont add closing parentheses
+                }else if (i -1 < formatArray.length && (String.valueOf(curChar).equals("[") || String.valueOf(curChar).equals("(")) && symbols == null
+                        && formatArray[i+1] == 'S'){
+                    //dont add closing parentheses
+                }else{
+                    curString+= String.valueOf(curChar);
+                }
             }
         }
         int numBefore;
@@ -208,7 +217,15 @@ public class ImageDataUtilities {
                     }
                 }
             }else {
-                curString+= String.valueOf(curChar);
+                if (i > 0 && (String.valueOf(curChar).equals("]") || String.valueOf(curChar).equals(")")) && symbols == null
+                        && formatArray[i-1] == 'S'){
+                    //dont add closing parentheses
+                }else if (i -1 < formatArray.length && (String.valueOf(curChar).equals("[") || String.valueOf(curChar).equals("(")) && symbols == null
+                        && formatArray[i+1] == 'S'){
+                    //dont add closing parentheses
+                }else{
+                    curString+= String.valueOf(curChar);
+                }
             }
         }
         return curString;

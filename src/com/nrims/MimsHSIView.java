@@ -1099,10 +1099,12 @@ public class MimsHSIView extends javax.swing.JPanel {
         if (delete){
             
             listModel.removeAllElements();
-
+            boolean noSymbols = false;
             // Get all the mass names.
             String [] massNames = image.getMassNames();
-
+            if (image.getMassSymbols() == null){
+                noSymbols = true;
+            }
             // Maximum difference between atomic weight
             // to appear by defualt on the ratio list.
             double maxDiff = /*ui.getPreferences().getRatioSpan();*/ 1.5;
@@ -1115,11 +1117,11 @@ public class MimsHSIView extends javax.swing.JPanel {
                    int jSeries = ImageDataUtilities.determineSeries(j, image);
                   Double d2 = new Double(massNames[j]);
                   if (Math.abs(d2-d1) <= maxDiff && iSeries == jSeries) {
-                      if (isIsotopicPair(j, i)) {
+                      if (isIsotopicPair(j, i) || noSymbols) {
                           listModel.addElement(j + ":" + i);
                       }
                      if(reciprocals) {
-                         if (isIsotopicPair(i, j)) {
+                         if (isIsotopicPair(i, j) || noSymbols) {
                              listModel.addElement(i + ":" + j);
                          }
                      }
@@ -1594,10 +1596,12 @@ public class MimsHSIView extends javax.swing.JPanel {
             else {
                Integer numIdx = new Integer(num.getName());
                Integer denIdx = new Integer(den.getName());
-               if (ImageDataUtilities.determineSeries(numIdx, ui.getOpener()) == ImageDataUtilities.determineSeries(denIdx, ui.getOpener())){
+               if (ImageDataUtilities.determineSeries(numIdx, ui.getOpener()) == ImageDataUtilities.determineSeries(denIdx, ui.getOpener()) || denIdx >= ui.getOpener().getNMasses()){
                    hsiview.addToRatioList(numIdx, denIdx);
                    //ui.getPreferences().addRatioImage(ui.getMassValue(numIdx), ui.getMassValue(denIdx));
                    //ui.getPreferences().savePreferences();
+               }else if (numIdx >= ui.getOpener().getNMasses()){
+                   JOptionPane.showMessageDialog(this, "You cannot have a mass of 1 as the numerator", "Error", JOptionPane.ERROR_MESSAGE);
                }else{
                    int n = JOptionPane.showConfirmDialog(
                            this,
