@@ -399,9 +399,10 @@ public class Nrrd_Reader implements Opener {
       NrrdFileInfo fi_clone = (NrrdFileInfo)fi.clone();
 
       // Calculate offset
+      //cast to long needed to avoid int overflow
       long offset = fi_clone.longOffset + // move down header
-              (bitSize * index * fi_clone.width * fi_clone.height * fi_clone.nImages) + // move down to correct channel
-              (bitSize * fi_clone.width * fi_clone.height * currentIndex); // move down to correct image within that channel
+              ((long)bitSize * (long)index * (long)fi_clone.width * (long)fi_clone.height * (long)fi_clone.nImages) + // move down to correct channel
+              ((long)bitSize * (long)fi_clone.width * (long)fi_clone.height * (long)currentIndex); // move down to correct image within that channel
       fi_clone.longOffset = offset;
       fi_clone.nImages = 1; // only going to read 1 image.
       FileOpener fo = new FileOpener(fi_clone);

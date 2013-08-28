@@ -97,37 +97,40 @@ public class Nrrd_Writer {
         
         return returnFile;
 	}
-	File writeImage(FileInfo[] fi, Calibration cal) throws IOException {
+        
+    File writeImage(FileInfo[] fi, Calibration cal) throws IOException {
 
-      File file = new File(fi[0].directory, fi[0].fileName);
+        File file = new File(fi[0].directory, fi[0].fileName);
 
-      // Setup output stream.
-		FileOutputStream out = new FileOutputStream(file);
+        // Setup output stream.
+        FileOutputStream out = new FileOutputStream(file);
 
-      // First write out the full header
-		Writer bw = new BufferedWriter(new OutputStreamWriter(out));
-		bw.write(makeHeader(fi[0],cal));
-		
-      // Write Mims specific fields.
-      bw.write(getMimsKeyValuePairs());
+        // First write out the full header
+        Writer bw = new BufferedWriter(new OutputStreamWriter(out));
+        bw.write(makeHeader(fi[0], cal));
 
-      // Write out any other metadat.
-      bw.write(getMetaDataKeyValuePairs()+"\n");
+        // Write Mims specific fields.
+        bw.write(getMimsKeyValuePairs());
 
-      // Flush rather than close
-		bw.flush();		
+        // Write out any other metadat.
+        bw.write(getMetaDataKeyValuePairs() + "\n");
 
-		// Then the image data
-		ImageWriter[] writer = new ImageWriter[fi.length];
-      for (int i = 0; i < writer.length; i++) {
-         writer[i] = new ImageWriter(fi[i]);
-         writer[i].write(out);
-      }
+        // Flush rather than close
+        bw.flush();
 
-      out.close();	
-		IJ.showStatus("Saved "+ fi[0].fileName);
-      return file;
-	}
+        // Then the image data
+        ImageWriter[] writer = new ImageWriter[fi.length];
+        for (int i = 0; i < writer.length; i++) {
+            writer[i] = new ImageWriter(fi[i]);
+            writer[i].write(out);
+        }
+
+        out.close();
+        
+        //TODO, this shouldn't be here
+        IJ.showStatus("Saved " + fi[0].fileName);
+        return file;
+    }
 		
 	public static String makeHeader(FileInfo fi, Calibration cal) {
 		// NB You can add further fields to this basic header but 
