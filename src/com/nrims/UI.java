@@ -5,80 +5,58 @@
  */
 package com.nrims;
 
-import com.nrims.managers.OpenerManager;
 import com.nrims.data.*;
+import com.nrims.logging.OMLogger;
+import com.nrims.managers.OpenerManager;
 import com.nrims.managers.QSAcorrectionManager;
 import com.nrims.managers.convertManager;
 import com.nrims.unoplugin.UnoPlugin;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
-import ij.gui.Roi;
-import ij.gui.ImageWindow;
 import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
+import ij.gui.Roi;
 import ij.io.FileSaver;
-
 import it.sauronsoftware.junique.AlreadyLockedException;
 import it.sauronsoftware.junique.JUnique;
 import it.sauronsoftware.junique.MessageHandler;
-
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Image;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
-import java.awt.Point;
-import java.awt.Image;
-import java.awt.EventQueue;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.beans.DefaultPersistenceDelegate;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.*;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.net.UnknownHostException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+
 /**
  * The main user interface of the NRIMS ImageJ plugin.
- * A multitabbed window with a file menu, the UI class
+ * A multi-tabbed window with a file menu, the UI class
  * serves as the central hub for all classes involved
  * with the user interface.
  */
@@ -178,7 +156,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public SwingWorker task;
     boolean previousFileCanceled = true;
     
-
+    private final static Logger OMLOGGER = OMLogger.getOMLogger(UI.class.getName());
+    
     public UI() {
        this(false);
     }
@@ -187,23 +166,28 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public UI(boolean silentMode) {
       super("OpenMIMS");
       
+        OMLOGGER.info("");
+      
+        // Is this to surpress what was going to stdout, 
+        // that should have been going to stderr?
         this.silentMode = silentMode;
-        System.out.println("Ui constructor: id=" + System.identityHashCode(this));
-        System.out.println("java.version: " + System.getProperty("java.version"));
-        System.out.println("java.vendor: " + System.getProperty("java.vendor"));
-        System.out.println("java.vendor.url: " + System.getProperty("java.vendor.url"));
-        System.out.println("java.home: " + System.getProperty("java.home"));
-        System.out.println("os.arch: " + System.getProperty("os.arch"));
-        System.out.println("os.name: " + System.getProperty("os.name"));
-        System.out.println("os.version: " + System.getProperty("os.version"));
+        
+        OMLOGGER.fine("Ui id = " + System.identityHashCode(this));
+        OMLOGGER.fine("java.version: " + System.getProperty("java.version"));
+        OMLOGGER.fine("java.vendor: " + System.getProperty("java.vendor"));
+        OMLOGGER.fine("java.vendor.url: " + System.getProperty("java.vendor.url"));
+        OMLOGGER.fine("java.home: " + System.getProperty("java.home"));
+        OMLOGGER.fine("os.arch: " + System.getProperty("os.arch"));
+        OMLOGGER.fine("os.name: " + System.getProperty("os.name"));
+        OMLOGGER.fine("os.version: " + System.getProperty("os.version"));
         
         try {
-            System.out.println("machine name: " + FileUtilities.getMachineName());
+            OMLOGGER.info("machine name = " + FileUtilities.getMachineName());
         } catch (Exception e) {
-            System.out.println("Error: could not retrieve machine name");
+            OMLOGGER.info("Could not retrieve machine name");
         }
       revisionNumber = extractRevisionNumber();
-      System.out.println("revisionNumber: "+revisionNumber);
+      OMLOGGER.info("revisionNumber: "+revisionNumber);
       
       /*
       // Set look and feel to native OS - this has been giving us issues
@@ -237,9 +221,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       prefs = new PrefFrame(this);
       if (isDeveloping) {       
           String pdir = ij.IJ.getDirectory("plugins");
-          System.out.println("plugins dir: "+pdir);
+          OMLOGGER.fine("plugins.dir = " + pdir);
           String mdir = ij.IJ.getDirectory("macros");
-          System.out.println("macros dir: "+mdir);
+          OMLOGGER.fine("macros.dir = " + mdir);
       }
       
       if (image == null) {
@@ -302,13 +286,19 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       
       //install macros for OpenMIMS tools and DragDrop
 
-        String pluginPath = IJ.getDirectory("macros");
-        File file = new File(pluginPath + "/openmims_tools.fiji.ijm");
+        String macrosPath = IJ.getDirectory("macros");
+        File file = new File(macrosPath + "/openmims_tools.fiji.ijm");
         if (file.exists()) {
-            IJ.run("Install...", "install=" + pluginPath + "/openmims_tools.fiji.ijm");
+            OMLOGGER.info("openmims_tools.fiji.ijm found, installing");
+            IJ.run("Install...", "install=" + macrosPath + "/openmims_tools.fiji.ijm");
         } else {
+            OMLOGGER.info("openmims_tools.fiji.ijm NOT found.");
+            //This line --probably-- broke the "open_mims" bash script called from the
+            //"transfer" script...
             //IJ.error("Error: openmims_tools.fiji.ijm does not exist. Please try updating.");
         }
+        
+        
       //StartupScript should be DEPRICATED/REMOVED
       //Better way to initialize state is via a script
       //need to research...
@@ -326,10 +316,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (IJ.getInstance() != null) {
                prefs.savePreferences();
             }
-            String pluginPath = IJ.getDirectory("macros");
-             File file = new File(pluginPath + "/StartupMacros.fiji.ijm");
+            String macrosPath = IJ.getDirectory("macros");
+             File file = new File(macrosPath + "/StartupMacros.fiji.ijm");
              if (file.exists()) {
-                 IJ.run("Install...", "install=" + pluginPath + "/StartupMacros.fiji.ijm");
+                 System.out.println("OpenMIMS: restoring StartupMacros.fiji.ijm");
+                 IJ.run("Install...", "install=" + macrosPath + "/StartupMacros.fiji.ijm");
              }
             closeCurrentImage();
             close();
@@ -992,7 +983,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
-   
+
 
     /**
      * Updates all images and kills any active
@@ -2048,58 +2039,58 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     public boolean saveSession(String fileName, boolean saveImageOnly) {
 
-        // Initialize variables.
-        File file = new File(fileName);
-        String directory = file.getParent();
-        String name = file.getName();
+      // Initialize variables.
+      File file = new File(fileName);
+      String directory = file.getParent();
+      String name = file.getName();
         String baseFileName;
         String onlyFileName;
 
-        try {
+      try {
 
             if (imgNotes != null) {
-                getOpener().setNotes(imgNotes.getOutputFormatedText());
+           getOpener().setNotes(imgNotes.getOutputFormatedText());
             }
-            if (mimsAction.getIsTracked()) {
-                double max_delta = mimsAction.getMaxDelta();
-                DecimalFormat twoDForm = new DecimalFormat("#.##");
-                insertMetaData(Opener.Max_Tracking_Delta, twoDForm.format(max_delta));
-            }
+        if (mimsAction.getIsTracked()) {
+           double max_delta = mimsAction.getMaxDelta();
+           DecimalFormat twoDForm = new DecimalFormat("#.##");
+           insertMetaData(Opener.Max_Tracking_Delta, twoDForm.format(max_delta));
+        }
             if (!metaData.isEmpty()) {
-                getOpener().setMetaDataKeyValuePairs(metaData);
+           getOpener().setMetaDataKeyValuePairs(metaData);
             }
-            // Set DT correction flag.
-            getOpener().setIsDTCorrected(isDTCorrected);
+        // Set DT correction flag.
+        getOpener().setIsDTCorrected(isDTCorrected);
 
-            // Set QSA correction flag.
-            getOpener().setIsQSACorrected(isQSACorrected);
+        // Set QSA correction flag.
+        getOpener().setIsQSACorrected(isQSACorrected);
 
-            // Set QSA correction parameters.
-            if (isQSACorrected) {
-                getOpener().setBetas(betas);
-                getOpener().setFCObjective(fc_objective);
-            }
+        // Set QSA correction parameters.
+        if (isQSACorrected) {
+           getOpener().setBetas(betas);
+           getOpener().setFCObjective(fc_objective);
+        }
 
-            // Save the original .im file to a new file of the .nrrd file type.
-            String nrrdFileName = name;
+        // Save the original .im file to a new file of the .nrrd file type.
+        String nrrdFileName = name;
             if (!name.endsWith(NRRD_EXTENSION)) {
-                nrrdFileName = name + NRRD_EXTENSION;
+           nrrdFileName = name+NRRD_EXTENSION;        
             }
 
-            // Save the file.
-            if (saveImageOnly || ui.getmimsAction().isImageModified()) {
-                ImagePlus[] imp = getOpenMassImages();
-                if (imp == null) {
-                    return false;
-                }
-                Nrrd_Writer nw = new Nrrd_Writer(this);
-                File dataFile = nw.save(imp, directory, nrrdFileName);
+        // Save the file.
+          if (saveImageOnly || ui.getmimsAction().isImageModified()) {
+              ImagePlus[] imp = getOpenMassImages();
+              if (imp == null) {
+                  return false;
+              }
+              Nrrd_Writer nw = new Nrrd_Writer(this);
+              File dataFile = nw.save(imp, directory, nrrdFileName);
 
-                // Update the Opener object.
-                image.close();
-                image = new Nrrd_Reader(dataFile);
-                openers.clear();
-                openers.put(nrrdFileName, image);
+              // Update the Opener object.
+              image.close();
+              image = new Nrrd_Reader(dataFile);
+              openers.clear();
+              openers.put(nrrdFileName, image);
 
                 // Update the Action object.
                 mimsAction = new MimsAction(image);
@@ -2108,19 +2099,19 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 mimsData = new MimsData(this, image);
                 jTabbedPane1.setComponentAt(0, mimsData);
 
-                // Update the image titles.
-                for (int i = 0; i < imp.length; i++) {
-                    imp[i].setTitle((new MimsPlus(this, i)).getTitle());
-                }
-                baseFileName = getFilePrefix(dataFile.getAbsolutePath());
-                onlyFileName = getFilePrefix(dataFile.getName());
-            } else {
-                baseFileName = this.getLastFolder() + "/" + this.getImageFilePrefix();
-                onlyFileName = this.getImageFilePrefix();
-            }
+              // Update the image titles.
+              for (int i = 0; i < imp.length; i++) {
+                  imp[i].setTitle((new MimsPlus(this, i)).getTitle());
+              }
+              baseFileName = getFilePrefix(dataFile.getAbsolutePath());
+              onlyFileName = getFilePrefix(dataFile.getName());
+          } else {
+              baseFileName = this.getLastFolder() + "/" + this.getImageFilePrefix();
+              onlyFileName = this.getImageFilePrefix();
+          }
             if (saveImageOnly) {
-                return true;
-            }
+              return true;
+              }
             //save additional images (sum, ratio, etc) and rois
             FileUtilities.saveAdditionalData(baseFileName, onlyFileName, this);
         } catch (FileNotFoundException e) {
@@ -2130,9 +2121,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         } catch (IOException e) {
             e.printStackTrace();
             return false;
-        }
+            }
         return true;
-    }
+            }
     /**
      * Action method for File>Open Mims Image menu item. If opening
      */
@@ -3033,7 +3024,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
       return true;
    }
-
+    
 /**
  * Updates the line profile to reflect the data stored in <code>newdata</code>.
  *
@@ -3974,10 +3965,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      */
     //NOT hit if starting plugin from ImageJ plugins menu
     public static void main(String args[]) {
-        System.out.println("Entering com.nrims.UI.main()");
+        OMLOGGER.info("");
+        
         Boolean skip_next = false;
         for (int i = 0; i < args.length; i++) {
-            System.out.println("Arg " + i + " " + args[i]);
+            OMLOGGER.fine(args[i]);
 
           if (args[i] == null)
              continue;
@@ -3988,14 +3980,29 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              if (args[i].equals("-t")) {
                 isTesting = true;
                 
+                /* Debuging locale issues with MimsJTable,
+                 * eg "1.23" vs "1,23". No real issues in OpenMIMS
+                 * but downstream issues, eg in Excel...
+                 * needs imports
+                 * java.util.Locale and javax.swing.JComponent
+                 */
+                //JComponent.setDefaultLocale(Locale.US);
+                //JComponent.setDefaultLocale(Locale.GERMANY);
+                
              }
-             
+                          
              // Development doesn't work outside IDE
              if (args[i].equals("-d")) {
                  isDeveloping = true;
+                
                  System.getProperties().setProperty("plugins.dir", "lib/plugins");
-                 System.getProperties().setProperty("macros.dir", "lib/macros");
-
+                 //It appears unnessecary to explicity set macros.dir, 
+                 //gets set to lib/plugins/macros when instance of ij created?
+                 //calls to getProperty in UI() constructor have non null values
+                 //
+                 //System.getProperties().setProperty("macros.dir", "lib/plugins/macros");
+                 OMLOGGER.fine("plugins.dir = " + System.getProperty("plugins.dir"));
+                 OMLOGGER.fine("macros.dir = " + System.getProperty("macros.dir"));
              }
 
              if (args[i].startsWith("-ijpath") && i + 1 < args.length) {
@@ -4066,7 +4073,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
       if (single_instance_mode && already_open) {
          JUnique.sendMessage(id, im_file_path);
       } else {
-         System.out.println("im_file_path = " + im_file_path);
+         OMLOGGER.fine("im_file_path = " + im_file_path);
          if (im_file_path != null) {
             EventQueue.invokeLater(new Runnable() {
 
@@ -4188,7 +4195,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
        public FileOpenTask(File file, UI ui) {
           this.file = file;
           this.ui = ui;
-          System.out.println("OpenMIMS: UI.FileOpenTask(): " + file.getAbsolutePath());
+          OMLOGGER.info("OpenMIMS: UI.FileOpenTask(): " + file.getAbsolutePath());
        }
 
         /*
@@ -4441,7 +4448,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
              boolean checks_out = image.performFileSanityCheck();
              if (checks_out == false) {
                 if (ui.silentMode == true) {
-                   System.out.println("File has a bad header.");
+                   OMLOGGER.warning("File has a bad header.");
                    return false;
                 } else {
                    OpenerManager opg = new OpenerManager(ui, image);
@@ -4589,8 +4596,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     java.awt.Point p = ui.getLocation();
                     java.awt.Point q = IJ.getInstance().getLocation();
 
-                    System.out.println(p.getX() + "," + p.getY());
-                    System.out.println(q.getX() + "," + q.getY());
+                    OMLOGGER.finer("Ui screen location = " + p.getX() + "," + p.getY());
+                    OMLOGGER.finer("Ui screen location = " + q.getX() + "," + q.getY());
 
                     ui.setVisible(false);
                     ui.setLocation(p);
@@ -4598,7 +4605,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     ui.setExtendedState(javax.swing.JFrame.NORMAL);
                     ui.show();
 
-                    System.out.println("location after: " + ui.getLocation());
+                    OMLOGGER.finer("ui location after: " + ui.getLocation());
 
                     IJ.getInstance().setVisible(false);
                     IJ.getInstance().setLocation(q);
@@ -4688,7 +4695,8 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     }
                 });
 
-                mimsLog.Log("\n\nNew image: " + getImageFilePrefix() + "\n" + ImageDataUtilities.getImageHeader(image));
+                mimsLog.Log("\n\nNew image: " + getImageFilePrefix());
+                mimsLog.Log(ImageDataUtilities.getImageHeader(image));
 
                 // Calculate theoretical duration
                 double duration = image.getCountTime() * (double) image.getNImages();
