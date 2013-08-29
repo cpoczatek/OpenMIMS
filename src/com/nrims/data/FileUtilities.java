@@ -207,9 +207,10 @@ public class FileUtilities {
                     // Save the ROI files to zip.
                     String roisFileName = System.getProperty("java.io.tmpdir")+"/"+ui.getImageFilePrefix();
                     Roi[] rois = ui.getRoiManager().getAllROIs();
-                    if (rois.length > 0){
+                    if (rois.length > 0  && ui.getRoiManager().needsToBeSaved()){
                        checkSave(roisFileName + ROIS_EXTENSION, roisFileName, 1);
                        ui.getRoiManager().saveMultiple(rois, roisFileName + ROIS_EXTENSION, false);
+                       ui.getRoiManager().setNeedsToBeSaved(false);
                        //threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
                     }else{
                         //threadMessage("Nothing to autosave");

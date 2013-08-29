@@ -91,6 +91,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     String hideAllLabels = "Hide Labels";
     ListSelectionListener groupSelectionListener;
     ListSelectionListener roiSelectionListener;
+    boolean needsToBeSaved = false;
 
    /**
     * Creates a new instance of MimsRoiManager.
@@ -273,7 +274,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         pack();
         GUI.center(this);
     }
-
+    public boolean needsToBeSaved(){
+        return needsToBeSaved;
+    }
+    public void setNeedsToBeSaved(boolean bool){
+        needsToBeSaved = bool;
+    }
+            
    /**
     * Action Method for the "new" group button.
     */
@@ -316,7 +323,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           for (int i = 0; i < groupsStringArray.length; i++)
             groupListModel.addElement(groupsStringArray[i]);
        }
-
+       needsToBeSaved = true;
        return true;
     }
 
@@ -341,6 +348,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        }
        if(partManager != null) partManager.updateGroups();
         if(squaresManager != null) squaresManager.updateGroups();
+        needsToBeSaved = true;
     }
 
    /**
@@ -403,6 +411,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           String roiName = (String)roiListModel.get(Roiidxs[i]);
           groupsMap.remove(roiName);
        }
+       needsToBeSaved = true;
 
     }
 
@@ -449,6 +458,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           String roiName = (String)roiListModel.get(Roiidxs[i]);
           groupsMap.put(roiName, s);
        }
+       needsToBeSaved = true;
        groupjlist.setSelectedValue(s, true);
 
     }
@@ -582,6 +592,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             locations.put(key, xylist);
          }
       }
+      needsToBeSaved = true;
    }
 
    /** Updates the locations array for all ROIs.*/
@@ -608,6 +619,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             xylist.remove(xylist.size()-1);
          }
       }
+      needsToBeSaved = true;
    }
 
    /**
@@ -680,7 +692,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
       } else {
          return;
       }
-
+      
    }
 
    /**
@@ -733,7 +745,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
       }
       imp.setRoi(roi);
       move();
-
+      needsToBeSaved = true;
       updatePlots(false);
 
    }
@@ -782,6 +794,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         rois.put(newroi.getName(), newroi);
         imp.setRoi(newroi);
         imp.updateAndRepaintWindow();
+        needsToBeSaved = true;
         updatePlots(false);
     }
 
@@ -1347,6 +1360,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
        rois.remove(oldRoi.getName());
        rois.put(newRoi.getName(), newRoi);
+       needsToBeSaved = true;
    }
 
 
@@ -1383,7 +1397,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             }
             locations.put(label, xylist);
         }
-
+        needsToBeSaved = true;
         return b;
     }
 
@@ -1441,7 +1455,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
            if (indices.length == 1 && !group.equals(DEFAULT_GROUP))
               groupsMap.put(label, group);
         }
-
+        needsToBeSaved = true;
         return true;
     }
 
@@ -1486,7 +1500,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Add roi to list.
         rois.put(label, roi);
-
+        needsToBeSaved = true;
         return true;
     }
 
@@ -1546,7 +1560,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Assign group.
         groupsMap.put(label, group);
-
+        needsToBeSaved = true;
         return val;
     }
 
@@ -1654,6 +1668,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             Recorder.record("mimsRoiManager", "Delete");
         }        
         ui.updateAllImages();
+        needsToBeSaved = true;
         return true;
     }
 
@@ -1707,6 +1722,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         roijlist.setSelectedIndex(index);
 
         sortROIList();
+        needsToBeSaved = true;
         return true;
     }
 
@@ -1739,7 +1755,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         // Set the selected roi to yellow
         roi.setInstanceColor(java.awt.Color.yellow);
         imp.setRoi(roi);
-
+        needsToBeSaved = true;
         return true;
     }
 
@@ -2160,7 +2176,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
           // Add the roi the the hashmap.
           rois.put(label, roi2);
        }
-       
+       needsToBeSaved = true;
        return;
     }
 
