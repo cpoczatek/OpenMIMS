@@ -287,6 +287,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       //install macros for OpenMIMS tools and DragDrop
 
         String macrosPath = IJ.getDirectory("macros");
+        OMLOGGER.info("Macros filepath: " + macrosPath);
         File file = new File(macrosPath + "/openmims_tools.fiji.ijm");
         if (file.exists()) {
             OMLOGGER.info("openmims_tools.fiji.ijm found, installing");
@@ -1362,8 +1363,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         utilitiesMenu = new javax.swing.JMenu();
         generateReportMenuItem = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem3 = new javax.swing.JMenuItem();
-        jMenuItem4 = new javax.swing.JMenuItem();
+        openNewWriter = new javax.swing.JMenuItem();
+        openNewDraw = new javax.swing.JMenuItem();
+        openNewImpress = new javax.swing.JMenuItem();
+        insertPicFrame = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         sumAllMenuItem = new javax.swing.JMenuItem();
         importIMListMenuItem = new javax.swing.JMenuItem();
@@ -1553,21 +1556,37 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         jMenu1.setText("LibreOffice");
 
-        jMenuItem3.setText("Open new writer doc");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+        openNewWriter.setText("Open new writer doc");
+        openNewWriter.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
+                openNewWriterActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem3);
+        jMenu1.add(openNewWriter);
 
-        jMenuItem4.setText("Insert picture frame");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+        openNewDraw.setText("Open new draw doc");
+        openNewDraw.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
+                openNewDrawActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem4);
+        jMenu1.add(openNewDraw);
+
+        openNewImpress.setText("Open new impress doc");
+        openNewImpress.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openNewImpressActionPerformed(evt);
+            }
+        });
+        jMenu1.add(openNewImpress);
+
+        insertPicFrame.setText("Insert picture frame");
+        insertPicFrame.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                insertPicFrameActionPerformed(evt);
+            }
+        });
+        jMenu1.add(insertPicFrame);
 
         utilitiesMenu.add(jMenu1);
         utilitiesMenu.add(jSeparator1);
@@ -2977,13 +2996,21 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         recomputeAllImages();
     }//GEN-LAST:event_RecomputeAllMenuItemActionPerformed
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    private void openNewWriterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewWriterActionPerformed
         UnoPlugin.newDoc();
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    }//GEN-LAST:event_openNewWriterActionPerformed
 
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+    private void insertPicFrameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertPicFrameActionPerformed
         UnoPlugin.insertEmptyOLEObject();
-    }//GEN-LAST:event_jMenuItem4ActionPerformed
+    }//GEN-LAST:event_insertPicFrameActionPerformed
+
+    private void openNewDrawActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewDrawActionPerformed
+        UnoPlugin.newDraw();
+    }//GEN-LAST:event_openNewDrawActionPerformed
+
+    private void openNewImpressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewImpressActionPerformed
+        UnoPlugin.newImpress();
+    }//GEN-LAST:event_openNewImpressActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -4421,7 +4448,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
           if (!file.exists()) {
              throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
           }
-
+          long startTime = System.nanoTime();
           boolean isIM = false;
           boolean isNRRD = false;
           int progress = 0;
@@ -4558,12 +4585,18 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       }
                    }
                 }
-                updateStatus((i + 1) + " of " + nImages);
+                int divider = Math.round((nImages+1)/10);
+                if ((i+1)% divider== 0) {
+                    updateStatus((i + 1) + " of " + nImages);
+                }
                 if (stop) {
                    image.setNImages(i + 1);
                    break;
                 }
              }
+             long endTime = System.nanoTime();
+             long duration = endTime - startTime;
+             System.out.println(duration);
           } catch (Exception e) {
              if (!ui.silentMode) {
                 IJ.error("Failed to open " + file + ":" + e.getMessage() + "\n");
@@ -4752,12 +4785,11 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuItem generateReportMenuItem;
     private javax.swing.JMenuItem imageNotesMenuItem;
     private javax.swing.JMenuItem importIMListMenuItem;
+    private javax.swing.JMenuItem insertPicFrame;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;
@@ -4770,7 +4802,10 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JSeparator jSeparator7;
     private javax.swing.JSeparator jSeparator8;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JMenuItem openNewDraw;
+    private javax.swing.JMenuItem openNewImpress;
     private javax.swing.JMenuItem openNewMenuItem;
+    private javax.swing.JMenuItem openNewWriter;
     private javax.swing.JMenuItem openNextMenuItem;
     private javax.swing.JMenuItem preferencesMenuItem;
     private javax.swing.JMenuItem restoreMimsMenuItem;
