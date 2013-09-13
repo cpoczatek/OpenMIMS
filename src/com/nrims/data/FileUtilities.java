@@ -47,7 +47,7 @@ public class FileUtilities {
      * @param path
      * @param imageName
      * @param forward
-     * @return 
+     * @return fullpath to next item e.g. home/user/nextfile.nrrd
      */
     public static String getNext(String path, String imageName, boolean forward){
         File dir = new File(path);
@@ -96,7 +96,6 @@ public class FileUtilities {
             }
             
         }
-        //System.out.println("OpenNext: Search failed");
         return null;
     }
      /**
@@ -222,7 +221,15 @@ public class FileUtilities {
                 }
             }
         }
-    }
+    }/**
+     * Recursively check for files with the same name as specified and save those other files as other names.
+     * Used in autosave ROI to keep a backlog of autosaves
+     * Ex. my_rois.rois, my_rois(1).rois, my_rois(2).rois
+     * @param toSave full path and filename of filename you want to use
+     * @param filename only the filename you want to use
+     * @param n how many duplicates you have encountered so far
+     * @return new name of the file that doesn't conflict with any others
+     */
     public static boolean checkSave(String toSave, String filename, int n) {
         File file = new File(toSave);
         String newFilename = filename + "(" + n + ")" + ROIS_EXTENSION;
@@ -253,6 +260,13 @@ public class FileUtilities {
       String prefix = fileName.substring(0, fileName.lastIndexOf("."));
       return prefix;
    }
+   /**
+    * Method to save all additional data such as sum images, ratios images, rois, etc.
+    * @param baseFileName the filename and path of the .nrrd or .im file e.g. /home/user/myfile.nrrd
+    * @param onlyFileName the filename of the .nrrd or .im file without the extension or folders e.g. "myfile"
+    * @param ui
+    * @return true if succeeded, false if not
+    */
     public static boolean saveAdditionalData(String baseFileName, String onlyFileName, UI ui) {
         String dataFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
         File sessionFile = null;

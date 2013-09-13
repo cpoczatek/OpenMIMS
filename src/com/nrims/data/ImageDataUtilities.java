@@ -13,10 +13,12 @@ import ij.ImagePlus;
  * @author wang2
  */
 public class ImageDataUtilities {
+    
     /**
-     *
-     * @param op
-     * @return 
+     * Determine how large the series size of a mass spec image is.
+     * Particularly useful for determing whether or not an image is peak switching.
+     * @param op image to examine
+     * @return the size of the series
      */
     public static int getSeriesSize(Opener op){
         String[] massNames = op.getMassNames();
@@ -34,6 +36,12 @@ public class ImageDataUtilities {
                 prev = new Double(massNames[i-2]);
             }
             if (prev > cur){ 
+                /*
+                 * Explanation: The mass images are ordered in size of mass (save for zero which is always in the sixth position, when it exists)
+                 * within each series. When peak switching occurs, there is a drop in the mass in the image sequence.
+                 * Ex (m22 m23 m24 m25) ( m22 m23 ... etc)
+                 * We use the this to determine the series size
+                 */
                 //check if cur is zero (in which case we may not be at the end of the row)
                 //also check if row has already been set
                  if (cur != 0 && row == 0){
@@ -60,6 +68,11 @@ public class ImageDataUtilities {
        int series =  getSeriesSize(op);
        return ((index-(index%series))/series);
     }
+    /**
+     * Determine if the passed image is a peakswitching image
+     * @param op
+     * @return true if peak switching, false if not
+     */
     public static boolean isPeakSwitching(Opener op){
         int series =  getSeriesSize(op);
         if (series == op.getNMasses()) return false;
@@ -154,10 +167,10 @@ public class ImageDataUtilities {
             }else {
                 if (i > 0 && (String.valueOf(curChar).equals("]") || String.valueOf(curChar).equals(")")) && symbols == null
                         && formatArray[i-1] == 'S'){
-                    //dont add closing parentheses
+                    //dont add closing parentheses if there are no symbols, or else we just get empty symbols (Ex m22[]:filename.nrrd)
                 }else if (i -1 < formatArray.length && (String.valueOf(curChar).equals("[") || String.valueOf(curChar).equals("(")) && symbols == null
                         && formatArray[i+1] == 'S'){
-                    //dont add closing parentheses
+                    //dont add opening parentheses if there are no symbols, or else we just get empty symbols (Ex m22[]:filename.nrrd)
                 }else{
                     curString+= String.valueOf(curChar);
                 }
@@ -219,10 +232,10 @@ public class ImageDataUtilities {
             }else {
                 if (i > 0 && (String.valueOf(curChar).equals("]") || String.valueOf(curChar).equals(")")) && symbols == null
                         && formatArray[i-1] == 'S'){
-                    //dont add closing parentheses
+                   //dont add closing parentheses if there are no symbols, or else we just get empty symbols (Ex m22[]:filename.nrrd)
                 }else if (i -1 < formatArray.length && (String.valueOf(curChar).equals("[") || String.valueOf(curChar).equals("(")) && symbols == null
                         && formatArray[i+1] == 'S'){
-                    //dont add closing parentheses
+                    //dont add opening parentheses if there are no symbols, or else we just get empty symbols (Ex m22[]:filename.nrrd)
                 }else{
                     curString+= String.valueOf(curChar);
                 }
