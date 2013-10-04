@@ -94,8 +94,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private boolean isPercentTurnover = false;
     private boolean isRatio = true;
     private boolean[] bOpenMass = new boolean[maxMasses];
-    private static boolean isTesting = false;
-    private static boolean isDeveloping = false;
     private boolean silentMode = false;
     private boolean isDTCorrected = false;
     private boolean isQSACorrected = false;
@@ -140,17 +138,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private imageNotes imgNotes;
     private PrefFrame prefs;
     private String revisionNumber = "0";
-    private static String im_file_path = null;
-    private static Boolean single_instance_mode = false;
+    public static Boolean single_instance_mode = false;
     public static UI ui = null;
     public boolean sessionOpened = false;
-    /*
-     * Private stings for option parsing
-     */
-    private static final String IMFILE_OPTION = "-imfile";
-    private static final String SINGLE_INSTANCE_OPTION = "-single_instance";
-    private static final String FIJI_RUN_COMMAND = "run(\"Open MIMS Image\"";
-    private static final String IMAGEJ_RUN_COMMAND = "-run";
+    
 
     // Task related variables.
     public SwingWorker task;
@@ -164,6 +155,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     /** Creates a new instance of the OpenMIMS analysis interface.*/
     public UI(boolean silentMode) {
+        //NOTE: Trying to leave strictly UI related code in here, and remove the rest
+        //As such, autosaveroi is now called in NRIMS_Plugin
       super("OpenMIMS");
       
         OMLOGGER.info("");
@@ -219,13 +212,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       }
       
       prefs = new PrefFrame(this);
-      if (isDeveloping) {       
-          String pdir = ij.IJ.getDirectory("plugins");
-          OMLOGGER.fine("plugins.dir = " + pdir);
-          String mdir = ij.IJ.getDirectory("macros");
-          OMLOGGER.fine("macros.dir = " + mdir);
-      }
       
+      //initialize empty image arrays
       if (image == null) {
          for (int i = 0; i < maxMasses; i++) {
             massImages[i] = null;
@@ -237,7 +225,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             sumImages[i] = null;
          }
       }
-
+      //set location of window based on spawn location and size of IJ
       int xloc, yloc = 150;
       if (ijapp != null) {
          xloc = ijapp.getX();
@@ -253,40 +241,32 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          xloc = (int) (screenwidth > 832 ? screenwidth * 0.8 : screenwidth * 0.9);
          xloc -= this.getPreferredSize().width + 10;
       }
-
       this.setLocation(xloc, yloc);
       ij.WindowManager.addWindow(this);
-
+      
+      //create new interface for dropping files into OpenMIMS
       this.mimsDrop = new FileDrop(null, jTabbedPane1, new FileDrop.Listener() {
          public void filesDropped(File[] files) {
-
             if (files.length == 0) {
                IJ.error("Unable to open file. Make sure file is not from a remote location.");
                return;
             }
-
             if (files.length > 1) {
                IJ.error("Please drag no more than one file.");
                return;
             }
-
             File file = files[0];
             setLastFolder(file.getParentFile());
             setIJDefaultDir(file.getParent());
-
             boolean proceed = checkCurrentFileStatusBeforeOpening();
             if (proceed)
                openFileInBackground(file);
          }
       });
-      //Start Auto save thread for ROI
-      Thread t = new Thread(new FileUtilities.AutoSaveROI(this));
-      t.start();
+      
       this.ui = this;
       
-      //install macros for OpenMIMS tools and DragDrop
-
-        String macrosPath = IJ.getDirectory("macros");
+      String macrosPath = IJ.getDirectory("macros");
         OMLOGGER.info("Macros filepath: " + macrosPath);
         File file = new File(macrosPath + "/openmims_tools.fiji.ijm");
         if (file.exists()) {
@@ -329,7 +309,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       });
    }
 
-    
     
     /**
      * Insertion status of the current MimsPlus object
@@ -1329,7 +1308,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        this.testingMenu.setVisible(false);
    }
 
-   private void initComponentsTesting() {
+   public void initComponentsTesting() {
        this.testingMenu.setVisible(true);
    }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -3774,7 +3753,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         return this.medianFilterRadius;
     }
 
-    /**
+    /**N
      * Returns the directory of the last location used by
      * the user for loading or saving image data.
      *
@@ -3803,7 +3782,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      * Set the directory of the last location used
      * to retrieve data.
      *
-     * @param the last folder.
+     * @param the last folder.N
      */
     public void setLastFolder(File folder) {
        if (folder.exists() && folder.isDirectory())
@@ -3976,9 +3955,10 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
     @Override
     public void run(String cmd) {
-        System.out.println("UI.run");
+        OMLOGGER.info("UI.run");
         
         if(cmd!=null) {
+            OMLOGGER.info("Fiji args: " + cmd);
             if (cmd.equals("-t"))
                 initComponentsTesting();
         }
@@ -3988,147 +3968,23 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     }
 
     /**
-     * @param args the command line arguments
+     * @param args the command line argumentsS
      */
     //NOT hit if starting plugin from ImageJ plugins menu
+    //Program startup flow
+    //
+    //If being called from Netbeans or the main class is being called in an executable (runUI) then we will hit this function first
+    //then we create the nrimsPlugin class, the construction of which does nothing but log some info
+    //we then call run and pass it the arguments we recieved in main
+    //run will parse the arguments and configure the UI globals
+    //then it will create a new instance of UI and set it visible
+    //it then checks if there are any arguments passed from ImageJ
+    //then passes those to UI.run(), which only checks for the testing flag.
     public static void main(String args[]) {
-        OMLOGGER.info("");
-        
-        Boolean skip_next = false;
-        for (int i = 0; i < args.length; i++) {
-            OMLOGGER.fine(args[i]);
-
-          if (args[i] == null)
-             continue;
-          
-          if (!skip_next) {
-
-             // Testing should work inside and outside IDE.
-             if (args[i].equals("-t")) {
-                isTesting = true;
-                
-                /* Debuging locale issues with MimsJTable,
-                 * eg "1.23" vs "1,23". No real issues in OpenMIMS
-                 * but downstream issues, eg in Excel...
-                 * needs imports
-                 * java.util.Locale and javax.swing.JComponent
-                 */
-                //JComponent.setDefaultLocale(Locale.US);
-                //JComponent.setDefaultLocale(Locale.GERMANY);
-                
-             }
-                          
-             // Development doesn't work outside IDE
-             if (args[i].equals("-d")) {
-                 isDeveloping = true;
-                
-                 System.getProperties().setProperty("plugins.dir", "lib/plugins");
-                 //It appears unnessecary to explicity set macros.dir, 
-                 //gets set to lib/plugins/macros when instance of ij created?
-                 //calls to getProperty in UI() constructor have non null values
-                 //
-                 //System.getProperties().setProperty("macros.dir", "lib/plugins/macros");
-                 OMLOGGER.fine("plugins.dir = " + System.getProperty("plugins.dir"));
-                 OMLOGGER.fine("macros.dir = " + System.getProperty("macros.dir"));
-             }
-
-             if (args[i].startsWith("-ijpath") && i + 1 < args.length) {
-                //Prefs.setHomeDir(args[i+1]);
-                skip_next = true;
-             }
-             
-             // NO LONGER SUPPORTED
-             // The use of the "-imFile" flag is no longer supported or required.
-             if ( (args[i].equals(IMFILE_OPTION)) && i + 1 < args.length )
-             {
-                im_file_path = args[i+1];
-                skip_next = true;
-             }
-
-             if (args[i].startsWith(FIJI_RUN_COMMAND))
-             {
-                int q1 = args[i].indexOf("\"");
-                int q2 = args[i].indexOf("\"", q1 + 1);
-                int q3 = args[i].indexOf("\"", q2 + 1);
-                int q4 = args[i].indexOf("\"", q3 + 1);
-                if (q3 > 0 && q4 > 0) {
-                   im_file_path = args[i].substring(q3 + 1, q4);
-                }
-             }
-
-             if (args[i].startsWith(IMAGEJ_RUN_COMMAND))
-             {
-                skip_next = true;
-             }
-
-             if ( (args[i].equals(SINGLE_INSTANCE_OPTION)) )
-             {
-                single_instance_mode = true;
-             }
-             
-             if ( im_file_path == null && (new File(args[i])).exists() )
-             {
-                im_file_path = args[i];
-             }
-
-          } else
-             skip_next = false;
-       }
-
-        String id = UI.class.getName();
-
-        boolean already_open = false;
-        if (single_instance_mode) {
-          try {
-             JUnique.acquireLock(id, new MessageHandler() {
-                public String handle(String message) {
-                   if (ui != null) {
-                      UI thisui = ui;
-                      thisui.setVisible(true);
-                      thisui.toFront();
-                      thisui.openFileInBackground(new File(message));
-                   }
-                   return null;
-                }
-             });
-          } catch (AlreadyLockedException e) {
-             already_open = true;
-          }
-       }
-
-
-      if (single_instance_mode && already_open) {
-         JUnique.sendMessage(id, im_file_path);
-      } else {
-         OMLOGGER.fine("im_file_path = " + im_file_path);
-         if (im_file_path != null) {
-            EventQueue.invokeLater(new Runnable() {
-
-               @Override
-               public void run() {
-                  String temp_path = im_file_path;
-                  File[] files_arr = new File[1];
-                  ui = new UI();
-                  ui.setVisible(true);
-                  files_arr[0] = new File(temp_path);
-                  File file_to_open = files_arr[0];
-                  ui.openFileInBackground(file_to_open);
-               }
-            });
-         } else {
-            EventQueue.invokeLater(new Runnable() {
-
-               @Override
-               public void run() {
-                  ui = new UI();
-                  if (isTesting) {
-                     ui.initComponentsTesting();
-                  }
-                  ui.setVisible(true);
-               }
-            });
-         }
-      }
+       NRIMS_Plugin nrimsPlugin = new NRIMS_Plugin();
+       nrimsPlugin.run(FileUtilities.joinArray(args));
+       //to emulate hitting it from the gui, comment out the above and uncomment the below:
+       //nrimsPlugin.run("");
    }
     
     /**

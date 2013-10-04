@@ -390,4 +390,15 @@ public class FileUtilities {
         }
         return f;
     }
+     public static String joinArray(String[] args){
+        String output = "";
+        for (int i = 0; i < args.length; i++){
+            if (i != 0) output += ",";
+            output += args[i];
+        }
+        return output;
+    }
+    public static String[] splitToArray(String args){
+        return args.split(",");
+    }
 }
