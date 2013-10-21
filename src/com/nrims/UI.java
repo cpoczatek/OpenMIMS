@@ -4441,7 +4441,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       }
                    }
                 }
-                int divider = Math.round((nImages+1)/10);
+                int divider = Math.max(Math.round((nImages+1)/10), 1);
                 if ((i+1)% divider== 0) {
                     updateStatus((i + 1) + " of " + nImages);
                 }
