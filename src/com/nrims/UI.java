@@ -4441,6 +4441,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                       }
                    }
                 }
+                //here the divider ensures that the progress bar is updated no more than 10 times (thus why we divide by 10 and round)
                 int divider = Math.max(Math.round((nImages+1)/10), 1);
                 if ((i+1)% divider== 0) {
                     updateStatus((i + 1) + " of " + nImages);
