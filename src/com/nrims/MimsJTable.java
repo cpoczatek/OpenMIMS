@@ -704,7 +704,11 @@ public class MimsJTable {
                   value = "null";
                else
                   value = objVal.toString();
-               out.print('"' + value + '"');
+               if ((objVal instanceof String && !table.getColumnName(j).equals(new String("Slice")))|| table.getColumnName(j).equals(ROINAME)|| table.getColumnName(j).equals(ROIGROUP)){
+                  out.print('"' + value + '"');
+               }else{
+                   out.print(value);
+               }
                if (j < table.getColumnCount() - 1)
                   out.print(",");
             }
