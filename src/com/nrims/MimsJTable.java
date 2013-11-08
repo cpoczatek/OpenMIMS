@@ -1,11 +1,13 @@
 package com.nrims;
 
 import com.nrims.data.MIMSFileFilter;
+import com.nrims.logging.OMLogger;
 import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -18,6 +20,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -67,6 +70,7 @@ public class MimsJTable {
    static String TRUE = "True Index";
    static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
    static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
+   private final static Logger OMLOGGER = OMLogger.getOMLogger(MimsJTable.class.getName());
 
    public static final int mOptions = ImageStatistics.AREA+ImageStatistics.MEAN+ImageStatistics.STD_DEV +
                  ImageStatistics.MODE+ImageStatistics.MIN_MAX+ImageStatistics.CENTROID +
@@ -371,14 +375,24 @@ public class MimsJTable {
          Integer[] xy = gui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
          rois[row].setLocation(xy[0], xy[1]);
          image.setRoi(rois[row]);
-
+         Rectangle rect = image.getProcessor().getRoi();
+         int area = rect.width*rect.height;
+         //NOTE:For some reason when I calculate the area the same way as ImageJ does in ImageStatistics (http://rsb.info.nih.gov/ij/developer/source/ij/process/FloatStatistics.java.html)
+         //I get a value of 1 even when getSingleStat gives an area of 0 as it should be
+         //Therefore I assume that anything with an area of 1 will have no area.
+         if (area <= 1){
+             OMLOGGER.fine("Roi " + rois[row].getName() + " has zero area and is invalid.");
+         }
          for (int col = 0; col < stats.length; col++) {
             stat = stats[col];
             // "Group" is a mandatory row, so ignore if user selected it.
             if (stat.startsWith(GROUP))
                continue;
-
-            data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, gui);
+            if (area > 1){
+               data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, gui);
+            }else{
+                data[row][colnum] = 0;
+            }
             colnum++;
          }
      }
