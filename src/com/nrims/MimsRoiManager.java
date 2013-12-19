@@ -3094,7 +3094,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     }
 
     public void roiPixelvalues(MimsPlus img) {
-
+        MimsPlus numImg = new MimsPlus(ui);
+        MimsPlus denImg = new MimsPlus(ui);
        // Make sure we have an image.
        if (img == null) {
           IJ.error("No image has been selected.");
@@ -3115,10 +3116,14 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        // HSIs pixel data is stored in the internal ratio image.
         if(img.getMimsType()==MimsPlus.HSI_IMAGE || img.getMimsType()==MimsPlus.RATIO_IMAGE) {
             img = img.internalRatio;
+            numImg = ui.getMassImage(img.getRatioProps().getNumMassIdx());
+            denImg = ui.getMassImage(img.getRatioProps().getDenMassIdx());
         }
 
         // Collect all the pixels within the highlighted rois.
         ArrayList<Double> values = new ArrayList<Double>();
+        ArrayList<Double> numValues = new ArrayList<Double>();
+        ArrayList<Double> denValues = new ArrayList<Double>();
         ArrayList<String> lgroups = new ArrayList<String>();
         ArrayList<String> names  = new ArrayList<String>();
         DecimalFormat twoDForm = new DecimalFormat("#.##");
@@ -3134,6 +3139,16 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 lgroups.add(group);
                 names.add(roi.getName());
             }
+            if (img.getMimsType()==MimsPlus.RATIO_IMAGE || img.getMimsType()==MimsPlus.HSI_IMAGE){
+                roipixels = numImg.getRoiPixels();
+                for (double pixel : roipixels) {
+                    numValues.add(Double.valueOf(twoDForm.format(pixel)));
+                }
+                roipixels = denImg.getRoiPixels();
+                for (double pixel : roipixels) {
+                    denValues.add(Double.valueOf(twoDForm.format(pixel)));
+                }
+            }
             img.killRoi();
         }
 
@@ -3145,7 +3160,11 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        MimsPlus[] imgs = new MimsPlus[1];
        imgs[0] = img;
        tbl.setImages(imgs);
-       tbl.createPixelTable(ui.getImageFilePrefix(), names, lgroups, values);
+       if (img.getMimsType()==MimsPlus.RATIO_IMAGE || img.getMimsType()==MimsPlus.HSI_IMAGE){
+           tbl.createPixelTableNumDen(ui.getImageFilePrefix(), names, lgroups, values, numValues, denValues);
+       }else{
+           tbl.createPixelTable(ui.getImageFilePrefix(), names, lgroups, values);
+       }
        tbl.showFrame();
     }
 

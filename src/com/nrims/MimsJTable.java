@@ -209,7 +209,41 @@ public class MimsJTable {
 
       displayTable(data, columnNames);
    }
+      void createPixelTableNumDen(String file, ArrayList<String> names, ArrayList<String> groups, ArrayList<Double> values, ArrayList<Double> numValues, ArrayList<Double> denValues) {
+      
+      // Input checks.
+      if (names == null || groups == null || values == null)
+         return;
+      if (names.isEmpty() || groups.isEmpty() || values.isEmpty())
+         return;
+      if ((groups.size() != values.size()) || (names.size() != values.size()))
+         return;
 
+      // Get data.
+      Object[][] data = new Object[values.size()][6];
+      String group, name = "";
+      for(int i = 0; i < values.size(); i++) {
+         name = (String)names.get(i);
+         group = (String)groups.get(i);
+         if (group == null)
+            group = "null";
+         if (name == null)
+            name = "null";
+         if (group.trim().length() == 0)
+            group = "null";
+         if (name.trim().length() == 0)
+            name = "null";
+         data[i][0] = file;
+         data[i][1] = group;
+         data[i][2] = name;
+         data[i][3] = (Double)values.get(i);
+         data[i][4] = (Double)numValues.get(i);
+         data[i][5] = (Double)denValues.get(i);
+      }
+      String[] columnNames = {FILENAME, ROIGROUP, ROINAME, "Med. pixel value", "Num pixel value", "Den pixel value"};
+
+      displayTable(data, columnNames);
+   }
   /**
    * Does the actual displaying of the table and frame.
    */
@@ -375,24 +409,25 @@ public class MimsJTable {
          Integer[] xy = gui.getRoiManager().getRoiLocation(rois[row].getName(), plane);
          rois[row].setLocation(xy[0], xy[1]);
          image.setRoi(rois[row]);
-         Rectangle rect = image.getProcessor().getRoi();
-         int area = rect.width*rect.height;
+       //  Rectangle rect = image.getProcessor().getRoi();
+         //int area = rect.width*rect.height;
+        // OMLOGGER.fine("Roi " + rois[row].getName() + ": " + area);
          //NOTE:For some reason when I calculate the area the same way as ImageJ does in ImageStatistics (http://rsb.info.nih.gov/ij/developer/source/ij/process/FloatStatistics.java.html)
          //I get a value of 1 even when getSingleStat gives an area of 0 as it should be
          //Therefore I assume that anything with an area of 1 will have no area.
-         if (area <= 1){
-             OMLOGGER.fine("Roi " + rois[row].getName() + " has zero area and is invalid.");
-         }
+         //if (area <= 1){
+             //OMLOGGER.fine("Roi " + rois[row].getName() + " has zero area and is invalid.");
+        // }
          for (int col = 0; col < stats.length; col++) {
             stat = stats[col];
             // "Group" is a mandatory row, so ignore if user selected it.
             if (stat.startsWith(GROUP))
                continue;
-            if (area > 1){
+           // if (area > 1){
                data[row][colnum] = MimsJFreeChart.getSingleStat(image, stat, gui);
-            }else{
-                data[row][colnum] = 0;
-            }
+           // }else{
+            //    data[row][colnum] = 0;
+            //}
             colnum++;
          }
      }
