@@ -57,8 +57,14 @@ public class NRIMS_Plugin implements PlugIn {
      */
     @Override
     public void run(String arg) {
-        if (arg != null) {//if there are args, we are being called from main
-            String[] args = FileUtilities.splitToArray(arg);
+        String options = ij.Macro.getOptions();
+        
+        if (options != null || arg != null) {//if there are args, we are being called from main
+            if (arg != null && options == null){
+                options = arg;
+            }
+            OMLOGGER.info("args: " + options);
+            String[] args = FileUtilities.splitToArray(options.trim());
             Boolean skip_next = false;
             for (int i = 0; i < args.length; i++) {
                 OMLOGGER.fine(args[i]);
@@ -68,6 +74,7 @@ public class NRIMS_Plugin implements PlugIn {
                 if (!skip_next) {
                     // Testing should work inside and outside IDE.
                     if (args[i].equals("-t")) {
+                        OMLOGGER.fine("Testing mode");
                         isTesting = true;
                         /* Debuging locale issues with MimsJTable,
                          * eg "1.23" vs "1,23". No real issues in OpenMIMS
@@ -112,9 +119,10 @@ public class NRIMS_Plugin implements PlugIn {
                         skip_next = true;
                     }
                     if ((args[i].equals(SINGLE_INSTANCE_OPTION))) {
+                        OMLOGGER.fine("Single instance mode");
                         ui.single_instance_mode = true;
                     }
-                    if (im_file_path == null && (new File(args[i])).exists()) {
+                    if ((new File(args[i])).exists()) {
                         im_file_path = args[i];
                     }
                 } else {
@@ -176,20 +184,27 @@ public class NRIMS_Plugin implements PlugIn {
             //UI will be constructed regardless, but either after parsing args or immeadiately if none
             ui = new UI();
         }
-        //Start Auto save thread for ROI
-        Thread t = new Thread(new FileUtilities.AutoSaveROI(ui));
-        t.start();
-        OMLOGGER.info("NRIMS.run");
-        String options = ij.Macro.getOptions();
-        OMLOGGER.info("options: " + options);
-        if (options != null) {
-            options = options.trim();
-            System.out.println("options=" + options + ",");
-        }
+        if (ui != null) {//need to check whether or not ui is null, which can happen when a single instance mode is already open
+            //Start Auto save thread for ROI
+            Thread t = new Thread(new FileUtilities.AutoSaveROI(ui));
+            t.start();
+            
+            OMLOGGER.info("NRIMS.run");
+             OMLOGGER.info(Thread.currentThread().getName());
+             //NOTE: I've commented out the below because upon further inspection, ui.run doesn't do anything useful
+             /*
+             options = ij.Macro.getOptions();
+             OMLOGGER.info("options: " + options);
+             if (options != null) {
+             options = options.trim();
+             System.out.println("options=" + options + ",");
+             }
 
-        ui.run(options);
-        if (ui.isVisible() == false) {
-            ui.setVisible(true);
+             ui.run(options);
+             */
+            if (ui.isVisible() == false) {
+                ui.setVisible(true);
+            }
         }
     }
     private static com.nrims.UI ui = null;
