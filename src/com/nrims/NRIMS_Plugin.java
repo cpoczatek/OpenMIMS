@@ -126,6 +126,7 @@ public class NRIMS_Plugin implements PlugIn {
             if (ui.single_instance_mode) {
                 try {
                     JUnique.acquireLock(id, new MessageHandler() {
+                        @Override
                         public String handle(String message) {
                             if (ui != null) {
                                 UI thisui = ui;
@@ -142,6 +143,8 @@ public class NRIMS_Plugin implements PlugIn {
             }
             if (ui.single_instance_mode && already_open) {
                 JUnique.sendMessage(id, im_file_path);
+                ij.IJ.getInstance().quit();
+                return;
             } else {
                 ui = new UI();
                 OMLOGGER.fine("im_file_path = " + im_file_path);
