@@ -957,7 +957,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
    }
 
    /**
-    * A static class that takes a String in the form "2,4,8-25,45..."
+    * A static method that takes a String in the form "2,4,8-25,45..."
     * and converts it to a list of integers.
     *
     * @param liststr the string (for example "2,4,8-25,45...").
