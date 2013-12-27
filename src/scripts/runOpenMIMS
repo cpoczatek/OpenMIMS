@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+################################################
+## The script to call to open the plugin. To
+## open the plugin with a particular file, pass
+## the file name as an argument.
+##
+################################################
+FIJIPATH=/nrims/common/local/Fiji.app
+cd $FIJIPATH
+./ImageJ-linux64 --allow-multiple -eval "run('Open MIMS Image', '$@'); run('Install...', 'install=$FIJIPATH/macros/openmims_tools.fiji.ijm');" >&  $FIJIPATH/logs/logfile_$(whoami)_$(hostname)_$$.txt &
