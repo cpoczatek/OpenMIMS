@@ -1,9 +1,9 @@
 Short notes about scripts in this directory.  Most scripts are self documented.
 
-runOpenMIMS - bash script to start Fiji and run OpenMIMS passing args to OpenMIMS.
+runOpenMIMS.sh - bash script to start Fiji and run OpenMIMS passing args to OpenMIMS.
 Also runs a macro to do the toolbar setup and logs stdout/stderr to a file.
 
-runOpenMIMS_singleInstance - same as above, but with -single_instance flag added.
+runOpenMIMS_singleInstance.sh - same as above, but with -single_instance flag added.
 
 OpenMIMS.desktop - a .desktop file to allow filetype-application association. Copy
 to ~/.local/share/applications/ or similar
