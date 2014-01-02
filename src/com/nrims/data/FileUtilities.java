@@ -31,6 +31,7 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -400,5 +401,37 @@ public class FileUtilities {
     }
     public static String[] splitToArray(String args){
         return args.split(" ");
+    }
+    public static String[] splitArgs(String args){
+
+        String SINGLE_INSTANCE_OPTION = "-single_instance";
+        String FIJI_RUN_COMMAND = "run(\"Open MIMS Image\"";
+        String IMAGEJ_RUN_COMMAND = "-run";
+        String im_file_path = null;
+        ArrayList<String> optArgs = new ArrayList<String>();
+        String[] splitArgs = args.split(" ");
+        String leftover = "";
+        for (int i = 0; i < splitArgs.length; i++) {
+            String checkArg = leftover + splitArgs[i];
+            if (checkArg.equals("-t") || checkArg.equals("-d") || checkArg.equals(SINGLE_INSTANCE_OPTION) || (new File(checkArg)).exists()) {
+                optArgs.add(checkArg);
+                leftover = "";
+            } else if (checkArg.startsWith("-ijpath") && i + 1 < splitArgs.length) {
+                optArgs.add(checkArg);
+                i++;
+                leftover = "";
+            } else if (checkArg.startsWith(IMAGEJ_RUN_COMMAND)) {
+                optArgs.add(checkArg);
+                i++;
+                leftover = "";
+            } else {
+                if (leftover.equals("")) {
+                    leftover = splitArgs[i] + " ";
+                } else {
+                    leftover = leftover + " " + splitArgs[i] + " ";
+                }
+            }
+        }
+        return (String[]) optArgs.toArray(new String[0]);
     }
 }

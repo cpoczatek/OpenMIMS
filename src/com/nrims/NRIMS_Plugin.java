@@ -64,7 +64,7 @@ public class NRIMS_Plugin implements PlugIn {
                 options = arg;
             }
             OMLOGGER.info("args: " + options);
-            String[] args = FileUtilities.splitToArray(options.trim());
+            String[] args = FileUtilities.splitArgs(options.trim());
             Boolean skip_next = false;
             for (int i = 0; i < args.length; i++) {
                 OMLOGGER.fine(args[i]);
