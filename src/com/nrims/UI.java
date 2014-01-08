@@ -205,10 +205,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       ijapp = IJ.getInstance();
       if (ijapp == null || (ijapp != null && !ijapp.isShowing())) {
          if (silentMode)
-            ijapp = new ij.ImageJ(ij.ImageJ.NO_SHOW);
+              ijapp = new ij.ImageJ(ij.ImageJ.NO_SHOW);
          else
-            ijapp = new ij.ImageJ();         
-         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+              ijapp = new ij.ImageJ();
+          setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
       }
       
       prefs = new PrefFrame(this);
@@ -243,7 +243,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       }
       this.setLocation(xloc, yloc);
       ij.WindowManager.addWindow(this);
-      
+      this.ui = this;
       //create new interface for dropping files into OpenMIMS
       this.mimsDrop = new FileDrop(null, jTabbedPane1, new FileDrop.Listener() {
          public void filesDropped(File[] files) {
@@ -251,11 +251,28 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                IJ.error("Unable to open file. Make sure file is not from a remote location.");
                return;
             }
-            if (files.length > 1) {
-               IJ.error("Please drag no more than one file.");
-               return;
-            }
             File file = files[0];
+            //if multiple files detected, check whether the user wants to stack them, open the first, or neither
+            if (files.length > 1) {
+                Object[] options = {"Yes, stack the images",
+                    "No, just open the first one",
+                    "No, don't open anything"};
+                int n = JOptionPane.showOptionDialog(ui,
+                        "Would you like to open a stacked version of these multiple images or just open the first one?",
+                        "Multiple images detected",
+                        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                if (n == 0) {
+                    setLastFolder(file.getParentFile());
+                    setIJDefaultDir(file.getParent());
+                    boolean proceed = checkCurrentFileStatusBeforeOpening();
+                    if (proceed) {
+                        openFileInBackground(FileUtilities.stackImages(files, ui));
+                    }
+                    return;
+                }else if (n == 2){
+                    return;
+                }
+            }
             setLastFolder(file.getParentFile());
             setIJDefaultDir(file.getParent());
             boolean proceed = checkCurrentFileStatusBeforeOpening();
@@ -264,7 +281,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          }
       });
       
-      this.ui = this;
       
       String macrosPath = IJ.getDirectory("macros");
         OMLOGGER.info("Macros filepath: " + macrosPath);
@@ -4161,6 +4177,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         * @param file to be opened.
         */
        public boolean openFile(File file) {
+           long length = file.length();
+           OMLOGGER.fine("Current file size: " + length);
+           OMLOGGER.fine("Total JVM memory: " + Runtime.getRuntime().totalMemory());
+           if (length > Runtime.getRuntime().totalMemory()){
+               OMLOGGER.fine("File size exceeds the allocated memory in JVM.");
+           }
 
           boolean onlyShowDraggedFile = true;
 

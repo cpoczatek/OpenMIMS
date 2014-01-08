@@ -7,6 +7,7 @@ package com.nrims.data;
 import com.nrims.HSIProps;
 import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
+import com.nrims.MimsStackEditor;
 import com.nrims.RatioProps;
 import com.nrims.SumProps;
 import com.nrims.UI;
@@ -17,6 +18,7 @@ import static com.nrims.UI.RATIO_EXTENSION;
 import static com.nrims.UI.ROIS_EXTENSION;
 import static com.nrims.UI.SESSIONS_EXTENSION;
 import static com.nrims.UI.SUM_EXTENSION;
+import static com.nrims.UI.ui;
 import ij.gui.Roi;
 import java.beans.DefaultPersistenceDelegate;
 import java.beans.XMLDecoder;
@@ -402,8 +404,12 @@ public class FileUtilities {
     public static String[] splitToArray(String args){
         return args.split(" ");
     }
+    /**
+     * Method to parse arguments passed in startup of OpenMIMS
+     * @param args
+     * @return 
+     */
     public static String[] splitArgs(String args){
-
         String SINGLE_INSTANCE_OPTION = "-single_instance";
         String FIJI_RUN_COMMAND = "run(\"Open MIMS Image\"";
         String IMAGEJ_RUN_COMMAND = "-run";
@@ -411,6 +417,7 @@ public class FileUtilities {
         ArrayList<String> optArgs = new ArrayList<String>();
         String[] splitArgs = args.split(" ");
         String leftover = "";
+        //In case the file has spaces in the name, we need to check all invalid flags and their following combinations
         for (int i = 0; i < splitArgs.length; i++) {
             String checkArg = leftover + splitArgs[i];
             if (checkArg.equals("-t") || checkArg.equals("-d") || checkArg.equals(SINGLE_INSTANCE_OPTION) || (new File(checkArg)).exists()) {
@@ -425,6 +432,7 @@ public class FileUtilities {
                 i++;
                 leftover = "";
             } else {
+                //if the flag is not valid, there could be the possibility that it is a filename, so we save it
                 if (leftover.equals("")) {
                     leftover = splitArgs[i] + " ";
                 } else {
@@ -433,5 +441,106 @@ public class FileUtilities {
             }
         }
         return (String[]) optArgs.toArray(new String[0]);
+    }
+    /**
+     * Helper method to eliminate extra null values in MimsPlus arrays.
+     * Useful for the arrays returned by getMassImages(), etc.
+     * @param massImages
+     * @return array containing only the MimsPlus
+     */
+    public static MimsPlus[] slimImageArray(MimsPlus[] massImages){
+        ArrayList<MimsPlus> images = new ArrayList<MimsPlus>();
+        for (int i = 0; i < massImages.length; i++){
+            if (massImages[i] != null){
+                images.add(massImages[i]);
+            }
+        }
+        return (MimsPlus[]) images.toArray(new MimsPlus[0]);
+    }
+    /**
+     * Used to sum images, then concatenate the sums.
+     * Useful for series of images
+     * @param files
+     * @param ui
+     * @return the saved file in which the stack of images is located
+     */
+    public static File stackImages(File[] files, UI ui) {
+        String originalParent = "";
+        String originalName = "";
+        ArrayList<File> tempFiles = new ArrayList<File>();
+        for (int i = 0; i < files.length; i++) {
+            File imFile = files[i];
+            if (i == 0) {
+                //We take the name of the first file as the identifier of the stack file
+                originalParent = imFile.getParent();
+                originalName = getFilePrefix(imFile.getName());
+            }
+            String name = getFilePrefix(imFile.getName());
+            ui.openFile(imFile);
+            MimsStackEditor mimStack = ui.getmimsStackEditing();
+            MimsPlus[] images = slimImageArray(ui.getMassImages());
+            int blockSize = images[0].getNSlices();
+            //compress all mass images in file into sum images
+            Boolean done = mimStack.compressPlanes(blockSize);
+            massCorrection massCorr = new massCorrection(ui);
+            //force all images to be float in order for them to be compatible for concatenation
+            massCorr.forceFloatImages(images);
+            if (done) {
+                //save the resulting sum images into a temporary file
+                Nrrd_Writer nw = new Nrrd_Writer(ui);
+                File dataFile = nw.save(images, System.getProperty("java.io.tmpdir"), "comp_" + name + ".nrrd");
+                tempFiles.add(dataFile);
+            }
+        }
+        //open up the first file to do our work in
+        ui.openFile(tempFiles.get(0));
+        for (int i = 0; i < tempFiles.size(); i++) {
+            File tempFile = tempFiles.get(i);
+            String name = getFilePrefix(tempFile.getName());
+            MimsPlus[] images = slimImageArray(ui.getMassImages());
+            for (int j = 0; j < images.length; j++) {
+                images[j].setTitle(name);
+            }
+            if (i != 0) {
+                Opener image = ui.getOpener();
+                UI tempUi = new UI();
+                tempUi.openFile(tempFile);
+                Opener tempImage = tempUi.getOpener();
+                MimsStackEditor mimStack = ui.getmimsStackEditing();
+                if (ui.getOpener().getNMasses() == tempImage.getNMasses()) {
+                    if (mimStack.sameResolution(image, tempImage)) {
+                        if (mimStack.sameSpotSize(image, tempImage)) {
+                            //Concatenate the images if all conditions are met
+                            mimStack.concatImages(false, tempUi);
+                        }//else{
+                          //   OMLOGGER.fine("Images do not have the same spot size.");
+                        //}
+                    }//else{
+                        //OMLOGGER.fine("Images are not the same resolution.");
+                    //}
+                }//else{
+                    //OMLOGGER.fine("Files have different number of masses.");
+                //}
+                MimsPlus[] tempImages = slimImageArray(tempUi.getMassImages());
+                //close all temporary images and kill the tempUI
+                for (int j = 0; j < tempImages.length; j++) {
+                    if (tempImages[j] != null) {
+                        tempImages[j].setAllowClose(true);
+                        tempImages[j].close();
+                    }
+                }
+                tempUi = null;
+                tempFile.delete();
+                ui.getMimsData().setHasStack(true);
+            }
+        }
+        Nrrd_Writer nw = new Nrrd_Writer(ui);
+        MimsPlus[] images = slimImageArray(ui.getMassImages());
+        ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
+        ij.WindowManager.repaintImageWindows();
+        tempFiles.get(0).delete();
+        //save the file and return it
+        return nw.save(images, originalParent, "stack_" + originalName + ".nrrd");
+        
     }
 }
