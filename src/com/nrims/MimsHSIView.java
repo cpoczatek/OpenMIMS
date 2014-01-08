@@ -869,6 +869,7 @@ public class MimsHSIView extends javax.swing.JPanel {
              }
              mp = new MimsPlus(ui, ratioProps);
              mp.showWindow(autoAdjust);
+             mp.getWindow().setLocation(mp.getWindow().getLocationOnScreen().x, mp.getWindow().getLocationOnScreen().y+ui.getPreferences().tileY);
           }
        }
 }//GEN-LAST:event_displayRatiojButtonActionPerformed
@@ -964,6 +965,7 @@ public class MimsHSIView extends javax.swing.JPanel {
              }
              mp = new MimsPlus(ui, hsiProps);
              mp.showWindow(autoAdjust);
+             mp.getWindow().setLocation(mp.getWindow().getLocationOnScreen().x, mp.getWindow().getLocationOnScreen().y+ui.getPreferences().tileY);
           }
        }
 }//GEN-LAST:event_displayHSIjButtonActionPerformed
