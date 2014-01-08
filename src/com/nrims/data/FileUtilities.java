@@ -470,26 +470,27 @@ public class FileUtilities {
         ArrayList<File> tempFiles = new ArrayList<File>();
         for (int i = 0; i < files.length; i++) {
             File imFile = files[i];
-            if (i == 0) {
-                //We take the name of the first file as the identifier of the stack file
-                originalParent = imFile.getParent();
-                originalName = getFilePrefix(imFile.getName());
-            }
-            String name = getFilePrefix(imFile.getName());
-            ui.openFile(imFile);
-            MimsStackEditor mimStack = ui.getmimsStackEditing();
-            MimsPlus[] images = slimImageArray(ui.getMassImages());
-            int blockSize = images[0].getNSlices();
-            //compress all mass images in file into sum images
-            Boolean done = mimStack.compressPlanes(blockSize);
-            massCorrection massCorr = new massCorrection(ui);
-            //force all images to be float in order for them to be compatible for concatenation
-            massCorr.forceFloatImages(images);
-            if (done) {
-                //save the resulting sum images into a temporary file
-                Nrrd_Writer nw = new Nrrd_Writer(ui);
-                File dataFile = nw.save(images, System.getProperty("java.io.tmpdir"), "comp_" + name + ".nrrd");
-                tempFiles.add(dataFile);
+            if (ui.openFile(imFile)) {
+                if (i == 0) {
+                    //We take the name of the first file as the identifier of the stack file
+                    originalParent = imFile.getParent();
+                    originalName = getFilePrefix(imFile.getName());
+                }
+                String name = getFilePrefix(imFile.getName());
+                MimsStackEditor mimStack = ui.getmimsStackEditing();
+                MimsPlus[] images = slimImageArray(ui.getMassImages());
+                int blockSize = images[0].getNSlices();
+                //compress all mass images in file into sum images
+                Boolean done = mimStack.compressPlanes(blockSize);
+                massCorrection massCorr = new massCorrection(ui);
+                //force all images to be float in order for them to be compatible for concatenation
+                massCorr.forceFloatImages(images);
+                if (done) {
+                    //save the resulting sum images into a temporary file
+                    Nrrd_Writer nw = new Nrrd_Writer(ui);
+                    File dataFile = nw.save(images, System.getProperty("java.io.tmpdir"), "comp_" + name + ".nrrd");
+                    tempFiles.add(dataFile);
+                }
             }
         }
         //open up the first file to do our work in
