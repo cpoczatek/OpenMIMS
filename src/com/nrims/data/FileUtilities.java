@@ -39,6 +39,12 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.swing.JFileChooser;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -101,6 +107,7 @@ public class FileUtilities {
         }
         return null;
     }
+
      /**
      * Helper function for reading .sum/.ratio/.hsi files from xml.
      * @param file the file to read
@@ -464,7 +471,8 @@ public class FileUtilities {
      * @param ui
      * @return the saved file in which the stack of images is located
      */
-    public static File stackImages(File[] files, UI ui) {
+    public static File stackImages(File[] files) {
+        UI ui = new UI();
         String originalParent = "";
         String originalName = "";
         ArrayList<File> tempFiles = new ArrayList<File>();
@@ -535,13 +543,99 @@ public class FileUtilities {
                 ui.getMimsData().setHasStack(true);
             }
         }
+      
         Nrrd_Writer nw = new Nrrd_Writer(ui);
         MimsPlus[] images = slimImageArray(ui.getMassImages());
         ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
         ij.WindowManager.repaintImageWindows();
         tempFiles.get(0).delete();
         //save the file and return it
-        return nw.save(images, originalParent, "stack_" + originalName + ".nrrd");
-        
+        File file = nw.save(images, originalParent, "stack_" + originalName + ".nrrd");
+        for (int j = 0; j < images.length; j++) {
+            if (images[j] != null) {
+                images[j].setAllowClose(true);
+                images[j].close();
+            }
+        }
+        ui = null;
+        return file;
+    }
+    public static ArrayList<Object> openExperiment(File file){
+        ArrayList entries = new ArrayList();
+        Object obj;
+        try {
+            XMLDecoder xmlDecoder;
+            xmlDecoder = new XMLDecoder(new FileInputStream(file));
+            obj = xmlDecoder.readObject();
+            Integer length = (Integer) obj;
+            for (int i = 0; i < length; i++){
+                obj = xmlDecoder.readObject();
+                entries.add(obj);
+            }
+            xmlDecoder.close();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            return entries;
+        }
+    }
+    public static boolean saveExperiment(String baseFileName, String onlyFileName, UI ui) {
+        String dataFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
+        File sessionFile = null;
+        Opener image = ui.getOpener();
+        MimsPlus ratio[] = ui.getOpenRatioImages();
+        MimsPlus hsi[] = ui.getOpenHSIImages();
+        MimsPlus sum[] = ui.getOpenSumImages();
+        String[] names = image.getMassNames();
+        Integer length = ratio.length + hsi.length + sum.length;
+        if (ratio.length + hsi.length + sum.length > 0) {
+                        try {
+                // Contruct a unique name for each ratio image and save into a ratios.zip file
+                BufferedOutputStream zos = new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION));
+                XMLEncoder out = new XMLEncoder(zos);
+                //write how many objects we are writing to the file
+                out.writeObject(length);
+                
+            //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
+                if (ratio.length > 0) {
+                    out.setPersistenceDelegate(RatioProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
+                    for (int i = 0; i < ratio.length; i++) {
+                        RatioProps ratioprops = ratio[i].getRatioProps();
+                        ratioprops.setDataFileName(dataFileName);
+                        out.writeObject(ratioprops);
+                    }
+                }
+                // Contruct a unique name for each hsi image and save.
+                if (hsi.length > 0) {
+                    out.setPersistenceDelegate(RatioProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
+                    for (int i = 0; i < hsi.length; i++) {
+                        HSIProps hsiprops = hsi[i].getHSIProps();
+                        hsiprops.setDataFileName(dataFileName);
+                        out.writeObject(hsiprops);
+                    }
+                }
+                // Contruct a unique name for each sum image and save.
+                if (sum.length > 0) {
+                    for (int i = 0; i < sum.length; i++) {
+                        SumProps sumProps = sum[i].getSumProps();
+                        sumProps.setDataFileName(dataFileName);
+                        if (sumProps.getSumType() == 1) {
+                            out.setPersistenceDelegate(RatioProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
+                            out.writeObject(sumProps);
+                        } else if (sumProps.getSumType() == 0) {
+                            out.setPersistenceDelegate(RatioProps.class, new DefaultPersistenceDelegate(new String[]{"parentMassIdx"}));
+                            out.writeObject(sumProps);
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+                out.close();
+            } catch (Exception e) {
+                System.out.println("Error saving experiment settings");
+                return false;
+            }
+        }
+        return true;
     }
 }
