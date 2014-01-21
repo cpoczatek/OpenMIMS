@@ -381,7 +381,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
          op.setStackIndex(openerIndex);
          for (int k = 0; k <= (numberMasses - 1); k++) {
             images[k].setSlice(plane);
-            images[k].getProcessor().setPixels(op.getPixels(k));
+            //images[k].getProcessor().setPixels(op.getPixels(k));
+            images[k].getStack().setPixels(op.getPixels(k), restoreIndex);
             images[k].updateAndDraw();
          }
       } catch (Exception e) {
@@ -1722,7 +1723,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
      * Sets all translations to zero.
      */
     private void untrackButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_untrackButtonActionPerformed
-       untrack();
+       
+        untrack();
     }//GEN-LAST:event_untrackButtonActionPerformed
 
    /**
