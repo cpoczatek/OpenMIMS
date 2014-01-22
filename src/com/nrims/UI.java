@@ -1352,6 +1352,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         restoreMimsMenuItem = new javax.swing.JMenuItem();
         viewMenu = new javax.swing.JMenu();
         tileWindowsMenuItem = new javax.swing.JMenuItem();
+        closeMenu = new javax.swing.JMenu();
+        closeAllRatioMenuItem = new javax.swing.JMenuItem();
+        closeAllHSIMenuItem = new javax.swing.JMenuItem();
+        closeAllSumMenuItem = new javax.swing.JMenuItem();
         jSeparator6 = new javax.swing.JSeparator();
         roiManagerMenuItem = new javax.swing.JMenuItem();
         jSeparator8 = new javax.swing.JSeparator();
@@ -1370,13 +1374,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         RecomputeAllMenuItem = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JSeparator();
         batch2nrrdMenuItem = new javax.swing.JMenuItem();
+        findMosaic = new javax.swing.JMenuItem();
         exportjMenu = new javax.swing.JMenu();
         exportPNGjMenuItem = new javax.swing.JMenuItem();
         exportQVisMenuItem = new javax.swing.JMenuItem();
-        closeMenu = new javax.swing.JMenu();
-        closeAllRatioMenuItem = new javax.swing.JMenuItem();
-        closeAllHSIMenuItem = new javax.swing.JMenuItem();
-        closeAllSumMenuItem = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JSeparator();
         genStackMenuItem = new javax.swing.JMenuItem();
         compositeMenuItem = new javax.swing.JMenuItem();
@@ -1411,7 +1412,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 422, Short.MAX_VALUE)
+            .add(0, 425, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Images", jPanel1);
@@ -1526,6 +1527,34 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         viewMenu.add(tileWindowsMenuItem);
+
+        closeMenu.setText("Close...");
+
+        closeAllRatioMenuItem.setText("Close All Ratio Images");
+        closeAllRatioMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeAllRatioMenuItemActionPerformed(evt);
+            }
+        });
+        closeMenu.add(closeAllRatioMenuItem);
+
+        closeAllHSIMenuItem.setText("Close All HSI Images");
+        closeAllHSIMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeAllHSIMenuItemActionPerformed(evt);
+            }
+        });
+        closeMenu.add(closeAllHSIMenuItem);
+
+        closeAllSumMenuItem.setText("Close All Sum Images");
+        closeAllSumMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeAllSumMenuItemActionPerformed(evt);
+            }
+        });
+        closeMenu.add(closeAllSumMenuItem);
+
+        viewMenu.add(closeMenu);
         viewMenu.add(jSeparator6);
 
         roiManagerMenuItem.setText("Roi Manager");
@@ -1636,6 +1665,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         utilitiesMenu.add(batch2nrrdMenuItem);
 
+        findMosaic.setText("Find mosaic file");
+        findMosaic.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                findMosaicActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(findMosaic);
+
         exportjMenu.setText("Export...");
 
         exportPNGjMenuItem.setText("All Derived (png)");
@@ -1655,34 +1692,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         exportjMenu.add(exportQVisMenuItem);
 
         utilitiesMenu.add(exportjMenu);
-
-        closeMenu.setText("Close...");
-
-        closeAllRatioMenuItem.setText("Close All Ratio Images");
-        closeAllRatioMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                closeAllRatioMenuItemActionPerformed(evt);
-            }
-        });
-        closeMenu.add(closeAllRatioMenuItem);
-
-        closeAllHSIMenuItem.setText("Close All HSI Images");
-        closeAllHSIMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                closeAllHSIMenuItemActionPerformed(evt);
-            }
-        });
-        closeMenu.add(closeAllHSIMenuItem);
-
-        closeAllSumMenuItem.setText("Close All Sum Images");
-        closeAllSumMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                closeAllSumMenuItemActionPerformed(evt);
-            }
-        });
-        closeMenu.add(closeAllSumMenuItem);
-
-        utilitiesMenu.add(closeMenu);
         utilitiesMenu.add(jSeparator4);
 
         genStackMenuItem.setText("Generate Stack");
@@ -3006,6 +3015,18 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private void openNewImpressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewImpressActionPerformed
         UnoPlugin.newImpress();
     }//GEN-LAST:event_openNewImpressActionPerformed
+
+    private void findMosaicActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findMosaicActionPerformed
+       File file = FileUtilities.getMosaic(image.getImageFile());
+       if (file != null){
+           FileUtilities.openInNewUI(file, ui);
+       }else{
+           JOptionPane.showMessageDialog(this,
+                   "Could not find mosaic which contains this file",
+                   "File not found",
+                   JOptionPane.WARNING_MESSAGE);
+       }
+    }//GEN-LAST:event_findMosaicActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -4660,6 +4681,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuItem exportQVisMenuItem;
     private javax.swing.JMenu exportjMenu;
     private javax.swing.JMenu fileMenu;
+    private javax.swing.JMenuItem findMosaic;
     private javax.swing.JMenuItem genStackMenuItem;
     private javax.swing.JMenuItem generateReportMenuItem;
     private javax.swing.JMenuItem imageNotesMenuItem;

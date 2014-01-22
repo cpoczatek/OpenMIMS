@@ -29,11 +29,15 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -559,6 +563,66 @@ public class FileUtilities {
         }
         ui = null;
         return file;
+    }
+    public static File getMosaic(File file){
+        File parent = file.getParentFile();
+        while (parent != null){
+            File[] siblings = parent.listFiles();
+            for (File sibling: siblings){
+                if (sibling.getPath().endsWith(NRRD_EXTENSION)){
+                    try{
+                        HashMap<String, String> headerInfo = FileUtilities.getHeaderInfo(sibling);
+                        if(headerInfo.containsKey("mims_tile_positions") && headerInfo.get("mims_tile_positions").contains(file.getName())){
+                            return sibling;
+                        }
+                    }catch (Exception e){
+                        return null;
+                    }
+                }
+            }
+            parent = parent.getParentFile();
+        }
+        return null;
+    }
+    public static void openInNewUI(File file, UI ui) {
+        UI ui_new = new UI();
+        ui_new.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
+        ui_new.setVisible(true);
+        ui_new.openFile(file);
+        ui_new.restoreState(ui.getOpenRatioProps(), ui.getOpenHSIProps(), ui.getOpenSumProps(), false, false);
+        ui_new.getHSIView().useSum(ui.getIsSum());
+        ui_new.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
+    }
+    public static HashMap<String, String> getHeaderInfo(File file) throws IOException {
+        HashMap<String, String> headerInfo = new HashMap<String, String>();
+
+        // Need RAF in order to ensure that we know file offset.
+        RandomAccessFile in = new RandomAccessFile(file.getAbsolutePath(), "r");
+
+        // Initialize some strings.
+        String thisLine, noteType, noteValue, noteValuelc;
+        int lineskip = 0;
+        String commentString = "";
+        // Parse the header file, until reach an empty line.
+        while (true) {
+            thisLine = in.readLine();
+            if (thisLine == null || thisLine.equals("")) {
+                break;
+            }
+            if (thisLine.indexOf("#") == 0) {
+                commentString += thisLine.substring(1) + "\n";
+            }else if (thisLine.contains(":")) {
+                String[] keyValuePair = thisLine.split("/:(.+)?/");
+                String key = thisLine.substring(0, thisLine.indexOf(":")).trim().toLowerCase();
+                String value =thisLine.substring(thisLine.indexOf(":")+1).trim();
+                if (value.indexOf("=") == 0) {
+                    value = value.substring(1).trim();
+                }
+                headerInfo.put(key, value);
+            }
+        }
+        headerInfo.put("comments", commentString);
+        return headerInfo;
     }
     public static ArrayList<Object> openExperiment(File file){
         ArrayList entries = new ArrayList();
