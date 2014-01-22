@@ -4648,6 +4648,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                     cbControl.addWindowtoList(mp[i]);
                 }
                 previousFileCanceled = false;
+                ui.setTitle("OpenMIMS: " + image.getImageFile().getName().toString());
             }else{
                 sessionOpened = false;
             }
