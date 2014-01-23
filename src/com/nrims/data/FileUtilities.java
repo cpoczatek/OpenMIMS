@@ -19,6 +19,7 @@ import static com.nrims.UI.ROIS_EXTENSION;
 import static com.nrims.UI.SESSIONS_EXTENSION;
 import static com.nrims.UI.SUM_EXTENSION;
 import static com.nrims.UI.ui;
+import ij.ImageStack;
 import ij.gui.Roi;
 import java.beans.DefaultPersistenceDelegate;
 import java.beans.XMLDecoder;
@@ -43,6 +44,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -468,6 +470,33 @@ public class FileUtilities {
         }
         return (MimsPlus[]) images.toArray(new MimsPlus[0]);
     }
+    public static File checkWritePermissions(File folder, UI ui, String msg){
+        while (!folder.canWrite()) {
+            int n = JOptionPane.showConfirmDialog(
+                    ui, msg,
+                    "No write permissions",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            if (n == JOptionPane.NO_OPTION) {
+                return null;
+            }
+            if (n == JOptionPane.YES_OPTION) {
+                JFileChooser chooser = new JFileChooser(folder);
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                chooser.setDialogTitle("Select target directory");
+                int returnVal = chooser.showOpenDialog(ui);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    folder = chooser.getSelectedFile();
+                } else {
+                    return null;
+                }
+            }
+            if (n == JOptionPane.CANCEL_OPTION) {
+                return null;
+            }
+        }
+        return folder;
+    }
     /**
      * Used to sum images, then concatenate the sums.
      * Useful for series of images
@@ -475,94 +504,121 @@ public class FileUtilities {
      * @param ui
      * @return the saved file in which the stack of images is located
      */
-    public static File stackImages(File[] files) {
+    public static File stackImages(File[] files, UI originalUI) {
         UI ui = new UI();
-        String originalParent = "";
+        File targetDirectory;
+        File tempDirectory;
         String originalName = "";
         ArrayList<File> tempFiles = new ArrayList<File>();
-        for (int i = 0; i < files.length; i++) {
-            File imFile = files[i];
-            if (ui.openFile(imFile)) {
-                if (i == 0) {
-                    //We take the name of the first file as the identifier of the stack file
-                    originalParent = imFile.getParent();
-                    originalName = getFilePrefix(imFile.getName());
-                }
-                String name = getFilePrefix(imFile.getName());
-                MimsStackEditor mimStack = ui.getmimsStackEditing();
-                MimsPlus[] images = slimImageArray(ui.getMassImages());
-                int blockSize = images[0].getNSlices();
-                //compress all mass images in file into sum images
-                Boolean done = mimStack.compressPlanes(blockSize);
-                massCorrection massCorr = new massCorrection(ui);
-                //force all images to be float in order for them to be compatible for concatenation
-                massCorr.forceFloatImages(images);
-                if (done) {
-                    //save the resulting sum images into a temporary file
-                    Nrrd_Writer nw = new Nrrd_Writer(ui);
-                    File dataFile = nw.save(images, System.getProperty("java.io.tmpdir"), "comp_" + name + ".nrrd");
-                    tempFiles.add(dataFile);
-                }
+        if (files.length > 0) {
+            originalName = getFilePrefix(files[0].getName());
+            targetDirectory = checkWritePermissions(files[0].getParentFile(), originalUI,
+                    "Current user lacks write permissions to save in current folder. Choose another folder?");
+            if (targetDirectory == null) {
+                return null;
             }
-        }
-        //open up the first file to do our work in
-        ui.openFile(tempFiles.get(0));
-        for (int i = 0; i < tempFiles.size(); i++) {
-            File tempFile = tempFiles.get(i);
-            String name = getFilePrefix(tempFile.getName());
-            MimsPlus[] images = slimImageArray(ui.getMassImages());
-            for (int j = 0; j < images.length; j++) {
-                images[j].setTitle(name);
+            tempDirectory = checkWritePermissions(new File(System.getProperty("java.io.tmpdir")), originalUI,
+                    "Current user lacks write permissions to write temporary stack work to system tmp folder. Choose another folder to do work in?");
+            if (tempDirectory == null) {
+                return null;
             }
-            if (i != 0) {
-                Opener image = ui.getOpener();
-                UI tempUi = new UI();
-                tempUi.openFile(tempFile);
-                Opener tempImage = tempUi.getOpener();
-                MimsStackEditor mimStack = ui.getmimsStackEditing();
-                if (ui.getOpener().getNMasses() == tempImage.getNMasses()) {
-                    if (mimStack.sameResolution(image, tempImage)) {
-                        if (mimStack.sameSpotSize(image, tempImage)) {
-                            //Concatenate the images if all conditions are met
-                            mimStack.concatImages(false, tempUi);
-                        }//else{
-                          //   OMLOGGER.fine("Images do not have the same spot size.");
-                        //}
-                    }//else{
-                        //OMLOGGER.fine("Images are not the same resolution.");
-                    //}
-                }//else{
-                    //OMLOGGER.fine("Files have different number of masses.");
-                //}
-                MimsPlus[] tempImages = slimImageArray(tempUi.getMassImages());
-                //close all temporary images and kill the tempUI
-                for (int j = 0; j < tempImages.length; j++) {
-                    if (tempImages[j] != null) {
-                        tempImages[j].setAllowClose(true);
-                        tempImages[j].close();
+            for (int i = 0; i < files.length; i++) {
+                File imFile = files[i];
+                if (ui.openFile(imFile)) {
+                    String name = getFilePrefix(imFile.getName());
+                    MimsStackEditor mimStack = ui.getmimsStackEditing();
+                    MimsPlus[] images = slimImageArray(ui.getMassImages());
+                    int blockSize = images[0].getNSlices();
+                    //compress all mass images in file into sum images
+                    Boolean done = mimStack.compressPlanes(blockSize);
+                    massCorrection massCorr = new massCorrection(ui);
+                    //force all images to be float in order for them to be compatible for concatenation
+                    massCorr.forceFloatImages(images);
+                    if (done) {
+                        //save the resulting sum images into a temporary file
+                        Nrrd_Writer nw = new Nrrd_Writer(ui);
+                        File dataFile = nw.save(images, tempDirectory.getPath(), "comp_" + name + ".nrrd");
+                        tempFiles.add(dataFile);
                     }
                 }
-                tempUi = null;
-                tempFile.delete();
-                ui.getMimsData().setHasStack(true);
             }
-        }
-      
-        Nrrd_Writer nw = new Nrrd_Writer(ui);
-        MimsPlus[] images = slimImageArray(ui.getMassImages());
-        ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
-        ij.WindowManager.repaintImageWindows();
-        tempFiles.get(0).delete();
-        //save the file and return it
-        File file = nw.save(images, originalParent, "stack_" + originalName + ".nrrd");
-        for (int j = 0; j < images.length; j++) {
-            if (images[j] != null) {
-                images[j].setAllowClose(true);
-                images[j].close();
+            //open up the first file to do our work in
+            ui.openFile(tempFiles.get(0));
+            MimsPlus[] images = slimImageArray(ui.getMassImages());
+            for (int j = 0; j < images.length; j++) {
+                images[j].getImageStack().setSliceLabel(tempFiles.get(0).getName(), 1);
             }
+            String[] names = new String[tempFiles.size()];
+            for (int i = 0; i < tempFiles.size(); i++) {
+                File tempFile = tempFiles.get(i);
+                String name = getFilePrefix(tempFile.getName());
+                names[i] = name;
+                images = slimImageArray(ui.getMassImages());
+
+                if (i != 0) {
+                    Opener image = ui.getOpener();
+                    UI tempUi = new UI();
+                    tempUi.openFile(tempFile);
+                    Opener tempImage = tempUi.getOpener();
+                    MimsPlus[] tempImages = slimImageArray(tempUi.getMassImages());
+                    for (int j = 0; j < tempImages.length; j++) {
+                        images[j].setTitle(name);
+                    }
+                    MimsStackEditor mimStack = ui.getmimsStackEditing();
+                    if (ui.getOpener().getNMasses() == tempImage.getNMasses()) {
+                        if (mimStack.sameResolution(image, tempImage)) {
+                            if (mimStack.sameSpotSize(image, tempImage)) {
+                                //Concatenate the images if all conditions are met
+                                mimStack.concatImages(false, tempUi);
+                            }//else{
+                            //   OMLOGGER.fine("Images do not have the same spot size.");
+                            //}
+                        }//else{
+                        //OMLOGGER.fine("Images are not the same resolution.");
+                        //}
+                    }//else{
+                    //OMLOGGER.fine("Files have different number of masses.");
+                    //}
+                    //close all temporary images and kill the tempUI
+                    tempImages = tempUi.getOpenMassImages();
+                    for (int j = 0; j < tempImages.length; j++) {
+                        if (tempImages[j] != null) {
+                            tempImages[j].setAllowClose(true);
+                            tempImages[j].close();
+                        }
+                    }
+                    tempUi = null;
+                    tempFile.delete();
+                    ui.getMimsData().setHasStack(true);
+                }
+            }
+            images = slimImageArray(ui.getMassImages());
+            for (int j = 0; j < images.length; j++) {
+                ImageStack imageStack = images[j].getImageStack();
+                for (int i = 0; i < names.length; i++) {
+                    imageStack.setSliceLabel(names[i], i + 1);
+                    images[j].setStack(imageStack);
+                }
+
+            }
+
+            Nrrd_Writer nw = new Nrrd_Writer(ui);
+            images = slimImageArray(ui.getMassImages());
+            ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
+            ij.WindowManager.repaintImageWindows();
+            tempFiles.get(0).delete();
+            //save the file and return it
+            File file = nw.save(images, targetDirectory.getPath(), "stack_" + originalName + ".nrrd");
+            for (int j = 0; j < images.length; j++) {
+             if (images[j] != null) {
+             images[j].setAllowClose(true);
+             images[j].close();
+             }
+             }
+             ui = null;
+            return file;
         }
-        ui = null;
-        return file;
+        return null;
     }
     public static File getMosaic(File file){
         File parent = file.getParentFile();

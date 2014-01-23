@@ -266,7 +266,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     setIJDefaultDir(file.getParent());
                     boolean proceed = checkCurrentFileStatusBeforeOpening();
                     if (proceed) {
-                        openFileInBackground(FileUtilities.stackImages(files));
+                        openFileInBackground(FileUtilities.stackImages(files, ui));
                     }
                     return;
                 }else if (n == 2){
