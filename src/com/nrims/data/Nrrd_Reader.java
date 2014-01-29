@@ -242,6 +242,9 @@ public class Nrrd_Reader implements Opener {
 
          else if(thisLine.startsWith(Opener.Mims_tile_positions))
                 fi.tilePositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
+         
+         else if(thisLine.startsWith(Opener.Mims_stack_positions))
+                fi.stackPositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
 
          else if(thisLine.startsWith(Opener.Mims_raster))
                 fi.raster=value;
@@ -554,7 +557,13 @@ public class Nrrd_Reader implements Opener {
     public String[] getTilePositions() {
        return fi.tilePositions;
     }
+    public String[] getStackPositions() {
+       return fi.stackPositions;
+    }
 
+    public void setStackPositions(String[] names){
+        fi.stackPositions = names;
+    }
     public boolean isPrototype() {
        return fi.isPrototype;
     }

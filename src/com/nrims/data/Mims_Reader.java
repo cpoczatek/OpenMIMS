@@ -42,6 +42,7 @@ public class Mims_Reader implements Opener {
     private float fc_objective;
     private boolean isPrototype = false;
     private String[] tilePositions = null;
+    private String[] stackPositions = null;
     private HashMap metaData = new HashMap();
 
     // These field were specifically selected by analysts as having importance.
@@ -1160,6 +1161,12 @@ public class Mims_Reader implements Opener {
     */
    public void setNImages(int nimages) {
       fi.nImages = nimages;
+   }
+   public String[] getStackPositions(){
+       return stackPositions;
+   }
+   public void setStackPositions(String[] names){
+       this.stackPositions = names;
    }
 
    /**

@@ -32,6 +32,7 @@ public interface Opener {
     public static final String Mims_QSA_FC_Obj = "Mims_QSA_FC_Obj";
     public static final String Mims_prototype = "Mims_prototype";
     public static final String Mims_tile_positions = "Mims_tile_positions";
+    public static final String Mims_stack_positions = "Mims_stack_positions";
     public static final String Mims_BField = "Mims_BField";
     public static final String Mims_pszComment = "Mims_pszComment";
     public static final String Mims_PrimCurrentT0 = "Mims_PrimCurrentT0";
@@ -88,6 +89,7 @@ public interface Opener {
     public float getFCObjective();
     public boolean isPrototype();
     public String[] getTilePositions();
+    public String[] getStackPositions();
     public HashMap getMetaDataKeyValuePairs();
     public String getBField();
     public String getpszComment();
@@ -99,6 +101,7 @@ public interface Opener {
     public String getRadius();
 
     //Setable metadata
+    public void setStackPositions(String[] names);
     public void setNotes(String notes);
     public void setIsDTCorrected(boolean isDTCorrected);
     public void setIsQSACorrected(boolean isQSACorrected);

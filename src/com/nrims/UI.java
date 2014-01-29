@@ -4547,15 +4547,24 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
                 }
 
-
+                       String[] names = image.getStackPositions();
                 for (int i = 0; i < image.getNMasses(); i++) {
                     if (bOpenMass[i]) {
                         if (image.getNImages() > 1) {
+                            if (names != null && names.length > 0) {
+                                ImageStack stack = massImages[i].getImageStack();
+                                for (int j = 0; j < names.length; j++) {
+                                    stack.setSliceLabel(names[j], j + 1);
+                                }
+                                massImages[i].setStack(stack);
+                            }
+
                             massImages[i].setIsStack(true);
                             massImages[i].setSlice(1);
                         }
                         if (isSilentMode() == false) {
                             massImages[i].show();
+                            massImages[i].updateAndDraw();
                         }
                     }
                 }

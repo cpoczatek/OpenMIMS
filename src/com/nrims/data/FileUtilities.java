@@ -470,7 +470,19 @@ public class FileUtilities {
         }
         return (MimsPlus[]) images.toArray(new MimsPlus[0]);
     }
+    /**
+     * Helper method to check the permissions of a given directory/directory file is contained in.
+     * Useful for when you are trying to save something.
+     * If the folder is not writable, then the function prompts the user to select a new directory
+     * @param folder the directory whose write permission are in question, or file to check it's parent directory
+     * @param ui main UI window, needed to display error messages
+     * @param msg customized message for the user to describe what you're using the folder for.
+     * @return the parent folder if one can be written to, or null if the users opts out of choosing one.
+     */
     public static File checkWritePermissions(File folder, UI ui, String msg){
+        if (!folder.isDirectory()){
+            folder = folder.getParentFile();
+        }
         while (!folder.canWrite()) {
             int n = JOptionPane.showConfirmDialog(
                     ui, msg,
@@ -499,8 +511,8 @@ public class FileUtilities {
     }
     /**
      * Used to sum images, then concatenate the sums.
-     * Useful for series of images
-     * @param files
+     * Useful for series of images. Images will be stacked in order of array
+     * @param files the files you want to stack
      * @param ui
      * @return the saved file in which the stack of images is located
      */
@@ -510,6 +522,7 @@ public class FileUtilities {
         File tempDirectory;
         String originalName = "";
         ArrayList<File> tempFiles = new ArrayList<File>();
+                    String[] names = new String[files.length];
         if (files.length > 0) {
             originalName = getFilePrefix(files[0].getName());
             targetDirectory = checkWritePermissions(files[0].getParentFile(), originalUI,
@@ -524,6 +537,7 @@ public class FileUtilities {
             }
             for (int i = 0; i < files.length; i++) {
                 File imFile = files[i];
+                names[i] = imFile.getName();
                 if (ui.openFile(imFile)) {
                     String name = getFilePrefix(imFile.getName());
                     MimsStackEditor mimStack = ui.getmimsStackEditing();
@@ -544,43 +558,43 @@ public class FileUtilities {
             }
             //open up the first file to do our work in
             ui.openFile(tempFiles.get(0));
-            MimsPlus[] images = slimImageArray(ui.getMassImages());
-            for (int j = 0; j < images.length; j++) {
-                images[j].getImageStack().setSliceLabel(tempFiles.get(0).getName(), 1);
-            }
-            String[] names = new String[tempFiles.size()];
+            MimsPlus[] images;
+
             for (int i = 0; i < tempFiles.size(); i++) {
                 File tempFile = tempFiles.get(i);
-                String name = getFilePrefix(tempFile.getName());
-                names[i] = name;
                 images = slimImageArray(ui.getMassImages());
-
                 if (i != 0) {
                     Opener image = ui.getOpener();
                     UI tempUi = new UI();
                     tempUi.openFile(tempFile);
                     Opener tempImage = tempUi.getOpener();
-                    MimsPlus[] tempImages = slimImageArray(tempUi.getMassImages());
-                    for (int j = 0; j < tempImages.length; j++) {
-                        images[j].setTitle(name);
-                    }
+                    
                     MimsStackEditor mimStack = ui.getmimsStackEditing();
                     if (ui.getOpener().getNMasses() == tempImage.getNMasses()) {
                         if (mimStack.sameResolution(image, tempImage)) {
                             if (mimStack.sameSpotSize(image, tempImage)) {
                                 //Concatenate the images if all conditions are met
                                 mimStack.concatImages(false, tempUi);
-                            }//else{
-                            //   OMLOGGER.fine("Images do not have the same spot size.");
-                            //}
-                        }//else{
-                        //OMLOGGER.fine("Images are not the same resolution.");
-                        //}
-                    }//else{
-                    //OMLOGGER.fine("Files have different number of masses.");
-                    //}
+                            } else {
+                                JOptionPane.showMessageDialog(originalUI,
+                                        "Images do not have the same spot size.",
+                                        "Error", JOptionPane.ERROR_MESSAGE);
+                                return null;
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(originalUI,
+                                    "Images are not the same resolution.",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            return null;
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(originalUI,
+                                "Files have different number of masses.",
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                        return null;
+                    }
                     //close all temporary images and kill the tempUI
-                    tempImages = tempUi.getOpenMassImages();
+                    MimsPlus[] tempImages = tempUi.getOpenMassImages();
                     for (int j = 0; j < tempImages.length; j++) {
                         if (tempImages[j] != null) {
                             tempImages[j].setAllowClose(true);
@@ -601,7 +615,7 @@ public class FileUtilities {
                 }
 
             }
-
+            ui.getOpener().setStackPositions(names);
             Nrrd_Writer nw = new Nrrd_Writer(ui);
             images = slimImageArray(ui.getMassImages());
             ij.plugin.WindowOrganizer wo = new ij.plugin.WindowOrganizer();
@@ -610,16 +624,23 @@ public class FileUtilities {
             //save the file and return it
             File file = nw.save(images, targetDirectory.getPath(), "stack_" + originalName + ".nrrd");
             for (int j = 0; j < images.length; j++) {
-             if (images[j] != null) {
-             images[j].setAllowClose(true);
-             images[j].close();
-             }
-             }
-             ui = null;
+                if (images[j] != null) {
+                    images[j].setAllowClose(true);
+                    images[j].close();
+                }
+            }
+            ui = null;
             return file;
         }
         return null;
     }
+    /**
+     * Get the mosaic file in which the argument file is contained within.
+     * Note: searches the direct parent directories and all .nrrd files directly within those directories.
+     * It will not recursively search the sibling/uncle directories.
+     * @param file 
+     * @return the mosaic file if found, or null if not found.
+     */
     public static File getMosaic(File file){
         File parent = file.getParentFile();
         while (parent != null){

@@ -112,7 +112,7 @@ public class Nrrd_Writer {
         // Write Mims specific fields.
         bw.write(getMimsKeyValuePairs());
 
-        // Write out any other metadat.
+        // Write out any other metadata.
         bw.write(getMetaDataKeyValuePairs() + "\n");
 
         // Flush rather than close
@@ -296,6 +296,15 @@ public class Nrrd_Writer {
            out.write(Opener.Mims_QSA_FC_Obj+Opener.Nrrd_seperator+op.getFCObjective() + "\n");
 
        }
+       //write slice labels
+       if (op.getStackPositions() != null && op.getStackPositions().length > 0){
+           String[] names = op.getStackPositions();
+           String output = "";
+           for (int i = 0; i < names.length; i++) {
+               output += names[i] + ";";
+           }
+           out.write(Opener.Mims_stack_positions+Opener.Nrrd_seperator+output+"\n");
+       }
 
        // Image Notes
        String notes = op.getNotes();
@@ -405,6 +414,7 @@ class NrrdFileInfo extends FileInfo {
    public float fc_objective;
    public boolean isPrototype = false;
    public String[] tilePositions = null;
+   public String[] stackPositions = null;
    public HashMap metadata = new HashMap();
    public double countTime;
 
