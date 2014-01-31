@@ -17,6 +17,7 @@ import java.util.Arrays;
 import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.ListCellRenderer;
 
 import org.jfree.chart.JFreeChart;
@@ -315,27 +316,52 @@ public class MimsTomography extends javax.swing.JPanel {
        }
 
        // Get selected stats.
-       String[] statnames = getStatNames();
-       if (statnames.length >= 1) {
-          tomoChart.setStats(statnames);
-       } else {
-          System.out.println("No stats selected");
-          return;
-       }
+
 
        // Get selected rois.
        MimsRoiManager rm = ui.getRoiManager();
        Roi[] rois = rm.getSelectedROIs();
+       int numLine = 0;
        if (rois.length == 0) {
           rois = rm.getAllROIsInList();
        }
        if (rois.length >= 1) {
+          for (Roi roi : rois){
+              if (roi.isLine()){
+                  numLine++;
+              }
+          }
+           if (numLine > 0 && numLine != rois.length) {
+               JOptionPane.showMessageDialog(ui,
+                       "You cannot mix line and area rois in graphs.",
+                       "Plotting options conflict",
+                       JOptionPane.WARNING_MESSAGE);
+               return;
+           }
           tomoChart.setRois(rois);
        } else {
           IJ.error("No rois selected");
           return;
        }
-
+       boolean mean= false;
+        String[] statnames = getStatNames();
+        for (String statname : statnames) {
+            if (statname == "mean"){
+                mean = true;
+                if (statnames.length > 1) {
+                    JOptionPane.showMessageDialog(ui,
+                            "Because you have selected mean, only mean will be plotted.",
+                            "Plotting options conflict",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        }
+        if (statnames.length >= 1) {
+            tomoChart.setStats(statnames);
+        } else {
+            System.out.println("No stats selected");
+            return;
+        }
        // images
        MimsPlus[] images = getImages();
        if (images.length >= 1) {
@@ -353,7 +379,7 @@ public class MimsTomography extends javax.swing.JPanel {
        }
 
        int currentPlane = ui.getMassImage(0).getSlice();
-       tomoChart.plotData(appendCheckBox.isSelected());
+       tomoChart.plotData(appendCheckBox.isSelected(), mean);
 
        // Fast forward stack by one slice if we are appending current plane.
        if ((currentPlaneCheckBox.isSelected()) && ((currentPlane + 1) <= ui.getMassImage(0).getStackSize())) {

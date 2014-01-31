@@ -92,7 +92,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
    * @param appendingData <code>true</code> if appending a plot
    * to an existing frame, otherwise <code>false</code>.
    */
-   public void plotData(boolean appendingData) {
+   public void plotData(boolean appendingData, boolean mean) {
 
       // Add data to existing plaot if appending.
       if (appendingData && chartpanel != null)
@@ -101,9 +101,13 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          
          // Create an chart empty.
          JFreeChart chart = createChart();
-
+        XYDataset xydata;
          // Get the data.
-         XYDataset xydata = getDataset();
+          if (mean) {
+              xydata = getLineDataset();
+          } else {
+              xydata = getDataset();
+          }
 
          // Apply data to the plot
          MimsXYPlot xyplot = (MimsXYPlot)chart.getPlot();
@@ -397,7 +401,72 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
 
       return dataset;
    }
+/**
+   * This method will generate a set of plots for a given set of: rois, stats, images.
+   *
+   * @return XYDataset
+   */
+   public XYDataset getLineDataset() {
 
+      // Initialize some variables
+      XYSeriesCollection dataset = new XYSeriesCollection();
+      XYSeries series[][] = new XYSeries[rois.length][images.length];
+      String seriesname[][] = new String[rois.length][images.length];
+      int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
+      ArrayList<String> seriesNames = new ArrayList<String>();
+      String tempName = "";
+      double stat;
+
+      // Image loop
+      for (int j = 0; j < images.length; j++) {
+         MimsPlus image = images[j];
+            // Roi loop
+            for (int i = 0; i < rois.length; i++) {
+
+               // Set the Roi to the image.
+               Integer[] xy = ui.getRoiManager().getRoiLocation(rois[i].getName(), image.getCurrentSlice());
+               rois[i].setLocation(xy[0], xy[1]);
+               image.setRoi(rois[i]);
+
+               // Stat loop
+               for (int k = 0; k < stats.length; k++) {
+
+                  // Generate a name for the dataset.
+                  String prefix = "";
+                  if (image.getType() == MimsPlus.MASS_IMAGE || image.getType() == MimsPlus.RATIO_IMAGE)
+                        prefix = "_m";
+                  if (seriesname[i][j] == null) {
+                     tempName = "mean" + prefix + image.getRoundedTitle(true) + "_r" + rois[i].getName();
+                     int dup = 1;
+                     while (seriesNames.contains(tempName)) {
+                        tempName = "mean" + prefix + image.getRoundedTitle(true) + "_r" + rois[i].getName() + " (" + dup + ")";
+                        dup++;
+                     }
+                     seriesNames.add(tempName);
+                     seriesname[i][j] = tempName;
+                  }
+                  series[i][j] = new XYSeries(seriesname[i][j]);
+                  ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(image);
+                  double[] newdata = profileP.getProfile();
+                   for (int p = 0; p < newdata.length; p++) {
+                       series[i][j].add(p, newdata[p]);
+                   }
+
+               } // End of Stat
+            } // End of Roi
+      } // End of Image
+
+      // Populate the final data structure.
+      for (int i = 0; i < rois.length; i++) {
+         for (int j = 0; j < images.length; j++) {
+               dataset.addSeries(series[i][j]);
+         }
+      }
+
+      ui.getOpenMassImages()[0].setSlice(currentSlice);
+
+      return dataset;
+   }
    /**
     * Sets the images to be plotted.
     *
