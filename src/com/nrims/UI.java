@@ -1375,6 +1375,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jSeparator3 = new javax.swing.JSeparator();
         batch2nrrdMenuItem = new javax.swing.JMenuItem();
         findMosaic = new javax.swing.JMenuItem();
+        jMenuItem4 = new javax.swing.JMenuItem();
         exportjMenu = new javax.swing.JMenu();
         exportPNGjMenuItem = new javax.swing.JMenuItem();
         exportQVisMenuItem = new javax.swing.JMenuItem();
@@ -1672,6 +1673,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(findMosaic);
+
+        jMenuItem4.setText("Center of mass autotrack");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(jMenuItem4);
 
         exportjMenu.setText("Export...");
 
@@ -3027,6 +3036,10 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                    JOptionPane.WARNING_MESSAGE);
        }
     }//GEN-LAST:event_findMosaicActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        ImageDataUtilities.centerMassAutoTrack(ui);
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -4701,6 +4714,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;

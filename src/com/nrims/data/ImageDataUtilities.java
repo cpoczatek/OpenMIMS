@@ -4,9 +4,14 @@
  */
 package com.nrims.data;
 
+import com.nrims.MimsJTable;
 import com.nrims.MimsPlus;
+import com.nrims.MimsRoiManager;
 import com.nrims.UI;
 import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.Roi;
+import ij.process.ImageStatistics;
 
 /**
  *
@@ -297,5 +302,35 @@ public class ImageDataUtilities {
         newimp.setSlice(currentslice);
         refimp.setSlice(currentslice);
 
+    }
+
+    /**
+     *
+     * @param ui the value of ui
+     */
+    public static void centerMassAutoTrack(UI ui) {
+        MimsPlus image = (MimsPlus) WindowManager.getCurrentImage();
+        MimsRoiManager roiManager = ui.getRoiManager();
+        Roi roi = roiManager.getRoi();
+        Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), 1);
+        roi.setLocation(xy[0], xy[1]);
+        image.setRoi(roi);
+        image.setSlice(1);
+        ImageStatistics stats = image.getStatistics(MimsJTable.mOptions);
+        double xcenter = stats.xCenterOfMass;
+        double ycenter = stats.yCenterOfMass;
+        for (int i = 2; i <= image.getNSlices(); i++) {
+            xy = ui.getRoiManager().getRoiLocation(roi.getName(), i);
+            roi.setLocation(xy[0], xy[1]);
+            image.setSlice(i);
+            image.setRoi(roi);
+            ImageStatistics sliceStats = image.getStatistics(MimsJTable.mOptions);
+            double slicexcenter = sliceStats.xCenterOfMass;
+            double sliceycenter = sliceStats.yCenterOfMass;
+            int deltax = (int) (xcenter - slicexcenter);
+            int deltay = (int) (ycenter - sliceycenter);
+            MimsPlus[] translateimages = ui.getOpenMassImages();
+            ui.getmimsStackEditing().translateStack(deltax, deltay, i, i);
+        }
     }
 }
