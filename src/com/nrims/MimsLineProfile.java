@@ -4,19 +4,30 @@ import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
+import ij.gui.Line;
+import ij.gui.Roi;
+import ij.gui.ShapeRoi;
 import java.awt.Color;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ResourceBundle;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingConstants;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.event.PlotChangeEvent;
+import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.util.ResourceBundleWrapper;
 import org.jfree.data.xy.XYDataset;
@@ -35,20 +46,85 @@ import org.jfree.ui.ExtensionFileFilter;
 public class MimsLineProfile extends JFrame {
 
     private JFreeChart chart;
+    private JLabel coords;
     private MimsChartPanel chartPanel;
     private int linewidth = 1;
     private UI ui;
+    private double curX;
+    private String name;
 
     public MimsLineProfile(final UI ui) {
         super("Dynamic Line Profile");
         this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
         this.ui = ui;
-
+        
         XYDataset dataset = createDataset();
         chart = createChart(dataset);
-
+        /*chart.getPlot().addChangeListener(new PlotChangeListener(){
+            MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+            @Override
+            public void plotChanged(PlotChangeEvent e){
+                System.out.println("Plot change event triggered.");
+                MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+                if (plot.isDomainCrosshairVisible() && name != null) {
+                    curX = plot.getDomainCrosshairValue();
+                    Roi roi = ui.getRoiManager().getRoiByName(name);
+                    if (roi.isLine()) {
+                        Line line = (Line) roi;
+                        double ratio = curX / line.getLength();
+                        Polygon points = line.getPoints();
+                        int[] xpoints = points.xpoints;
+                        int[] ypoints = points.ypoints;
+                        double xvec = (xpoints[0] - xpoints[1]) * ratio;
+                        double yvec = (ypoints[0] - ypoints[1]) * ratio;
+                        int pixelX = (int) (xpoints[0] - xvec);
+                        int pixelY = (int) (ypoints[0] - yvec);
+                        System.out.println(pixelX + ", " + pixelY);
+                        coords.setText(pixelX + ", " + pixelY);
+                        //Rectangle shape = new Rectangle((int) (xpoints[0]+xvec-2), (int) (ypoints[0]+yvec-2), 4, 4);
+                        //Roi shaperoi = new ShapeRoi(shape);
+                    }
+                }
+            }
+        });*/
+                
+        
+ 
         chartPanel = new MimsChartPanel(chart);
         chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+        coords = new JLabel("", SwingConstants.LEFT);
+        chartPanel.add(coords);
+        chartPanel.addChartMouseListener(new ChartMouseListener(){
+
+            public void chartMouseClicked(ChartMouseEvent cme) {
+                MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+                if (plot.isDomainCrosshairVisible() && curX != plot.getDomainCrosshairValue() && name != null) {
+                    curX = plot.getDomainCrosshairValue();
+                    Roi roi = ui.getRoiManager().getRoiByName(name);
+                    if (roi.isLine()) {
+                        Line line = (Line) roi;
+                        double ratio = curX / line.getLength();
+                        Polygon points = line.getPoints();
+                        int[] xpoints = points.xpoints;
+                        int[] ypoints = points.ypoints;
+                        double xvec = (xpoints[0] - xpoints[1]) * ratio;
+                        double yvec = (ypoints[0] - ypoints[1]) * ratio;
+                        int pixelX = (int) (xpoints[0] - xvec);
+                        int pixelY = (int) (ypoints[0] - yvec);
+                        System.out.println(pixelX + ", " + pixelY);
+                        plot.setPixelCoords(pixelX, pixelY);
+                        //Rectangle shape = new Rectangle((int) (xpoints[0]+xvec-2), (int) (ypoints[0]+yvec-2), 4, 4);
+                        //Roi shaperoi = new ShapeRoi(shape);
+                    }
+                }
+            }
+
+            public void chartMouseMoved(ChartMouseEvent cme) {
+                //
+            }
+            
+        })
+        ;
         JPopupMenu menu = chartPanel.getPopupMenu();
         JMenuItem menuItem = new javax.swing.JMenuItem("Display text");
         menuItem.addActionListener(new ActionListener() {
@@ -174,7 +250,7 @@ public class MimsLineProfile extends JFrame {
         if (newdata == null) {
             return;
         }
-
+        this.name = name.substring(name.lastIndexOf(":") + 2);
         linewidth = width;
         XYSeries series = new XYSeries(name + " w: "+width);
         for(int i = 0; i< newdata.length; i++) {

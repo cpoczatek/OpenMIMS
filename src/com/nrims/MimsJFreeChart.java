@@ -98,9 +98,12 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       if (appendingData && chartpanel != null)
          appendData();      
       else {
-         
+         String xaxisname = "Plane";
          // Create an chart empty.
-         JFreeChart chart = createChart();
+          if (mean){
+              xaxisname = "Length";
+          }
+         JFreeChart chart = createChart(xaxisname);
         XYDataset xydata;
          // Get the data.
           if (mean) {
@@ -196,8 +199,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
 /**
  * Contructs the frame and sets the specifics regarding visual parameters.
  */
-   private static JFreeChart createChart() {
-      JFreeChart chart = MimsChartFactory.createMimsXYLineChart("", "Plane", "", null, PlotOrientation.VERTICAL, true, true, false);
+   private static JFreeChart createChart(String xaxisName) {
+      JFreeChart chart = MimsChartFactory.createMimsXYLineChart("", xaxisName, "", null, PlotOrientation.VERTICAL, true, true, false);
       chart.setBackgroundPaint(Color.white);
       // Get a reference to the plot.
       MimsXYPlot plot = (MimsXYPlot) chart.getPlot();

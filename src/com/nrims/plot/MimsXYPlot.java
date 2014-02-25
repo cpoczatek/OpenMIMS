@@ -37,10 +37,14 @@ import org.jfree.ui.TextAnchor;
  * separates this class from its parent {@link XYPlot}.
  */
 public class MimsXYPlot extends XYPlot {
+    int pixelX;
+    int pixelY;
+    boolean pixelsSet = false;
    
     /** A flag that controls whether or not a label displaying XHair location is displayed. */
     private boolean crosshairLabelVisible;
     XYTextAnnotation xyannot = new XYTextAnnotation("", 0, 0);
+    XYTextAnnotation pixelCoords = new XYTextAnnotation("", 0, 0);
     
    public MimsXYPlot(XYDataset dataset, ValueAxis domainAxis,
                      ValueAxis rangeAxis, XYItemRenderer renderer){
@@ -365,8 +369,10 @@ public class MimsXYPlot extends XYPlot {
         System.out.println("after x: " + aX + "  y: " + aY);
         
         removeAnnotation(xyannot, false);
+        removeAnnotation(pixelCoords, false);
         setCrosshairLabel(aX,aY);
         addAnnotation(xyannot, false);
+        addAnnotation(pixelCoords, false);
         drawAnnotations(g2, dataArea, info);
         //end added code
         
@@ -393,6 +399,20 @@ public class MimsXYPlot extends XYPlot {
          xyannot.setText("");
       }
       
+   }
+   //Set label
+   public void setPixelCoords(int x, int y) {
+                double xmax = getDomainAxis().getUpperBound();
+         double ymax = getRangeAxis().getUpperBound();
+      pixelX = x;
+      pixelY = y;
+      pixelsSet = true;
+      String xhairlabel = "pX = " + pixelX + ", pY = " + pixelY;
+       
+      pixelCoords.setText(xhairlabel);
+               pixelCoords.setX(xmax);
+         pixelCoords.setY(ymax-50);
+         pixelCoords.setTextAnchor(TextAnchor.TOP_RIGHT);
    }
 
    public void showXHairLabel(boolean visible) {
