@@ -327,7 +327,7 @@ public class MimsTomography extends javax.swing.JPanel {
        }
        if (rois.length >= 1) {
           for (Roi roi : rois){
-              if (roi.isLine()){
+              if (roi.getType() == 5){
                   numLine++;
               }
           }
@@ -347,12 +347,14 @@ public class MimsTomography extends javax.swing.JPanel {
         String[] statnames = getStatNames();
         for (String statname : statnames) {
             if (statname == "mean"){
-                mean = true;
-                if (statnames.length > 1) {
+                if (statnames.length > 1 && numLine > 0) {
+                    mean = true;
                     JOptionPane.showMessageDialog(ui,
-                            "Because you have selected mean, only mean will be plotted.",
+                            "Because you have selected mean while using line ROIs, only mean will be plotted.",
                             "Plotting options conflict",
                             JOptionPane.WARNING_MESSAGE);
+                }else if (numLine > 0 && statnames.length == 1){
+                    mean = true;
                 }
             }
         }
