@@ -53,6 +53,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * The main user interface of the NRIMS ImageJ plugin.
@@ -111,6 +112,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsPlus[] segImages = new MimsPlus[maxMasses];
     private MimsPlus[] sumImages = new MimsPlus[2 * maxMasses];
     private MimsPlus[] compImages = new MimsPlus[2 * maxMasses];
+    private ArrayList<MimsPlus> nonMIMSImages = new ArrayList<MimsPlus>();
 
     private MimsData mimsData = null;
     private MimsLog mimsLog = null;   
@@ -1222,6 +1224,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         compImages[i].setRoi(evt.getRoi());
                     }
                 }
+               for (i = 0; i < nonMIMSImages.size(); i++) {
+                    if (nonMIMSImages.get(i) != mp && nonMIMSImages.get(i) != null) {
+                        nonMIMSImages.get(i).setRoi(evt.getRoi());
+                    }
+                }
             // Automatically appends a drawn ROI to the RoiManager
             // to improve work flow without extra mouse actions.             
             if (evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
@@ -1340,6 +1347,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jMenuBar1 = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         openNewMenuItem = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
         openNextMenuItem = new javax.swing.JMenuItem();
         jMenuItem1 = new javax.swing.JMenuItem();
         saveMIMSjMenuItem = new javax.swing.JMenuItem();
@@ -1447,6 +1455,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         fileMenu.add(openNewMenuItem);
         openNewMenuItem.getAccessibleContext().setAccessibleDescription("Open a MIMS Image");
+
+        jMenuItem3.setText("Open Non-MIMS Image");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        fileMenu.add(jMenuItem3);
 
         openNextMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
         openNextMenuItem.setText("Open Next");
@@ -3040,6 +3056,27 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
         ImageDataUtilities.centerMassAutoTrack(ui);
     }//GEN-LAST:event_jMenuItem4ActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        MimsJFileChooser fc = new MimsJFileChooser(this);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Non-MIMS Images", "png", "tif", "jpg");
+        fc.setFileFilter(filter);
+        fc.setMultiSelectionEnabled(false);
+        int returnVal = fc.showOpenDialog(this);
+
+        // Open file or return null.
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            ImagePlus tiff = IJ.openImage(file.getAbsolutePath());
+            MimsPlus newImage = new MimsPlus(this);
+            newImage.setProcessor(tiff.getProcessor());
+            newImage.addListener(ui);
+            nonMIMSImages.add(newImage);
+            tiff.close();
+            newImage.show();
+        }
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
 
    /**
     * Applies a correction to the current image and writes the file
@@ -4714,6 +4751,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;

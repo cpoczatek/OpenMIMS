@@ -70,6 +70,8 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                parentplane = ui.getMassImages()[mImp.getSumProps().getParentMassIdx()].getCurrentSlice();
             else if (mImp.getSumProps().getSumType() == SumProps.RATIO_IMAGE)
                parentplane = ui.getMassImages()[mImp.getSumProps().getNumMassIdx()].getCurrentSlice();
+        }else{
+            mImp.getCurrentSlice();
         }
         } catch(NullPointerException npe) {
            npe.printStackTrace();
