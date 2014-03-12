@@ -1383,6 +1383,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jSeparator3 = new javax.swing.JSeparator();
         batch2nrrdMenuItem = new javax.swing.JMenuItem();
         findMosaic = new javax.swing.JMenuItem();
+        findStackFile = new javax.swing.JMenuItem();
         jMenuItem4 = new javax.swing.JMenuItem();
         exportjMenu = new javax.swing.JMenu();
         exportPNGjMenuItem = new javax.swing.JMenuItem();
@@ -1689,6 +1690,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(findMosaic);
+
+        findStackFile.setText("Find stack file");
+        findStackFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                findStackFileActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(findStackFile);
 
         jMenuItem4.setText("Center of mass autotrack");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
@@ -3078,6 +3087,18 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         }
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
+    private void findStackFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findStackFileActionPerformed
+        File file = FileUtilities.getStack(image.getImageFile());
+        if (file != null) {
+            FileUtilities.openInNewUI(file, ui);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Could not find stack which contains this file",
+                    "File not found",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }//GEN-LAST:event_findStackFileActionPerformed
+
    /**
     * Applies a correction to the current image and writes the file
     * to fileName.
@@ -3363,7 +3384,25 @@ public void updateLineProfile(double[] newdata, String name, int width) {
         }
         return mp;
     }
-
+    
+    public MimsPlus[] getOpenNonMimsImages() {
+        int i, nOpen = 0;
+        for (i = 0; i < nonMIMSImages.size(); i++) {
+            if (nonMIMSImages.get(i) != null) {
+                nOpen++;
+            }
+        }
+        MimsPlus[] mp = new MimsPlus[nOpen];
+        if (nOpen == 0) {
+            return mp;
+        }
+        for (i = 0        , nOpen = 0; i < nonMIMSImages.size(); i++) {
+            if (nonMIMSImages.get(i) != null) {
+                mp[nOpen++] = nonMIMSImages.get(i);
+            }
+        }
+        return mp;
+    }
     /**
      * Returns the open ratio images as an array.
      *
@@ -4742,6 +4781,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
     private javax.swing.JMenu exportjMenu;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenuItem findMosaic;
+    private javax.swing.JMenuItem findStackFile;
     private javax.swing.JMenuItem genStackMenuItem;
     private javax.swing.JMenuItem generateReportMenuItem;
     private javax.swing.JMenuItem imageNotesMenuItem;

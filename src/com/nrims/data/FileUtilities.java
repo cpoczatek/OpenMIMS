@@ -5,6 +5,7 @@
 package com.nrims.data;
 
 import com.nrims.HSIProps;
+import com.nrims.MimsCanvas;
 import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
 import com.nrims.MimsStackEditor;
@@ -36,6 +37,7 @@ import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -778,5 +780,59 @@ public class FileUtilities {
             }
         }
         return true;
+    }
+    private static void addFilesRecursively(File dir, String name, Collection<File> all) {
+        if (all.size() > 0) {
+            return;
+        }
+        final File[] children = dir.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                if (child.getName().matches(name)) {
+                    all.add(child);
+                    return;
+                }
+                addFilesRecursively(child, name, all);
+            }
+        }
+    }
+    public static File getSliceFile(MimsPlus massimage, UI ui) {
+        File file = null;
+        int sliceIndex = massimage.getCurrentSlice();
+        String sliceName = ui.getOpener().getStackPositions()[sliceIndex - 1];
+        final Collection<File> all = new ArrayList<File>();
+        addFilesRecursively(new File(ui.getImageDir()), sliceName, all);
+        if (all.isEmpty()) {
+            return null;
+        }else{
+            return ((File)all.toArray()[0]);
+        }
+    }
+        /**
+     * Get the mosaic file in which the argument file is contained within.
+     * Note: searches the direct parent directories and all .nrrd files directly within those directories.
+     * It will not recursively search the sibling/uncle directories.
+     * @param file 
+     * @return the mosaic file if found, or null if not found.
+     */
+    public static File getStack(File file){
+        File parent = file.getParentFile();
+        while (parent != null){
+            File[] siblings = parent.listFiles();
+            for (File sibling: siblings){
+                if (sibling.getPath().endsWith(NRRD_EXTENSION)){
+                    try{
+                        HashMap<String, String> headerInfo = FileUtilities.getHeaderInfo(sibling);
+                        if(headerInfo.containsKey("mims_stack_positions") && headerInfo.get("mims_stack_positions").contains(file.getName())){
+                            return sibling;
+                        }
+                    }catch (Exception e){
+                        return null;
+                    }
+                }
+            }
+            parent = parent.getParentFile();
+        }
+        return null;
     }
 }

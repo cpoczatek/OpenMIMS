@@ -128,6 +128,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
    @Override
    protected void handlePopupMenu(MouseEvent e) {
       String[] tileList = ui.getOpener().getTilePositions();
+      String[] stackList = ui.getOpener().getStackPositions();
       ReportGenerator rg = ui.getReportGenerator();  
       if(rg != null && rg.isVisible()) {
          int x = e.getX();
@@ -152,7 +153,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
          popup.add(addImage);
          popup.show(this , x, y);
       }
-      else if (ui.getOpener().getTilePositions() == null || tileList.length == 0)
+      else if ((ui.getOpener().getTilePositions() == null || tileList.length == 0) && (ui.getOpener().getStackPositions() == null || stackList.length == 0))
          super.handlePopupMenu(e);
       else {
          int x = e.getX();
@@ -160,48 +161,83 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
          JPopupMenu popup = new JPopupMenu();         
          int mX = offScreenX(x);
          int mY = offScreenY(y);
-         String tileName = getClosestTileName(mX, mY);
-         JMenuItem openTile = new JMenuItem("open tile: " + tileName);
-         openTile.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent event) {
+         String tileName;
+         JMenuItem openTile;
+          if (ui.getOpener().getTilePositions() != null && tileList.length != 0) {
+              tileName = getClosestTileName(mX, mY);
+              openTile = new JMenuItem("open tile: " + tileName);
+              openTile.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent event) {
 
-             AbstractButton aButton = (AbstractButton) event.getSource();
-             String nrrdFileName = aButton.getActionCommand();
+                      AbstractButton aButton = (AbstractButton) event.getSource();
+                      String nrrdFileName = aButton.getActionCommand();
 
-             // Look for nrrd file.
-             final Collection<File> all = new ArrayList<File>();
-             addFilesRecursively(new File(ui.getImageDir()), nrrdFileName, all);
+                      // Look for nrrd file.
+                      final Collection<File> all = new ArrayList<File>();
+                      addFilesRecursively(new File(ui.getImageDir()), nrrdFileName, all);
 
-             // If unable to find nrrd file, look for im file.
-             String imFileName = null;
-             if (all.isEmpty()) {
-                imFileName = nrrdFileName.substring(0, nrrdFileName.lastIndexOf(".")) + UI.MIMS_EXTENSION;
-                addFilesRecursively(new File(ui.getImageDir()), imFileName, all);
-             }
+                      // If unable to find nrrd file, look for im file.
+                      String imFileName = null;
+                      if (all.isEmpty()) {
+                          imFileName = nrrdFileName.substring(0, nrrdFileName.lastIndexOf(".")) + UI.MIMS_EXTENSION;
+                          addFilesRecursively(new File(ui.getImageDir()), imFileName, all);
+                      }
 
-             // Open a new instance of the plugin.
-             if (all.isEmpty()) {
-                IJ.error("Unable to locate " + nrrdFileName + " or " + imFileName);
-             } else {
-                UI ui_tile = new UI();
-                ui_tile.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
-                ui_tile.setVisible(true);
-                ui_tile.openFile(((File)all.toArray()[0]));
-                if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
-                   HSIProps tileProps = mImp.getHSIProps().clone();
-                   tileProps.setNumMassValue(ui.getMassValue(tileProps.getNumMassIdx()));
-                   tileProps.setDenMassValue(ui.getMassValue(tileProps.getDenMassIdx()));
-                   tileProps.setXWindowLocation(MouseInfo.getPointerInfo().getLocation().x);
-                   tileProps.setYWindowLocation(MouseInfo.getPointerInfo().getLocation().y);
-                   HSIProps[] hsiProps = {tileProps};
-                   ui_tile.restoreState(null, hsiProps, null, false, false);                   
-                   ui_tile.getHSIView().useSum(ui.getIsSum());
-                   ui_tile.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
-                }                
-             }
+                      // Open a new instance of the plugin.
+                      if (all.isEmpty()) {
+                          IJ.error("Unable to locate " + nrrdFileName + " or " + imFileName);
+                      } else {
+                          UI ui_tile = new UI();
+                          ui_tile.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
+                          ui_tile.setVisible(true);
+                          ui_tile.openFile(((File) all.toArray()[0]));
+                          if (mImp.getMimsType() == MimsPlus.HSI_IMAGE) {
+                              HSIProps tileProps = mImp.getHSIProps().clone();
+                              tileProps.setNumMassValue(ui.getMassValue(tileProps.getNumMassIdx()));
+                              tileProps.setDenMassValue(ui.getMassValue(tileProps.getDenMassIdx()));
+                              tileProps.setXWindowLocation(MouseInfo.getPointerInfo().getLocation().x);
+                              tileProps.setYWindowLocation(MouseInfo.getPointerInfo().getLocation().y);
+                              HSIProps[] hsiProps = {tileProps};
+                              ui_tile.restoreState(null, hsiProps, null, false, false);
+                              ui_tile.getHSIView().useSum(ui.getIsSum());
+                              ui_tile.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
+                          }
+                      }
+                  }
+              });
+          } else {
+              int sliceIndex = mImp.getCurrentSlice();
+              tileName = ui.getOpener().getStackPositions()[sliceIndex - 1];
+              openTile = new JMenuItem("open slice: " + tileName);
+              openTile.addActionListener(new ActionListener() {
+                  public void actionPerformed(ActionEvent event) {
+
+                      AbstractButton aButton = (AbstractButton) event.getSource();
+                      String nrrdFileName = aButton.getActionCommand();
+
+                      // Look for nrrd file.
+                      final Collection<File> all = new ArrayList<File>();
+                      addFilesRecursively(new File(ui.getImageDir()), nrrdFileName, all);
+
+                      // If unable to find nrrd file, look for im file.
+                      String imFileName = null;
+                      if (all.isEmpty()) {
+                          imFileName = nrrdFileName.substring(0, nrrdFileName.lastIndexOf(".")) + UI.MIMS_EXTENSION;
+                          addFilesRecursively(new File(ui.getImageDir()), imFileName, all);
+                      }
+
+                      // Open a new instance of the plugin.
+                      if (all.isEmpty()) {
+                          IJ.error("Unable to locate " + nrrdFileName + " or " + imFileName);
+                      } else {
+                          UI ui_tile = new UI();
+                          ui_tile.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
+                          ui_tile.setVisible(true);
+                          ui_tile.openFile(((File) all.toArray()[0]));
+                      }
+                  }
+              });
           }
-       });
-
          openTile.setActionCommand(tileName);
          popup.add(openTile);
          popup.show(this , x, y);
