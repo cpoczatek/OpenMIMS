@@ -1622,7 +1622,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         jMenu1.add(openNewImpress);
 
-        insertPicFrame.setText("Insert picture frame");
+        insertPicFrame.setText("Insert Draw frame");
         insertPicFrame.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 insertPicFrameActionPerformed(evt);

@@ -3,6 +3,7 @@ package com.nrims;
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
+import com.nrims.unoplugin.UnoPlugin;
 import ij.IJ;
 import ij.gui.*;
 import ij.process.*;
@@ -49,6 +50,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
    private com.nrims.UI ui;
    //private MimsChartPanel chartpanel;
    private MimsChartPanel chartpanel;
+   private UnoPlugin mimsUno;
    
    public MimsJFreeChart(UI ui) {
       super("Plot");
@@ -71,20 +73,26 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       menu.add(menuItem);
 
       // Generate report menu item.
-      menuItem = new JMenuItem("Generate Report");
+      /*menuItem = new JMenuItem("Generate Report");
       menuItem.addActionListener(new java.awt.event.ActionListener() {
          public void actionPerformed(java.awt.event.ActionEvent evt) {
             generateReport();
          }
       });
-      menu.add(menuItem);
+      menu.add(menuItem);*/
 
       // Generate frame.
       setJMenuBar(menuBar);
       pack();
       setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      setupDragDrop();
    }
-
+    public void setupDragDrop(){
+        mimsUno = UnoPlugin.getInstance();
+        if (mimsUno == null) {
+            mimsUno = new UnoPlugin(true);
+        }
+    }
   /**
    * Plots the data and shows the frame. Only call this method
    * if all relevant member variables are set.
@@ -149,14 +157,20 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          chartpanel.getPopupMenu().add(logscale);
 
          // Add menu item for exporting plot to report.
-         JMenuItem genreport = new JMenuItem("Generate Report");
+         /*JMenuItem genreport = new JMenuItem("Generate Report");
          genreport.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                generateReport();
             }
          });
-         chartpanel.getPopupMenu().add(genreport);
-
+         chartpanel.getPopupMenu().add(genreport);*/
+         JMenuItem libreoffice = new JMenuItem("Add to Libreoffice");
+         libreoffice.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            mimsUno.insertGraph(getImage(), "test", "test", "test");
+         }
+      });
+     chartpanel.getPopupMenu().add(libreoffice);
          // Replace Save As... menu item.
          chartpanel.getPopupMenu().remove(3);
          JMenuItem saveas = new JMenuItem("Save as...");

@@ -241,7 +241,7 @@
                 </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="insertPicFrame">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Insert picture frame"/>
+                    <Property name="text" type="java.lang.String" value="Insert Draw frame"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="insertPicFrameActionPerformed"/>
