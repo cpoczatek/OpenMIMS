@@ -5,6 +5,7 @@ package com.nrims.plot;
  * @author cpoczatek
  */
 
+import ij.IJ;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -208,7 +209,7 @@ public class MimsChartPanel extends ChartPanel {
     
     @Override
     public void mouseDragged(MouseEvent e) {
-
+     if (!IJ.getToolName().equals("Drag To Writer tool")){
         // if the popup menu has already been triggered, then ignore dragging...
         if (this.getPopupMenu() != null && this.getPopupMenu().isShowing()) {
             return;
@@ -261,6 +262,7 @@ public class MimsChartPanel extends ChartPanel {
                  }
               }
         }
+     }
     }
     
     /**
@@ -272,26 +274,27 @@ public class MimsChartPanel extends ChartPanel {
      */
     @Override
     public void mouseReleased(MouseEvent e) {
-
-        // if we've been panning, we need to reset now that the mouse is
-        // released...
-        if (this.panLast != null) {
-            this.panLast = null;
-            setCursor(Cursor.getDefaultCursor());
-        }
-
-        if (zoomX || zoomY) {
-           zoomX = false;
-           zoomY = false;
-        }
-        //delete large block of parent method dealing with zoomRectangle
-        //which we shouldn't care about since we don't use that for zooming        
-        else if (e.isPopupTrigger()) {
-            if (this.getPopupMenu() != null) {
-                displayPopupMenu(e.getX(), e.getY());
+        if (!IJ.getToolName().equals("Drag To Writer tool")) {
+            // if we've been panning, we need to reset now that the mouse is
+            // released...
+            if (this.panLast != null) {
+                this.panLast = null;
+                setCursor(Cursor.getDefaultCursor());
             }
+
+            if (zoomX || zoomY) {
+                zoomX = false;
+                zoomY = false;
+            } //delete large block of parent method dealing with zoomRectangle
+            //which we shouldn't care about since we don't use that for zooming        
+            else if (e.isPopupTrigger()) {
+                if (this.getPopupMenu() != null) {
+                    displayPopupMenu(e.getX(), e.getY());
+                }
+            }
+        } else {
+            //mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
         }
-        
     }
     
     /**

@@ -382,7 +382,7 @@ public class MimsTomography extends javax.swing.JPanel {
 
        int currentPlane = ui.getMassImage(0).getSlice();
        tomoChart.plotData(appendCheckBox.isSelected(), mean);
-
+       tomoChart.setTitle(ui.getImageFilePrefix());
        // Fast forward stack by one slice if we are appending current plane.
        if ((currentPlaneCheckBox.isSelected()) && ((currentPlane + 1) <= ui.getMassImage(0).getStackSize())) {
           ui.getMassImage(0).setSlice(currentPlane + 1);
