@@ -3217,12 +3217,19 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         Roi roi = imp.getRoi();
         if(roi == null) return;
-        double[] roipix = imp.getRoiPixels();
-
+        
+        // If this is an HSI or ratio image replace imp with internalRatio which
+        // has the correct un-medianized ratio values, then set roi.
+        if((imp.getMimsType() == MimsPlus.HSI_IMAGE) || (imp.getMimsType() == MimsPlus.RATIO_IMAGE)) {
+                imp = imp.internalRatio;
+                imp.setRoi(roi);
+        }
+        
         if ((roi.getType() == Roi.LINE) || (roi.getType() == Roi.POLYLINE) || (roi.getType() == Roi.FREELINE)) {
             ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(imp);
             ui.updateLineProfile(profileP.getProfile(), imp.getShortTitle() + " : " + roi.getName(), imp.getProcessor().getLineWidth());
         } else {
+            double[] roipix = imp.getRoiPixels();
             String label = imp.getShortTitle() + " ROI: " + roi.getName();
             ui.getmimsTomography().updateHistogram(roipix, label, force);
         }
