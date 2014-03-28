@@ -68,7 +68,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     // Other member variables.
     public String title = "";
-    public String titleExtension = "";
+    public String libreTitle = "";
     private boolean allowClose =true;
     private boolean bIgnoreClose = false ;
     boolean bMoving = false;
@@ -138,7 +138,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         }
         //String titleString = "m" + ui.getTitleStringSymbol(index) + ": " + ui.getImageFilePrefix();
         title = ImageDataUtilities.formatTitle(index, false, ui.getPreferences().getFormatString(), ui.getOpener());
-        titleExtension = ImageDataUtilities.formatTitle(index, true, ui.getPreferences().getFormatString(), ui.getOpener());
+        libreTitle = ImageDataUtilities.formatLibreTitle(index, ui.getOpener(), this);
         setProcessor(title, ipp);
         
         fStateListeners = new EventListenerList() ;
@@ -192,18 +192,18 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       double sumPixels[] = new double[w*h];
       ImageProcessor ipp = new FloatProcessor(w, h, sumPixels);
       title = "Sum : ";
-      titleExtension = "Sum : ";
+      libreTitle = "";
       if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
          if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length){
             title += "1";
-            titleExtension += "1";
+            libreTitle += "1";
          }else{
             title += ImageDataUtilities.formatTitle(sumProps.getParentMassIdx(), false, ui.getPreferences().getFormatString(), ui.getOpener());
-            titleExtension += ImageDataUtilities.formatTitle(sumProps.getParentMassIdx(), true, ui.getPreferences().getFormatString(), ui.getOpener());
+            libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getParentMassIdx(), ui.getOpener(), this);
          }
       } else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
          title += ImageDataUtilities.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), false, ui.getPreferences().getFormatString(), ui.getOpener());
-         titleExtension += ImageDataUtilities.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), true, ui.getPreferences().getFormatString(), ui.getOpener());
+         libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), ui.getOpener(), this);
       }
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
@@ -256,7 +256,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       ipp.setMinAndMax(0, 1.0);
       String numName, denName;
       title += ImageDataUtilities.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(), false, ui.getPreferences().getFormatString(), ui.getOpener());
-      titleExtension += ImageDataUtilities.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(), true, ui.getPreferences().getFormatString(), ui.getOpener());
+      libreTitle += ImageDataUtilities.formatLibreTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(), ui.getOpener(), this);
       setProcessor(title, ipp);
       fStateListeners = new EventListenerList();
       //before listeners were added in compute...
@@ -372,7 +372,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       String denName;
       ImageProcessor ipp = new ColorProcessor(w, h, rgbPixels);
       title = "HSI : " + ImageDataUtilities.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), false, ui.getPreferences().getFormatString(), ui.getOpener());
-       titleExtension = "HSI : " + ImageDataUtilities.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), true, ui.getPreferences().getFormatString(), ui.getOpener());
+       libreTitle = ImageDataUtilities.formatLibreTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), ui.getOpener(), this);
       setProcessor(title, ipp);
       getProcessor().setMinAndMax(0, 255);
       fStateListeners = new EventListenerList();
@@ -1257,7 +1257,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
           }
       }else{
           
-          mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), titleExtension, titleExtension, ui.getDescription());
+          mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
       }
    }
 

@@ -285,6 +285,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
       
       
       String macrosPath = IJ.getDirectory("macros");
+      if (macrosPath == null){
+          macrosPath = "lib/plugins/macros/";
+      }
         OMLOGGER.info("Macros filepath: " + macrosPath);
         File file = new File(macrosPath + "/openmims_tools.fiji.ijm");
         if (file.exists()) {
@@ -3039,7 +3042,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     }//GEN-LAST:event_openNewWriterActionPerformed
 
     private void insertPicFrameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertPicFrameActionPerformed
-        UnoPlugin.insertEmptyOLEObject();
+        UnoPlugin.insertEmptyOLEObject(image.getImageFile().getName(), getImageDir() + File.separator);
     }//GEN-LAST:event_insertPicFrameActionPerformed
 
     private void openNewDrawActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewDrawActionPerformed

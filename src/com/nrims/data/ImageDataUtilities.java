@@ -189,6 +189,58 @@ public class ImageDataUtilities {
         }
         return curString;
     }
+    public static String formatLibreTitle(int index, Opener image, MimsPlus mp) {
+        String curString = "";
+        String[] symbols = image.getMassSymbols();
+        if (mp.getMimsType() == MimsPlus.MASS_IMAGE) {
+            curString += "Mass ";
+        } else if (mp.getMimsType() == MimsPlus.SUM_IMAGE) {
+            curString += "Sum ";
+        }
+        int numBefore;
+        if (isPeakSwitching(image)) {
+            numBefore = determineSeries(index, image) + 1;
+            curString += "(" + numBefore + ") ";
+
+        }
+        if (image.getMassSymbols() != null) {
+            curString += String.valueOf(symbols[index]);
+        } else {
+            curString += String.valueOf(image.getMassNames()[index]);
+        }
+        return curString;
+    }
+        public static String formatLibreTitle(int numIndex, int denIndex, Opener image, MimsPlus mp) {
+        String curString = "";
+        String[] names = image.getMassNames();
+        String[] symbols = image.getMassSymbols();
+        if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
+            curString += "HSI ";
+        } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
+            curString += "Ratio ";
+        }
+        int numBefore;
+        if (isPeakSwitching(image)) {
+            numBefore = determineSeries(numIndex, image) + 1;
+            curString += "(" + numBefore + ") ";
+
+        }
+        if (image.getMassSymbols() != null) {
+            curString += String.valueOf(symbols[numIndex]);
+            if (denIndex < image.getNMasses()) {
+                curString += "/" + String.valueOf(symbols[denIndex]);
+            }
+                
+        } else {
+            curString += String.valueOf(names[numIndex]) + "/";
+                if (denIndex < image.getNMasses()){
+                    curString += String.valueOf(names[denIndex]);
+                }else{
+                    curString += "1";
+                }
+        }
+        return curString;
+    }
     /**
      * Method to return title for a double image (ie ratio, hsi) based on formatString in preferences
      * @param numIndex index of the numerator
