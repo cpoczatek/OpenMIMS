@@ -802,7 +802,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
     public void mouseReleased(MouseEvent e) {
         if (IJ.getToolName().equals("Drag To Writer tool")) {
             String title = getTitle();
-            mimsUno.dropImage(getImage(), title, title, title);
+            mimsUno.dropImage(getImage(), "", title, ui.getDescription());
         }
     }
 

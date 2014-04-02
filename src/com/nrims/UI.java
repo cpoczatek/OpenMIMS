@@ -3042,7 +3042,11 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     }//GEN-LAST:event_openNewWriterActionPerformed
 
     private void insertPicFrameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertPicFrameActionPerformed
+        if (image != null){
         UnoPlugin.insertEmptyOLEObject(image.getImageFile().getName(), getImageDir() + File.separator);
+        }else{
+            UnoPlugin.insertEmptyOLEObject("", "");
+        }
     }//GEN-LAST:event_insertPicFrameActionPerformed
 
     private void openNewDrawActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewDrawActionPerformed
