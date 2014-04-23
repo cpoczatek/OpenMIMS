@@ -78,7 +78,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public static final String SESSIONS_EXTENSION = ".session.zip";
     public static final String ACT_EXTIONSION = ".act";
 
-    public static final String SAVE_IMAGE = "Save Image";
+    public static final String SAVE_IMAGE = "Save Images";
     public static final String SAVE_SESSION = "Save Session";
 
     public int maxMasses = 25;
