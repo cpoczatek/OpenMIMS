@@ -507,6 +507,7 @@ public class MimsHSIView extends javax.swing.JPanel {
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            currentImage.setDisplayRange(new Double(ratioMinjSpinner.getValue().toString()), new Double(rartioMaxjSpinner.getValue().toString()));
            currentImage.updateAndDraw();
+           ui.recomputeAllComposite();
         }
     }//GEN-LAST:event_rartioMaxjSpinnerStateChanged
 
@@ -521,9 +522,11 @@ public class MimsHSIView extends javax.swing.JPanel {
         if (currentImage.getMimsType() == MimsPlus.HSI_IMAGE) {
            currentImage.getHSIProps().setMinRatio(new Double(ratioMinjSpinner.getValue().toString()));
            update();
+           ui.recomputeComposite(currentImage);
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            currentImage.setDisplayRange(new Double(ratioMinjSpinner.getValue().toString()), new Double(rartioMaxjSpinner.getValue().toString()));
            currentImage.updateAndDraw();
+           ui.recomputeAllComposite();
         }
     }//GEN-LAST:event_ratioMinjSpinnerStateChanged
 
@@ -539,11 +542,13 @@ public class MimsHSIView extends javax.swing.JPanel {
            currentImage.getHSIProps().setNumThreshold(new Integer(numThresholdjSpinner.getValue().toString()));
            currentImage.computeHSI();
            update();
+           ui.recomputeAllComposite();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int numThreshold = ((Integer)numThresholdjSpinner.getValue()).intValue();
            currentImage.getRatioProps().setNumThreshold(numThreshold);
            currentImage.computeRatio();
            currentImage.updateAndDraw();
+           ui.recomputeAllComposite();
         }
     }//GEN-LAST:event_numThresholdjSpinnerStateChanged
 
@@ -559,11 +564,13 @@ public class MimsHSIView extends javax.swing.JPanel {
            currentImage.getHSIProps().setDenThreshold(new Integer(denThresholdjSpinner.getValue().toString()));
            currentImage.computeHSI();
            update();
+          ui.recomputeAllComposite();
         } else if (currentImage.getMimsType() == MimsPlus.RATIO_IMAGE) {
            int denThreshold = ((Integer)denThresholdjSpinner.getValue()).intValue();
            currentImage.getRatioProps().setDenThreshold(denThreshold);
            currentImage.computeRatio();
            currentImage.updateAndDraw();
+           ui.recomputeAllComposite();
         }
     }//GEN-LAST:event_denThresholdjSpinnerStateChanged
 
@@ -573,6 +580,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         currentImage.getHSIProps().setTransparency(transparencyjComboBox.getSelectedIndex());
         update();
+        ui.recomputeAllComposite();
     }//GEN-LAST:event_transparencyjComboBoxActionPerformed
 
     private void scalebarjComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_scalebarjComboBoxActionPerformed
@@ -589,6 +597,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Regenerate Image.
        currentImage.setupHSIImage(currentImage.getHSIProps());
+       ui.recomputeAllComposite();
     }//GEN-LAST:event_scalebarjComboBoxActionPerformed
 
     private void rgbMaxjSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rgbMaxjSliderStateChanged
@@ -616,6 +625,7 @@ public class MimsHSIView extends javax.swing.JPanel {
         rgbMinjSlider.repaint();
         //needs to be called to update image
         update();
+        ui.recomputeAllComposite();
     }//GEN-LAST:event_rgbMaxjSliderStateChanged
 
     private void rgbMinjSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rgbMinjSliderStateChanged
@@ -636,6 +646,7 @@ public class MimsHSIView extends javax.swing.JPanel {
     rgbMaxjSlider.repaint();
     //needs to be called to update image
     update();
+    ui.recomputeAllComposite();
     }//GEN-LAST:event_rgbMinjSliderStateChanged
 
     private void ratioSFjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_ratioSFjSpinnerStateChanged
@@ -649,10 +660,12 @@ public class MimsHSIView extends javax.swing.JPanel {
        if (mp.getMimsType() == MimsPlus.HSI_IMAGE) {
           mp.getHSIProcessor().getHSIProps().setRatioScaleFactor((Double) ratioSFjSpinner.getValue());
           mp.computeHSI();
+          ui.recomputeComposite(currentImage);
        } else if (mp.getMimsType() == MimsPlus.RATIO_IMAGE) {
           mp.getRatioProps().setRatioScaleFactor((Double) ratioSFjSpinner.getValue());
           mp.computeRatio();
           mp.updateAndDraw();
+          ui.recomputeComposite(currentImage);
        }
     }//GEN-LAST:event_ratioSFjSpinnerStateChanged
 
@@ -691,6 +704,7 @@ public class MimsHSIView extends javax.swing.JPanel {
           mps[i].computeHSI();
        }
        setProps(currentImage.getHSIProps());
+       ui.recomputeAllComposite();
 }//GEN-LAST:event_percentTurnoverRadioButtonActionPerformed
 
     private void ratioRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ratioRadioButtonActionPerformed
@@ -729,6 +743,7 @@ public class MimsHSIView extends javax.swing.JPanel {
        }
 
        setProps(currentImage.getHSIProps());
+      ui.recomputeAllComposite();
     }//GEN-LAST:event_ratioRadioButtonActionPerformed
 
     private void hsiWindowjSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_hsiWindowjSpinnerStateChanged
@@ -742,6 +757,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
+       ui.recomputeAllComposite();
 }//GEN-LAST:event_hsiWindowjSpinnerStateChanged
 
     private void hsiWindowRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hsiWindowRadioButtonActionPerformed
@@ -762,6 +778,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
+       ui.recomputeAllComposite();
 }//GEN-LAST:event_hsiWindowRadioButtonActionPerformed
 
     private void hsiSumRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hsiSumRadioButtonActionPerformed
@@ -889,6 +906,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
+       ui.recomputeAllComposite();
 }//GEN-LAST:event_medianRadiusjSpinnerStateChanged
 
     private void medianFilterjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_medianFilterjButtonActionPerformed
@@ -918,6 +936,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
        // Recompute all hsi images.
        ui.recomputeAllHSI();
+       ui.recomputeAllComposite();
     }
 
     private void displayHSIjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayHSIjButtonActionPerformed
