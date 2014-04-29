@@ -4,7 +4,9 @@
  */
 package com.nrims.data;
 
+import com.nrims.CompositeProps;
 import com.nrims.HSIProps;
+import com.nrims.MassProps;
 import com.nrims.MimsCanvas;
 import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
@@ -19,6 +21,7 @@ import static com.nrims.UI.RATIO_EXTENSION;
 import static com.nrims.UI.ROIS_EXTENSION;
 import static com.nrims.UI.SESSIONS_EXTENSION;
 import static com.nrims.UI.SUM_EXTENSION;
+import static com.nrims.UI.COMPOSITE_EXTENSION;
 import static com.nrims.UI.ui;
 import ij.ImageStack;
 import ij.gui.Roi;
@@ -169,6 +172,11 @@ public class FileUtilities {
             zos.putNextEntry(new ZipEntry(filenames[i] + post + extension));
             XMLEncoder e = new XMLEncoder(zos);
             //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
+            e.setPersistenceDelegate(MassProps.class, new DefaultPersistenceDelegate(new String[]{"massIdx"}));
+            e.setPersistenceDelegate(RatioProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
+            e.setPersistenceDelegate(HSIProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
+            e.setPersistenceDelegate(SumProps.class, new DefaultPersistenceDelegate(new String[]{"parentMassIdx"}));
+            //e.setPersistenceDelegate(SumProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
             e.setPersistenceDelegate(cls, new DefaultPersistenceDelegate(params));
             e.writeObject(toWrite);
             e.flush();
@@ -293,6 +301,7 @@ public class FileUtilities {
         MimsPlus ratio[] = ui.getOpenRatioImages();
         MimsPlus hsi[] = ui.getOpenHSIImages();
         MimsPlus sum[] = ui.getOpenSumImages();
+        MimsPlus comp[] = ui.getOpenCompositeImages();
         String[] names = image.getMassNames();
         // Save the ROI files to zip.
         if (rois.length > 0) {
@@ -304,7 +313,7 @@ public class FileUtilities {
                 System.out.println("Saving roi.zip canceled.");
             }
         }
-        if (ratio.length + hsi.length + sum.length > 0) {
+        if (ratio.length + hsi.length + sum.length + comp.length > 0) {
             if ((sessionFile = checkForExistingFiles(SESSIONS_EXTENSION, baseFileName, "Mims session files", ui)) != null) {
                 baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
                 onlyFileName = getFilePrefix(getFilePrefix(sessionFile.getName()));
@@ -339,7 +348,17 @@ public class FileUtilities {
                         }
                     }
                 }
-
+                if (comp.length > 0) {
+                    String[] filenames = new String[comp.length];
+                    for (int i = 0; i < comp.length; i++) {
+                        CompositeProps compprops = comp[i].getCompositeProps();
+                        compprops.setDataFileName(dataFileName);
+                        if (!FileUtilities.saveToXML(zos, compprops, CompositeProps.class, new String[]{"imageProps"}, filenames,
+                                COMPOSITE_EXTENSION, i+"", "-1", onlyFileName, i)) {
+                            return false;
+                        }
+                    }
+                }
                 // Contruct a unique name for each sum image and save.
                 if (sum.length > 0) {
                     String[] filenames = new String[sum.length];

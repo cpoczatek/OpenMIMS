@@ -72,6 +72,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public static final String RATIO_EXTENSION = ".ratio";
     public static final String RATIOS_EXTENSION = ".ratios.zip";
     public static final String HSI_EXTENSION = ".hsi";
+    public static final String COMPOSITE_EXTENSION = ".comp";
     public static final String HSIS_EXTENSION = ".hsis.zip";
     public static final String SUM_EXTENSION = ".sum";
     public static final String SUMS_EXTENSION = ".sums.zip";
@@ -1083,7 +1084,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         MimsPlus[] openComp = this.getOpenCompositeImages();
         for (int i = 0; i < openComp.length; i++) {
             CompositeProps props = openComp[i].compProps;
-            MimsPlus[] parentImgs = props.getImages();
+            MimsPlus[] parentImgs = props.getImages(this);
             for (int j = 0; j < parentImgs.length; j++) {
                 if(parentImgs[j]!=null) {
                     if(img.equals(parentImgs[j])) {
@@ -4374,6 +4375,9 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                   }
                   //sort the objects into props
                   MimsPlus sp;
+                  //IMPORTANT: Composite props must be loaded last after all other images are loaded, as it may call
+                  //upon other MimsPlus objects
+                  ArrayList<CompositeProps> compProps = new ArrayList<CompositeProps>();
                  for (Object entry : entries) {
                      if (entry instanceof SumProps) {
                          SumProps sumprops = (SumProps) entry;
@@ -4405,7 +4409,29 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                          }
                          sp = new MimsPlus(ui, hsiprops);
                          sp.showWindow();
+                     } else if (entry instanceof HSIProps) {
+                         HSIProps hsiprops = (HSIProps) entry;
+                         if (!sessionOpened) {
+                             if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
+                                 return false;
+                             doneLoadingFile();
+                             sessionOpened = true;
+                         }
+                         sp = new MimsPlus(ui, hsiprops);
+                         sp.showWindow();
+                     }else if (entry instanceof CompositeProps) {
+                         if (!sessionOpened) {
+                             if (!loadMIMSFile(new File(file.getParent(), ((CompositeProps) entry).getDataFileName())))
+                                 return false;
+                             doneLoadingFile();
+                             sessionOpened = true;
+                         }
+                         compProps.add((CompositeProps) entry);
                      }
+                 }
+                 for (CompositeProps entry : compProps) {
+                     sp = new MimsPlus(ui, entry);
+                     sp.showWindow();
                  }
                  
              } else if (file.getAbsolutePath().endsWith(ROIS_EXTENSION)

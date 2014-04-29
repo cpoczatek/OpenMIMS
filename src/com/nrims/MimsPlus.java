@@ -315,7 +315,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     */
    public void setupCompositeImage(CompositeProps compprops) {
        compProps = compprops;
-       MimsPlus[] imgs = compprops.getImages();
+       MimsPlus[] imgs = compprops.getImages(ui);
 
        Opener op = ui.getOpener();
        int w = op.getWidth();
@@ -343,7 +343,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     */
     public synchronized boolean computeComposite()
     {
-        setCompositeProcessor(new CompositeProcessor(this));
+        setCompositeProcessor(new CompositeProcessor(this, ui));
         try {
             getCompositeProcessor().setProps(compProps);
         } catch (Exception e) {
@@ -1256,7 +1256,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                   break;
           }
       }else{
-          
+          System.out.println("release captured");
           mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
       }
    }

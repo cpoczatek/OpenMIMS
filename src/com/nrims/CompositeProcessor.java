@@ -13,8 +13,9 @@ public class CompositeProcessor  implements Runnable{
      * Creates a new instance of HSIProcessor.
      * @param compImage the MimsPlus image for which the composite image is based.
      */
-    public CompositeProcessor(MimsPlus compImage) {
+    public CompositeProcessor(MimsPlus compImage, UI ui) {
         this.compImage = compImage ;
+        this.ui = ui;
     }
 
     public void finalize() {
@@ -25,6 +26,7 @@ public class CompositeProcessor  implements Runnable{
     private MimsPlus compImage = null;
     private CompositeProps compProps = null;
     private Thread fThread = null;
+    private UI ui;
 
     /**
      * Sets the <code>CompositeProps</code> object for this composite image.
@@ -88,7 +90,7 @@ public class CompositeProcessor  implements Runnable{
                return;
             }
 
-            MimsPlus[] images = this.getProps().getImages();
+            MimsPlus[] images = this.getProps().getImages(ui);
             int width = compImage.getWidth();
             int height = compImage.getHeight();
 
