@@ -12,6 +12,7 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
+import org.jfree.data.xy.XYDataset;
 
 /**
  *
@@ -192,21 +193,20 @@ public class ImageDataUtilities {
     public static String formatLibreTitle(int index, Opener image, MimsPlus mp) {
         String curString = "";
         String[] symbols = image.getMassSymbols();
-        if (mp.getMimsType() == MimsPlus.MASS_IMAGE) {
-            curString += "Mass ";
-        } else if (mp.getMimsType() == MimsPlus.SUM_IMAGE) {
+        if (mp.getMimsType() == MimsPlus.SUM_IMAGE) {
             curString += "Sum ";
         }
         int numBefore;
-        if (isPeakSwitching(image)) {
-            numBefore = determineSeries(index, image) + 1;
-            curString += "(" + numBefore + ") ";
 
-        }
         if (image.getMassSymbols() != null) {
             curString += String.valueOf(symbols[index]);
         } else {
             curString += String.valueOf(image.getMassNames()[index]);
+        }
+        if (isPeakSwitching(image)) {
+            numBefore = determineSeries(index, image) + 1;
+            curString += "(" + numBefore + ") ";
+
         }
         return curString;
     }
@@ -355,7 +355,24 @@ public class ImageDataUtilities {
         refimp.setSlice(currentslice);
 
     }
-
+    public static double[][] xyDatasetToTableData(XYDataset dataset){
+        int maxCount = 0;
+        for (int j = 0; j < dataset.getSeriesCount(); j++) {
+            if (maxCount < dataset.getItemCount(j)) {
+                maxCount = dataset.getItemCount(j);
+            }
+        }
+        double[][] data = new double[dataset.getSeriesCount()+1][maxCount];
+        for (int j = 1; j <= dataset.getSeriesCount(); j++) {
+            for (int i = 0; i < dataset.getItemCount(j); i++) {
+                if (j == 1){
+                    data[0][i] = dataset.getXValue(j-1, i);
+                }
+                data[j][i] = dataset.getYValue(j-1, i);
+            }
+        }
+        return data;
+    }
     /**
      *
      * @param ui the value of ui
