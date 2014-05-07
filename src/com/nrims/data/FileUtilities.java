@@ -315,7 +315,12 @@ public class FileUtilities {
                 System.out.println("Saving roi.zip canceled.");
             }
         }
+        //serialize all special images to XML
         if (ratio.length + hsi.length + sum.length + comp.length > 0) {
+            /* Get the desired save name of the session.zip file. By default it is filename.session.zip, but 
+             * the file prompt window will always appear so the user can change it. If another filename.session.zip
+             * exists, then the default name will be filename(1).session.zip, etc.
+             */
             if ((sessionFile = checkForExistingFiles(SESSIONS_EXTENSION, baseFileName, "Mims session files", ui)) != null) {
                 baseFileName = getFilePrefix(getFilePrefix(sessionFile.getAbsolutePath()));
                 onlyFileName = getFilePrefix(getFilePrefix(sessionFile.getName()));
@@ -323,9 +328,8 @@ public class FileUtilities {
                 System.out.println("Saving session.zip canceled.");
             }
             try {
-                // Contruct a unique name for each ratio image and save into a ratios.zip file
                 ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(baseFileName + SESSIONS_EXTENSION)));
-
+                // Contruct a unique name for each ratio image and save.
                 if (ratio.length > 0) {
                     String[] filenames = new String[ratio.length];
                     for (int i = 0; i < ratio.length; i++) {
@@ -350,6 +354,7 @@ public class FileUtilities {
                         }
                     }
                 }
+                //Construct a unique name of each composite image and save
                 if (comp.length > 0) {
                     String[] filenames = new String[comp.length];
                     for (int i = 0; i < comp.length; i++) {
@@ -382,10 +387,11 @@ public class FileUtilities {
                         }
                     }
                 }
+                //close the zip file
                 zos.flush();
                 zos.close();
             } catch (Exception e) {
-                System.out.println("Error saving session file");
+                System.out.println("Error saving session file:" + e);
                 return false;
             }
         }
@@ -533,7 +539,7 @@ public class FileUtilities {
         return folder;
     }
     /**
-     * Used to sum images, then concatenate the sums.
+     * Used to sum a list of images, then concatenate the sums.
      * Useful for series of images. Images will be stacked in order of array
      * @param files the files you want to stack
      * @param ui
@@ -684,6 +690,11 @@ public class FileUtilities {
         }
         return null;
     }
+    /**
+     * Open a file in a new UI window
+     * @param file
+     * @param ui 
+     */
     public static void openInNewUI(File file, UI ui) {
         UI ui_new = new UI();
         ui_new.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
@@ -693,6 +704,12 @@ public class FileUtilities {
         ui_new.getHSIView().useSum(ui.getIsSum());
         ui_new.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
     }
+    /**
+     * Pull the header info from a .nrrd file into a HashMap.
+     * @param file
+     * @return
+     * @throws IOException 
+     */
     public static HashMap<String, String> getHeaderInfo(File file) throws IOException {
         HashMap<String, String> headerInfo = new HashMap<String, String>();
 
@@ -817,6 +834,12 @@ public class FileUtilities {
             }
         }
     }
+    /**
+     * Get the file from which the current slice of a generated stack originates from.
+     * @param massimage the image whose current slice is desired file we wish to find
+     * @param ui
+     * @return the file which the slice originates from.
+     */
     public static File getSliceFile(MimsPlus massimage, UI ui) {
         File file = null;
         int sliceIndex = massimage.getCurrentSlice();

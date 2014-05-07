@@ -200,11 +200,23 @@ public class compositeManager extends javax.swing.JFrame {
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
 
         String[] imgNames = {redTextField.getText(),greenTextField.getText(),blueTextField.getText(),grayTextField.getText()};
-        MimsPlus[] imgs = new MimsPlus[4];
+        Object[] imgs = new Object[4];
         
         for(int i = 0; i<4; i++) {
             MimsPlus nimg = ui.getImageByName(imgNames[i]);
-            imgs[i] = nimg;
+            if (nimg.getMimsType() == MimsPlus.HSI_IMAGE) {
+                imgs[i] = nimg.getHSIProps();
+            }
+            if (nimg.getMimsType() == MimsPlus.RATIO_IMAGE) {
+                imgs[i] = nimg.getRatioProps();
+            }
+            if (nimg.getMimsType() == MimsPlus.SUM_IMAGE) {
+                imgs[i] = nimg.getSumProps();
+            }
+            if (nimg.getMimsType() == MimsPlus.MASS_IMAGE) {
+                imgs[i] = new MassProps(nimg.getMassIndex());
+            }
+            
         }
 
         CompositeProps props = new CompositeProps(imgs);

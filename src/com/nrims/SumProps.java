@@ -50,6 +50,17 @@ public class SumProps implements java.io.Serializable {
         setupSumRatio(numIndex, denIndex);
     }
     
+    /**
+     * Instantiates a SumProps object given all three values.
+     * This method is needed for serialization. The XML serialazation requires a custom PersistenceDelegate
+     * to be set to specify the constructor, and there can only be one set. Therefore we needed a constructor
+     * that can create both a sum of a mass image or a sum of a ratio at the same time. You also cannot
+     * simply pass an array of values, as when the object is writing the specifying value (parentMassIdx, etc)
+     * must be direct properties of the object.
+     * @param massIndex the index of the mass image for which a sum image is being generated. Equals -1 if creating a ratio image.
+     * @param numIndex the index of the mass images of the numerator. Equals -1 if creating a sum of a single mass image.
+     * @param denIndex the index of the mass images of the denominator. Equals -1 if creating a sum of a single mass image.
+     */
     public SumProps(int massIndex, int numIndex, int denIndex) {
         if(numIndex < 0 && denIndex < 0){
             setupSumMass(massIndex);
@@ -57,6 +68,10 @@ public class SumProps implements java.io.Serializable {
             setupSumRatio(numIndex, denIndex);
         }
     }
+    /**
+     * Set up the SumProps as a sum of a mass image.
+     * @param massIndex the index of the mass image for which a sum image is being generated.
+     */
     public void setupSumMass(int massIndex) {
         this.parentMassIdx = massIndex;
         this.sumType = MASS_IMAGE;
@@ -69,6 +84,11 @@ public class SumProps implements java.io.Serializable {
         denMassValue = -1.0;
         ratioScaleFactor = -1.0;
     }
+    /**
+     * Setup the SumProps as a sum of a ratio image.
+     * @param numIndex the index of the mass images of the numerator.
+     * @param denIndex the index of the mass images of the denominator.
+     */
     public void setupSumRatio(int numIndex, int denIndex){
        this.parentMassIdx = -1;
        this.numMassIdx = numIndex;
@@ -108,15 +128,6 @@ public class SumProps implements java.io.Serializable {
 
        return false;
    }
-    public int[] getMassArray() {
-        int[] result = null;
-        if (sumType == MASS_IMAGE) {
-            result =  new int[]{parentMassIdx};
-        } else if (sumType == RATIO_IMAGE) {
-            result =  new int[]{numMassIdx, denMassIdx};
-        }
-        return result;
-    }
           
    /**
     * Overwrites the index of the numerator mass set in the constructor.

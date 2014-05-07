@@ -261,13 +261,13 @@ public class ImageDataUtilities {
             if (curChar == 'M') {
                 if (isPeakSwitching) {
                     numBefore = determineSeries(numIndex, image) + 1;
-                    curString = "(" + (numBefore + 1) + ")" + curString;
+                    curString = "(" + (numBefore) + ")" + curString;
                 }
                 curString += String.valueOf(names[numIndex]) + "/";
                 if (denIndex < image.getNMasses()){
                     if (isPeakSwitching) {
                         numBefore = determineSeries(denIndex, image) + 1;
-                        curString = "(" + (numBefore + 1) + ")" + curString;
+                        curString = "(" + (numBefore) + ")" + curString;
                     }
                     curString += String.valueOf(names[denIndex]);
                 }else{
