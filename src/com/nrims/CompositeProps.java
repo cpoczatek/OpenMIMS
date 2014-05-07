@@ -121,7 +121,7 @@ public class CompositeProps implements Serializable{
            if (imageProps[i] instanceof SumProps) {
                for (int j = 0; j < sumImages.length; j++) {
                    if (sumImages[j].getSumProps().equals((SumProps) imageProps[i])){
-                       images[i] =  ratioImages[j];
+                       images[i] =  sumImages[j];
                    }                   
                }
            }

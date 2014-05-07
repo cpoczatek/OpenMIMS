@@ -26,6 +26,9 @@ import static com.nrims.UI.ui;
 import ij.ImageStack;
 import ij.gui.Roi;
 import java.beans.DefaultPersistenceDelegate;
+import java.beans.Encoder;
+import java.beans.Expression;
+import java.beans.PersistenceDelegate;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
@@ -159,7 +162,7 @@ public class FileUtilities {
     * @return true if save succeeded, or false if an error was thrown
     */
     
-    public static boolean saveToXML(ZipOutputStream zos, Object toWrite, Class<?> cls, String[] params, String[] filenames, String extension, String numName, String denName, String filename, int i){
+    public static boolean saveToXML(ZipOutputStream zos, Object toWrite, String[] filenames, String extension, String numName, String denName, String filename, int i){
         try {
             int numMass = Math.round(new Float(numName));
             int denMass = Math.round(new Float(denName));
@@ -172,12 +175,11 @@ public class FileUtilities {
             zos.putNextEntry(new ZipEntry(filenames[i] + post + extension));
             XMLEncoder e = new XMLEncoder(zos);
             //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
+            e.setPersistenceDelegate(CompositeProps.class, new DefaultPersistenceDelegate(new String[]{"imageProps"}));
             e.setPersistenceDelegate(MassProps.class, new DefaultPersistenceDelegate(new String[]{"massIdx"}));
             e.setPersistenceDelegate(RatioProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
             e.setPersistenceDelegate(HSIProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
-            e.setPersistenceDelegate(SumProps.class, new DefaultPersistenceDelegate(new String[]{"parentMassIdx"}));
-            //e.setPersistenceDelegate(SumProps.class, new DefaultPersistenceDelegate(new String[]{"numMassIdx", "denMassIdx"}));
-            e.setPersistenceDelegate(cls, new DefaultPersistenceDelegate(params));
+            e.setPersistenceDelegate(SumProps.class, new DefaultPersistenceDelegate(new String[]{"parentMassIdx", "numMassIdx", "denMassIdx"}));
             e.writeObject(toWrite);
             e.flush();
             //need to append "</java>" to the end because flushing doesn't "complete" the file like close does
@@ -329,7 +331,7 @@ public class FileUtilities {
                     for (int i = 0; i < ratio.length; i++) {
                         RatioProps ratioprops = ratio[i].getRatioProps();
                         ratioprops.setDataFileName(dataFileName);
-                        if (!FileUtilities.saveToXML(zos, ratioprops, RatioProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                        if (!FileUtilities.saveToXML(zos, ratioprops, filenames,
                                 RATIO_EXTENSION, names[ratioprops.getNumMassIdx()], names[ratioprops.getDenMassIdx()], onlyFileName, i)) {
                             return false;
                         }
@@ -342,7 +344,7 @@ public class FileUtilities {
                     for (int i = 0; i < hsi.length; i++) {
                         HSIProps hsiprops = hsi[i].getHSIProps();
                         hsiprops.setDataFileName(dataFileName);
-                        if (!FileUtilities.saveToXML(zos, hsiprops, HSIProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                        if (!FileUtilities.saveToXML(zos, hsiprops, filenames,
                                 HSI_EXTENSION, names[hsiprops.getNumMassIdx()], names[hsiprops.getDenMassIdx()], onlyFileName, i)) {
                             return false;
                         }
@@ -353,7 +355,7 @@ public class FileUtilities {
                     for (int i = 0; i < comp.length; i++) {
                         CompositeProps compprops = comp[i].getCompositeProps();
                         compprops.setDataFileName(dataFileName);
-                        if (!FileUtilities.saveToXML(zos, compprops, CompositeProps.class, new String[]{"imageProps"}, filenames,
+                        if (!FileUtilities.saveToXML(zos, compprops, filenames,
                                 COMPOSITE_EXTENSION, i+"", "-1", onlyFileName, i)) {
                             return false;
                         }
@@ -366,12 +368,12 @@ public class FileUtilities {
                         SumProps sumProps = sum[i].getSumProps();
                         sumProps.setDataFileName(dataFileName);
                         if (sumProps.getSumType() == 1) {
-                            if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"numMassIdx", "denMassIdx"}, filenames,
+                            if (!FileUtilities.saveToXML(zos, sumProps, filenames,
                                     SUM_EXTENSION, names[sumProps.getNumMassIdx()], names[sumProps.getDenMassIdx()], onlyFileName, i)) {
                                 return false;
                             }
                         } else if (sumProps.getSumType() == 0) {
-                            if (!FileUtilities.saveToXML(zos, sumProps, SumProps.class, new String[]{"parentMassIdx"}, filenames,
+                            if (!FileUtilities.saveToXML(zos, sumProps, filenames,
                                     SUM_EXTENSION, names[sumProps.getParentMassIdx()], "-1", onlyFileName, i)) {
                                 return false;
                             }

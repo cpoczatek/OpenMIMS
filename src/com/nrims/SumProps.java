@@ -38,15 +38,7 @@ public class SumProps implements java.io.Serializable {
      * @param massIndex the index of the mass image for which a sum image is being generated.
      */
     public SumProps(int massIndex) {
-       this.parentMassIdx = massIndex;
-       this.sumType = MASS_IMAGE;
-
-       // Default values.
-       xloc = -1;
-       yloc = -1;
-       numMassValue = -1.0;
-       denMassValue = -1.0;
-       ratioScaleFactor = -1.0;
+        setupSumMass(massIndex);
     }        
     
     /**
@@ -55,6 +47,30 @@ public class SumProps implements java.io.Serializable {
      * @param denIndex the index of the mass images of the denominator.
      */
     public SumProps(int numIndex, int denIndex) {
+        setupSumRatio(numIndex, denIndex);
+    }
+    
+    public SumProps(int massIndex, int numIndex, int denIndex) {
+        if(numIndex < 0 && denIndex < 0){
+            setupSumMass(massIndex);
+        }else if (massIndex < 0){
+            setupSumRatio(numIndex, denIndex);
+        }
+    }
+    public void setupSumMass(int massIndex) {
+        this.parentMassIdx = massIndex;
+        this.sumType = MASS_IMAGE;
+        this.numMassIdx = -1;
+        this.denMassIdx = -1;
+        // Default values.
+        xloc = -1;
+        yloc = -1;
+        numMassValue = -1.0;
+        denMassValue = -1.0;
+        ratioScaleFactor = -1.0;
+    }
+    public void setupSumRatio(int numIndex, int denIndex){
+       this.parentMassIdx = -1;
        this.numMassIdx = numIndex;
        this.denMassIdx = denIndex;
        this.sumType = RATIO_IMAGE;
@@ -69,7 +85,6 @@ public class SumProps implements java.io.Serializable {
        minLUT = 0.0;
        maxLUT = 1.0;
     }
-
     /**
      * Two <code>SumProps</code> objects are equal if numerator and denominator
      * are the same, in the case of a sum of a ratio image. Or if the parent mass
@@ -93,6 +108,15 @@ public class SumProps implements java.io.Serializable {
 
        return false;
    }
+    public int[] getMassArray() {
+        int[] result = null;
+        if (sumType == MASS_IMAGE) {
+            result =  new int[]{parentMassIdx};
+        } else if (sumType == RATIO_IMAGE) {
+            result =  new int[]{numMassIdx, denMassIdx};
+        }
+        return result;
+    }
           
    /**
     * Overwrites the index of the numerator mass set in the constructor.
