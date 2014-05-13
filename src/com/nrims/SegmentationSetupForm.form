@@ -15,6 +15,7 @@
   </Properties>
   <SyntheticProperties>
     <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
+    <SyntheticProperty name="generateCenter" type="boolean" value="false"/>
   </SyntheticProperties>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
@@ -38,7 +39,7 @@
                       <Component id="jPanel3" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jPanel1" max="32767" attributes="0"/>
-                      <EmptySpace pref="46" max="32767" attributes="0"/>
+                      <EmptySpace pref="235" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
                       <Component id="jPanel2" max="32767" attributes="1"/>
@@ -103,51 +104,80 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace max="-2" attributes="0"/>
+                      <Group type="102" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="masscheckbox3" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      <Component id="masscheckbox1" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="masscheckbox2" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      <Component id="masscheckbox4" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                              </Group>
                               <Group type="102" alignment="0" attributes="0">
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="masscheckbox5" alignment="0" min="-2" pref="66" max="-2" attributes="1"/>
-                                      <Component id="masscheckbox7" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox3" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              <Component id="masscheckbox1" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox2" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              <Component id="masscheckbox4" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                      </Group>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox5" alignment="0" min="-2" pref="66" max="-2" attributes="1"/>
+                                              <Component id="masscheckbox7" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox8" min="-2" max="-2" attributes="0"/>
+                                              <Component id="masscheckbox6" min="-2" max="-2" attributes="1"/>
+                                          </Group>
+                                      </Group>
                                   </Group>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="masscheckbox8" min="-2" max="-2" attributes="0"/>
-                                      <Component id="masscheckbox6" min="-2" max="-2" attributes="1"/>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox9" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              <Component id="masscheckbox11" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox10" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              <Component id="masscheckbox12" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                      </Group>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox13" alignment="0" min="-2" pref="66" max="-2" attributes="1"/>
+                                              <Component id="masscheckbox15" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="masscheckbox14" min="-2" max="-2" attributes="1"/>
+                                              <Component id="masscheckbox16" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                      </Group>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jSeparator3" min="-2" pref="6" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="ratiocheckbox3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="ratiocheckbox2" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="ratiocheckbox1" alignment="0" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
+                              <Group type="102" attributes="0">
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jSeparator1" min="-2" pref="419" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
-                          <EmptySpace min="-2" max="-2" attributes="0"/>
-                          <Component id="jSeparator3" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="ratiocheckbox3" min="-2" max="-2" attributes="0"/>
-                              <Component id="ratiocheckbox2" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="ratiocheckbox1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          </Group>
                       </Group>
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace min="-2" pref="117" max="-2" attributes="0"/>
+                      <Group type="102" alignment="1" attributes="0">
                           <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <Group type="102" attributes="0">
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jSeparator1" min="-2" pref="340" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="166" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
                           <Component id="jSeparator2" max="32767" attributes="1"/>
@@ -181,9 +211,9 @@
                       <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Component id="jSeparator2" max="32767" attributes="1"/>
                       <Component id="jSeparator1" max="32767" attributes="1"/>
-                      <Component id="jSeparator2" alignment="1" max="32767" attributes="1"/>
                   </Group>
                   <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
@@ -230,10 +260,31 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="ratiocheckbox3" min="-2" max="-2" attributes="0"/>
                               </Group>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="masscheckbox9" alignment="0" min="-2" max="-2" attributes="1"/>
+                                      <Component id="masscheckbox10" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="masscheckbox11" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="masscheckbox12" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="masscheckbox14" alignment="0" min="-2" max="-2" attributes="1"/>
+                                      <Component id="masscheckbox13" alignment="0" min="-2" max="-2" attributes="1"/>
+                                  </Group>
+                                  <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="masscheckbox15" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="masscheckbox16" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
                           </Group>
                       </Group>
                   </Group>
-                  <EmptySpace pref="24" max="32767" attributes="0"/>
+                  <EmptySpace pref="131" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -353,6 +404,56 @@
           </Properties>
         </Component>
         <Component class="java.awt.Checkbox" name="masscheckbox8">
+          <Properties>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox9">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox10">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="SegmentationSetupForm_checkbox2"/>
+          </AuxValues>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox11">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox12">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox13">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox14">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox15">
+          <Properties>
+            <Property name="enabled" type="boolean" value="false"/>
+            <Property name="label" type="java.lang.String" value="Mass"/>
+          </Properties>
+        </Component>
+        <Component class="java.awt.Checkbox" name="masscheckbox16">
           <Properties>
             <Property name="label" type="java.lang.String" value="Mass"/>
           </Properties>
@@ -479,8 +580,8 @@
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="enginesCombo" alignment="0" pref="161" max="32767" attributes="0"/>
-                      <Component id="setupButton" alignment="1" pref="161" max="32767" attributes="1"/>
+                      <Component id="enginesCombo" alignment="0" pref="224" max="32767" attributes="0"/>
+                      <Component id="setupButton" alignment="1" pref="224" max="32767" attributes="1"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
