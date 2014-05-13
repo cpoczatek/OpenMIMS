@@ -2698,35 +2698,43 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
             boolean saveImageOnly = true;
             boolean sucess = false;
             //Save only image, enter save from gui because evt != null
-            if (evt != null && evt.getActionCommand().equals(SAVE_IMAGE)) {
+            if ((evt != null && evt.getActionCommand().equals(SAVE_IMAGE)) || evt == null) {
                 saveImageOnly = true;
                 System.out.println("Save image only.");
+                MimsJFileChooser fc = new MimsJFileChooser(this);
+                int returnVal = fc.showSaveDialog(jTabbedPane1);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    fileName = fc.getSelectedFile().getAbsolutePath();
+                    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                    sucess = saveSession(fileName, saveImageOnly);
+                }
 
                 //Save session, enter save from gui because evt != null
             } else if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)) {
                 saveImageOnly = false;
                 System.out.println("Save session.");
+                if (this.getmimsAction().isImageModified()) {
+                    MimsJFileChooser fc = new MimsJFileChooser(this);
+                    if (this.getImageFilePrefix() != null) {
+                        fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
+                    }
 
+                    int returnVal = fc.showSaveDialog(jTabbedPane1);
+                    if (returnVal == JFileChooser.APPROVE_OPTION) {
+                        fileName = fc.getSelectedFile().getAbsolutePath();
+                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                        sucess = saveSession(fileName, saveImageOnly);
+                    }
+                }else{
+                    fileName = new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION).getAbsolutePath();
+                    sucess = saveSession(fileName, saveImageOnly);
+                }
                 //saveMIMS(null) called
                 //only called from checkCurrentFileStatusBeforeOpening()
-            } else if (evt == null) {
-                saveImageOnly = true;
-                System.out.println("Force save image only.");
             }
 
-            //Show Filechooser to get possible new name.
-            MimsJFileChooser fc = new MimsJFileChooser(this);
-            if (this.getImageFilePrefix() != null) {
-                fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
-            }
-
-            int returnVal = fc.showSaveDialog(jTabbedPane1);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                fileName = fc.getSelectedFile().getAbsolutePath();
-                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                sucess = saveSession(fileName, saveImageOnly);
-            }
             return sucess;
         } catch (Exception e) {
             if (!silentMode) {

@@ -296,7 +296,7 @@ public class FileUtilities {
     * @return true if succeeded, false if not
     */
     public static boolean saveAdditionalData(String baseFileName, String onlyFileName, UI ui) {
-        String dataFileName = ui.getImageFilePrefix() + NRRD_EXTENSION;
+        String dataFileName = onlyFileName + NRRD_EXTENSION;
         File sessionFile = null;
         Opener image = ui.getOpener();
         Roi[] rois = ui.getRoiManager().getAllROIs();
