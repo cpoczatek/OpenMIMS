@@ -4756,6 +4756,15 @@ public void updateLineProfile(double[] newdata, String name, int width) {
 
                     mimsData.setMimsImage(image);
                     hsiControl.updateImage(false);
+                    //if RatioManager is open, redo the list of masses to ensure the list is not stale
+                    MimsHSIView.MimsRatioManager ratioManager = MimsHSIView.MimsRatioManager.getInstance();
+                    if (ratioManager != null) {
+                        ratioManager.closeWindow();
+                        ratioManager = new MimsHSIView.MimsRatioManager(hsiControl, ui);
+                        ratioManager.showFrame();
+                    } else {
+                        System.out.println("Empty");
+                    }
                 }
 
                 jTabbedPane1.addChangeListener(new ChangeListener() {
@@ -4788,6 +4797,7 @@ public void updateLineProfile(double[] newdata, String name, int width) {
                 }
                 previousFileCanceled = false;
                 ui.setTitle("OpenMIMS: " + image.getImageFile().getName().toString());
+
             }else{
                 sessionOpened = false;
             }
