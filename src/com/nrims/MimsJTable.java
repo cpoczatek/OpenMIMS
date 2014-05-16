@@ -374,7 +374,9 @@ public class MimsJTable {
       Roi roi;
       String stat;
 
-      // Set the plane.      
+      // Set the plane.
+      if (image.getMimsType() == MimsPlus.HSI_IMAGE)
+          image = image.internalRatio;
       if (image.getMimsType() == MimsPlus.MASS_IMAGE)
          image.setSlice(plane, false);
       else if (image.getMimsType() == MimsPlus.RATIO_IMAGE)
