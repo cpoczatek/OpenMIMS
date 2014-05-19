@@ -3349,11 +3349,12 @@ public void updateLineProfile(double[] newdata, String name, int width) {
      *
      * @return array of images.
      */
-    public MimsPlus[] getOpenImages() {
+    public MimsPlus[] getAllOpenImages() {
         MimsPlus[] massImages = getOpenMassImages();
         MimsPlus[] sumImages = getOpenSumImages();
         MimsPlus[] ratioImages = getOpenRatioImages();
         MimsPlus[] hsiImages = getOpenHSIImages();
+        MimsPlus[] compImages = getOpenCompositeImages();
 
         MimsPlus[] allImages = new MimsPlus[massImages.length + sumImages.length + ratioImages.length + hsiImages.length];
         int i = 0;
@@ -3370,6 +3371,10 @@ public void updateLineProfile(double[] newdata, String name, int width) {
            i++;
         }
         for (MimsPlus mp : hsiImages) {
+           allImages[i] = mp;
+           i++;
+        }
+        for (MimsPlus mp : compImages) {
            allImages[i] = mp;
            i++;
         }
