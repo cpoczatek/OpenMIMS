@@ -74,7 +74,11 @@ public final class NelderMead {
 
         //if we're above 98% return
         if(min < 2.0) return minP;
-
+        
+        //if we've collapsed to a single point return
+        if( (minP.get(1) == maxP.get(1)) && (minP.get(2) == maxP.get(2))) {
+            return minP;
+        }
         // sum all but the worst point
         Point total = new Point(dim);
         for(Iterator/*<Point>*/ i = simplex.iterator(); i.hasNext();) {
