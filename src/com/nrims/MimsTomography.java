@@ -5,13 +5,18 @@ import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
+import ij.gui.Line;
+import ij.gui.Overlay;
 
 import ij.gui.Roi;
+import ij.gui.ShapeRoi;
 
 import java.awt.Component;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.Polygon;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.DefaultListModel;
@@ -41,7 +46,7 @@ public class MimsTomography extends javax.swing.JPanel {
 
    private UI ui;
    private Opener image;
-   MimsJFreeChart tomoChart = null;
+   Overlay overlay = new Overlay();
    MimsJTable table = null;
    private JFreeChart chart;
    private MimsChartPanel chartPanel;
@@ -225,7 +230,6 @@ public class MimsTomography extends javax.swing.JPanel {
       jLabel3.setText("Statistics");
       imageJList.setModel(new DefaultListModel());
       imageJList.setCellRenderer(new ImageListRenderer());
-      tomoChart = null;
 
       // Remove components (jspinners) from the area
       // in which a user can drag and drop a file.
@@ -294,13 +298,13 @@ public class MimsTomography extends javax.swing.JPanel {
          chart.fireChartChanged();
       }
    }
-
+   
     /**
      * The action method for the "Plot" button. Generates a plot
      * containing ROI statistical information.
      */
     private void plotButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_plotButtonActionPerformed
-
+        MimsJFreeChart tomoChart = null;
        // Initialize chart.
        if (!appendCheckBox.isSelected() || tomoChart == null) {
           tomoChart = new MimsJFreeChart(ui);
@@ -369,9 +373,6 @@ public class MimsTomography extends javax.swing.JPanel {
        if (images.length >= 1) {
           MimsPlus[] imagesToSend = new MimsPlus[images.length];
           for (int i = 0; i < images.length; i++) {
-             if (images[i].getMimsType() == MimsPlus.HSI_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE)
-                imagesToSend[i] = images[i].internalRatio;
-             else
                 imagesToSend[i] = images[i];
           }
           tomoChart.setImages(imagesToSend);
@@ -494,7 +495,7 @@ public class MimsTomography extends javax.swing.JPanel {
           for (int i = 0; i < 100; i++) {
              foo[i] = 10;
           }
-          ui.updateLineProfile(foo, "line", 1);
+          ui.updateLineProfile(foo, "line", 1, null);
        } else {
           ui.lineProfile.setVisible(true);
        }

@@ -83,6 +83,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     private CompositeProcessor compProcessor = null ;
     private com.nrims.UI ui = null;
     private EventListenerList fStateListeners = null ;
+    private Overlay graphOverlay = new Overlay();
     
     //Mouse coordinates for use with OpenMIMS too
     private int startX;
@@ -1731,7 +1732,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       } else {
          profileP = new ij.gui.ProfilePlot(this);         
       }
-      ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth());
+      ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + roi.getName(), this.getProcessor().getLineWidth(), this);
 
    }
 
@@ -2079,5 +2080,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return UI object
      */
     public UI getUI() { return ui ; }
+    /**
+     * Set
+     * @param overlay 
+     */
+    public Overlay getGraphOverlay(){
+        return graphOverlay;
+    }
 
 }

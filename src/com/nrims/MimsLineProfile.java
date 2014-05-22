@@ -54,12 +54,13 @@ public class MimsLineProfile extends JFrame {
     private UI ui;
     private double curX;
     private String name;
+    private MimsPlus image;
 
     public MimsLineProfile(final UI ui) {
         super("Dynamic Line Profile");
         this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
         this.ui = ui;
-        
+        image = null;
         XYDataset dataset = createDataset();
         chart = createChart(dataset);
         curX = 0;
@@ -114,30 +115,30 @@ public class MimsLineProfile extends JFrame {
         this.setVisible(true);
     }
     public void updateLineCoords() {
-        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
-        System.out.println(plot.getDomainCrosshairValue());
-        if (plot.isDomainCrosshairVisible() && curX != plot.getDomainCrosshairValue() && name != null) {
-            curX = plot.getDomainCrosshairValue();
-            Roi roi = ui.getRoiManager().getRoiByName(name);
-            if (roi.isLine()) {
-                Line line = (Line) roi;
-                double ratio = plot.getDomainCrosshairValue() / line.getLength();
-                Polygon points = line.getPoints();
-                int[] xpoints = points.xpoints;
-                int[] ypoints = points.ypoints;
-                double xvec = (xpoints[0] - xpoints[1]) * ratio;
-                double yvec = (ypoints[0] - ypoints[1]) * ratio;
-                int pixelX = (int) (xpoints[0] - xvec);
-                int pixelY = (int) (ypoints[0] - yvec);
-                System.out.println(pixelX + ", " + pixelY);
-                plot.setPixelCoords(pixelX, pixelY);
-                Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
-                Roi shaperoi = new ShapeRoi(shape);
-                Overlay overlay = new Overlay(shaperoi);
-                overlay.setFillColor(java.awt.Color.yellow);
-                MimsPlus[] images = ui.getAllOpenImages();
-                for (MimsPlus image : images) {
+        if (image != null){
+            MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+            System.out.println(plot.getDomainCrosshairValue());
+            if (plot.isDomainCrosshairVisible() && curX != plot.getDomainCrosshairValue() && name != null) {
+                curX = plot.getDomainCrosshairValue();
+                Roi roi = ui.getRoiManager().getRoiByName(name);
+                if (roi.isLine()) {
+                    Line line = (Line) roi;
+                    double ratio = plot.getDomainCrosshairValue() / line.getLength();
+                    Polygon points = line.getPoints();
+                    int[] xpoints = points.xpoints;
+                    int[] ypoints = points.ypoints;
+                    double xvec = (xpoints[0] - xpoints[1]) * ratio;
+                    double yvec = (ypoints[0] - ypoints[1]) * ratio;
+                    int pixelX = (int) (xpoints[0] - xvec);
+                    int pixelY = (int) (ypoints[0] - yvec);
+                    System.out.println(pixelX + ", " + pixelY);
+                    plot.setPixelCoords(pixelX, pixelY);
+                    Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
+                    Roi shaperoi = new ShapeRoi(shape);
+                    Overlay overlay = new Overlay(shaperoi);
+                    overlay.setFillColor(java.awt.Color.yellow);
                     image.setOverlay(overlay);
+                    
                 }
             }
         }
@@ -218,11 +219,13 @@ public class MimsLineProfile extends JFrame {
      * @param name name of ROI.
      * @param width the line width.
      */
-    public void updateData(double[] newdata, String name, int width) {
+    public void updateData(double[] newdata, String name, int width, MimsPlus image) {
         if (newdata == null) {
             return;
         }
+        removeOverlay();
         this.name = name.substring(name.lastIndexOf(":") + 2);
+        this.image = image;
         linewidth = width;
         XYSeries series = new XYSeries(name + " w: "+width);
         for(int i = 0; i< newdata.length; i++) {
@@ -288,5 +291,19 @@ public class MimsLineProfile extends JFrame {
           }
        }
     }
+    public void windowClosing(WindowEvent e) {
+        removeOverlay();
+    }
+    public void removeOverlay() {
+        if (image != null && name != null) {
+            Overlay overlay = image.getGraphOverlay();
+            int index = overlay.getIndex(name);
+            if (index > -1) {
+                overlay.remove(index);
+            }
+            image.setOverlay(overlay);
+        }
+    }
+
 
 }

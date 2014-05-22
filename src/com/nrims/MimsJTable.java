@@ -574,7 +574,7 @@ public class MimsJTable {
   /**
    * Returns the column names.
    */
-   private String[] getColumnNames(){
+   public String[] getColumnNames(){
 
       // initialze variables.
       ArrayList<String> columnNamesArray = new ArrayList<String>();

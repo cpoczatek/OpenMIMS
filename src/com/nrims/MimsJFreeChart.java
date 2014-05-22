@@ -1,9 +1,11 @@
 package com.nrims;
 
+import com.nrims.data.FileUtilities;
 import com.nrims.plot.MimsChartFactory;
 import com.nrims.plot.MimsChartPanel;
 import com.nrims.plot.MimsXYPlot;
 import com.nrims.unoplugin.UnoPlugin;
+import com.sun.star.beans.Pair;
 import ij.IJ;
 import ij.gui.*;
 import ij.process.*;
@@ -11,12 +13,15 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.Polygon;
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -51,6 +56,12 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
    //private MimsChartPanel chartpanel;
    private MimsChartPanel chartpanel;
    private UnoPlugin mimsUno;
+   //local copy of data kept for RightClick-> Get Text
+   private XYDataset data;
+   //Unique id for graph, used for plotting coordinate from line ROI graphs
+   private String graphID;
+   //Map associating data series name with their corresponding MimsPlus ROI pair
+   private HashMap<String, Pair<MimsPlus, Roi>> map;
    
    public MimsJFreeChart(UI ui) {
       super("Plot");
@@ -60,9 +71,10 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       JMenuItem menuItem;
       menu = new JMenu("File");
       menuBar.add(menu);
-      
+      //Unique ID is created using timestamp
+      graphID = "" + (int) System.currentTimeMillis();
       addMouseListener(this);
-
+      addWindowListener(this);
       // Save as menu item.
       menuItem = new JMenuItem("Save");
       menuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -112,17 +124,18 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
               xaxisname = "Length";
           }
          JFreeChart chart = createChart(xaxisname);
-        XYDataset xydata;
          // Get the data.
           if (mean) {
-              xydata = getLineDataset();
+              data = getLineDataset();
           } else {
-              xydata = getDataset();
+              data = getDataset();
           }
 
          // Apply data to the plot
          MimsXYPlot xyplot = (MimsXYPlot)chart.getPlot();
-         xyplot.setDataset(xydata);
+         xyplot.setDataset(data);
+         xyplot.setRois(rois);
+         xyplot.setParent(this);
 
          // Generate the layout.
          //chartpanel = new MimsChartPanel(chart);
@@ -352,7 +365,12 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
 
       // Image loop
       for (int j = 0; j < images.length; j++) {
-         MimsPlus image = images[j];
+         MimsPlus image;
+          if (images[j].getMimsType() == MimsPlus.HSI_IMAGE || images[j].getMimsType() == MimsPlus.RATIO_IMAGE) {
+              image = images[j].internalRatio;
+          } else {
+              image = images[j];
+          }
 
          // Plane loop
          for (int ii = 0; ii < planes.size(); ii++) {
@@ -432,11 +450,17 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       int currentSlice = ui.getOpenMassImages()[0].getCurrentSlice();
       ArrayList<String> seriesNames = new ArrayList<String>();
       String tempName = "";
+            map = new HashMap<String, Pair<MimsPlus, Roi>>();
       double stat;
 
       // Image loop
       for (int j = 0; j < images.length; j++) {
-         MimsPlus image = images[j];
+          MimsPlus image;
+          if (images[j].getMimsType() == MimsPlus.HSI_IMAGE || images[j].getMimsType() == MimsPlus.RATIO_IMAGE) {
+              image = images[j].internalRatio;
+          } else {
+              image = images[j];
+          }
             // Roi loop
             for (int i = 0; i < rois.length; i++) {
 
@@ -468,7 +492,9 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                    for (int p = 0; p < newdata.length; p++) {
                        series[i][j].add(p, newdata[p]);
                    }
-
+                   Pair tuple = new Pair(images[j], rois[i]);
+                   map.put(seriesname[i][j], tuple);
+                   
                } // End of Stat
             } // End of Roi
       } // End of Image
@@ -659,7 +685,10 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
        table.setStats(stats);
        table.setRois(rois);
        table.setImages(images);
-       table.createTable(false);
+       String[] columnnames = table.getColumnNames();
+       //MimsJTable requires multi-dim array, so need to convert dataset
+       Object[][] exportedData = FileUtilities.convertXYDatasetToArray(data);
+       table.createCustomTable(exportedData, columnnames);
        table.showFrame();
     }
 
@@ -767,16 +796,79 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       }
       return returnVal;
    }
-  
+   /**
+    * Given the identifier of a series and a point on it, 
+    * display a single point located on the corresponding line ROI and it's image.
+    * @param seriesKey name of the series
+    * @param x crosshair x point on series
+    * @param y crosshair y point on series
+    */
+      public void addToOverlay(String seriesKey, double x, double y) {
+          //check to see if either seriesKey or map is null- this indicates that either no crosshair is set
+          //or that this is not a line ROI graph
+          if (seriesKey != null && map != null) {
+              Pair tuple = map.get(seriesKey);
+              MimsPlus finalImage = (MimsPlus) tuple.First;
+              Roi roi = (Roi) tuple.Second;
+              //check that this a line ROI graph
+              if (roi.isLine()) {
+                  Line line = (Line) roi;
+                  //convert from series coordinate system to image coordinate system
+                  double ratio = x / line.getLength();
+                  Polygon points = line.getPoints();
+                  int[] xpoints = points.xpoints;
+                  int[] ypoints = points.ypoints;
+                  double xvec = (xpoints[0] - xpoints[1]) * ratio;
+                  double yvec = (ypoints[0] - ypoints[1]) * ratio;
+                  int pixelX = (int) (xpoints[0] - xvec);
+                  int pixelY = (int) (ypoints[0] - yvec);
+                  Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
+                  Roi shaperoi = new ShapeRoi(shape);
+                  shaperoi.setName(roi.getName() + graphID);
+                  //remove any previous crosshair ROIs that originated from this graph
+                  //this is why we set and remove based on the unique global graphID
+                  for (MimsPlus image : images) {
+                      Overlay overlay = image.getGraphOverlay();
+                      for (Roi roim : rois) {
+                          Overlay overlaym = image.getGraphOverlay();
+                          int indexm = overlaym.getIndex(roim.getName() + graphID);
+                          if (indexm > -1) {
+                              overlay.remove(indexm);
+                          }
+                      }
+                      image.setOverlay(overlay);
+                  }
+                  //add the roi to the overlay, and set it 
+                  Overlay overlay = finalImage.getGraphOverlay();
+                  overlay.add(shaperoi);
+                  overlay.setFillColor(java.awt.Color.yellow);
+                  finalImage.setOverlay(overlay);
+              }
+        }
+    }
 
    @Override
    public void windowActivated(WindowEvent e) {}
 
    public void windowOpened(WindowEvent e) {}
 
-   public void windowClosing(WindowEvent e) {}
+   public void windowClosing(WindowEvent e) {
+       //on closing, remove all crosshair ROI's from any affected images
+       for (MimsPlus image : images) {
+           for (Roi roi : rois) {
+               Overlay overlay = image.getGraphOverlay();
+               int index = overlay.getIndex(roi.getName() + graphID);
+               if (index > -1) {
+                   overlay.remove(index);
+               }
+               image.setOverlay(overlay);
+           }
+       }
+   }
 
-   public void windowClosed(WindowEvent e) {}
+   public void windowClosed(WindowEvent e) {
+
+   }
 
    public void windowIconified(WindowEvent e) {}
 

@@ -381,7 +381,6 @@ public class MimsStackEditor extends javax.swing.JPanel {
          op.setStackIndex(openerIndex);
          for (int k = 0; k <= (numberMasses - 1); k++) {
             images[k].setSlice(plane);
-            //images[k].getProcessor().setPixels(op.getPixels(k));
             images[k].getStack().setPixels(op.getPixels(k), restoreIndex);
             images[k].updateAndDraw();
          }

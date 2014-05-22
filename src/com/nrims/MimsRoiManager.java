@@ -3227,7 +3227,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         
         if ((roi.getType() == Roi.LINE) || (roi.getType() == Roi.POLYLINE) || (roi.getType() == Roi.FREELINE)) {
             ij.gui.ProfilePlot profileP = new ij.gui.ProfilePlot(imp);
-            ui.updateLineProfile(profileP.getProfile(), imp.getShortTitle() + " : " + roi.getName(), imp.getProcessor().getLineWidth());
+            ui.updateLineProfile(profileP.getProfile(), imp.getShortTitle() + " : " + roi.getName(), imp.getProcessor().getLineWidth(), imp);
         } else {
             double[] roipix = imp.getRoiPixels();
             String label = imp.getShortTitle() + " ROI: " + roi.getName();

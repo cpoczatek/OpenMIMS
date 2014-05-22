@@ -1,5 +1,9 @@
 package com.nrims.plot;
 
+import com.nrims.MimsJFreeChart;
+import com.nrims.MimsLineProfile;
+import com.nrims.UI;
+import ij.gui.Roi;
 import java.awt.AlphaComposite;
 import java.awt.Composite;
 import java.awt.Graphics2D;
@@ -40,6 +44,9 @@ public class MimsXYPlot extends XYPlot {
     int pixelX;
     int pixelY;
     boolean pixelsSet = false;
+    MimsLineProfile lineProfile = null;
+    MimsJFreeChart parent;
+    Roi[] rois;
    
     /** A flag that controls whether or not a label displaying XHair location is displayed. */
     private boolean crosshairLabelVisible;
@@ -62,7 +69,20 @@ public class MimsXYPlot extends XYPlot {
       this.crosshairLabelVisible = true;
       this.addAnnotation(xyannot);
    }
-
+   public void setRois(Roi[] r){
+       rois = r;
+   }
+   public String identifySeries(double x, double y){
+       XYDataset dataset = getDataset();
+       for (int i = 0; i < dataset.getSeriesCount(); i++){
+           for (int j = 0; j < dataset.getItemCount(i); j++){
+               if(dataset.getXValue(i, j) == x && dataset.getYValue(i, j) == y){
+                   return dataset.getSeriesKey(i).toString();
+               }
+           }
+       }
+       return null;
+   }
 
 
     /**
@@ -382,7 +402,23 @@ public class MimsXYPlot extends XYPlot {
         drawOutline(g2, dataArea);
 
     }
-       
+   /**
+    * Set the line profile this XYPlot corresponds to.
+    * Needed for drawing the point on a MimsPlus which corresponds to the current crosshair
+    * @param profile 
+    */
+   public void setLineProfile(MimsLineProfile profile){
+       lineProfile = profile;
+   }
+   /**
+    * Set the JFreeChart this XYPlot corresponds to.
+    * Needed for drawing the point on a MimsPlus which corresponds to the current crosshair
+    * @param chart 
+    */
+   public void setParent(MimsJFreeChart chart){
+       parent = chart;
+   }
+           
    //Set label
    public void setCrosshairLabel(double x, double y) {
        System.out.println("MimsXYPlot.setCrosshairLabel() called");
@@ -395,6 +431,13 @@ public class MimsXYPlot extends XYPlot {
          xyannot.setX(xmax);
          xyannot.setY(ymax);
          xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);
+         //draw the point on a MimsPlus which corresponds to the crosshair
+         if (lineProfile != null){
+             lineProfile.updateLineCoords();
+         }else{
+             parent.addToOverlay(identifySeries(x,y), x, y);
+         }
+         
       } else {
          xyannot.setText("");
       }
@@ -411,7 +454,7 @@ public class MimsXYPlot extends XYPlot {
        
       pixelCoords.setText(xhairlabel);
                pixelCoords.setX(xmax);
-         pixelCoords.setY(ymax-50);
+         pixelCoords.setY(ymax-5);
          pixelCoords.setTextAnchor(TextAnchor.TOP_RIGHT);
    }
 

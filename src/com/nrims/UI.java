@@ -3162,11 +3162,11 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
  * @param name the name to be on the legend.
  * @param width width of the line roi.
  */
-public void updateLineProfile(double[] newdata, String name, int width) {
+public void updateLineProfile(double[] newdata, String name, int width, MimsPlus image) {
     if(this.lineProfile==null) {
         return;
     } else {
-        lineProfile.updateData(newdata, name, width);
+        lineProfile.updateData(newdata, name, width, image);
     }
 }
 

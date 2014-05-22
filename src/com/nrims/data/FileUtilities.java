@@ -55,6 +55,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.jfree.data.xy.XYDataset;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -878,5 +879,28 @@ public class FileUtilities {
             parent = parent.getParentFile();
         }
         return null;
+    }
+    public static Object[][] convertXYDatasetToArray(XYDataset data){
+        int numSeries = data.getSeriesCount();
+       int maxCount = 0;
+        for (int i = 0; i < numSeries; i++) {
+            if (data.getItemCount(i) > maxCount){
+                maxCount = data.getItemCount(i);
+            }
+        }
+       Object[][] exportedData = new Object[maxCount][numSeries+1];
+       for (int i = 0; i < maxCount; i++){
+           Object[] row = new Object[numSeries+1];
+           row[0] = i+1;
+           for (int j = 1; j < numSeries+1; j++){
+               if (i >= data.getItemCount(j-1)){
+                   row[j] = 0;
+               }else{
+                   row[j] = data.getYValue(j-1, i);
+               }
+           }
+           exportedData[i] = row;
+       }
+       return exportedData;
     }
 }
