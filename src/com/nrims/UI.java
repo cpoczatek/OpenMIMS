@@ -4391,12 +4391,21 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                   //IMPORTANT: Composite props must be loaded last after all other images are loaded, as it may call
                   //upon other MimsPlus objects
                   ArrayList<CompositeProps> compProps = new ArrayList<CompositeProps>();
+                  String filename = file.getName().toString();
+                  String sessionname = filename.substring(0, filename.lastIndexOf(".session.zip"))+".nrrd";
                  for (Object entry : entries) {
                      if (entry instanceof SumProps) {
                          SumProps sumprops = (SumProps) entry;
                          if (!sessionOpened) {
-                             if (!loadMIMSFile(new File(file.getParent(), sumprops.getDataFileName())))
-                                 return false;
+                             try{
+                                 if (!loadMIMSFile(new File(file.getParent(), sumprops.getDataFileName()))) {
+                                     return false;
+                                 }
+                             }catch(Exception e){
+                                 if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                     return false;
+                                 }
+                             }         
                              doneLoadingFile();
                              sessionOpened = true;
                          }
@@ -4405,8 +4414,16 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                      } else if (entry instanceof RatioProps) {
                          RatioProps ratioprops = (RatioProps) entry;
                          if (!sessionOpened) {
-                             if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName())))
-                                 return false;
+                             try {
+                                 if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName()))) {
+                                     return false;
+
+                                 }
+                             } catch (Exception e) {
+                                 if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                     return false;
+                                 }
+                             }
                              doneLoadingFile();
                              sessionOpened = true;
                          }
@@ -4415,8 +4432,16 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                      } else if (entry instanceof HSIProps) {
                          HSIProps hsiprops = (HSIProps) entry;
                          if (!sessionOpened) {
-                             if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
-                                 return false;
+                             try {
+                                 if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName()))) {
+                                     return false;
+
+                                 }
+                             } catch (Exception e) {
+                                 if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                     return false;
+                                 }
+                             }
                              doneLoadingFile();
                              sessionOpened = true;
                          }
@@ -4425,8 +4450,16 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                      } else if (entry instanceof HSIProps) {
                          HSIProps hsiprops = (HSIProps) entry;
                          if (!sessionOpened) {
-                             if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName())))
-                                 return false;
+                             try {
+                                 if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName()))) {
+                                     return false;
+
+                                 }
+                             } catch (Exception e) {
+                                 if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                     return false;
+                                 }
+                             }
                              doneLoadingFile();
                              sessionOpened = true;
                          }
@@ -4434,8 +4467,16 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                          sp.showWindow();
                      }else if (entry instanceof CompositeProps) {
                          if (!sessionOpened) {
-                             if (!loadMIMSFile(new File(file.getParent(), ((CompositeProps) entry).getDataFileName())))
-                                 return false;
+                             try {
+                                 if (!loadMIMSFile(new File(file.getParent(), ((CompositeProps) entry).getDataFileName()))) {
+                                     return false;
+
+                                 }
+                             } catch (Exception e) {
+                                 if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                     return false;
+                                 }
+                             }
                              doneLoadingFile();
                              sessionOpened = true;
                          }
