@@ -30,6 +30,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.event.PlotChangeEvent;
 import org.jfree.chart.event.PlotChangeListener;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.util.ResourceBundleWrapper;
 import org.jfree.data.xy.XYDataset;
@@ -85,7 +86,7 @@ public class MimsLineProfile extends JFrame {
          JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
          xhairs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               MimsJFreeChart.showHideCrossHairs(chartPanel);
+               showHideCrossHairs(chartPanel);
             }
          });
          chartPanel.getPopupMenu().addSeparator();
@@ -304,6 +305,20 @@ public class MimsLineProfile extends JFrame {
             image.setOverlay(overlay);
         }
     }
+    public void showHideCrossHairs(MimsChartPanel chartpanel) {
+        Plot plot = chartpanel.getChart().getPlot();
+        if (!(plot instanceof MimsXYPlot)) {
+            return;
+        }
 
+        // Show/Hide XHairs
+        MimsXYPlot xyplot = (MimsXYPlot) plot;
+        xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
+        xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
+        if (!xyplot.isDomainCrosshairVisible()) {
+            removeOverlay();
+        }
+        xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
+    }
 
 }

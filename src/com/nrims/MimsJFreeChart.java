@@ -154,7 +154,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
          xhairs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               MimsJFreeChart.showHideCrossHairs(chartpanel);
+              showHideCrossHairs(chartpanel);
             }
          });
          chartpanel.getPopupMenu().addSeparator();
@@ -589,7 +589,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
     * Swap crosshairs from hidden to shown or vice versa
     * @param chartpanel GUI element to be affected
     */
-   public static void showHideCrossHairs(MimsChartPanel chartpanel) {
+   public void showHideCrossHairs(MimsChartPanel chartpanel) {
       Plot plot = chartpanel.getChart().getPlot();
       if (!(plot instanceof MimsXYPlot))
          return;
@@ -598,6 +598,9 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       MimsXYPlot xyplot = (MimsXYPlot) plot;
       xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
       xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
+      if (!xyplot.isDomainCrosshairVisible()){
+          removeOverlay();
+      }
       xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
    }
 
@@ -846,15 +849,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
               }
         }
     }
-
-   @Override
-   public void windowActivated(WindowEvent e) {}
-
-   public void windowOpened(WindowEvent e) {}
-
-   public void windowClosing(WindowEvent e) {
-       //on closing, remove all crosshair ROI's from any affected images
-       for (MimsPlus image : images) {
+   public void removeOverlay(){
+              for (MimsPlus image : images) {
            for (Roi roi : rois) {
                Overlay overlay = image.getGraphOverlay();
                int index = overlay.getIndex(roi.getName() + graphID);
@@ -864,6 +860,15 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                image.setOverlay(overlay);
            }
        }
+   }
+   @Override
+   public void windowActivated(WindowEvent e) {}
+
+   public void windowOpened(WindowEvent e) {}
+
+   public void windowClosing(WindowEvent e) {
+       //on closing, remove all crosshair ROI's from any affected images
+       removeOverlay();
    }
 
    public void windowClosed(WindowEvent e) {
