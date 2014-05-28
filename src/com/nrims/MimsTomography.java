@@ -331,7 +331,7 @@ public class MimsTomography extends javax.swing.JPanel {
        }
        if (rois.length >= 1) {
           for (Roi roi : rois){
-              if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE){
+              if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == roi.POLYLINE){
                   numLine++;
               }
           }

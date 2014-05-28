@@ -815,18 +815,48 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
               Roi roi = (Roi) tuple.Second;
               //check that this a line ROI graph
               if (roi.isLine()) {
-                  Line line = (Line) roi;
-                  //convert from series coordinate system to image coordinate system
-                  double ratio = x / line.getLength();
-                  Polygon points = line.getPoints();
-                  int[] xpoints = points.xpoints;
-                  int[] ypoints = points.ypoints;
-                  double xvec = (xpoints[0] - xpoints[1]) * ratio;
-                  double yvec = (ypoints[0] - ypoints[1]) * ratio;
-                  int pixelX = (int) (xpoints[0] - xvec);
-                  int pixelY = (int) (ypoints[0] - yvec);
+                  int pixelX = 0;
+                  int pixelY = 0;
+                  if (roi.getType() == Roi.LINE) {
+                      Line line = (Line) roi;
+                      //convert from series coordinate system to image coordinate system
+                      double ratio = x / line.getLength();
+                      Polygon points = line.getPoints();
+                      int[] xpoints = points.xpoints;
+                      int[] ypoints = points.ypoints;
+                      double xvec = (xpoints[0] - xpoints[1]) * ratio;
+                      double yvec = (ypoints[0] - ypoints[1]) * ratio;
+                      pixelX = (int) (xpoints[0] - xvec);
+                      pixelY = (int) (ypoints[0] - yvec);
+                      //add the roi to the overlay, and set it 
+                  /*Overlay overlay = finalImage.getGraphOverlay();
+                       overlay.add(shaperoi);
+                       overlay.setFillColor(java.awt.Color.yellow);
+                       finalImage.setOverlay(overlay);*/
+                  } else if (roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
+                      Polygon points = roi.getPolygon();
+                      int[] xpoints = points.xpoints;
+                      int[] ypoints = points.ypoints;
+                      double distanceTraveled = 0;
+                      pixelX = 0;
+                      pixelY = 0;
+                      for (int i = 0; i < xpoints.length - 1; i++) {
+                          double distance = Math.pow((Math.pow((double) (xpoints[i] - xpoints[i + 1]), 2) + Math.pow((double) (ypoints[i] - ypoints[i + 1]), 2)), 0.5);
+                          if (distanceTraveled + distance > x) {
+                              double needToTravel = x - distanceTraveled;
+                              double ratio = needToTravel / distance;
+                              double xvec = (xpoints[i] - xpoints[i + 1]) * ratio;
+                              double yvec = (ypoints[i] - ypoints[i + 1]) * ratio;
+                              pixelX = (int) (xpoints[i] - xvec);
+                              pixelY = (int) (ypoints[i] - yvec);
+                              i = xpoints.length;
+                          } else {
+                              distanceTraveled += distance;
+                          }
+                      }
+                  }
                   int[] coords = {pixelX, pixelY};
-                  Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
+                  Ellipse2D shape = new Ellipse2D.Float(pixelX - 2, pixelY - 2, 4, 4);
                   Roi shaperoi = new ShapeRoi(shape);
                   shaperoi.setName(roi.getName() + graphID);
                   //remove any previous crosshair ROIs that originated from this graph
@@ -847,13 +877,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                       image.setOverlay(overlay);
                   }
                   return coords;
-                  //add the roi to the overlay, and set it 
-                  /*Overlay overlay = finalImage.getGraphOverlay();
-                  overlay.add(shaperoi);
-                  overlay.setFillColor(java.awt.Color.yellow);
-                  finalImage.setOverlay(overlay);*/
               }
-        }
+          }
           return null;
     }
    public void removeOverlay(){
