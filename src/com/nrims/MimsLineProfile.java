@@ -6,6 +6,7 @@ import com.nrims.plot.MimsXYPlot;
 import ij.IJ;
 import ij.gui.Line;
 import ij.gui.Overlay;
+import ij.gui.PointRoi;
 import ij.gui.Roi;
 import ij.gui.ShapeRoi;
 import java.awt.Color;
@@ -56,6 +57,8 @@ public class MimsLineProfile extends JFrame {
     private double curX;
     private String name;
     private MimsPlus image;
+    private int pointX = -1;
+    private int pointY = -1;
 
     public MimsLineProfile(final UI ui) {
         super("Dynamic Line Profile");
@@ -91,7 +94,16 @@ public class MimsLineProfile extends JFrame {
          });
          chartPanel.getPopupMenu().addSeparator();
          chartPanel.getPopupMenu().add(xhairs);
-
+        JMenuItem pointhairs = new JMenuItem("Add point roi at crosshairs");
+        pointhairs.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (pointX > 0 && pointY > 0) {
+                    ui.getRoiManager().add(new PointRoi(pointX, pointY));
+                    ui.updateAllImages();
+                }
+            }
+        });
+         chartPanel.getPopupMenu().add(pointhairs);
          // Replace Save As... menu item.
          chartPanel.getPopupMenu().remove(3);
          JMenuItem saveas = new JMenuItem("Save as...");
@@ -122,8 +134,8 @@ public class MimsLineProfile extends JFrame {
             if (plot.isDomainCrosshairVisible() && curX != plot.getDomainCrosshairValue() && name != null) {
                 curX = plot.getDomainCrosshairValue();
                 Roi roi = ui.getRoiManager().getRoiByName(name);
-                int pixelX = 0;
-                int pixelY = 0;
+                int pixelX = -1;
+                int pixelY = -1;
                 if (roi != null && roi.isLine()) {
                     if (roi.getType() == Roi.LINE) {
                         Line line = (Line) roi;
@@ -174,6 +186,8 @@ public class MimsLineProfile extends JFrame {
                         overlay.setFillColor(java.awt.Color.yellow);
                         image.setOverlay(overlay);
                     }
+                    pointX = pixelX;
+                    pointY = pixelY;
                     return coords;
                 }
             }

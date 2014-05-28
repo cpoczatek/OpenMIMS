@@ -62,6 +62,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
    private String graphID;
    //Map associating data series name with their corresponding MimsPlus ROI pair
    private HashMap<String, Pair<MimsPlus, Roi>> map;
+   private int pointX = -1;
+   private int pointY = -1;
    
    public MimsJFreeChart(UI ui) {
       super("Plot");
@@ -159,7 +161,17 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          });
          chartpanel.getPopupMenu().addSeparator();
          chartpanel.getPopupMenu().add(xhairs);
-
+         // Add menu item for showing/hiding crosshairs.
+         JMenuItem pointhairs = new JMenuItem("Add point roi at crosshairs");
+         pointhairs.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (pointX >0 && pointY >0) {
+                    ui.getRoiManager().add(new PointRoi(pointX, pointY));
+                    ui.updateAllImages();
+                }
+            }
+         });
+         chartpanel.getPopupMenu().add(pointhairs);
          // Add menu item for toggling between linear and log scales.
          JMenuItem logscale = new JMenuItem("Log/Linear scale");
          logscale.addActionListener(new ActionListener() {
@@ -799,6 +811,10 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       }
       return returnVal;
    }
+   public void setPoint(int x, int y){
+       pointX = x;
+       pointY = y;
+   }
    /**
     * Given the identifier of a series and a point on it, 
     * display a single point located on the corresponding line ROI and it's image.
@@ -815,8 +831,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
               Roi roi = (Roi) tuple.Second;
               //check that this a line ROI graph
               if (roi.isLine()) {
-                  int pixelX = 0;
-                  int pixelY = 0;
+                  int pixelX = -1;
+                  int pixelY = -1;
                   if (roi.getType() == Roi.LINE) {
                       Line line = (Line) roi;
                       //convert from series coordinate system to image coordinate system
@@ -876,6 +892,8 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                       overlay.setFillColor(java.awt.Color.yellow);
                       image.setOverlay(overlay);
                   }
+                  pointX = pixelX;
+                  pointY = pixelY;
                   return coords;
               }
           }
