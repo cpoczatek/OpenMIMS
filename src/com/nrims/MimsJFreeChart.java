@@ -830,27 +830,32 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                   shaperoi.setName(roi.getName() + graphID);
                   //remove any previous crosshair ROIs that originated from this graph
                   //this is why we set and remove based on the unique global graphID
-                  for (MimsPlus image : images) {
+                  MimsPlus[] openImages = ui.getAllOpenImages();
+                  //for (MimsPlus image : images) {
+                  for (MimsPlus image : openImages) {
                       Overlay overlay = image.getGraphOverlay();
+
                       for (Roi roim : rois) {
-                          Overlay overlaym = image.getGraphOverlay();
-                          int indexm = overlaym.getIndex(roim.getName() + graphID);
+                          int indexm = overlay.getIndex(roim.getName() + graphID);
                           if (indexm > -1) {
                               overlay.remove(indexm);
                           }
                       }
+                      overlay.add(shaperoi);
+                      overlay.setFillColor(java.awt.Color.yellow);
                       image.setOverlay(overlay);
                   }
                   //add the roi to the overlay, and set it 
-                  Overlay overlay = finalImage.getGraphOverlay();
+                  /*Overlay overlay = finalImage.getGraphOverlay();
                   overlay.add(shaperoi);
                   overlay.setFillColor(java.awt.Color.yellow);
-                  finalImage.setOverlay(overlay);
+                  finalImage.setOverlay(overlay);*/
               }
         }
     }
    public void removeOverlay(){
-              for (MimsPlus image : images) {
+       MimsPlus[] openImages = ui.getAllOpenImages();
+              for (MimsPlus image : openImages) {
            for (Roi roi : rois) {
                Overlay overlay = image.getGraphOverlay();
                int index = overlay.getIndex(roi.getName() + graphID);

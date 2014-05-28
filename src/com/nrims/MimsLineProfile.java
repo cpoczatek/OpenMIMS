@@ -136,9 +136,20 @@ public class MimsLineProfile extends JFrame {
                     plot.setPixelCoords(pixelX, pixelY);
                     Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
                     Roi shaperoi = new ShapeRoi(shape);
-                    Overlay overlay = new Overlay(shaperoi);
-                    overlay.setFillColor(java.awt.Color.yellow);
-                    image.setOverlay(overlay);
+                    shaperoi.setName(name);
+                    MimsPlus[] openImages = ui.getAllOpenImages();
+                    //for (MimsPlus image : images) {
+                    for (MimsPlus image : openImages) {
+                        Overlay overlay = image.getGraphOverlay();
+                       
+                        int indexm = overlay.getIndex(roi.getName());
+                        if (indexm > -1) {
+                            overlay.remove(indexm);
+                        }
+                        overlay.add(shaperoi);
+                         overlay.setFillColor(java.awt.Color.yellow);
+                        image.setOverlay(overlay);
+                    }
                     
                 }
             }
@@ -297,12 +308,17 @@ public class MimsLineProfile extends JFrame {
     }
     public void removeOverlay() {
         if (image != null && name != null) {
-            Overlay overlay = image.getGraphOverlay();
-            int index = overlay.getIndex(name);
-            if (index > -1) {
-                overlay.remove(index);
+            MimsPlus[] openImages = ui.getAllOpenImages();
+            //for (MimsPlus image : images) {
+            for (MimsPlus image : openImages) {
+                Overlay overlay = image.getGraphOverlay();
+
+                int indexm = overlay.getIndex(name);
+                if (indexm > -1) {
+                    overlay.remove(indexm);
+                }
+                image.setOverlay(overlay);
             }
-            image.setOverlay(overlay);
         }
     }
     public void showHideCrossHairs(MimsChartPanel chartpanel) {
