@@ -604,7 +604,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
    }
 
-   public void setLabel() {
+   /*public void setLabel() {
        System.out.println("MimsJFreeChart.setLabel() called");
        
        MimsXYPlot plot = (MimsXYPlot)chartpanel.getChart().getPlot();
@@ -623,7 +623,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          plot.getCrossHairAnnotation().setText("");
       }
 
-   }
+   }*/
    
     /**
     * Change y axis from linear to log scale or vice versa

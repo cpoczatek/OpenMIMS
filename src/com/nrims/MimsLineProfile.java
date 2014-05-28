@@ -115,7 +115,7 @@ public class MimsLineProfile extends JFrame {
         this.pack();
         this.setVisible(true);
     }
-    public void updateLineCoords() {
+    public int[] updateLineCoords() {
         if (image != null){
             MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
             System.out.println(plot.getDomainCrosshairValue());
@@ -132,8 +132,8 @@ public class MimsLineProfile extends JFrame {
                     double yvec = (ypoints[0] - ypoints[1]) * ratio;
                     int pixelX = (int) (xpoints[0] - xvec);
                     int pixelY = (int) (ypoints[0] - yvec);
+                    int[] coords = {pixelX, pixelY};
                     System.out.println(pixelX + ", " + pixelY);
-                    plot.setPixelCoords(pixelX, pixelY);
                     Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
                     Roi shaperoi = new ShapeRoi(shape);
                     shaperoi.setName(name);
@@ -150,10 +150,12 @@ public class MimsLineProfile extends JFrame {
                          overlay.setFillColor(java.awt.Color.yellow);
                         image.setOverlay(overlay);
                     }
+                    return coords;
                     
                 }
             }
         }
+        return null;
    }
      /**
      * Creates a sample dataset.

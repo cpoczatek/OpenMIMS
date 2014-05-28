@@ -59,7 +59,9 @@ public class MimsXYPlot extends XYPlot {
               rangeAxis, renderer);
 
       this.crosshairLabelVisible = true;
+            this.addAnnotation(pixelCoords);
       this.addAnnotation(xyannot);
+
    }
 
    public MimsXYPlot(XYPlot xyplot){
@@ -67,7 +69,9 @@ public class MimsXYPlot extends XYPlot {
               xyplot.getRangeAxis(), xyplot.getRenderer());
 
       this.crosshairLabelVisible = true;
+      this.addAnnotation(pixelCoords);
       this.addAnnotation(xyannot);
+      
    }
    public void setRois(Roi[] r){
        rois = r;
@@ -433,7 +437,14 @@ public class MimsXYPlot extends XYPlot {
          xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);
          //draw the point on a MimsPlus which corresponds to the crosshair
          if (lineProfile != null){
-             lineProfile.updateLineCoords();
+            int[] coords = lineProfile.updateLineCoords();
+            if (coords != null){
+             pixelX = coords[0];
+             pixelY = coords[1];
+             pixelsSet = true;
+             xhairlabel +="   pX = " + pixelX + ", pY = " + pixelY;
+             xyannot.setText(xhairlabel);
+            }
          }else{
              parent.addToOverlay(identifySeries(x,y), x, y);
          }
@@ -447,15 +458,9 @@ public class MimsXYPlot extends XYPlot {
    public void setPixelCoords(int x, int y) {
                 double xmax = getDomainAxis().getUpperBound();
          double ymax = getRangeAxis().getUpperBound();
-      pixelX = x;
-      pixelY = y;
-      pixelsSet = true;
-      String xhairlabel = "pX = " + pixelX + ", pY = " + pixelY;
-       
-      pixelCoords.setText(xhairlabel);
-               pixelCoords.setX(xmax);
-         pixelCoords.setY(ymax-5);
-         pixelCoords.setTextAnchor(TextAnchor.TOP_RIGHT);
+
+
+         
    }
 
    public void showXHairLabel(boolean visible) {
