@@ -623,7 +623,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          plot.getCrossHairAnnotation().setText("");
       }
 
-   }*/
+   }
    
     /**
     * Change y axis from linear to log scale or vice versa
@@ -806,7 +806,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
     * @param x crosshair x point on series
     * @param y crosshair y point on series
     */
-      public void addToOverlay(String seriesKey, double x, double y) {
+      public int[] addToOverlay(String seriesKey, double x, double y) {
           //check to see if either seriesKey or map is null- this indicates that either no crosshair is set
           //or that this is not a line ROI graph
           if (seriesKey != null && map != null) {
@@ -825,6 +825,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                   double yvec = (ypoints[0] - ypoints[1]) * ratio;
                   int pixelX = (int) (xpoints[0] - xvec);
                   int pixelY = (int) (ypoints[0] - yvec);
+                  int[] coords = {pixelX, pixelY};
                   Ellipse2D shape = new Ellipse2D.Float(pixelX - 3, pixelY - 3, 6, 6);
                   Roi shaperoi = new ShapeRoi(shape);
                   shaperoi.setName(roi.getName() + graphID);
@@ -845,6 +846,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                       overlay.setFillColor(java.awt.Color.yellow);
                       image.setOverlay(overlay);
                   }
+                  return coords;
                   //add the roi to the overlay, and set it 
                   /*Overlay overlay = finalImage.getGraphOverlay();
                   overlay.add(shaperoi);
@@ -852,6 +854,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
                   finalImage.setOverlay(overlay);*/
               }
         }
+          return null;
     }
    public void removeOverlay(){
        MimsPlus[] openImages = ui.getAllOpenImages();

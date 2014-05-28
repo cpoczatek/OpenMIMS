@@ -436,19 +436,20 @@ public class MimsXYPlot extends XYPlot {
          xyannot.setY(ymax);
          xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);
          //draw the point on a MimsPlus which corresponds to the crosshair
-         if (lineProfile != null){
-            int[] coords = lineProfile.updateLineCoords();
-            if (coords != null){
-             pixelX = coords[0];
-             pixelY = coords[1];
-             pixelsSet = true;
-             xhairlabel +="   pX = " + pixelX + ", pY = " + pixelY;
-             xyannot.setText(xhairlabel);
-            }
-         }else{
-             parent.addToOverlay(identifySeries(x,y), x, y);
-         }
-         
+         int[] coords;
+          if (lineProfile != null) {
+              coords = lineProfile.updateLineCoords();
+
+          } else {
+              coords = parent.addToOverlay(identifySeries(x, y), x, y);
+          }
+          if (coords != null) {
+              pixelX = coords[0];
+              pixelY = coords[1];
+              pixelsSet = true;
+              xhairlabel += "   pX = " + pixelX + ", pY = " + pixelY;
+              xyannot.setText(xhairlabel);
+          }
       } else {
          xyannot.setText("");
       }
