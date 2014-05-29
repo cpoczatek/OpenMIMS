@@ -204,6 +204,10 @@ public class compositeManager extends javax.swing.JFrame {
         
         for(int i = 0; i<4; i++) {
             MimsPlus nimg = ui.getImageByName(imgNames[i]);
+            if (nimg == null) {
+                imgs[i] = null;
+                continue;
+            }
             if (nimg.getMimsType() == MimsPlus.HSI_IMAGE) {
                 imgs[i] = nimg.getHSIProps();
             }
