@@ -438,7 +438,7 @@ public class MimsXYPlot extends XYPlot {
          //draw the point on a MimsPlus which corresponds to the crosshair
          int[] coords;
           if (lineProfile != null) {
-              coords = lineProfile.updateLineCoords();
+              coords = lineProfile.addToOverlay();
 
           } else {
               coords = parent.addToOverlay(identifySeries(x, y), x, y);
