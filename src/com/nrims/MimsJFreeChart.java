@@ -808,111 +808,118 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
             float background = ui.getPreferences().getBackgroundRatio();
             returnVal = HSIProcessor.turnoverTransform((float) returnVal, reference, background, (float)sf);
          }         
-      }
-      return returnVal;
-   }
-   public void setPoint(int x, int y){
-       pointX = x;
-       pointY = y;
-   }
-   /**
-    * Given the identifier of a series and a point on it, 
-    * display a single point located on the corresponding line ROI and it's image.
-    * @param seriesKey name of the series
-    * @param x crosshair x point on series
-    * @param y crosshair y point on series
-    */
-      public int[] addToOverlay(String seriesKey, double x, double y) {
-          //check to see if either seriesKey or map is null- this indicates that either no crosshair is set
-          //or that this is not a line ROI graph
-          if (seriesKey != null && map != null) {
-              Pair tuple = map.get(seriesKey);
-              MimsPlus finalImage = (MimsPlus) tuple.First;
-              Roi roi = (Roi) tuple.Second;
-              //check that this a line ROI graph
-              if (roi.isLine()) {
-                  int pixelX = -1;
-                  int pixelY = -1;
-                  if (roi.getType() == Roi.LINE) {
-                      Line line = (Line) roi;
-                      //convert from series coordinate system to image coordinate system
-                      double ratio = x / line.getLength();
-                      Polygon points = line.getPoints();
-                      int[] xpoints = points.xpoints;
-                      int[] ypoints = points.ypoints;
-                      double xvec = (xpoints[0] - xpoints[1]) * ratio;
-                      double yvec = (ypoints[0] - ypoints[1]) * ratio;
-                      pixelX = (int) (xpoints[0] - xvec);
-                      pixelY = (int) (ypoints[0] - yvec);
-                      //add the roi to the overlay, and set it 
-                  /*Overlay overlay = finalImage.getGraphOverlay();
-                       overlay.add(shaperoi);
-                       overlay.setFillColor(java.awt.Color.yellow);
-                       finalImage.setOverlay(overlay);*/
-                  } else if (roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
-                      Polygon points = roi.getPolygon();
-                      int[] xpoints = points.xpoints;
-                      int[] ypoints = points.ypoints;
-                      double distanceTraveled = 0;
-                      pixelX = 0;
-                      pixelY = 0;
-                      for (int i = 0; i < xpoints.length - 1; i++) {
-                          double distance = Math.pow((Math.pow((double) (xpoints[i] - xpoints[i + 1]), 2) + Math.pow((double) (ypoints[i] - ypoints[i + 1]), 2)), 0.5);
-                          if (distanceTraveled + distance > x) {
-                              double needToTravel = x - distanceTraveled;
-                              double ratio = needToTravel / distance;
-                              double xvec = (xpoints[i] - xpoints[i + 1]) * ratio;
-                              double yvec = (ypoints[i] - ypoints[i + 1]) * ratio;
-                              pixelX = (int) (xpoints[i] - xvec);
-                              pixelY = (int) (ypoints[i] - yvec);
-                              i = xpoints.length;
-                          } else {
-                              distanceTraveled += distance;
-                          }
-                      }
-                  }
-                  int[] coords = {pixelX, pixelY};
-                  Ellipse2D shape = new Ellipse2D.Float(pixelX - 2, pixelY - 2, 4, 4);
-                  Roi shaperoi = new ShapeRoi(shape);
-                  shaperoi.setName(roi.getName() + graphID);
-                  //remove any previous crosshair ROIs that originated from this graph
-                  //this is why we set and remove based on the unique global graphID
-                  MimsPlus[] openImages = ui.getAllOpenImages();
-                  //for (MimsPlus image : images) {
-                  for (MimsPlus image : openImages) {
-                      Overlay overlay = image.getGraphOverlay();
-
-                      for (Roi roim : rois) {
-                          int indexm = overlay.getIndex(roim.getName() + graphID);
-                          if (indexm > -1) {
-                              overlay.remove(indexm);
-                          }
-                      }
-                      overlay.add(shaperoi);
-                      overlay.setFillColor(java.awt.Color.yellow);
-                      image.setOverlay(overlay);
-                  }
-                  pointX = pixelX;
-                  pointY = pixelY;
-                  return coords;
-              }
-          }
-          return null;
+        }
+        return returnVal;
     }
-   public void removeOverlay(){
-       MimsPlus[] openImages = ui.getAllOpenImages();
-              for (MimsPlus image : openImages) {
-           for (Roi roi : rois) {
-               Overlay overlay = image.getGraphOverlay();
-               int index = overlay.getIndex(roi.getName() + graphID);
-               if (index > -1) {
-                   overlay.remove(index);
-               }
-               image.setOverlay(overlay);
-           }
-       }
-   }
-   @Override
+
+    /**
+     * Given the identifier of a series and a point on it, display a single
+     * point located on the corresponding line ROI and it's image.
+     *
+     * @param seriesKey name of the series
+     * @param x crosshair x point on series
+     * @param y crosshair y point on series
+     */
+    public int[] addToOverlay(String seriesKey, double x, double y) {
+        //check to see if either seriesKey or map is null- this indicates that either no crosshair is set
+        //or that this is not a line ROI graph
+        if (seriesKey != null && map != null) {
+            Pair tuple = map.get(seriesKey);
+            MimsPlus finalImage = (MimsPlus) tuple.First;
+            Roi roi = (Roi) tuple.Second;
+            pointX = -1;
+            pointY = -1;
+            //check that this a line ROI graph
+            if (roi.isLine()) {
+                if (roi.getType() == Roi.LINE) {
+                    Line line = (Line) roi;
+                    //convert from series coordinate system to image coordinate system
+                    double ratio = x / line.getLength();
+                    Polygon points = line.getPoints();
+                    int[] xpoints = points.xpoints;
+                    int[] ypoints = points.ypoints;
+                    double xvec = (xpoints[0] - xpoints[1]) * ratio;
+                    double yvec = (ypoints[0] - ypoints[1]) * ratio;
+                    pointX = (int) (xpoints[0] - xvec);
+                    pointY = (int) (ypoints[0] - yvec);
+                    //add the roi to the overlay, and set it 
+                  /*Overlay overlay = finalImage.getGraphOverlay();
+                     overlay.add(shaperoi);
+                     overlay.setFillColor(java.awt.Color.yellow);
+                     finalImage.setOverlay(overlay);*/
+                } else if (roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
+                    Polygon points = roi.getPolygon();
+                    int[] xpoints = points.xpoints;
+                    int[] ypoints = points.ypoints;
+                    double distanceTraveled = 0;
+                    //loop through all segments and figure out which one the point lies on
+                    for (int i = 0; i < xpoints.length - 1; i++) {
+                        //calculate length of current segment
+                        double distance = Math.pow((Math.pow((double) (xpoints[i] - xpoints[i + 1]), 2) + Math.pow((double) (ypoints[i] - ypoints[i + 1]), 2)), 0.5);
+                        if (distanceTraveled + distance > x) {
+                            //figure out where the point lies on desired segment
+                            double needToTravel = x - distanceTraveled;
+                            double ratio = needToTravel / distance;
+                            double xvec = (xpoints[i] - xpoints[i + 1]) * ratio;
+                            double yvec = (ypoints[i] - ypoints[i + 1]) * ratio;
+                            pointX = (int) (xpoints[i] - xvec);
+                            pointY = (int) (ypoints[i] - yvec);
+                            i = xpoints.length;
+                        } else {
+                            //continue along line if not desired segment
+                            distanceTraveled += distance;
+                        }
+                    }
+                }
+                int[] coords = {pointX, pointY};
+                Ellipse2D shape = new Ellipse2D.Float(pointX - 2, pointY - 2, 4, 4);
+                Roi shaperoi = new ShapeRoi(shape);
+                shaperoi.setName(roi.getName() + graphID);
+                //remove any previous crosshair ROIs that originated from this graph
+                //this is why we set and remove based on the unique global graphID
+                MimsPlus[] openImages = ui.getAllOpenImages();
+                //originally coordinate was only displayed on relveant image/roi pair
+                //switch out the next two lines to restore this functionality
+                //for (MimsPlus image : images) {
+                for (MimsPlus image : openImages) {
+                    Overlay overlay = image.getGraphOverlay();
+                    //remove all coordinate displays from this graph from all images
+                    for (Roi roim : rois) {
+                        int indexm = overlay.getIndex(roim.getName() + graphID);
+                        if (indexm > -1) {
+                            overlay.remove(indexm);
+                        }
+                    }
+                    //add new coordinate
+                    overlay.add(shaperoi);
+                    overlay.setFillColor(java.awt.Color.yellow);
+                    image.setOverlay(overlay);
+                }
+                return coords;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Remove all coordinate displays from all images that correspond to this
+     * graph.
+     */
+    public void removeOverlay() {
+        MimsPlus[] openImages = ui.getAllOpenImages();
+        for (MimsPlus image : openImages) {
+            for (Roi roi : rois) {
+                Overlay overlay = image.getGraphOverlay();
+                int index = overlay.getIndex(roi.getName() + graphID);
+                if (index > -1) {
+                    overlay.remove(index);
+                }
+                image.setOverlay(overlay);
+            }
+        }
+    }
+
+    @Override
    public void windowActivated(WindowEvent e) {}
 
    public void windowOpened(WindowEvent e) {}

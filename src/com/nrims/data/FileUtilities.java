@@ -45,21 +45,13 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.jfree.data.xy.XYDataset;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  *
@@ -444,9 +436,6 @@ public class FileUtilities {
         }
         return output;
     }
-    public static String[] splitToArray(String args){
-        return args.split(" ");
-    }
     /**
      * Method to parse arguments passed in startup of OpenMIMS
      * @param args
@@ -742,7 +731,7 @@ public class FileUtilities {
         headerInfo.put("comments", commentString);
         return headerInfo;
     }
-    public static ArrayList<Object> openExperiment(File file){
+    /*public static ArrayList<Object> openExperiment(File file){
         ArrayList entries = new ArrayList();
         Object obj;
         try {
@@ -819,7 +808,7 @@ public class FileUtilities {
             }
         }
         return true;
-    }
+    }*/
     private static void addFilesRecursively(File dir, String name, Collection<File> all) {
         if (all.size() > 0) {
             return;
@@ -880,6 +869,11 @@ public class FileUtilities {
         }
         return null;
     }
+    /**
+     * Take an XYDataset and convert it to a two dimensional array.
+     * @param data
+     * @return two dimensional Object array
+     */
     public static Object[][] convertXYDatasetToArray(XYDataset data){
         int numSeries = data.getSeriesCount();
        int maxCount = 0;

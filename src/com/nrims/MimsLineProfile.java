@@ -40,10 +40,9 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
 
 /**
- * The MimsLineProfile class creates a line plot 
- * for line ROIs. The y-axis represents pixel value
- * (of the current image) and x-axis represents 
- * length along the line.
+ * The MimsLineProfile class creates a line plot for line ROIs. The y-axis
+ * represents pixel value (of the current image) and x-axis represents length
+ * along the line.
  *
  * @author cpoczatek
  */
@@ -73,27 +72,27 @@ public class MimsLineProfile extends JFrame {
         chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
         coords = new JLabel("", SwingConstants.LEFT);
         chartPanel.add(coords);
-      
+
         JPopupMenu menu = chartPanel.getPopupMenu();
         JMenuItem menuItem = new javax.swing.JMenuItem("Display text");
         menuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               displayProfileData();
+                displayProfileData();
             }
-         });
+        });
 
         menu.add(menuItem, 2);
         setContentPane(chartPanel);
 
-         // Add menu item for showing/hiding crosshairs.
-         JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
-         xhairs.addActionListener(new ActionListener() {
+        // Add menu item for showing/hiding crosshairs.
+        JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
+        xhairs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               showHideCrossHairs(chartPanel);
+                showHideCrossHairs(chartPanel);
             }
-         });
-         chartPanel.getPopupMenu().addSeparator();
-         chartPanel.getPopupMenu().add(xhairs);
+        });
+        chartPanel.getPopupMenu().addSeparator();
+        chartPanel.getPopupMenu().add(xhairs);
         JMenuItem pointhairs = new JMenuItem("Add point roi at crosshairs");
         pointhairs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -103,39 +102,45 @@ public class MimsLineProfile extends JFrame {
                 }
             }
         });
-         chartPanel.getPopupMenu().add(pointhairs);
-         // Replace Save As... menu item.
-         chartPanel.getPopupMenu().remove(3);
-         JMenuItem saveas = new JMenuItem("Save as...");
-         saveas.addActionListener(new ActionListener() {
+        chartPanel.getPopupMenu().add(pointhairs);
+        // Replace Save As... menu item.
+        chartPanel.getPopupMenu().remove(3);
+        JMenuItem saveas = new JMenuItem("Save as...");
+        saveas.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               saveAs();
+                saveAs();
             }
-         });
-         chartPanel.getPopupMenu().add(saveas, 3);
+        });
+        chartPanel.getPopupMenu().add(saveas, 3);
 
-         KeyboardFocusManager.getCurrentKeyboardFocusManager()
-            .addKeyEventDispatcher(new KeyEventDispatcher() {
-                public boolean dispatchKeyEvent(KeyEvent e) {
-                    if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
-                        chartPanel.keyPressed(e);
-                   }
-                    return false;
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addKeyEventDispatcher(new KeyEventDispatcher() {
+            public boolean dispatchKeyEvent(KeyEvent e) {
+                if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
+                    chartPanel.keyPressed(e);
                 }
-            });
+                return false;
+            }
+        });
 
         this.pack();
         this.setVisible(true);
     }
-    public int[] updateLineCoords() {
-        if (image != null){
+
+    /**
+     * Add current corresponding crosshair point to all image overlays
+     *
+     * @return coordinates of corresponding image
+     */
+    public int[] addToOverlay() {
+        if (image != null) {
             MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
             System.out.println(plot.getDomainCrosshairValue());
             if (plot.isDomainCrosshairVisible() && curX != plot.getDomainCrosshairValue() && name != null) {
                 curX = plot.getDomainCrosshairValue();
                 Roi roi = ui.getRoiManager().getRoiByName(name);
-                int pixelX = -1;
-                int pixelY = -1;
+                pointX = -1;
+                pointY = -1;
                 if (roi != null && roi.isLine()) {
                     if (roi.getType() == Roi.LINE) {
                         Line line = (Line) roi;
@@ -145,15 +150,15 @@ public class MimsLineProfile extends JFrame {
                         int[] ypoints = points.ypoints;
                         double xvec = (xpoints[0] - xpoints[1]) * ratio;
                         double yvec = (ypoints[0] - ypoints[1]) * ratio;
-                        pixelX = (int) (xpoints[0] - xvec);
-                        pixelY = (int) (ypoints[0] - yvec);
+                        pointX = (int) (xpoints[0] - xvec);
+                        pointY = (int) (ypoints[0] - yvec);
                     } else if (roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
                         Polygon points = roi.getPolygon();
                         int[] xpoints = points.xpoints;
                         int[] ypoints = points.ypoints;
                         double distanceTraveled = 0;
-                        pixelX = 0;
-                        pixelY = 0;
+                        pointX = 0;
+                        pointY = 0;
                         for (int i = 0; i < xpoints.length - 1; i++) {
                             double distance = Math.pow((Math.pow((double) (xpoints[i] - xpoints[i + 1]), 2) + Math.pow((double) (ypoints[i] - ypoints[i + 1]), 2)), 0.5);
                             if (distanceTraveled + distance > curX) {
@@ -161,23 +166,22 @@ public class MimsLineProfile extends JFrame {
                                 double ratio = needToTravel / distance;
                                 double xvec = (xpoints[i] - xpoints[i + 1]) * ratio;
                                 double yvec = (ypoints[i] - ypoints[i + 1]) * ratio;
-                                pixelX = (int) (xpoints[i] - xvec);
-                                pixelY = (int) (ypoints[i] - yvec);
+                                pointX = (int) (xpoints[i] - xvec);
+                                pointY = (int) (ypoints[i] - yvec);
                                 i = xpoints.length;
                             } else {
                                 distanceTraveled += distance;
                             }
                         }
                     }
-                    int[] coords = {pixelX, pixelY};
-                    Ellipse2D shape = new Ellipse2D.Float(pixelX - 2, pixelY - 2, 4, 4);
+                    int[] coords = {pointX, pointY};
+                    Ellipse2D shape = new Ellipse2D.Float(pointX - 2, pointY - 2, 4, 4);
                     Roi shaperoi = new ShapeRoi(shape);
                     shaperoi.setName(name);
                     MimsPlus[] openImages = ui.getAllOpenImages();
                     //for (MimsPlus image : images) {
                     for (MimsPlus image : openImages) {
                         Overlay overlay = image.getGraphOverlay();
-
                         int indexm = overlay.getIndex(roi.getName());
                         if (indexm > -1) {
                             overlay.remove(indexm);
@@ -186,21 +190,52 @@ public class MimsLineProfile extends JFrame {
                         overlay.setFillColor(java.awt.Color.yellow);
                         image.setOverlay(overlay);
                     }
-                    pointX = pixelX;
-                    pointY = pixelY;
                     return coords;
                 }
             }
         }
         return null;
-   }
-     /**
+    }
+
+    public void removeOverlay() {
+        if (image != null && name != null) {
+            MimsPlus[] openImages = ui.getAllOpenImages();
+            //for (MimsPlus image : images) {
+            for (MimsPlus image : openImages) {
+                Overlay overlay = image.getGraphOverlay();
+
+                int indexm = overlay.getIndex(name);
+                if (indexm > -1) {
+                    overlay.remove(indexm);
+                }
+                image.setOverlay(overlay);
+            }
+        }
+    }
+
+    public void showHideCrossHairs(MimsChartPanel chartpanel) {
+        Plot plot = chartpanel.getChart().getPlot();
+        if (!(plot instanceof MimsXYPlot)) {
+            return;
+        }
+
+        // Show/Hide XHairs
+        MimsXYPlot xyplot = (MimsXYPlot) plot;
+        xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
+        xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
+        if (!xyplot.isDomainCrosshairVisible()) {
+            removeOverlay();
+        }
+        xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
+    }
+
+    /**
      * Creates a sample dataset.
-     * 
+     *
      * @return a sample dataset.
      */
     private XYDataset createDataset() {
-        
+
         XYSeries series1 = new XYSeries("N");
         series1.add(1.0, 2.0);
         series1.add(2.0, 2.0);
@@ -213,54 +248,54 @@ public class MimsLineProfile extends JFrame {
 
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(series1);
-                
+
         return dataset;
-        
+
     }
-    
+
     /**
      * Creates a chart.
-     * 
-     * @param dataset  the data for the chart.
-     * 
+     *
+     * @param dataset the data for the chart.
+     *
      * @return a chart.
      */
     private JFreeChart createChart(final XYDataset dataset) {
-        
+
         // create the chart...
         final JFreeChart chart = MimsChartFactory.createMimsXYLineChart(
-            "",      // chart title
-            "L",                      // x axis label
-            "P",                      // y axis label
-            dataset,                  // data
-            PlotOrientation.VERTICAL,
-            true,                     // include legend
-            true,                     // tooltips
-            false                     // urls
-        );
+                "", // chart title
+                "L", // x axis label
+                "P", // y axis label
+                dataset, // data
+                PlotOrientation.VERTICAL,
+                true, // include legend
+                true, // tooltips
+                false // urls
+                );
 
-      // get a reference to the plot for further customisation...
-      MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
+        // get a reference to the plot for further customisation...
+        MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
 
-      // Set colors.
-      plot.setBackgroundPaint(Color.lightGray);
-      plot.setDomainGridlinePaint(Color.white);
-      plot.setRangeGridlinePaint(Color.white);
+        // Set colors.
+        plot.setBackgroundPaint(Color.lightGray);
+        plot.setDomainGridlinePaint(Color.white);
+        plot.setRangeGridlinePaint(Color.white);
 
-      // Movable range and domain.
-      plot.setDomainPannable(true);
-      plot.setRangePannable(true);
+        // Movable range and domain.
+        plot.setDomainPannable(true);
+        plot.setRangePannable(true);
 
-      // Allow crosshairs to 'focus' in on a given point.
-      plot.setDomainCrosshairVisible(true);
-      plot.setRangeCrosshairVisible(true);
+        // Allow crosshairs to 'focus' in on a given point.
+        plot.setDomainCrosshairVisible(true);
+        plot.setRangeCrosshairVisible(true);
 
         // change the auto tick unit selection to integer units only...        
         plot.getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         plot.getDomainAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-                
+
         return chart;
-        
+
     }
 
     /**
@@ -278,11 +313,11 @@ public class MimsLineProfile extends JFrame {
         this.name = name.substring(name.lastIndexOf(":") + 2);
         this.image = image;
         linewidth = width;
-        XYSeries series = new XYSeries(name + " w: "+width);
-        for(int i = 0; i< newdata.length; i++) {
+        XYSeries series = new XYSeries(name + " w: " + width);
+        for (int i = 0; i < newdata.length; i++) {
             series.add(i, newdata[i]);
         }
-        
+
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(series);
         MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
@@ -308,72 +343,42 @@ public class MimsLineProfile extends JFrame {
             table.incrementCounter();
             table.addValue(1, data.getXValue(0, i));
             table.addValue(2, data.getYValue(0, i));
-            
+
         }
 
         table.show("");
     }
 
-   private boolean thisHasFocus(){
-      return this.hasFocus();
-   }
-
-   /**
-    * Saveas the chart as a .png
-    */
-    public void saveAs(){
-       MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
-       fileChooser.setSelectedFile(new File(ui.getLastFolder(), ui.getImageFilePrefix() + ".png"));
-       ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
-       ExtensionFileFilter filter = new ExtensionFileFilter(
-               localizationResources.getString("PNG_Image_Files"), ".png");
-       fileChooser.addChoosableFileFilter(filter);
-       fileChooser.setFileFilter(filter);
-       int option = fileChooser.showSaveDialog(chartPanel);
-       if (option == MimsJFileChooser.APPROVE_OPTION) {
-          String filename = fileChooser.getSelectedFile().getPath();
-          if (!filename.endsWith(".png")) {
-             filename = filename + ".png";
-          }
-          try {
-             ChartUtilities.saveChartAsPNG(new File(filename), chartPanel.getChart(), getWidth(), getHeight());
-          } catch (IOException ioe) {
-             IJ.error("Unable to save file.\n\n" + ioe.toString());
-          }
-       }
+    private boolean thisHasFocus() {
+        return this.hasFocus();
     }
-    public void windowClosing(WindowEvent e) {
-        removeOverlay();
-    }
-    public void removeOverlay() {
-        if (image != null && name != null) {
-            MimsPlus[] openImages = ui.getAllOpenImages();
-            //for (MimsPlus image : images) {
-            for (MimsPlus image : openImages) {
-                Overlay overlay = image.getGraphOverlay();
 
-                int indexm = overlay.getIndex(name);
-                if (indexm > -1) {
-                    overlay.remove(indexm);
-                }
-                image.setOverlay(overlay);
+    /**
+     * Saveas the chart as a .png
+     */
+    public void saveAs() {
+        MimsJFileChooser fileChooser = new MimsJFileChooser(ui);
+        fileChooser.setSelectedFile(new File(ui.getLastFolder(), ui.getImageFilePrefix() + ".png"));
+        ResourceBundle localizationResources = ResourceBundleWrapper.getBundle("org.jfree.chart.LocalizationBundle");
+        ExtensionFileFilter filter = new ExtensionFileFilter(
+                localizationResources.getString("PNG_Image_Files"), ".png");
+        fileChooser.addChoosableFileFilter(filter);
+        fileChooser.setFileFilter(filter);
+        int option = fileChooser.showSaveDialog(chartPanel);
+        if (option == MimsJFileChooser.APPROVE_OPTION) {
+            String filename = fileChooser.getSelectedFile().getPath();
+            if (!filename.endsWith(".png")) {
+                filename = filename + ".png";
+            }
+            try {
+                ChartUtilities.saveChartAsPNG(new File(filename), chartPanel.getChart(), getWidth(), getHeight());
+            } catch (IOException ioe) {
+                IJ.error("Unable to save file.\n\n" + ioe.toString());
             }
         }
     }
-    public void showHideCrossHairs(MimsChartPanel chartpanel) {
-        Plot plot = chartpanel.getChart().getPlot();
-        if (!(plot instanceof MimsXYPlot)) {
-            return;
-        }
 
-        // Show/Hide XHairs
-        MimsXYPlot xyplot = (MimsXYPlot) plot;
-        xyplot.setDomainCrosshairVisible(!xyplot.isDomainCrosshairVisible());
-        xyplot.setRangeCrosshairVisible(!xyplot.isRangeCrosshairVisible());
-        if (!xyplot.isDomainCrosshairVisible()) {
-            removeOverlay();
-        }
-        xyplot.showXHairLabel(xyplot.isDomainCrosshairVisible() || xyplot.isDomainCrosshairVisible());
+    public void windowClosing(WindowEvent e) {
+        removeOverlay();
     }
-
 }
