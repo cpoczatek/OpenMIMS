@@ -1027,10 +1027,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void windowActivated(WindowEvent e) {
+        //??? should this be handled in setActiveMimsPlus instead?
         ui.setActiveMimsPlus(this);
         ui.getCBControl().setWindowlistCombobox(getTitle());
         ui.getCBControl().setLUT(lut);
-
+        MimsStackEditor.AutoTrackManager am = ui.getmimsStackEditing().atManager;
+        if(am!=null) am.updateImage(this);
+        //??? can/should add reports?
+        
         MimsRoiManager rm = ui.getRoiManager();
         if(rm==null) return;
 
@@ -1039,8 +1043,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         if(pm!=null) pm.resetImage(this);
         if(sm!=null) sm.resetImage(this);
-        //can/should add autotrack manager?
-        //can/should add reports?
     }
 
     @Override

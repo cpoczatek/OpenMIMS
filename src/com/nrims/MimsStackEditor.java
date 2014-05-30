@@ -2013,6 +2013,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
       Frame instance;
       ButtonGroup buttonGroup = new ButtonGroup();
       JTextField txtField = new JTextField();
+      JLabel imageLabel;
       JRadioButton all;
       JRadioButton some;
       JRadioButton sub;
@@ -2039,8 +2040,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
          jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.PAGE_AXIS));
 
          String imagename = WindowManager.getCurrentImage().getTitle();
-         JLabel label = new JLabel("Image:   " + imagename);
-         jPanel.add(label);
+         imageLabel = new JLabel("Image:   " + imagename);
+         jPanel.add(imageLabel);
          jPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
          // Radio buttons.
@@ -2167,6 +2168,14 @@ public class MimsStackEditor extends javax.swing.JPanel {
          }
       }
 
+      public void updateImage(MimsPlus img) {
+          if(img == null) {
+              return;
+          }
+          this.currentImage = img;
+          this.imageLabel.setText("Image:   " + img.getTitle());
+      }
+      
       /** Shows the frame.*/
       public void showFrame() {
          setLocation(400, 400);
