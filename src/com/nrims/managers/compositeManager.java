@@ -12,6 +12,8 @@
 package com.nrims.managers;
 import com.nrims.*;
 import ij.WindowManager;
+import java.util.ArrayList;
+import javax.swing.DropMode;
 
 /**
  *
@@ -26,8 +28,13 @@ public class compositeManager extends javax.swing.JFrame {
     public compositeManager(UI ui) {
         initComponents();
         jList1.setModel(listModel);
+        jList1.setDragEnabled(true); // DJ: 08/01/2014
         this.ui = ui;
         this.setTitle("Composite Manager");
+        
+ 
+    //    grayTextField.setDropMode(DropMode.USE_SELECTION);
+      
     }
 
     @Override
@@ -46,7 +53,11 @@ public class compositeManager extends javax.swing.JFrame {
 
     public void addImages(MimsPlus[] imgs) {
         for(int i = 0; i< imgs.length; i++) {
-            listModel.addElement(imgs[i].getTitle());
+           
+            // listModel.addElement(imgs[i].getTitle());  // DJ: 08/01/2014 : commented out ths line
+            
+           // DJ: 08/01/2014
+           listModel.addElement(imgs[i].getTitle().substring(0, imgs[i].getShortTitle().indexOf("[")));
         }
     }
 
@@ -134,38 +145,47 @@ public class compositeManager extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(displayButton)
+                .add(30, 30, 30)
+                .add(cancelButton)
+                .add(52, 52, 52))
+            .add(layout.createSequentialGroup()
                 .addContainerGap()
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 151, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(greenButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(redButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 77, Short.MAX_VALUE)
-                            .add(blueButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(grayButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(clearButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .add(14, 14, 14)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                            .add(greenButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 77, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(redButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 77, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(blueButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 77, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(grayButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 77, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .add(18, 18, 18)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(blueTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
-                            .add(greenTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
-                            .add(redTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
-                            .add(grayTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)))
-                    .add(layout.createSequentialGroup()
-                        .add(displayButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(cancelButton)))
-                .addContainerGap())
+                            .add(greenTextField)
+                            .add(layout.createSequentialGroup()
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, blueTextField)
+                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, grayTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 189, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .add(0, 0, Short.MAX_VALUE))
+                            .add(redTextField))
+                        .add(24, 24, 24))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(clearButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 77, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(79, 79, 79))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 196, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                            .add(grayTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(grayTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(grayButton))
                             .add(layout.createSequentialGroup()
                                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                     .add(redButton)
@@ -178,15 +198,17 @@ public class compositeManager extends javax.swing.JFrame {
                                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                     .add(blueButton)
                                     .add(blueTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(grayButton)))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(clearButton)))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 44, Short.MAX_VALUE)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(displayButton)
-                    .add(cancelButton))
-                .add(23, 23, 23))
+                                .add(33, 33, 33)))
+                        .add(18, 18, 18)
+                        .add(clearButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(displayButton)
+                            .add(cancelButton))
+                        .add(23, 23, 23))
+                    .add(layout.createSequentialGroup()
+                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 220, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(92, Short.MAX_VALUE))))
         );
 
         pack();
@@ -198,7 +220,7 @@ public class compositeManager extends javax.swing.JFrame {
     }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
-
+        /*
         String[] imgNames = {redTextField.getText(),greenTextField.getText(),blueTextField.getText(),grayTextField.getText()};
         Object[] imgs = new Object[4];
         
@@ -227,6 +249,49 @@ public class compositeManager extends javax.swing.JFrame {
         MimsPlus img = new MimsPlus(ui, props);
         img.showWindow();
         this.setVisible(false);
+       
+       */
+        
+        
+      // DJ: 08/01/2014
+      // Rewritten so it can handles strings taken from each channel textField as mass string 
+      // instead of whole/long titles (better visibility/GUI) 
+        
+      String[] channels = {redTextField.getText(),greenTextField.getText(),blueTextField.getText(),grayTextField.getText()};
+      Object[] imgs = new Object[4];
+      
+      MimsPlus[] allImages = ui.getAllOpenImages();
+      
+      for(int i = 0 ; i < allImages.length ; i++){
+          for (int y = 0 ; y < channels.length ; y++){
+             
+              if(channels[y] == null){
+                  imgs[y] = null;
+                  break;
+              }
+              if (allImages[i].getShortTitle().contains(channels[y]) && channels[y].contains("/")){
+                  imgs[y] = allImages[i].getRatioProps();
+                  break;
+              }
+              if (allImages[i].getShortTitle().contains(channels[y]) && channels[y].contains("Sum")){
+                  imgs[y] = allImages[i].getSumProps();
+                  break;
+              } 
+              if (allImages[i].getShortTitle().contains(channels[y]) && !channels[y].contains("/") && !channels[y].contains("Sum")){
+                  imgs[y] = new MassProps(allImages[i].getMassIndex());
+              }
+          }
+      }
+      CompositeProps props = new CompositeProps(imgs);
+      MimsPlus img = new MimsPlus(ui, props);
+      img.showWindow();
+      // set to true -- so the user can add multiple composite images without opening
+      // the composite manager all over again.
+      // hit OK to add as much composite images as wanted; when done, hit cancel/done Adding
+      this.setVisible(true); 
+      
+        
+        
     }//GEN-LAST:event_displayButtonActionPerformed
 
     private void redButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_redButtonActionPerformed

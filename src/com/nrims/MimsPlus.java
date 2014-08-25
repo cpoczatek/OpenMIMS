@@ -58,6 +58,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     private double mag = 1.0;
 
     // Props objects.
+    public MassProps massProps = null;
     public SumProps sumProps = null;
     public RatioProps ratioProps = null;
     public HSIProps hsiProps = null;
@@ -222,6 +223,63 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       computeSum(sumlist);
       setupDragDrop();
    }
+   
+   
+   
+      /**
+     * Constructor for sum images.
+     * @param ui
+     * @param sumProps
+     * @param sumlist
+     */
+   public MimsPlus(UI ui, SumProps sumProps, ArrayList<Integer> sumlist, MassProps massProps) {
+      super();
+      this.ui = ui;
+      this.sumProps = sumProps;
+      this.nType = SUM_IMAGE;
+      this.xloc = massProps.getXWindowLocation();
+      this.yloc = massProps.getYWindowLocation();
+      this.mag = sumProps.getMag();
+
+      // Setup image.
+      Opener op = ui.getOpener();
+      int w = op.getWidth();
+      int h = op.getHeight();
+      double sumPixels[] = new double[w*h];
+      ImageProcessor ipp = new FloatProcessor(w, h, sumPixels);
+      title = "Sum : ";
+      libreTitle = "";
+      if (sumProps.getSumType() == SumProps.MASS_IMAGE) {
+         if (sumProps.getParentMassIdx() == ui.getOpenMassImages().length){
+            title += "1";
+            libreTitle += "1";
+         }else{
+            title += ImageDataUtilities.formatTitle(sumProps.getParentMassIdx(), false, ui.getPreferences().getFormatString(), ui.getOpener());
+            libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getParentMassIdx(), ui.getOpener(), this);
+         }
+      } else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
+         title += ImageDataUtilities.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), false, ui.getPreferences().getFormatString(), ui.getOpener());
+         libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), ui.getOpener(), this);
+      }
+      setProcessor(title, ipp);
+      fStateListeners = new EventListenerList();
+      //before listeners were added in compute...
+      addListener(ui);
+
+      // Setup sumlist.
+      if (sumlist == null) {
+         sumlist = new ArrayList<Integer>();
+         for(int i = 1; i <= ui.getmimsAction().getSize(); i++)
+            sumlist.add(i);
+      }
+
+      // Compute pixels values.
+      computeSum(sumlist);
+      setupDragDrop();
+   }
+   
+   
+   
 
    /**
     * Constructor for ratio images.
@@ -303,6 +361,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
       setupHSIImage(props);
       setupDragDrop();
     }
+    
     public void setupDragDrop(){
         mimsUno = UnoPlugin.getInstance();
         if (mimsUno == null) {
@@ -918,6 +977,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     public java.awt.Point getXYLoc() {
         return new java.awt.Point(this.xloc, this.yloc);
     }
+    
+     /**
+     * Sets current window location
+     */
+    public void setXYLoc(java.awt.Point p) {
+        this.xloc = p.x;
+        this.yloc = p.y;
+    }
 
     /**
      * Shows the window and add various mouse mouse listeners.
@@ -1003,9 +1070,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void windowClosing(WindowEvent e) {
+
         java.awt.Point p = this.getWindow().getLocation();
-        this.xloc = p.x;
-        this.yloc = p.y;
+        this.setXYLoc(p);
+        //this.xloc = p.x;
+        //this.yloc = p.y;
+        
+        
+        
     }
 
     @Override
@@ -1031,6 +1103,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ui.setActiveMimsPlus(this);
         ui.getCBControl().setWindowlistCombobox(getTitle());
         ui.getCBControl().setLUT(lut);
+        if(ui.getmimsStackEditing()==null) return;
         MimsStackEditor.AutoTrackManager am = ui.getmimsStackEditing().atManager;
         if(am!=null) am.updateImage(this);
         //??? can/should add reports?
@@ -1972,14 +2045,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     public CompositeProcessor getCompositeProcessor() { return compProcessor ; }
 
     /**
-     * Sets auto comtrast adjust flag (true/false)
-     * @param auto auto comtrast adjust flag
+     * Sets auto contrast adjust flag (true/false)
+     * @param auto auto contrast adjust flag
      */
     public void setAutoContrastAdjust( boolean auto ) { this.autoAdjustContrast = auto ; }
 
     /**
      *
-     * @return auto comtrast adjust flag
+     * @return auto contrast adjust flag
      */
     public boolean getAutoContrastAdjust() { return autoAdjustContrast ; }
 
@@ -2012,7 +2085,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return MIMS type
      */
     public int getMimsType() { return nType ; }
-
+    
     /**
      *
      * @return sum properties

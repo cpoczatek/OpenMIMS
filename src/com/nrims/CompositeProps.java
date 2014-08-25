@@ -19,14 +19,13 @@ public class CompositeProps implements Serializable{
     //------------------------------
     //End of v2
 
-
+    
    /**
     * Instantiates a CompositeProps object with images <code>imgs</code>.
     * @param imgs set of images used to create the composite image.
     */
    public CompositeProps(Object[] imgs) {
        this.imageProps = imgs;
-
    }
 
     /**

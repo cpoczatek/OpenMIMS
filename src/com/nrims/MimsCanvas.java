@@ -198,7 +198,11 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                               tileProps.setXWindowLocation(MouseInfo.getPointerInfo().getLocation().x);
                               tileProps.setYWindowLocation(MouseInfo.getPointerInfo().getLocation().y);
                               HSIProps[] hsiProps = {tileProps};
-                              ui_tile.restoreState(null, hsiProps, null, false, false);
+                              
+                              // DJ: 1st "null" added to represent the new mass_props arg we added to ui.restoreState
+                              // DJ: 4th "null" added to represent the new compsite_props arg we added to ui.restoreState
+                              ui_tile.restoreState(null, null, hsiProps, null, null, false, false); 
+                                                                                              
                               ui_tile.getHSIView().useSum(ui.getIsSum());
                               ui_tile.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
                           }

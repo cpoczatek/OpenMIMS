@@ -690,7 +690,12 @@ public class FileUtilities {
         ui_new.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
         ui_new.setVisible(true);
         ui_new.openFile(file);
-        ui_new.restoreState(ui.getOpenRatioProps(), ui.getOpenHSIProps(), ui.getOpenSumProps(), false, false);
+        
+        // DJ: 07/24/2014 - "ui.getOpenMassProps()" added due to the new mass_props arg we added to restoreState
+        // DJ: 08/01/2014 - "ui.getOpenCompositeProps()" added due to the new composite_props arg we added to restoreState
+        ui_new.restoreState(ui.getOpenMassProps(), ui.getOpenRatioProps(), ui.getOpenHSIProps(), ui.getOpenSumProps(), ui.getOpenCompositeProps(), false, false);
+        
+        
         ui_new.getHSIView().useSum(ui.getIsSum());
         ui_new.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
     }

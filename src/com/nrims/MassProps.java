@@ -27,10 +27,11 @@ public class MassProps implements java.io.Serializable{
    private double minLUT;
    private double maxLUT;
    private int currentSlice;
+   private boolean hidden;
 
 
     /**
-     * Instatiates a MassProps object to create a sum image of a mass image.
+     * Instatiates a MassProps object.
      * @param massIndex the index of the mass image for which a sum image is being generated.
      */
     public MassProps(int massIndex) {
@@ -118,6 +119,19 @@ public class MassProps implements java.io.Serializable{
      * @return y-value of window location.
      */
     public int getYWindowLocation() { return this.yloc; }
+    
+    // set, get visibility: DJ 07/29/2014.
+     /**
+     * Sets the hidden property of the window.
+     * @param isHidden true if hidden, false otherwise
+     */
+    public void setVisibility(boolean isHidden) { this.hidden = isHidden; }
+
+    /**
+     * Gets the hidden property of the window as boolean.
+     * @return true if hidden or false otherwise.
+     */
+    public boolean getVisibility() { return this.hidden; }
 
     /**
      * Sets the name of the data file from which this image was derived.

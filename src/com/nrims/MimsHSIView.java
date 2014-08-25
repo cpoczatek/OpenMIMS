@@ -2,6 +2,8 @@ package com.nrims;
 
 import com.nrims.data.ImageDataUtilities;
 import ij.IJ;
+import ij.io.Opener;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -9,6 +11,7 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import javax.swing.*;
 
@@ -812,6 +815,7 @@ public class MimsHSIView extends javax.swing.JPanel {
        ui.recomputeAllHSI();
     }
 
+    
     private void removeRatiojButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeRatiojButtonActionPerformed
        int index[] = jList1.getSelectedIndices();
        int num, den;
@@ -833,6 +837,186 @@ public class MimsHSIView extends javax.swing.JPanel {
           //ui.getPreferences().savePreferences();
        }
 }//GEN-LAST:event_removeRatiojButtonActionPerformed
+
+    // DJ : 07/30/2014
+    public void updateHSIFieldRatios(){
+       
+        int lastindex = listModel.getSize()-1;
+        generatePossibleValidRatios();
+        
+   //     listModel.clear();
+        
+        listModel.removeRange(0, lastindex);
+        
+        RatioProps[] ratio_props = ui.getRatioProps();
+        HSIProps[] hsi_props = ui.getHSIProps();
+ 
+
+        if (ratio_props != null){
+        
+        
+            for (RatioProps r : ratio_props){
+               int numIndx = ui.getClosestMassIndices(r.getNumMassValue(), 0.49);
+                int denIndx = ui.getClosestMassIndices(r.getDenMassValue(), 0.49);
+
+               if(numIndx != -1 && denIndx != -1 && !listModel.contains(numIndx +":"+ denIndx))
+                 listModel.addElement(numIndx +":"+ denIndx);
+            }
+        }
+
+        if (hsi_props != null){
+            
+             for (HSIProps h : hsi_props){
+                int numIndx = ui.getClosestMassIndices(h.getNumMassValue(), 0.49);
+                int denIndx = ui.getClosestMassIndices(h.getDenMassValue(), 0.49);
+            
+                if(numIndx != -1 && denIndx != -1 && !listModel.contains(numIndx +":"+ denIndx))
+                    listModel.addElement(numIndx +":"+ denIndx);
+            }
+        }
+    }    
+    
+    public void generatePossibleValidRatios(){
+        
+        MimsPlus[] imgs = ui.getOpenMassImages();
+        String[] symbols = new String[imgs.length];
+        
+        symbols = ui.getOpener().getMassSymbols();
+
+        /*
+        for(int i = 0 ; i < imgs.length ; i++ ){
+            //String symbol =  imgs[i].getShortTitle().substring(imgs[i].getShortTitle().indexOf("[") + 1, imgs[i].getShortTitle().length());
+            symbols[i] = imgs[i].get//symbol;
+        }
+*/
+        for(int i = 0 ; i < imgs.length ; i++ ){
+           for(int y = 0 ; y < imgs.length ; y++){
+                if(// !listModel.contains(imgs[i].getMassIndex() + ":" + imgs[y].getMassIndex())
+                   //     &&
+                    ui.validRatioChecker(symbols[i], symbols[y])
+                  ){
+                    listModel.addElement(imgs[i].getMassIndex() + ":" + imgs[y].getMassIndex());
+                }
+           }
+        } 
+        
+    //     jList1.setForeground(Color.red);
+    }
+        
+    
+    
+    
+    
+    
+   /*     
+        String[] imgs = ui.getOpener().getMassSymbols();
+        
+        
+        System.out.println("imgs length = " + imgs.length);
+     
+        for(int i = 0 ; i < imgs.length ; i++){
+            
+            System.out.println("Root index " + i + imgs[i] );
+            for(int j = 0 ; j < mass_props.size() ; j++){
+                ;
+                
+            }
+            
+        }
+        
+     */   
+        
+        
+    /*    
+        
+       ArrayList<MassProps> mass_props = ui.getMassProps();
+       
+       
+       
+       int length = listModel.size();
+       int num, den;
+       double num_value, den_value;
+       
+       int rt_num_indx = -1, rt_den_indx = -1;
+       double rt_num_val = -0.0, rt_den_val = -0.0;
+       
+       ArrayList<RatioProps> rp_list = new ArrayList<RatioProps>();
+
+       
+
+       
+       System.out.println("mass_props size is:"  + mass_props.size());
+       
+   //    for (int i = length-1; i >= 0; i--){ 
+       for (int i = 0; i < length; i++){ 
+           
+       
+           System.out.println("Here : " + i + "----------------------");
+           boolean numExists = false, denExists = false;
+           String[] num_den = ((String)listModel.getElementAt(i)).split(":");
+            
+           try {
+              num = Integer.parseInt(num_den[0]);
+              den = Integer.parseInt(num_den[1]);
+           } catch(NumberFormatException nfe) {
+              continue;
+           }
+               
+           num_value = ui.getMassValue(num);
+           den_value = ui.getMassValue(den);
+              
+           System.out.print(num + "/" + den +  "==" + num_value + "/"+ den_value + "\n");              
+           
+           for (int j=0 ; j<mass_props.size(); j++){
+       
+
+                 System.out.print("Check for :" + mass_props.get(j).getMassValue()+"\n" );
+                
+                 
+                 if(num_value == mass_props.get(j).getMassValue()) {
+                     numExists = true;
+                     rt_num_indx = mass_props.get(j).getMassIdx();
+                     rt_num_val  = mass_props.get(j).getMassValue();
+                     
+                     System.out.println(" \t ---> NUM FOUND");
+                     
+
+                 }
+                 else if(den_value == mass_props.get(j).getMassValue()) {
+                     denExists = true;
+                     rt_den_indx = mass_props.get(j).getMassIdx();
+                     rt_den_val  = mass_props.get(j).getMassValue();
+                     
+                     System.out.println(" \t ---> DEN FOUND ");
+                 }  
+           }// end of the inner loop
+           
+           if(numExists == true && denExists == true) {
+               
+                   RatioProps rp = new RatioProps(rt_num_indx, rt_den_indx);
+   
+                   rp.setNumMassValue(rt_num_val);
+                   rp.setDenMassValue(rt_den_val);
+                
+                   rp_list.add(rp);
+                   
+           } 
+       } // end of outer loop
+ 
+       listModel.removeAllElements();
+       
+        System.out.println("listModel length = " + listModel.size());
+        System.out.println("rp_list   length = " + rp_list.size());
+       
+       for(RatioProps ratio : rp_list){
+           System.out.println(ratio.getNumMassValue() +  "/" + ratio.getDenMassValue());
+           listModel.addElement(ratio.getNumMassIdx()+ ":" + ratio.getDenMassIdx());
+
+       } 
+    
+    */ 
+  
+
 
     private void addRatiojButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addRatiojButtonActionPerformed
        MimsRatioManager ratioManager = MimsRatioManager.getInstance();
@@ -857,6 +1041,7 @@ public class MimsHSIView extends javax.swing.JPanel {
        // Generate images
        for (int i = 0; i < idx.length; i++) {
           String label = (String) idx[i];
+          
           int numerator = new Integer(label.substring(0, label.indexOf(":"))).intValue();
           int denomator = new Integer(label.substring(label.indexOf(":") + 1, label.length())).intValue();
           if (numerator >= ui.getOpenMassImages().length) {

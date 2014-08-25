@@ -47,6 +47,8 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.*;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -54,6 +56,7 @@ import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 /**
  * The main user interface of the NRIMS ImageJ plugin.
@@ -114,6 +117,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsPlus[] sumImages = new MimsPlus[2 * maxMasses];
     private MimsPlus[] compImages = new MimsPlus[2 * maxMasses];
     private ArrayList<MimsPlus> nonMIMSImages = new ArrayList<MimsPlus>();
+    
+    // DJ - 07/30/2014
+    // these copies are to be returned through their 
+    // coresponding methods in order to be called/used
+    // within MimsHSIView.updateHSIFieldRatios() to update
+    // the ratio list - make it accurate to the masses we have.
+    private ArrayList<MassProps> copy_of_filtered_mass_props;
+    private RatioProps[] copy_of_ratio_props;
+    private HSIProps[] copy_of_hsi_props;
 
     private MimsData mimsData = null;
     private MimsLog mimsLog = null;   
@@ -552,10 +564,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     *
     */
    public void gatherWindowState() {
-
-      wpMap = new HashMap<Double, Point>();
-      hwMap = new HashMap<Double, Boolean>();
-      zmMap = new HashMap<Double, Double>();
+     
+    //   if(true) return;
+     
+       
+      wpMap = new HashMap<Double, Point>();    // windows' positions
+      hwMap = new HashMap<Double, Boolean>();  // hidden windows.
+      zmMap = new HashMap<Double, Double>();   // Zoom property.
 
       if (massImages == null || massImages.length == 0) {
          return;
@@ -591,13 +606,102 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
          zmiMap.put(i, zoom);
       }
    }
+   
+   /**
+    * restores the windows positioning as well as 
+    * the zoom and the hiding properties of all windows based on the massProps[] given.
+    * @param mass_props an array of MassProps 
+    */
+    public void applyWindowState(MassProps[] mass_props) {
+
+        if (mass_props == null) {
+            return;
+        }
+        
+        try {
+            MimsPlus[] imgs = getOpenMassImages();
+
+            for (int i = 0; i < imgs.length; i++) {
+                for (int y = 0; y < mass_props.length; y++) {
+
+                    if (massesEqualityCheck(imgs[i].getMassValue(), mass_props[y].getMassValue(), 0.49)) {
+                        imgs[i].getWindow().setLocation(mass_props[y].getXWindowLocation(), mass_props[y].getYWindowLocation());
+                        imgs[i].getWindow().setVisible(mass_props[y].getVisibility());
+                        applyZoom(imgs[i], mass_props[y].getMag());
+                        break; // to reduce the looping process.
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+   
+   /*
+    * ApplyWindowState - Version 2
+    * using hashmaps to get previous positions, hidden, nad zoom properties. 
+    * 
+   public void applyWindowState() {
+      if(true) return;
+       // DJ : 07/29/2014
+      tileWindows();
+      
+      for (int i = 0; i < massImages.length; i++) {      
+        
+        //  Updating the windows positioning
+        Iterator wp_it = wpMap.entrySet().iterator();
+        while(wp_it.hasNext()){
+
+           Map.Entry window = (Map.Entry)wp_it.next();
+           Double mass = (Double)(window.getKey());
+           Point p = (Point)(window.getValue());
+           
+           if(massesEqualityCheck(massImages[i].getMassValue(), mass.doubleValue() , 0.49)){
+              massImages[i].getWindow().setLocation(p);
+           }
+         }
+        //------------------------------------------
+        
+        //  Updating the window hidding property
+        Iterator hw_it = hwMap.entrySet().iterator();
+        while(hw_it.hasNext()){
+          Map.Entry window = (Map.Entry)hw_it.next();
+          Double mass = (Double)(window.getKey());
+          Boolean isVisible = (Boolean)(window.getValue()) ;
+
+          if(massesEqualityCheck(massImages[i].getMassValue(), mass.doubleValue() , 0.49)){
+            if(isVisible == false) {
+              massImages[i].hide();
+            }
+          }
+        }//------------------------------------------
+           
+        //  Updating the windows zoom property
+        Iterator zw_it = zmMap.entrySet().iterator();
+        while(zw_it.hasNext()){
+
+          Map.Entry window = (Map.Entry)zw_it.next();
+          Double mass = (Double)(window.getKey());
+          Double zoom = (Double)(window.getValue());
+              
+          if(massesEqualityCheck(massImages[i].getMassValue(), mass.doubleValue() , 0.49)){
+            if ( zoom != 1.0 ){
+               applyZoom(massImages[i], zoom);
+            }
+          }            
+        }//-------------------------------------------
+   }
+      
+   */
 
    /**
+    *  Version 3 - implemented previously.
+    * 
     * Everybody has a different opinion on how this method should work.
-    * Im sure it will change again, butthis is how it works for now:
+    * Im sure it will change again, butt his is how it works for now:
     *
     * 1) All mass images are placed in the same location as their
-    *    equvalent mass image from the previous session.
+    *    equivalent mass image from the previous session.
     *
     * 2) All mass images that were hidden in the previous session are
     *    hidden in the current session.
@@ -613,9 +717,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * - Images that were hidden in the previous session are hidden in the
     *   current session. But when those images are made visible (e.g. View > m12.00),
     *   they are placed in the upper left corner.
-    */
-   public void applyWindowState() {
-
+    *
       Double zoom;
       Point point;
       Boolean isVisible;
@@ -641,7 +743,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
          }
       }
-   }
+     */
+   
+
+   
 
    /**
     * Gets the window position of the mass image
@@ -754,7 +859,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        }
     }
 
-   public void removeComponentFromMimsDrop(Component comp) {
+    public void removeComponentFromMimsDrop(Component comp) {
       if (comp != null)
          mimsDrop.remove(comp);
    }
@@ -763,7 +868,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     * Resets the "view" menu item to reflect the
     * mass images in the current data file.
     */
-   private void resetViewMenu() {
+    private void resetViewMenu() {
 
       if (isSilentMode())
          return;
@@ -834,15 +939,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
          if (viewMassMenuItems[index].isSelected() && !mp.isVisible()) {
             Double mass = mp.getMassValue();
-            Point point = getWindowLocation(mass);            
+            //Point point = getWindowLocation(mass);            
             mp.show();
-            mp.getWindow().setLocation(point);
+            mp.getWindow().setLocation(mp.getXYLoc());
             mp.setbIgnoreClose(true);
          } else if( !viewMassMenuItems[index].isSelected() && mp.isVisible()) {
-            Double mass = mp.getMassValue();
+            //Double mass = mp.getMassValue();
             Point point = mp.getWindow().getLocation();
-            wpMap.put(mass, point);
-            wpiMap.put(index, point);
+            //wpMap.put(mass, point);
+            //wpiMap.put(index, point);
+            mp.setXYLoc(point);
             mp.hide();
          }
     }
@@ -1944,7 +2050,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     }
 
     /**
-     * Sets the isWindow member vairable to <code>set</code> telling
+     * Sets the isWindow member variable to <code>set</code> telling
      * the application if ratio and HSI images should be generated
      * with a window of n planes.
      *
@@ -2249,102 +2355,419 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return true;
         else return false;
     }
+    /**
+     * DJ: 07/28/2014 
+     * Check whether two masses are close enough within the tolerance
+     * range to be considered equal.
+     * @param mass1 first mass to consider.
+     * @param mass2 second mass to consider.
+     * @param tolerance range to be considered.
+     * @return true if the two masses are within range.
+     */
+     public static boolean massesEqualityCheck(double mass1, double mass2, double tolerance){
+
+        double numDiff = Math.abs(mass1 - mass2);
+        
+        if (numDiff < tolerance)
+            return true;
+        else 
+            return false;
+    }
+     
+     /**
+      * DJ: 07/28/2014
+      * gives back a copy of the filtered mass props
+      * filtered: means that it has only the mass_props that correspond to the
+      * actual mass images that we have (when we open a file)
+      * @return filtered mass props.
+      */
+    public ArrayList<MassProps> getMassProps(){
+       return copy_of_filtered_mass_props;
+    }
+      /**
+      * DJ: 07/28/2014
+      * gives back a copy of the ratio props
+      * to be used mainly in MimsHSIView.java in order to update the HSIView
+      * @return ratio_props.
+      */
+    public RatioProps[] getRatioProps(){
+        return copy_of_ratio_props;
+    }
+       /**
+      * DJ: 07/28/2014
+      * gives back a copy of the filtered hsi props
+      * to be used mainly in MimsHSIView.java in order to update the HSIView
+      * @return hsi_props.
+      */  
+    public HSIProps[] getHSIProps(){
+        return copy_of_hsi_props;
+    }
+    
+    /**
+     * DJ: 07/31/2014
+     * To be used in MimsHSIView.java to generate all possible and valid ratios
+     * within the HSIview field in GUI.
+     * @param num string of the MASS-SYMBOL to be considered as numerator.
+     * @param den string of the MASS-SYMBOL to be considered as denumerator.
+     * @return true if the numerator and denumerator symbols are both suitable to construct a mass ratio.
+     */
+    public static boolean validRatioChecker(String num, String den){
+        
+        if(num.length() != den.length()) return false;       // no different lengths : 12C14N/12C
+        if(num.equals(den)) return false;                    // no same num and den  : 12C/12C
+        if(num.equals("-") || den.equals("-")) return false; // no zero involvemnt   : 0/12C  or  12C/0
+        
+        
+        boolean isValidRatio = true;
+        
+        ArrayList<Integer> num_coefs_list  = new ArrayList<Integer>(); // to hold the numerators coeffecients: 12C14N -->  (12, 14)
+        ArrayList<String> num_symbols_list = new ArrayList<String>();  // to hold the numerators symbols : 12C14N ------>  (C, N)
+        
+        ArrayList<Integer> den_coefs_list  = new ArrayList<Integer>(); // to hold the denumerators coeffecients:12C14N --> (12, 14)
+        ArrayList<String> den_symbols_list = new ArrayList<String>();  // to hold the dennumerators symbols : 12C14N ----> (C, N)
+        
+        String num_coef = "";
+        String num_symbol = "";
+        String den_coef = "";
+        String den_symbol = "";
+        
+        //-----------------------------------------------------------------
+        for(int i=0 ; i<num.length() ; i++){
+            char c  = num.charAt(i);
+            char next_c;
+            if(i+1 != num.length()){  // to avoid the case of going over the length of the numerator string.
+                next_c = num.charAt(i+1);
+            } else next_c = '-'; // or any non-letter symbol.
+            
+            if(Character.isDigit(c)){
+                num_coef += c; 
+                if(!Character.isDigit(next_c)){
+                    num_coefs_list.add(Integer.decode(num_coef));
+                    num_coef = "";
+                }
+            } 
+            
+            else if(Character.isLetter(c)){
+                num_symbol += c;
+                if(!Character.isLetter(next_c)){
+                    num_symbols_list.add(num_symbol);
+                    num_symbol = "";
+                }
+                
+            } else{
+                ;
+            }     
+        }
+        
+        //-----------------------------------------------------------------
+        for(int i=0 ; i<den.length() ; i++){
+            char c  = den.charAt(i);
+            char next_c;
+            if(i+1 != den.length()){
+                next_c = den.charAt(i+1);
+            } else next_c = '-'; // or any non-letter symbol.
+            
+            
+            if(Character.isDigit(c)){
+                den_coef += c; 
+                if(!Character.isDigit(next_c)){
+                    den_coefs_list.add(Integer.decode(den_coef));
+                    den_coef = "";
+                }
+            } 
+            
+            else if(Character.isLetter(c)){
+                den_symbol += c;
+                if(!Character.isLetter(next_c)){
+                    den_symbols_list.add(den_symbol);
+                    den_symbol = "";
+                }
+                
+            } else{
+                ;
+            }     
+        }
+        
+        // treat the "Se" seperately as a special case since for instance 77se/80se is fine     
+        for(int i=0 ; i<num_symbols_list.size() ; i++){
+            
+             // to make sure for "Se", we always get 80 in Denumerator as it's most abundant
+            if(num_symbols_list.get(i).equals("Se")  && den_symbols_list.get(i).equals("Se") && (den_coefs_list.get(i)).intValue() == 80)
+                return true;
+            
+             // to make explicitly sure that any other "Se" ratios where the denumerator isn't 80 are not considered correct
+            if (num_symbols_list.get(i).equals("Se") && den_symbols_list.get(i).equals("Se") && den_coefs_list.get(i).intValue() != 80 )
+                return false;
+            
+            // For the rest, first coeffieciant of numerator should always be greater than the first coeffecient of denumenator.
+            // for instance: to avoid having 12C/13C
+            if (num_coefs_list.get(0).intValue() < den_coefs_list.get(0)) 
+                return false;
+        }
+        
+         for(int i=0 ; i<num_symbols_list.size() ; i++){
+           if( !(num_symbols_list.get(i)).equals(den_symbols_list.get(i))   // to avoid for instance 12C/31P.
+                   ||   
+                (num_coefs_list.get(i)).intValue() <  (den_coefs_list.get(i)).intValue() // to avoid for instance: 12C14N/12C15N which should be the inverse.
+             )
+                return false;
+         }
+
+        
+        return isValidRatio;
+    }
 
     /**
      * Regenerates the ratio images, hsi images and sum images with
      * the properties specified in the arrays. Used when opening
      * a new data file and the user wishes to generate all the same
      * derived images that were open with the previous data file.
-     *
-     * @param rto_props array of <code>RatioProps</code> objects.
-     * @param hsi_props array of <code>HSIProps</code> objects.
-     * @param sum_props array of <code>SumProps</code> objects.
+     * @param mass_prop  array of <code>MassProps</code> objects.
+     * @param rto_props  array of <code>RatioProps</code> objects.
+     * @param hsi_props  array of <code>HSIProps</code> objects.
+     * @param sum_props  array of <code>SumProps</code> objects.
+     * @param composite_props array of <code>CompositeProps</code> objects
      * @param same_size <code>true</code> restores magnification.
+     * @param roiManagerVisible <code>true</code> region of interest.
      */
-    public void restoreState( RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props, boolean same_size, boolean roiManagerVisible){
+    public void restoreState(MassProps[] mass_props, RatioProps[] rto_props,  HSIProps[] hsi_props, SumProps[] sum_props, CompositeProps[] composite_props, boolean same_size, boolean roiManagerVisible){
 
-       if (rto_props == null)
-          rto_props = new RatioProps[0];
-       
-       if (hsi_props == null)
-          hsi_props = new HSIProps[0];
-       
-       if (sum_props == null)
-          sum_props = new SumProps[0];
+       // just to tile the the new windows that havent been present in the previous file
+       // The states of the ones that were present in the previous file, will be handled by applyStateWindow(mass_props)
+        tileWindows(); 
+        
+        applyWindowState(mass_props);
+        
+       if (mass_props == null)  mass_props = new MassProps[0]; 
+       if (rto_props  == null)  rto_props  = new RatioProps[0];  
+       if (hsi_props  == null)  hsi_props  = new HSIProps[0];  
+       if (sum_props  == null)  sum_props  = new SumProps[0];
+       if (composite_props == null) composite_props = new CompositeProps[0];
 
        MimsPlus mp;
-       // Generate ratio images.
-       for (int i=0; i<rto_props.length; i++){
-          int nidx = rto_props[i].getNumMassIdx();
-          int didx = rto_props[i].getDenMassIdx();
-          if (!withinMassRange(nidx, didx, 0.49, rto_props[i].getNumMassValue(), rto_props[i].getDenMassValue())){
-              nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
-              didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+    
+       ArrayList<MassProps>filtered_mass_props = new ArrayList<MassProps>();
+
+       for (int i = 0 ; i < image.getMassNames().length ; i++){ 
+         for (int j = 0 ; j < mass_props.length ; j++){
+            if(massesEqualityCheck(mass_props[j].getMassValue(), Double.parseDouble((image.getMassNames())[i]), 0.49)){               
+                
+                MassProps m = new MassProps(getOpenMassImages()[i].getMassIndex());
+                m.setMassValue(getOpenMassImages()[i].getMassValue());
+                filtered_mass_props.add(m);
+                break;
+            }
           }
-          if (nidx == -1 || didx == -1)
-             continue;
-          rto_props[i].setNumMassIdx(nidx);
-          rto_props[i].setDenMassIdx(didx);
-          if (!same_size)
-                rto_props[i].setMag(1.0);
-          mp = new MimsPlus(this, rto_props[i]);
-          mp.showWindow();
-          mp.setDisplayRange(rto_props[i].getMinLUT(), rto_props[i].getMaxLUT());          
+       }   
+        //-----------------------------------
+       // Generate ratio images. DJ: 07/28/2014
+       for (int i=0; i<rto_props.length; i++){
+           
+           boolean isExist_num = false, isExist_den = false;
+           
+           for(int y=0 ; y < filtered_mass_props.size() ; y++ ){
+               
+               if( massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), rto_props[i].getNumMassValue(), 0.49)){
+                    isExist_num = true;
+                    rto_props[i].setNumMassIdx(filtered_mass_props.get(y).getMassIdx());  
+               }
+                
+               else if (massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), rto_props[i].getDenMassValue(), 0.49) ){
+                    isExist_den = true;
+                    rto_props[i].setDenMassIdx(filtered_mass_props.get(y).getMassIdx());
+               }
+                
+               if (isExist_num && isExist_den) break;
+           }
+
+           if (isExist_num && isExist_den){
+                if (!same_size)
+                    rto_props[i].setMag(1.0);
+              
+                mp = new MimsPlus(this, rto_props[i]);
+                mp.showWindow();
+                mp.setDisplayRange(rto_props[i].getMinLUT(), rto_props[i].getMaxLUT());
+           }    
        }
        
-       // Generate hsi images.
+       // Generate hsi images. DJ: 07/28/2014
        for (int i=0; i<hsi_props.length; i++){
-          int nidx = hsi_props[i].getNumMassIdx();
-          int didx = hsi_props[i].getDenMassIdx();
-          if (!withinMassRange(nidx, didx, 0.49, hsi_props[i].getNumMassValue(), hsi_props[i].getDenMassValue())){
-              nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
-              didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
-          }
-          if (nidx == -1 || didx == -1)
-             continue;
-          hsi_props[i].setNumMassIdx(nidx);
-          hsi_props[i].setDenMassIdx(didx);
-          if (!same_size) 
-             hsi_props[i].setMag(1.0);
+           
+           boolean isExist_num = false, isExist_den = false;
+           
+           for(int y=0 ; y < filtered_mass_props.size() ; y++ ){
+               
+               if( massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), hsi_props[i].getNumMassValue(), 0.49)){
+                    isExist_num = true;
+                    hsi_props[i].setNumMassIdx(filtered_mass_props.get(y).getMassIdx());  
+               }
+                
+               else if (massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), hsi_props[i].getDenMassValue(), 0.49) ){
+                    isExist_den = true;
+                    hsi_props[i].setDenMassIdx(filtered_mass_props.get(y).getMassIdx());
+               }
+                
+               if (isExist_num && isExist_den) break;
+           }
 
-          mp = new MimsPlus(this, hsi_props[i]);
-          mp.showWindow();
+           if (isExist_num && isExist_den){
+                if (!same_size)
+                    hsi_props[i].setMag(1.0);
+              
+                mp = new MimsPlus(this, hsi_props[i]);
+                mp.showWindow();
+           }  
        }
 
-       // Generate sum images.
+       // Generate sum images. DJ: 07/28/2014
        for (int i=0; i<sum_props.length; i++){
+           
            if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {
-               int nidx = sum_props[i].getNumMassIdx();
-               int didx = sum_props[i].getDenMassIdx();
-               if (!withinMassRange(nidx, didx, 0.49, sum_props[i].getNumMassValue(), sum_props[i].getDenMassValue())) {
-                   nidx = getClosestMassIndices(rto_props[i].getNumMassValue(), 0.49);
-                   didx = getClosestMassIndices(rto_props[i].getDenMassValue(), 0.49);
+           boolean isExist_num = false, isExist_den = false;
+           
+           for(int y=0 ; y < filtered_mass_props.size() ; y++ ){
+               
+               if( massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), rto_props[i].getNumMassValue(), 0.49)){
+                    isExist_num = true;
+                    hsi_props[i].setNumMassIdx(filtered_mass_props.get(y).getMassIdx());  
                }
-               if (nidx == -1 || didx == -1) continue;
-               hsi_props[i].setNumMassIdx(nidx);
-               hsi_props[i].setDenMassIdx(didx);
-               if (!same_size) sum_props[i].setMag(1.0);
-               mp = new MimsPlus(this, sum_props[i], null);
-               mp.showWindow();
-               mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
+               else if (massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), rto_props[i].getDenMassValue(), 0.49) ){
+                    isExist_den = true;
+                    hsi_props[i].setDenMassIdx(filtered_mass_props.get(y).getMassIdx());
+               }
+               if (isExist_num && isExist_den) break;
+           }
 
-          } else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
-                int pidx = sum_props[i].getParentMassIdx();
-                if (pidx == -1)
-                  continue;
-                if (!withinMassRange(pidx, 0.49, sum_props[i].getParentMassValue())) {
-                   pidx = getClosestMassIndices(sum_props[i].getParentMassValue(), 0.49);
-               }
-                sum_props[i].setParentMassIdx(pidx);
+           if (isExist_num && isExist_den){
                 if (!same_size)
-                   sum_props[i].setMag(1.0);
+                    sum_props[i].setMag(1.0);
+              
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
-                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());             
-          }
-       }
+                mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
+           } 
+          } 
+           
+           else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
 
+               for(int z=0 ; z < filtered_mass_props.size() ; z++ ){
+                  if(massesEqualityCheck(filtered_mass_props.get(z).getMassValue(), sum_props[i].getParentMassValue(), 0.49)){
+    
+                      sum_props[i].setParentMassIdx(filtered_mass_props.get(z).getMassIdx());
+                      sum_props[i].setParentMassValue(filtered_mass_props.get(z).getMassValue());
+                       
+                       if (!same_size)
+                             sum_props[i].setMag(1.0);
+                       
+                       mp = new MimsPlus(this, sum_props[i], null);   
+                       mp.showWindow();
+                       mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());        
+                       
+                       break;
+                   }
+               }
+           }
+       }
+       
+       //  DJ: 08/01/2014.
+       // Generate composite images.
+ //        ArrayList<Object> imgs_collection = new ArrayList<Object>();
+         
+         for (int z=0; z<composite_props.length; z++){
+
+             Object[] channels = new Object[4]; // 4 = four channels : RGBG : Red, Green, Blue, Gray.
+             
+             
+             MimsPlus[] imgs = composite_props[z].getImages(ui);
+             Object[] imgs_props = composite_props[z].getImageProps();
+             
+             
+//             System.out.println("Composite Images props length is: " + imgs_props.length);
+             
+
+             boolean atLeastOneChannelExists = false; // the least we need to create a composite image is one image either mass, ratio, or sum.
+         
+             for(int i=0 ; i<imgs.length ; i++){
+                 
+                 
+                 if(imgs[i] != null){ // because often the GREY color is not used when a composite image is generated.
+                                       
+                     // in case the image is a ratio, we JUST loop through the ratio_props and not the rest. 
+                     
+                     //imgs[i].getMimsType() == MimsPlus.RATIO_IMAGE
+                     if(imgs[i].getShortTitle().contains("/")){
+                       
+                         for (int y=0; y<rto_props.length; y++){
+                             if (imgs[i].ratioProps.equals(rto_props[y])){
+                                 atLeastOneChannelExists = true;
+                                 channels[i] = imgs_props[i];
+                             }
+                         }
+                     }
+                     
+                     // in case the image is a ratio, we JUST loop through the ratio_props and not the rest. 
+                     else if(imgs[i].getShortTitle().contains("Sum")){
+                         
+                         for (int y=0; y<hsi_props.length; y++){
+                             if (imgs[i].hsiProps.equals(hsi_props[y])){
+                                 atLeastOneChannelExists = true;
+                                 channels[i] = imgs_props[i];
+                             }
+                         }
+                     }
+                     
+                     
+                     // in case the image is a not ratio and not Sum, it's autmatically a mass image,
+                     // then we JUST loop through the mass_props or more cleanly the filtered_mass_props and not the rest. 
+                     else {
+                     
+                          for (int y=0; y<filtered_mass_props.size(); y++){
+                             if (massesEqualityCheck( imgs[i].getMassValue(), filtered_mass_props.get(y).getMassValue(), 0.49)){
+                                 atLeastOneChannelExists = true;
+                                 channels[i] = imgs_props[i];
+                             }
+                         }   
+                     }
+                     
+                 } // end of null check
+              } // end of imgs LOOP
+             
+             if(atLeastOneChannelExists == true){
+                 
+                 composite_props[z].setImageProps(channels);
+                 composite_props[z].setDataFileName(composite_props[z].getDataFileName());
+                 
+  //               composite_props[z].setXWindowLocation(composite_props[z].getXWindowLocation());
+  //               composite_props[z].setYWindowLocation(composite_props[z].getYWindowLocation());               
+                 
+
+                 mp = new MimsPlus(this, composite_props[z]);
+                 mp.showWindow();
+                 
+             }
+           } // end of composite_props LOOP
+               
+             
+            /*
+            Object[] compositeComponents = new Object[imgs.length];
+            System.out.println("There are : " + imgs.length + " composing this CompositeImage" ); 
+            System.out.println("=============================");
+            System.out.println("=============================");
+            */ 
+             
+         
+       
+       
+       
        getRoiManager().setVisible(roiManagerVisible);
+       
+       // to be used as a refernce when updating the HSIView
+       // to delete the uncorrect ratios.
+       copy_of_filtered_mass_props = filtered_mass_props;
+       copy_of_ratio_props = rto_props;
+       copy_of_hsi_props = hsi_props;
+      
+       hsiControl.updateHSIFieldRatios();
     }
 
     /**
@@ -3238,6 +3661,8 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
 
     /**
      * Return the index of the mass that falls closest to massValue (and within tolerance).
+     * 
+     * Used in Converter.java. Should be deprecated.
      *
      * @param massValue the massValue.
      * @param tolerance the range of possible masses from <code>massValue</code>.
@@ -3296,6 +3721,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
 
        return indices;
     }
+    
 
     /**
      * Gets the mass value for mass image with index <code>i</code>.
@@ -3356,7 +3782,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
         MimsPlus[] hsiImages = getOpenHSIImages();
         MimsPlus[] compImages = getOpenCompositeImages();
 
-        MimsPlus[] allImages = new MimsPlus[massImages.length + sumImages.length + ratioImages.length + hsiImages.length];
+        MimsPlus[] allImages = new MimsPlus[massImages.length + sumImages.length + ratioImages.length + hsiImages.length + compImages.length];
         int i = 0;
         for (MimsPlus mp : massImages) {
            allImages[i] = mp;
@@ -3634,6 +4060,59 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
     }
 
     /**
+     * Returns the <code>MassProps</code> object for all open mass images.
+     *
+     * @return array of <code>MassProps</code> objects.
+     */
+    public MassProps[] getOpenMassProps(){
+        
+       MimsPlus[] mass = getOpenMassImages();
+       MassProps[] mass_props = new MassProps[mass.length];
+       
+       for (int i=0; i<mass.length; i++){
+          mass_props[i] = new MassProps(i);
+          mass_props[i].setMassValue(mass[i].getMassValue());
+       
+          if(mass[i].isVisible()){
+            mass_props[i].setXWindowLocation(mass[i].getWindow().getX());
+            mass_props[i].setYWindowLocation(mass[i].getWindow().getY());
+     
+          }
+      //    mass_props[i].setXWindowLocation();
+      //    mass_props[i].setYWindowLocation(mass[i].getDJ_Y());
+          
+          //should these be set inside getprops?
+          //maybe...
+          mass_props[i].setMinLUT(mass[i].getDisplayRangeMin());
+          mass_props[i].setMaxLUT(mass[i].getDisplayRangeMax());
+
+         if(mass[i].isVisible()){
+            mass_props[i].setMag(mass[i].getCanvas().getMagnification());
+         }
+          
+          mass_props[i].setVisibility(mass[i].isVisible()); // DJ: 07/29/2014
+          
+       }
+       return mass_props;
+    }
+    
+    // DJ : 08/01/2014
+    /**
+     * Returns the <code>CompositeProps</code> object for all open composite images.
+     *
+     * @return array of <code>CompositeProps</code> objects.
+     */
+    public CompositeProps[] getOpenCompositeProps(){
+        
+       MimsPlus[] composite = getOpenCompositeImages();
+       CompositeProps[] composite_props = new CompositeProps[composite.length];
+       for(int i=0 ; i<composite.length ; i++){
+           composite_props[i] = composite[i].getCompositeProps();
+       }
+       return composite_props;
+    }
+    
+    /**
      * Returns the mass, ratio, HSI or sum image with the name <code>name</code>.
      *
      * @param name the name
@@ -3674,6 +4153,14 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                 return tempimages[i];
             }
         }
+        // DJ: 08/01/2014
+        // Composite images.
+        tempimages = getOpenCompositeImages();
+        for(int i=0; i<tempimages.length; i++){
+            if(name.equals(tempimages[i].getTitle())) {
+                return tempimages[i];
+            }
+        }        
 
         return mp;
     }
@@ -3958,7 +4445,9 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
      * @param tileY amount of pixels to offset the vertical position by.
      */
     public void tileWindows() {
-        final int XSTART = 4, GAP = 2;
+        //Change by DJ: 07/29/2014
+        //XSTART changed from 4 to 40 to have more space on left: better visibility and lining
+        final int XSTART = 40, GAP = 2;
         int tileY = prefs.getTileY();
         int YSTART = 80 + tileY;
         int titlebarHeight = IJ.isMacintosh() ? 40 : 20;
@@ -3979,6 +4468,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
         MimsPlus[] sumImages = getOpenSumImages();
         MimsPlus[] ratioImages = getOpenRatioImages();
         MimsPlus[] hsiImages = getOpenHSIImages();
+        MimsPlus[] compositeImages = getOpenCompositeImages(); //DJ : 08/01/2014  not used though
         n = 0;
         int row = 0;
         MimsPlus curZero = null;
@@ -4234,11 +4724,13 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
         @Override
        public Boolean doInBackground() {
 
+          MassProps[] mass_props = getOpenMassProps();  // Collin+DJ : 07/24/2014
+                                                        // to be used in restoreState(...) + applyWindowState(...)
           // Get properties for derived images
           RatioProps[] rto_props = getOpenRatioProps();
           HSIProps[] hsi_props = getOpenHSIProps();
           SumProps[] sum_props = getOpenSumProps();
-
+          CompositeProps[] composite_props = getOpenCompositeProps();  // DJ: 08/01/2014
           // Get previous image size.
           int old_width = 0;
           int old_height = 0;
@@ -4262,7 +4754,12 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
           if (isRoiFile)
              return true;
 
-          doneLoadingFile();
+          try{
+            doneLoadingFile();
+          } catch( Exception e) {
+              e.printStackTrace();
+          }
+
           
           // Get new image size.
           int new_width = image.getWidth();
@@ -4271,7 +4768,9 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
 
           // Perform some checks to see if we wanna restore state.          
           boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
-          if (isImageFile) restoreState(rto_props, hsi_props, sum_props, same_size, roiManagerVisible);
+          if (isImageFile){
+              restoreState(mass_props, rto_props, hsi_props, sum_props, composite_props , same_size, roiManagerVisible);
+          }
 
           // Set up roi manager.
           MimsRoiManager rm = getRoiManager();
@@ -4746,12 +5245,13 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                 }
 
                 if (isSilentMode() == false) {
-                    if (wpMap.size() > 0 || previousFileCanceled == false) {
-                        applyWindowState();
+                    if (previousFileCanceled == false) {
+                 //       applyWindowState();
                     } else {
-                        tileWindows();
+                 //       tileWindows();
                     }
                 }
+                
 
                 for (int i = 0; i < image.getNMasses(); i++) {
                     if (bOpenMass[i]) {
@@ -4856,6 +5356,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
          currentlyOpeningImages = false;
       }
     }
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
