@@ -48,7 +48,6 @@ public class MassProps implements java.io.Serializable{
     // so composite_props would rely on massValues instead of massindexes
     // to avoid getting wrong values.
     // COULD BE USED AS NEEDED.
-    
     /**
      * Initiates a MassProps object.
      * @param massIndexthe of the mass image

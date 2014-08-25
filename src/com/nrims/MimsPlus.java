@@ -639,6 +639,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         show();
 
+        // Set window location.
         if (xloc > -1 & yloc > -1) {
             getWindow().setLocation(xloc, yloc);
         }
@@ -647,13 +648,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ui.addToImagesList(this);
 
         // Autocontrast image by default.
-        if ((this.getMimsType() == MimsPlus.MASS_IMAGE)
-                || (this.getMimsType() == MimsPlus.RATIO_IMAGE)
-                || (this.getMimsType() == MimsPlus.SUM_IMAGE)
-                || (this.getMimsType() == MimsPlus.COMPOSITE_IMAGE)) // DJ: 08/05/2014: added composite
+        if ((this.getMimsType() == MimsPlus.MASS_IMAGE) || (this.getMimsType() == MimsPlus.RATIO_IMAGE) || (this.getMimsType() == MimsPlus.SUM_IMAGE))
         {
             if (forceAutoContrast) {
                 ui.autoContrastImage(this);
+
             }
         }
 
@@ -1062,10 +1061,20 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     @Override
     public void windowClosing(WindowEvent e) {
 
-        if (getWindow() != null) {   // DJ: 08/07/2014 : IF line added to avoid nullexception when we 
+        if (getWindow() != null) {   // DJ: 08/07/2014 : the "IF" is added to avoid nullexception when we 
             // get a valid window but totally blank and we try to close it
             java.awt.Point p = this.getWindow().getLocation();
             this.setXYLoc(p);
+            
+            // to be used when updating the ui.viewMassChanged
+            // to keep it updated on the window location before it closes.
+            if (this.nType == MASS_IMAGE) {
+                MassProps windowMP = new MassProps(this.getMassIndex(), this.getMassValue());
+                windowMP.setXWindowLocation(p.x);
+                windowMP.setYWindowLocation(p.y);
+                ui.addToClosedWindowsList(windowMP);
+            }
+                    
         }
         //this.xloc = p.x;
         //this.yloc = p.y;
@@ -2257,18 +2266,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return ratio properties
      */
     public CompositeProps getCompositeProps() {
-        // compProps = getCompositeProcessor().getProps();
+        compProps = getCompositeProcessor().getProps();
         // DJ: 08/04/2014
-        if (getWindow() != null && isVisible()) {       // DJ: 08/06/2014
+        if (getWindow() != null && isVisible()) {
             compProps.setXWindowLocation(getWindow().getX());
             compProps.setYWindowLocation(getWindow().getY());
             compProps.setMag(getCanvas().getMagnification());
-
-            //       compProps.setImageProps (((MimsPlus)(getWindow().getImagePlus())).compProps.getImageProps());
-
-
         }
-        //  compProps.setImageProps(ui.get);    // to be continued...
+        
         return compProps;
     }
 
@@ -2288,5 +2293,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     public Overlay getGraphOverlay() {
         return graphOverlay;
     }
+    
+
  
 }

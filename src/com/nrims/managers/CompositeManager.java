@@ -4,7 +4,7 @@
  */
 
 /*
- * compositeManager.java
+ * CompositeManager.java
  *
  * Created on Jan 28, 2010, 12:17:00 PM
  */
@@ -18,7 +18,7 @@ import java.util.ArrayList;
  *
  * @author cpoczatek
  */
-public class compositeManager extends javax.swing.JFrame{
+public class CompositeManager extends javax.swing.JFrame{
 
     static javax.swing.JFrame instance;
     
@@ -31,8 +31,8 @@ public class compositeManager extends javax.swing.JFrame{
     
 
 
-    /** Creates new form compositeManager */
-    public compositeManager(UI ui) {
+    /** Creates new form CompositeManager */
+    public CompositeManager(UI ui) {
         initComponents();
         jList1.setModel(listModel);
         jList1.setDragEnabled(true); // DJ: 08/01/2014
@@ -83,8 +83,8 @@ public class compositeManager extends javax.swing.JFrame{
         }
     }
         
-    public static compositeManager getInstance() {
-        return (compositeManager) instance;
+    public static CompositeManager getInstance() {
+        return (CompositeManager) instance;
     }
     
     public void closeWindow(){

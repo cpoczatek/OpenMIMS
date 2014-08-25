@@ -49,7 +49,7 @@ public class MimsCBControl extends javax.swing.JPanel {
    private File lutDir;
    private String[] ijLutNames = new String[] { "Grays", "Fire", "Ice", "Spectrum", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Red/Green", "Invert LUT" };
    private ArrayList<String> ijLutNameArray = new ArrayList<String>();
-   public com.nrims.managers.compositeManager compManager;
+   public com.nrims.managers.CompositeManager compManager;
 
    /**
     * Constructor for MimsCBControl. A pointer to UI is required.
@@ -457,32 +457,6 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
    applyLutToAllWindows(label, ijlut);
 }
 
-// DJ:  08/07/2014
-public void jComboBox2ActionPerformed() {
-
-   if (holdUpdate)
-      return;
-
-   // Get the selected LUT  
-   String label = (String)jComboBox2.getSelectedItem();
-   boolean ijlut = false;
-
-   // Manipulate the string
-   LutLoader ll = new LutLoader();
-   if (ijLutNameArray.contains(label)) {
-      ijlut = true;
-      if (label.equals("Red/Green"))
-         label = "redgreen";
-      else if (label.equals("Invert LUT"))
-         label = "invert";
-      else
-         label = label.toLowerCase();
-   }
-
-   applyLutToAllWindows(label, ijlut);
-}
-
-
     /**
      * Applies the selected LUT to all possible windows.
      */
@@ -533,7 +507,7 @@ public void jComboBox2ActionPerformed() {
      */
    public void showCompositeManager() {
        if(this.compManager==null) {
-           compManager = new com.nrims.managers.compositeManager(ui);
+           compManager = new com.nrims.managers.CompositeManager(ui);
        }
        compManager.setVisible(true);
    }

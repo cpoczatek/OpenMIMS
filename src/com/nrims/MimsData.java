@@ -289,6 +289,10 @@ public class MimsData extends javax.swing.JPanel {
         return output;
     }
     // DJ: 08/18/2014
+    /**
+     * Gets the path+filename that is opened and shown on the MimsData tab. 
+     * @return String of the filename and path as it shows on screen - empty string otherwise 
+     */
     public String getFilePathAndName(){
         String filePathAndName = "";
         filePathAndName += jLabel24.getText()+"/"+jLabel9.getText();

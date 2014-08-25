@@ -173,13 +173,12 @@ public class CompositeProcessor  implements Runnable{
     }
     
     // DJ: 08/06/2014
+    // Just for testig purposes.
     public void waitForThreadToFinish(){
-  //      System.out.println("Thread Before: " + fThread.isAlive());
         try {
             this.fThread.join();
         } catch (InterruptedException ex) {
             Logger.getLogger(CompositeProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }
- //       System.out.println("Thread After: " + fThread.isAlive());
     }
 }

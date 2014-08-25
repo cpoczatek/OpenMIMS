@@ -41,6 +41,7 @@ public class MimsHSIView extends javax.swing.JPanel {
         initComponents();
         initComponentsCustom();
         updateImage(true);
+        
         // DJ: 08/12/2014: to list all POSSIBLE ratios when im/nrrd is loaded
         if (ui.getOpener().getMassSymbols() != null) {
             updateHSIFieldRatios(); // DJ: 08/12/2014
@@ -872,6 +873,9 @@ public class MimsHSIView extends javax.swing.JPanel {
 }//GEN-LAST:event_removeRatiojButtonActionPerformed
 
     // DJ : 07/30/2014
+    /**
+     * Updates the Ratio/HSI Field with all possible valid ratios
+     */
     public void updateHSIFieldRatios() {
 
         MimsPlus[] imgs = ui.getOpenMassImages();
@@ -903,12 +907,8 @@ public class MimsHSIView extends javax.swing.JPanel {
         for (int i = 0; i < imgs.length; i++) {
             for (int y = 0; y < imgs.length; y++) {
                 if (imgs[i] != null && imgs[y] != null && symbols[i] != null && symbols[y] != null) {
-
-                    if (com.nrims.UI.validRatioChecker(symbols[i], symbols[y])) {
-                        //  && !(listModel.contains(imgs[i].getMassIndex() + ":" + imgs[y].getMassIndex()))
-
+                    if (com.nrims.UI.validRatioChecker(symbols[i], symbols[y])) 
                         listModel.addElement(imgs[i].getMassIndex() + ":" + imgs[y].getMassIndex());
-                    }
                 }
             }
         }

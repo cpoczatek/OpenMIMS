@@ -473,6 +473,7 @@ public class HSIProcessor implements Runnable {
     }
   
     // DJ: 08/06/2014
+    // For testing purposes only.
     public void waitForThreadToFinish(){
        try {
            if(this.isRunning())

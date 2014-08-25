@@ -611,7 +611,12 @@ public class MimsTomography extends javax.swing.JPanel {
       return statnames;
    }
    
-   //DJ: 08/13/2014
+   // DJ: 08/13/2014
+   // Mainly created to be used in Jython scripting
+   /**
+    * Gets all the Stats Names
+    * @return array of strings of all stats names.
+    */
    public String[] getAllStatNames() {
        
        int numOfComponents = statJList.getModel().getSize();

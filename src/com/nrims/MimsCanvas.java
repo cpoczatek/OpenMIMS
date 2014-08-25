@@ -72,7 +72,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                parentplane = ui.getMassImages()[mImp.getSumProps().getNumMassIdx()].getCurrentSlice();
        
         
-        } // DJ: 08/06/2014
+        } // DJ: 08/06/2014 Added to handle composite images
         else if(mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE){
             for(int i=0 ; i<mImp.getCompositeProps().getImages(ui).length ; i++){
                 
@@ -228,8 +228,8 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                               tileProps.setYWindowLocation(MouseInfo.getPointerInfo().getLocation().y);
                               HSIProps[] hsiProps = {tileProps};
                               
-                              // DJ: 1st "null" added to represent the new mass_props arg we added to ui.restoreState
-                              // DJ: 4th "null" added to represent the new compsite_props arg we added to ui.restoreState
+                              // DJ: 1st "null" added to represent the new mass_props arg that we added to ui.restoreState
+                              // DJ: 4th "null" added to represent the new compsite_props arg that we added to ui.restoreState
                               //TODO: explain to DJ
                               ui_tile.restoreState(null, null, hsiProps, null, null, false, false); 
                                                                                               

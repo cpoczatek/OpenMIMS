@@ -62,8 +62,10 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     static final String GROUP_MAP_FILE_NAME = "group_map";
     JList roijlist;
     JList groupjlist;
-    DefaultListModel roiListModel;
-    DefaultListModel groupListModel;
+    
+    public DefaultListModel roiListModel;
+    public DefaultListModel groupListModel;
+    
     Hashtable rois = new Hashtable();
     boolean canceled;
     boolean macro;
@@ -82,9 +84,12 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     private String savedpath = "";
     boolean previouslySaved = false;
     boolean bAllPlanes = true;
+    
+    //add to something
     HashMap locations = new HashMap<String, ArrayList<Integer[]>>();
     HashMap groupsMap = new HashMap<String, String>();
     ArrayList groups = new ArrayList<String>();
+    
     ParticlesManager partManager;
     SquaresManager squaresManager;
     String hideAllRois = "Hide All Rois";
@@ -275,6 +280,34 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         pack();
         GUI.center(this);
     }
+    
+          
+      /*
+    HashMap locations = new HashMap<String, ArrayList<Integer[]>>();
+    HashMap groupsMap = new HashMap<String, String>();
+    ArrayList groups = new ArrayList<String>();
+       */
+      // DJ: 08/22/2014
+      public HashMap<String, ArrayList<Integer[]>> getLocations(){
+          return locations;
+      }
+      public HashMap<String, String> getGroupMap(){
+          return groupsMap;
+      }
+      public ArrayList<String> getGroups(){
+          return (ArrayList<String>)groups;
+      }
+      public void setLocations(HashMap<String, ArrayList<Integer[]>> locations){
+          this.locations = locations;
+      }
+      public void setGroupMap(HashMap<String, String> gMap){
+          this.groupsMap = gMap;
+      }
+      public void setGroups(ArrayList<String> groups){
+          this.groups = groups;
+      }
+    
+    
     public boolean needsToBeSaved(){
         return needsToBeSaved;
     }
@@ -299,7 +332,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     * @param s the name of the group.
     * @return <code>true</code> if successful, otherwise <code>false</code>.
     */
-    private boolean addGroup(String s) {
+    public boolean addGroup(String s) {
         
        if (s == null)
           return false;
@@ -1504,6 +1537,47 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         needsToBeSaved = true;
         return true;
     }
+    
+    // DJ: 08/25/2014
+    // Mainly used in com.nrims.managers.FileManager
+    // to restore the state of the MimsRoiManager. 
+    /**
+     * Adds a Roi to the manager without renaming the provided Roi
+     * @param roi
+     * @return <code>true</code> if added, <code>false</code> otherwise.
+     */
+    public boolean addWithoutRenaming(Roi roi) {
+        ImagePlus imp = getImage();
+        if (imp == null) {
+            return false;
+        }
+        if (roi == null) {
+            return false;
+        }
+        roiListModel.addElement(roi.getName());
+
+        Calibration cal = imp.getCalibration();
+        Rectangle r = roi.getBounds();
+        if (cal.xOrigin != 0.0 || cal.yOrigin != 0.0) {
+            roi.setLocation(r.x - (int) cal.xOrigin, r.y - (int) cal.yOrigin);
+        }
+
+        // Create positions arraylist.
+        int stacksize = ui.getmimsAction().getSize();
+        ArrayList xypositions = new ArrayList<Integer[]>();
+        Integer[] xy = new Integer[2];
+        for (int i = 0; i < stacksize; i++) {
+           xy = new Integer[] {r.x, r.y};
+           xypositions.add(i, xy);
+        }
+        locations.put(roi.getName(), xypositions);
+
+        // Add roi to list.
+        rois.put(roi.getName(), roi);
+        needsToBeSaved = true;
+        return true;        
+    }
+    
 
     /** Sets an array of Rois to the manager. */
     public boolean add(Roi[] roiarr) {
@@ -1561,6 +1635,46 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Assign group.
         groupsMap.put(label, group);
+        needsToBeSaved = true;
+        return val;
+    }
+    
+    // DJ: 08/25/2014
+    // Mainly used in com.nrims.managers.FileManager
+    // to restore the state of the MimsRoiManager. 
+    /**
+     * Adds an Roi to a group without renaming the Roi provided
+     * @param roi which will be added to the group.
+     * @param group as <code>String</code> of the group where the Roi should be added to.
+     * @return <code>true</code> if added, <code>false</code> otherwise.
+     */
+    public boolean addToGroupWithoutRenaming(Roi roi, String group) {
+        boolean val = true;
+
+        roiListModel.addElement(roi.getName());
+
+        Rectangle r = roi.getBounds();
+
+        // Create positions arraylist.
+        int stacksize = ui.getmimsAction().getSize();
+        ArrayList xypositions = new ArrayList<Integer[]>();
+        Integer[] xy = new Integer[2];
+        for (int i = 0; i < stacksize; i++) {
+            xy = new Integer[]{r.x, r.y};
+            xypositions.add(i, xy);
+        }
+        locations.put(roi.getName(), xypositions);
+
+        // Add roi to list.
+        rois.put(roi.getName(), roi);
+
+        //add group to list if not there
+        if(!groups.contains(group)) {
+            addGroup(group);
+        }
+
+        // Assign group.
+        groupsMap.put(roi.getName(), group);
         needsToBeSaved = true;
         return val;
     }

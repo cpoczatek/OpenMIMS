@@ -10,7 +10,8 @@ import com.nrims.logging.OMLogger;
 import com.nrims.managers.OpenerManager;
 import com.nrims.managers.QSAcorrectionManager;
 import com.nrims.managers.convertManager;
-import com.nrims.managers.compositeManager; //DJ: 08/07/2014
+import com.nrims.managers.CompositeManager; //DJ: 08/07/2014
+import com.nrims.managers.FilesManager;     //DJ: 08/20/2014
 import com.nrims.unoplugin.UnoPlugin;
 import ij.IJ;
 import ij.ImagePlus;
@@ -24,6 +25,7 @@ import it.sauronsoftware.junique.AlreadyLockedException;
 import it.sauronsoftware.junique.JUnique;
 import it.sauronsoftware.junique.MessageHandler;
 import java.awt.AWTException;
+import java.awt.Button;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -49,6 +51,10 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 import java.util.logging.*;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -117,7 +123,20 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     
     // DJ - 07/30/2014
     private ArrayList<MassProps> filtered_mass_props ;
-    private ArrayList<MimsPlus> closedWindowsList  = null;
+   // private ArrayList<MimsPlus> closedWindowsList  = null;
+    private ArrayList<MassProps> closedWindowsList = null;
+    private LinkedHashMap<String, Vector> filesProps = null;
+    public boolean same_size = false;
+    
+    // DJ: 08/20/2014
+    private File previousFileOpened = null;
+    private MassProps[] mass_props = null;
+    private RatioProps[] rto_props = null;
+    private HSIProps[] hsi_props = null;
+    private SumProps[] sum_props = null;
+    private CompositeProps[] composite_props = null;
+    
+    
 
     private MimsData mimsData = null;
     private MimsLog mimsLog = null;
@@ -126,7 +145,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private MimsRoiManager roiManager = null;
     private MimsTomography mimsTomography = null;
     private MimsHSIView hsiControl = null;
-    private compositeManager compManager = null;
+    private CompositeManager compManager = null;
     private SegmentationForm segmentation = null;
     private QSAcorrectionManager qsam;
     private ReportGenerator rg = null;
@@ -524,6 +543,72 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     public void openFileInBackground(File file) {
         
+        //----------------------------------------------------------------------
+        // DJ: 08/19/2014 - Saving all the props of the "to-be-closed-file"
+        if (mimsData != null) {
+            String previousFileTitle = mimsData.getFilePathAndName();
+            
+            MassProps[] prevFile_massProps = new MassProps[ui.getOpenMassProps().length];
+            prevFile_massProps = ui.getOpenMassProps();
+            
+            RatioProps[] prevFile_rtoProps = new RatioProps[ui.getOpenRatioProps().length];
+            prevFile_rtoProps = ui.getOpenRatioProps();
+            
+            HSIProps[] prevFile_hsiProps = new HSIProps[ui.getOpenHSIProps().length];
+            prevFile_hsiProps = ui.getOpenHSIProps();
+            
+            SumProps[] prevFile_sumProps = new SumProps[ui.getOpenSumProps().length];
+            prevFile_sumProps = ui.getOpenSumProps();
+            
+            CompositeProps[] prevFile_compProps = new CompositeProps[ui.getOpenCompositeProps().length];
+            prevFile_compProps = ui.getOpenCompositeProps();
+            
+            // composite Manager visibility
+            boolean isCompositemanagerVisible = false;
+            if(com.nrims.managers.CompositeManager.getInstance()!= null)
+                isCompositemanagerVisible= com.nrims.managers.CompositeManager.getInstance().isVisible();
+            
+             // roiProps:
+            boolean isROIVisble = roiManager.isVisible();
+            Roi[] allROIs = new Roi[roiManager.getAllROIs().length];
+            allROIs = roiManager.getAllROIs();
+            
+            HashMap<String, ArrayList<Integer[]>> locations = new HashMap<String, ArrayList<Integer[]>>();
+            locations = roiManager.getLocations();
+            
+            ArrayList<String> groups = new ArrayList<String>();
+            groups = roiManager.getGroups();
+            
+            HashMap<String, String> groupsMap = new HashMap<String, String>();
+            groupsMap = roiManager.getGroupMap();
+            
+            
+            ArrayList roiProps = new ArrayList();
+            roiProps.add(isROIVisble);
+            roiProps.add(allROIs);
+            roiProps.add(locations);
+            roiProps.add(groups);
+            roiProps.add(groupsMap);
+            
+            // populate the vector of all props for the previous file opened.
+            Vector v = new Vector();
+            v.add(prevFile_massProps);
+            v.add(prevFile_rtoProps);
+            v.add(prevFile_hsiProps);
+            v.add(prevFile_sumProps);
+            v.add(prevFile_compProps);
+            v.add(isCompositemanagerVisible);
+            v.add(roiProps);
+            
+            if(filesProps == null)
+                filesProps = new LinkedHashMap<String, Vector>();
+            
+            if(filesProps.containsKey(previousFileTitle))
+                filesProps.remove(previousFileTitle);
+            
+            filesProps.put(previousFileTitle, v);
+        }//---------------------------------------------------------------------
+        
         if (currentlyOpeningImages) {
             return;
         }
@@ -541,6 +626,72 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * @param file to be opened.
      */
     public boolean openFile(File file) {
+        
+        //----------------------------------------------------------------------
+        // DJ: 08/19/2014 - Saving all the props of the "to-be-closed-file".
+        if (mimsData != null) {
+            String previousFileTitle = mimsData.getFilePathAndName();
+            
+            MassProps[] prevFile_massProps = new MassProps[ui.getOpenMassProps().length];
+            prevFile_massProps = ui.getOpenMassProps();
+            
+            RatioProps[] prevFile_rtoProps = new RatioProps[ui.getOpenRatioProps().length];
+            prevFile_rtoProps = ui.getOpenRatioProps();
+            
+            HSIProps[] prevFile_hsiProps = new HSIProps[ui.getOpenHSIProps().length];
+            prevFile_hsiProps = ui.getOpenHSIProps();
+            
+            SumProps[] prevFile_sumProps = new SumProps[ui.getOpenSumProps().length];
+            prevFile_sumProps = ui.getOpenSumProps();
+            
+            CompositeProps[] prevFile_compProps = new CompositeProps[ui.getOpenCompositeProps().length];
+            prevFile_compProps = ui.getOpenCompositeProps();
+            
+            // composite Manager visibility
+            boolean isCompositemanagerVisible = false;
+            if(com.nrims.managers.CompositeManager.getInstance()!= null)
+                isCompositemanagerVisible= com.nrims.managers.CompositeManager.getInstance().isVisible();
+            
+            // roiProps:
+            boolean isROIVisble = roiManager.isVisible();
+            Roi[] allROIs = new Roi[roiManager.getAllROIs().length];
+            allROIs = roiManager.getAllROIs();
+            
+            HashMap<String, ArrayList<Integer[]>> locations = new HashMap<String, ArrayList<Integer[]>>();
+            locations = roiManager.getLocations();
+            
+            ArrayList<String> groups = new ArrayList<String>();
+            groups = roiManager.getGroups();
+            
+            HashMap<String, String> groupsMap = new HashMap<String, String>();
+            groupsMap = roiManager.getGroupMap();
+            
+            ArrayList roiProps = new ArrayList();
+            roiProps.add(isROIVisble);
+            roiProps.add(allROIs);
+            roiProps.add(locations);
+            roiProps.add(groups);
+            roiProps.add(groupsMap);
+            
+            // populate the vector of all props for the previous file opened.
+            Vector v = new Vector();
+            v.add(prevFile_massProps);
+            v.add(prevFile_rtoProps);
+            v.add(prevFile_hsiProps);
+            v.add(prevFile_sumProps);
+            v.add(prevFile_compProps);
+            v.add(isCompositemanagerVisible);
+            v.add(roiProps);
+            
+            if(filesProps == null)
+                filesProps = new LinkedHashMap<String, Vector>();
+            
+            if(filesProps.containsKey(previousFileTitle))
+                filesProps.remove(previousFileTitle);
+            
+            filesProps.put(previousFileTitle, v);
+        }//---------------------------------------------------------------------
+        
         boolean opened;
         try {
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -694,6 +845,24 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     }
 
+    // DJ:08/25/2014
+    // adds props of the window that was closed to the closedWindowsList
+    // in order to keep track of the positioning of all closed windows
+    // so when we show them again, they would appear at their last position
+    // when their were last time visible
+    /**
+     * adds props of the window that was closed to the closedWindowsList
+     * @param massProps of the closed window.
+     */
+    public void addToClosedWindowsList(MassProps massProps){
+        if (massProps != null) {
+            if(closedWindowsList == null)
+                closedWindowsList = new ArrayList<MassProps>();
+        
+            closedWindowsList.add(massProps);
+        }
+    }
+    
     /**
      * Action method for the "view" menu items.
      */
@@ -716,13 +885,17 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
           
             if(closedWindowsList != null){
                 for(int j=0 ; j<closedWindowsList.size(); j++){
-                    if(massesEqualityCheck(closedWindowsList.get(j).getMassValue(), mp.getMassValue(), 0.49 )){
-                        
-                        int index_diff = Math.abs(closedWindowsList.get(j).getMassIndex() - mp.getMassIndex());
+                  if(massesEqualityCheck(closedWindowsList.get(j).getMassValue(), mp.getMassValue(), 0.49 )){
+                        int index_diff = Math.abs(closedWindowsList.get(j).getMassIdx() - mp.getMassIndex());
                         if( index_diff < 3 ){ // DJ: in case we've two groups or more.
                             mp.show();
-                            mp.getWindow().setLocation(closedWindowsList.get(j).getXYLoc());
-                            mp.getWindow().setLocation(mp.getWindow().getX()+10, mp.getWindow().getY()+6);
+                            mp.getWindow().setLocation(
+                                    new Point(
+                                        closedWindowsList.get(j).getXWindowLocation(),
+                                        closedWindowsList.get(j).getYWindowLocation())
+                                    );
+                                        
+                            mp.getWindow().setLocation(mp.getWindow().getX()+10, mp.getWindow().getY()+7);
                             mp.setbIgnoreClose(true);
                             closedWindowsList.remove(j);
                             return;
@@ -739,15 +912,19 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             mp.setbIgnoreClose(true);
             
         } else if (!viewMassMenuItems[index].isSelected() && mp.isVisible()) {
-            Point point = mp.getWindow().getLocation();
+            Point point = new Point(mp.getWindow().getLocation());
+            
+            MassProps windowMProps = new MassProps(mp.getMassIndex(), mp.getMassValue());
+            windowMProps.setXWindowLocation(point.x);
+            windowMProps.setYWindowLocation(point.y);
+            
             if(closedWindowsList == null){
-                closedWindowsList = new ArrayList<MimsPlus>();
-                
-                closedWindowsList.add(mp);
+                closedWindowsList = new ArrayList<MassProps>();
+                closedWindowsList.add(windowMProps);
             }
             else{
-                if(!closedWindowsList.contains(mp))
-                    closedWindowsList.add(mp);
+               if(!closedWindowsList.contains(windowMProps))
+                   closedWindowsList.add(windowMProps);
             }
             mp.setXYLoc(point);
             mp.hide();
@@ -762,8 +939,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (massImages[i] != null) {
                 if (massImages[i].equals(im)) {
                     viewMassMenuItems[i].setSelected(false);
-                    //TODO
-                    System.out.println("is hidden: " + massImages[i].isVisible());
                 }
             }
         }
@@ -2237,8 +2412,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }
     }
 
+    // DJ: 08/12/2014
     /**
-     * DJ: 08/12/2014 gives back the number of groups where images are
+     * gives back the number of groups where images are
      * categorized :
      *
      * @return int of number of groups, if no groups are detected, return 0
@@ -2269,14 +2445,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         return collectionsCount;
     }
 
+    // DJ: 07/31/2014 To be used in MimsHSIView.java
     /**
-     * DJ: 07/31/2014 To be used in MimsHSIView.java to generate all possible
-     * and valid ratios within the HSIview field in GUI.
+     * Checks if numerator and denumerator are suitable to construct a ratio
      *
      * @param num string of the MASS-SYMBOL to be considered as numerator.
      * @param den string of the MASS-SYMBOL to be considered as denumerator.
      * @return true if the numerator and denumerator symbols are both suitable
-     * to construct a mass ratio.
+     * to construct a mass ratio. False otherwise.
      */
     public static boolean validRatioChecker(String num, String den) {
 
@@ -2642,7 +2818,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         // Generate composite images.
         for (int z = 0; z < composite_props.length; z++) {
 
-            System.out.println("We've got: " + composite_props.length + "  Composite images to restore");
             Object[] channels = new Object[4]; // 4 = four channels : RGBG : Red, Green, Blue, Gray.
 
             MimsPlus[] imgs = composite_props[z].getImages(ui);
@@ -3257,7 +3432,9 @@ private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
     //DJ: 08/14/2014
     // to avoid openning a new composite manager 
     // while another one still exists.
-    if (this.compManager == null)
+
+    if(com.nrims.managers.CompositeManager.getInstance() == null || 
+       com.nrims.managers.CompositeManager.getInstance().isVisible() == false)
         cbControl.showCompositeManager();
     else
         this.compManager.toFront();
@@ -3304,8 +3481,41 @@ private void batch2nrrdMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     cm.selectFiles();
 }//GEN-LAST:event_batch2nrrdMenuItemActionPerformed
 
+//DJ: 08/21/2014
+/**
+ * Gets all the File's props as a Vector.
+ * @param fileNameAndPath as a <code>String</code>
+ * @return <code>Vector</Code> of all the file's props.
+ */
+public Vector getFileSettings(String fileNameAndPath){
+    return filesProps.get(fileNameAndPath);
+}
+
+//DJ: 08/21/2014
+/**
+ * gets the name of the last file that was fully opened.
+ * @return <code>String</code> of the last file that was fully opened.
+ */
+public String getNameOfLastFileOpened(){
+    String[] allFilesPaths = filesProps.keySet().toArray(new String[filesProps.keySet().size()]);
+    return allFilesPaths[allFilesPaths.length-1];
+}
+
 private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
+
+    if (com.nrims.managers.CompositeManager.getInstance() != null)
+         com.nrims.managers.CompositeManager.getInstance().closeWindow();
+    
     task.cancel(true);
+
+    // so the next file loaded won't have the props of the last file cancelled
+    if (mimsData == null) {} 
+    else if (filesProps != null) {
+       String[] allFilesPaths = filesProps.keySet().toArray(new String[filesProps.keySet().size()]);
+       FilesManager filesManager = new FilesManager(ui);
+       filesManager.addImageFiles(allFilesPaths);
+       filesManager.setVisible(true);
+    }
 }//GEN-LAST:event_stopButtonActionPerformed
 
 private void DTCorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DTCorrectionMenuItemActionPerformed
@@ -3574,6 +3784,10 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             roiManager = new MimsRoiManager(this);
         }
         return roiManager;
+    }
+    public void resetRoiManager(){
+        roiManager = null;
+        roiManager = new MimsRoiManager(this);
     }
 
     /**
@@ -4067,8 +4281,6 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 mass_props[i].setYWindowLocation(mass[i].getWindow().getY());
 
             }
-            //    mass_props[i].setXWindowLocation();
-            //    mass_props[i].setYWindowLocation(mass[i].getDJ_Y());
 
             //should these be set inside getprops?
             //maybe...
@@ -4473,7 +4685,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         MimsPlus[] sumImages = getOpenSumImages();
         MimsPlus[] ratioImages = getOpenRatioImages();
         MimsPlus[] hsiImages = getOpenHSIImages();
-        MimsPlus[] compositeImages = getOpenCompositeImages(); //DJ : 08/01/2014  not used though
+        MimsPlus[] compositeImages = getOpenCompositeImages(); //DJ : 08/01/2014
         n = 0;
         int row = 0;
         MimsPlus curZero = null;
@@ -4803,16 +5015,12 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      * the task in the background but that is the result of the naming
      * convention used by java.
      */
-    class FileOpenTask extends SwingWorker<Boolean, Void> {
+    public class FileOpenTask extends SwingWorker<Boolean, Void> {
 
         UI ui;
         File file;
-        File previous_file; // DJ: 08/18/2014
 
         public FileOpenTask(File file, UI ui) {
-            if(this.file != null)
-                this.previous_file = this.file.getAbsoluteFile(); // DJ: 08/18/2014
-            
             this.file = file;
             this.ui = ui;
             
@@ -4829,14 +5037,22 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         @Override
         public Boolean doInBackground() {
 
-
+            mass_props = getOpenMassProps();
+            rto_props = getOpenRatioProps();
+            hsi_props = getOpenHSIProps();
+            sum_props = getOpenSumProps();
             
-            MassProps[] mass_props = getOpenMassProps();
-            RatioProps[] rto_props = getOpenRatioProps();
-            HSIProps[] hsi_props = getOpenHSIProps();
-            SumProps[] sum_props = getOpenSumProps();
-            CompositeProps[] composite_props = getOpenCompositeProps();  // DJ: 08/01/2014
+            // Roi Manager visible.
+            boolean roiManagerVisible = getRoiManager().isVisible();
             
+            composite_props = getOpenCompositeProps();  // DJ: 08/01/2014
+            boolean sucess = doInBackground(mass_props, rto_props, 
+                hsi_props, sum_props, composite_props,
+                true, roiManagerVisible);
+            return sucess;
+        
+            /*
+                
             // Get previous image size.
             int old_width = 0;
             int old_height = 0;
@@ -4845,8 +5061,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 old_height = image.getHeight();
             }
 
-            // Roi Manager visible.
-            boolean roiManagerVisible = getRoiManager().isVisible();
+            
 
             // Open the file.
             boolean opened = openFile(file);
@@ -4871,7 +5086,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             // Get new image size.
             int new_width = image.getWidth();
             int new_height = image.getHeight();
-            boolean same_size = ((old_height == new_height) && (old_width == new_width));
+            same_size = ((old_height == new_height) && (old_width == new_width));
 
             // Perform some checks to see if we wanna restore state.          
             boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
@@ -4919,8 +5134,82 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
 
 
+        return true;
+        */
+        }
+        
+        
+        
+        //DJ: 08/19/2014
+        public Boolean doInBackground(MassProps[] mass_props, RatioProps[] rto_props, 
+                HSIProps[] hsi_props, SumProps[] sum_props, CompositeProps[] composite_props,
+                boolean same_size, boolean roiManagerVisible) {
+            
+            // Get previous image size.
+            int old_width = 0;
+            int old_height = 0;
+            if (image != null) {
+                old_width = image.getWidth();
+                old_height = image.getHeight();
+            }
+
+            boolean opened = openFile(file);
+            if (!opened) 
+                return false;
+            
+            stopButton.setEnabled(false);
+
+            boolean isRoiFile = (file.getAbsolutePath().endsWith(ROI_EXTENSION) || file.getAbsolutePath().endsWith(ROIS_EXTENSION));
+            if (isRoiFile) {
+                return true;
+            }
+
+            try {
+                doneLoadingFile();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Perform some checks to see if we wanna restore state.          
+            boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
+            if (isImageFile) {
+                restoreState(mass_props, rto_props, hsi_props, sum_props, composite_props, same_size, roiManagerVisible);
+            }
+
+            // Set up roi manager.
+            MimsRoiManager rm = getRoiManager();
+            if (rm != null) {
+                rm.resetRoiLocationsLength();
+            }
+
+            // Update notes gui
+            if (image != null) {
+                imgNotes.setOutputFormatedText(image.getNotes());
+            }
+
+            // Update hashmap
+            if (image != null) {
+                metaData = image.getMetaDataKeyValuePairs();
+            }
+
+            // Update dt correction flag
+            if (image != null) {
+                isDTCorrected = image.isDTCorrected();
+            }
+            DTCorrectionMenuItem.setSelected(isDTCorrected);
+            DTCorrectionMenuItem.setEnabled(!isDTCorrected);
+
+            // Update QSA correction flag
+            if (image != null) {
+                isQSACorrected = image.isQSACorrected();
+            }
+            QSACorrectionMenuItem.setSelected(isQSACorrected);
+            QSACorrectionMenuItem.setEnabled(!isQSACorrected);
+
             return true;
         }
+        
+        
 
         /**
          * Relegates behavior for opening any of the various MimsPlus file
@@ -5379,114 +5668,113 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 }
 
 
-  //Lots of code. Seriously. Lots.
+                //Lots of code. Seriously. Lots.
 
 
-             try {
-                jTabbedPane1.setEnabled(true);
-                if (mimsData == null) {
-                    initializeViewMenu();
-                    mimsData = new com.nrims.MimsData(ui, image);
-                    hsiControl = new MimsHSIView(ui);
-                    mimsLog = new MimsLog();
-                    mimsStackEditing = new MimsStackEditor(ui, image);
-                    mimsTomography = new MimsTomography(ui);
-                    mimsAction = new MimsAction(image);
-                    segmentation = new SegmentationForm(ui);
+                try {
+                    jTabbedPane1.setEnabled(true);
+                    if (mimsData == null) {
+                        initializeViewMenu();
+                        mimsData = new com.nrims.MimsData(ui, image);
+                        hsiControl = new MimsHSIView(ui);
+                        mimsLog = new MimsLog();
+                        mimsStackEditing = new MimsStackEditor(ui, image);
+                        mimsTomography = new MimsTomography(ui);
+                        mimsAction = new MimsAction(image);
+                        segmentation = new SegmentationForm(ui);
 
-                    jTabbedPane1.setComponentAt(0, mimsData);
-                    jTabbedPane1.setTitleAt(0, "MIMS Data");
-                    jTabbedPane1.add("Process", hsiControl);
-                    jTabbedPane1.add("Contrast", cbControl);
-                    jTabbedPane1.add("Stack Editing", mimsStackEditing);
-                    jTabbedPane1.add("Tomography", mimsTomography);
-                    jTabbedPane1.add("Segmentation", segmentation);
-                    jTabbedPane1.add("MIMS Log", mimsLog);
+                        jTabbedPane1.setComponentAt(0, mimsData);
+                        jTabbedPane1.setTitleAt(0, "MIMS Data");
+                        jTabbedPane1.add("Process", hsiControl);
+                        jTabbedPane1.add("Contrast", cbControl);
+                        jTabbedPane1.add("Stack Editing", mimsStackEditing);
+                        jTabbedPane1.add("Tomography", mimsTomography);
+                        jTabbedPane1.add("Segmentation", segmentation);
+                        jTabbedPane1.add("MIMS Log", mimsLog);
 
-                } else {
-                    resetViewMenu();
-                    mimsData = new com.nrims.MimsData(ui, image);
-                    cbControl = new MimsCBControl(ui);
-                    mimsStackEditing = new MimsStackEditor(ui, image);
-                    int[] indices = mimsTomography.getSelectedStatIndices();
-                    mimsTomography = new MimsTomography(ui);
-                    mimsTomography.setSelectedStatIndices(indices);
-                    mimsAction = new MimsAction(image);
-                    segmentation = new SegmentationForm(ui);
-                    
-                    //DJ: 08/12/2014
-                    hsiControl = new MimsHSIView(ui);
+                    } else {
+                        resetViewMenu();
+                        mimsData = new com.nrims.MimsData(ui, image);
+                        cbControl = new MimsCBControl(ui);
+                        mimsStackEditing = new MimsStackEditor(ui, image);
+                        int[] indices = mimsTomography.getSelectedStatIndices();
+                        mimsTomography = new MimsTomography(ui);
+                        mimsTomography.setSelectedStatIndices(indices);
+                        mimsAction = new MimsAction(image);
+                        segmentation = new SegmentationForm(ui);
 
-                    jTabbedPane1.setComponentAt(0, mimsData);
-                    jTabbedPane1.setTitleAt(0, "MIMS Data");
-                    jTabbedPane1.setComponentAt(1, hsiControl);
-                    jTabbedPane1.setComponentAt(2, cbControl);
-                    jTabbedPane1.setComponentAt(3, mimsStackEditing);
-                    jTabbedPane1.setComponentAt(4, mimsTomography);
-                    jTabbedPane1.setComponentAt(5, segmentation);
+                        hsiControl = new MimsHSIView(ui);//DJ: 08/12/2014
 
-                    mimsData.setMimsImage(image);
-                    hsiControl.updateImage(false);
-                }
-                
-                
-           } catch (Exception e){
-                 throw new Exception(e);
-            }
-                
-                MimsHSIView.MimsRatioManager ratioManager = MimsHSIView.MimsRatioManager.getInstance();
-                if (ratioManager != null) {
-                    ratioManager.closeWindow();
-                    ratioManager = new MimsHSIView.MimsRatioManager(hsiControl, ui);
-                    ratioManager.showFrame();
-                }
-                
-                // DJ: 08/12/2014 re-open composite manager if it was open previously
-                compManager = compositeManager.getInstance();
-                if (compManager != null && compManager.isVisible() == true) {
-                    int x = compManager.getX();
-                    int y = compManager.getY();
-                    compManager.dispose();
-                    compManager = new com.nrims.managers.compositeManager(ui);
-                    compManager.setVisible(true);
-                    compManager.setLocation(new Point(x, y));
+                        jTabbedPane1.setComponentAt(0, mimsData);
+                        jTabbedPane1.setTitleAt(0, "MIMS Data");
+                        jTabbedPane1.setComponentAt(1, hsiControl);
+                        jTabbedPane1.setComponentAt(2, cbControl);
+                        jTabbedPane1.setComponentAt(3, mimsStackEditing);
+                        jTabbedPane1.setComponentAt(4, mimsTomography);
+                        jTabbedPane1.setComponentAt(5, segmentation);
 
-                }
-
-                jTabbedPane1.addChangeListener(new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
-                        int selected = jTabbedPane1.getSelectedIndex();
-                        if (selected == 2) {
-                            cbControl.updateHistogram();
-                        }
+                        mimsData.setMimsImage(image);
+                        hsiControl.updateImage(false);
                     }
-                });
 
-                mimsLog.Log("\n\nNew image: " + getImageFilePrefix());
-                mimsLog.Log(ImageDataUtilities.getImageHeader(image));
+                    MimsHSIView.MimsRatioManager ratioManager = MimsHSIView.MimsRatioManager.getInstance();
+                    if (ratioManager != null) {
+                        ratioManager.closeWindow();
+                        ratioManager = new MimsHSIView.MimsRatioManager(hsiControl, ui);
+                        ratioManager.showFrame();
+                    }
 
-                // Calculate theoretical duration
-                double duration = image.getCountTime() * (double) image.getNImages();
-                mimsLog.Log("Theoretical duration (s): " + Double.toString(duration));
+                    // DJ: 08/12/2014 re-open composite manager if it was open previously
+                    compManager = CompositeManager.getInstance();
+                    if (compManager != null && compManager.isVisible() == true) {
+                        int x = compManager.getX();
+                        int y = compManager.getY();
+                        compManager.dispose();
+                        compManager = new com.nrims.managers.CompositeManager(ui);
+                        compManager.setVisible(true);
+                        compManager.setLocation(new Point(x, y));
 
-                mimsTomography.resetImageNamesList();
-                mimsStackEditing.resetSpinners();
+                    }
 
-                openers.clear();
-                String fName = file.getName();
-                openers.put(fName, image);
+                    jTabbedPane1.addChangeListener(new ChangeListener() {
+                        public void stateChanged(ChangeEvent e) {
+                            int selected = jTabbedPane1.getSelectedIndex();
+                            if (selected == 2) {
+                                cbControl.updateHistogram();
+                            }
+                        }
+                    });
 
-                // Add the windows to the combobox in CBControl.
-                MimsPlus[] mp = getOpenMassImages();
-                for (int i = 0; i < mp.length; i++) {
-                    cbControl.addWindowtoList(mp[i]);
+                    mimsLog.Log("\n\nNew image: " + getImageFilePrefix());
+                    mimsLog.Log(ImageDataUtilities.getImageHeader(image));
+
+                    // Calculate theoretical duration
+                    double duration = image.getCountTime() * (double) image.getNImages();
+                    mimsLog.Log("Theoretical duration (s): " + Double.toString(duration));
+
+                    mimsTomography.resetImageNamesList();
+                    mimsStackEditing.resetSpinners();
+
+                    openers.clear();
+                    String fName = file.getName();
+                    openers.put(fName, image);
+
+                    // Add the windows to the combobox in CBControl.
+                    MimsPlus[] mp = getOpenMassImages();
+                    for (int i = 0; i < mp.length; i++) {
+                        cbControl.addWindowtoList(mp[i]);
+                    }
+                    previousFileCanceled = false;
+                    ui.setTitle("OpenMIMS: " + image.getImageFile().getName().toString());
+
+                } catch (Exception e) {
+                    throw new Exception(e);
                 }
-                previousFileCanceled = false;
-                ui.setTitle("OpenMIMS: " + image.getImageFile().getName().toString());
 
             } else {
                 sessionOpened = false;
             }
+
         }
 
         private void openProcessFailedOrCanceled() {
@@ -5496,11 +5784,6 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             currentlyOpeningImages = false;
         }
         
-        //DJ: 08/18/2014
-        public File getPrevFile(){
-            return this.previous_file;
-            
-        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;

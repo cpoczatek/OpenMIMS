@@ -223,19 +223,7 @@ public class SumProps implements java.io.Serializable {
      * Gets the index of the parent mass.
      * @return the index of the parent image.
      */
-    public int getParentMassIdx() { return parentMassIdx; }
-    
-    // Added by DJ - 07/23/2014
-    // Fixes the past vs new parents mixage.
-    public int getNewParentMassIdx(double parentVal){
-        int result;
-        if(this.getParentMassValue() == parentVal){
-            result = getParentMassIdx();
-        } else{
-            result = -1;
-        }
-         return result;
-    }
+    public int getParentMassIdx() { return parentMassIdx; } 
 
     /**
      * Sets the mass value of the parent mass image.

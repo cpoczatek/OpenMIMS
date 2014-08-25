@@ -1168,4 +1168,3 @@ class TrimmedLabel extends Label {
 
 } // TrimmedLabel class
 
-

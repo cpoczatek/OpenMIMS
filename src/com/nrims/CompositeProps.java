@@ -1,7 +1,7 @@
 package com.nrims;
 
 import java.io.Serializable;
-import com.nrims.managers.compositeManager;
+import com.nrims.managers.CompositeManager;
 import java.util.ArrayList;
 
 /**
