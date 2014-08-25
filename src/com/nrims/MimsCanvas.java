@@ -31,6 +31,15 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         this.mImp = imp;
         this.ui = ui;      
     }
+    
+    // DJ: 08/06/2014
+    /*
+     public MimsCanvas(MimsPlus imp, UI ui) {
+        super(imp);
+        this.mImp = imp;
+        this.ui = ui;      
+    }
+    */
 
     @Override
     public void paint(Graphics g) {
@@ -70,9 +79,38 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                parentplane = ui.getMassImages()[mImp.getSumProps().getParentMassIdx()].getCurrentSlice();
             else if (mImp.getSumProps().getSumType() == SumProps.RATIO_IMAGE)
                parentplane = ui.getMassImages()[mImp.getSumProps().getNumMassIdx()].getCurrentSlice();
-        }else{
-            mImp.getCurrentSlice();
+       
+        
+        } // DJ: 08/06/2014
+        else if(mImp.getMimsType() == MimsPlus.COMPOSITE_IMAGE){
+            for(int i=0 ; i<mImp.getCompositeProps().getImages(ui).length ; i++){
+                
+                MimsPlus channel = (mImp.getCompositeProps().getImages(ui))[i];
+                        
+                if( channel != null ){
+                    
+                    if( channel.getMimsType() == MimsPlus.MASS_IMAGE ){
+                        parentplane = channel.getCurrentSlice();
+                        break;
+                    }
+                    else if ( channel.getMimsType() == MimsPlus.RATIO_IMAGE ){
+                        parentplane = ui.getMassImages()[channel.getRatioProps().getNumMassIdx()].getCurrentSlice();
+                        break;
+                    }
+                    else if ( channel.getMimsType() == MimsPlus.SUM_IMAGE ){
+                        if (channel.getSumProps().getSumType() == SumProps.MASS_IMAGE){
+                             parentplane = ui.getMassImages()[channel.getSumProps().getParentMassIdx()].getCurrentSlice();
+                             break;
+                        }
+                        else if ( channel.getSumProps().getSumType() == SumProps.RATIO_IMAGE){
+                            parentplane = ui.getMassImages()[channel.getSumProps().getNumMassIdx()].getCurrentSlice();
+                            break;
+                        }
+                    }
+                }
+            }
         }
+    
         } catch(NullPointerException npe) {
            npe.printStackTrace();
            // Do nothing, assume plane 1.

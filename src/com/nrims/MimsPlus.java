@@ -43,7 +43,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     static final public int SUM_IMAGE = 4 ;
     static final public int COMPOSITE_IMAGE = 5 ;
 
-    static final public int X_OFFSET = 15;
+    static final public int X_OFFSET = 5; // originally 15
     static final public int Y_OFFSET = 40;
 
     // Internal images for test data display.
@@ -337,6 +337,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
        super();
        this.ui = ui;
        this.compProps = compprops;
+       this.xloc = compprops.getXWindowLocation(); // DJ
+       this.yloc = compprops.getYWindowLocation(); // DJ 
        this.nType = MimsPlus.COMPOSITE_IMAGE;
        fStateListeners = new EventListenerList();
        addListener(ui);
@@ -669,25 +671,32 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     public void showWindow() {
-       showWindow(true);
+        showWindow(true);
     }
 
     /**
      * Shows the current window.
      */
     public void showWindow(boolean forceAutoContrast) {
+        
         show();
 
-        // Set window location.
         if (xloc > -1 & yloc > -1) {
             getWindow().setLocation(xloc, yloc);
         }
+        
 
+        
         // Add image to list og images in UI.
         ui.addToImagesList(this);
 
         // Autocontrast image by default.
-        if ((this.getMimsType() == MimsPlus.MASS_IMAGE) || (this.getMimsType() == MimsPlus.RATIO_IMAGE) || (this.getMimsType() == MimsPlus.SUM_IMAGE)) {
+        if ( (this.getMimsType() == MimsPlus.MASS_IMAGE) || 
+             (this.getMimsType() == MimsPlus.RATIO_IMAGE) ||
+             (this.getMimsType() == MimsPlus.SUM_IMAGE)
+            || (this.getMimsType() == MimsPlus.COMPOSITE_IMAGE)) // DJ: 08/05/2014: added composite
+                    
+        {  
            if(forceAutoContrast)
               ui.autoContrastImage(this);
         }
@@ -991,28 +1000,68 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      */
     @Override
     public void show() {
-        while (this.lockSilently() == false){
+
+//   super.show(); // DJ testing
+
+        
+      while (this.lockSilently() == false){
             
-        }
-        try{
+      }
+      
+      // DJ: 08/06/2014 TESTING
+      compProcessor = this.getCompositeProcessor();
+      if(compProcessor != null){
+          System.out.println("is Composite Thread active ? " + compProcessor.isRunning());
+          compProcessor.waitForThreadToFinish();
+      }
+
+        
+      try{
             super.show() ;
             if(getWindow() != null) {
+                System.out.println("getWindow().getCanvas() : " + ( getWindow().getCanvas() ).getName() + " instance of: " + ( getWindow().getCanvas() ).getClass());
+                
                 if(!(getWindow().getCanvas() instanceof MimsCanvas )) {
+                  
                     if (getStackSize() > 1) {
-                        new StackWindow(this, new MimsCanvas(this, ui));
-                    } else {
-                        new ImageWindow(this, new MimsCanvas(this, ui));
+                        // DJ: 08/06/2014
+                        StackWindow sw = new StackWindow(this, new MimsCanvas(this, ui));
+                        sw.addWindowListener(this);
+                        sw.getCanvas().addMouseListener(this);
+                        sw.getCanvas().addMouseMotionListener(this);
+                        sw.getCanvas().addMouseWheelListener(this);
+                        this.unlock();
+                        
                     }
+                    else {
+                        // DJ: 08/06/2014
+                        ImageWindow iw = new ImageWindow(this, new MimsCanvas(this, ui));
+                        iw.addWindowListener(this);
+                        iw.getCanvas().addMouseListener(this);
+                        iw.getCanvas().addMouseMotionListener(this);
+                        iw.getCanvas().addMouseWheelListener(this);
+                        this.unlock();
+                    }
+                    
                 }
-                getWindow().addWindowListener(this);
-                getWindow().getCanvas().addMouseListener(this);
-                getWindow().getCanvas().addMouseMotionListener(this);
-                getWindow().getCanvas().addMouseWheelListener(this);
+                   /*
+                    getWindow().addWindowListener(this);
+                    getWindow().getCanvas().addMouseListener(this);
+                    getWindow().getCanvas().addMouseMotionListener(this);
+                    getWindow().getCanvas().addMouseWheelListener(this);
+                   */
             }
-        } finally{
+        } 
+      catch (Exception e){
+         System.out.println("DJ -- in MimsPlus.show() ... line 1026 ==>> " + e);
+      }
+      /*
+       finally{
             this.unlock();
-        }
+      }
+      */
     }
+    
 
     /**
      * Compares the input MimsPlus object (mp) to the current class.
@@ -1042,7 +1091,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 return true;
             }
         } else if (mp.getMimsType() == COMPOSITE_IMAGE) {
-            if (mp.getCompositeProps().equals(getCompositeProps())) {
+            if (mp.getCompositeProps().equals(this.getCompositeProps())) {
                 return true;
             }
         } else if (mp.getMimsType() == SEG_IMAGE) {
@@ -1126,6 +1175,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void windowOpened(WindowEvent e) {
+      
+        
+        if(getWindow() != null){    // DJ 08/06/2014
+        
         java.awt.Window w = getWindow();
         if(w==null) return;
         WindowListener [] wl = w.getWindowListeners();
@@ -1151,6 +1204,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             getWindow().getCanvas().addMouseMotionListener(this);
         }
     }
+    }
 
     @Override
     public void mouseExited(MouseEvent e){ ui.updateStatus(" "); }
@@ -1160,12 +1214,15 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void mousePressed(MouseEvent e) {
+      if(getWindow() != null){    // DJ 08/06/2014
+        
       if(IJ.getToolName().equals("OpenMIMS tool") && (this.nType==MimsPlus.MASS_IMAGE)) {
           startX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
           startY = getWindow().getCanvas().offScreenY((int) e.getPoint().getY());
           pressX = startX;
           pressY = startY;
           return;
+      }
       }
       
       if(getRoi() != null ) {
@@ -1269,11 +1326,18 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             if (this.getMimsType() == MimsPlus.SUM_IMAGE) {
                 this.getSumProps().setMag(lmag);
             }
+            if (this.getMimsType() == MimsPlus.COMPOSITE_IMAGE){ // DJ 08/06/2014
+                this.getCompositeProps().setMag(lmag);
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        
+        if(getWindow() != null){  // DJ: 08/06/2014
+        
+        
       if (!IJ.getToolName().equals("Drag To Writer tool")){
           if (bStateChanging) {
               return;
@@ -1335,6 +1399,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
           System.out.println("release captured");
           mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
       }
+      
+        }
    }
 
     /**
@@ -1351,6 +1417,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if(this.ui.isOpening()) {
             return;
         }
+        
+        if(getWindow() != null){   // DJ:  08/06/2014
 
         // Get the X and Y position of the mouse.
         int x = (int) e.getPoint().getX();
@@ -1539,6 +1607,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
           }
        }
        ui.updateStatus(msg);
+        }// DJ: end of getWindow() != null condition check
     }
 
     private String getValueAsString(int x, int y) {
@@ -1573,6 +1642,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     @Override
     // Display statistics while dragging or creating ROIs.
     public void mouseDragged(MouseEvent e) {
+        
+        if(getWindow() != null){  // DJ: 08/06/2014
+        
         if (!IJ.getToolName().equals("Drag To Writer tool")){
             if (IJ.getToolName().equals("OpenMIMS tool") && (this.nType == MimsPlus.MASS_IMAGE)) {
                 //Get spinners
@@ -1724,10 +1796,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
             }
         }
+        }
    }
 
     @Override
-    public void mouseWheelMoved(MouseWheelEvent e){     
+    public void mouseWheelMoved(MouseWheelEvent e){    
+        
+        if(getWindow() != null){  // DJ: 08/06/2014
+        
        int plane = 1;
         int size = 1;
         MimsPlus mp = null;
@@ -1757,6 +1833,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if( ( (plane + d)<=size ) && ( (plane+d)>=1 ) ) {
             mp.setSlice(plane+d);
         }   
+        
+        }
     }
 
     /**
@@ -2007,7 +2085,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         }
         try {
             if (allowClose) {
-                ui.imageClosed(this);
+                ui.imageClosed(this);   // calls ui.imageClosed()
                 ui.getCBControl().removeWindowfromList(this);
                 ui.getmimsTomography().resetImageNamesList();
                 super.close();
@@ -2091,7 +2169,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return sum properties
      */
     public SumProps getSumProps() { 
-       if (isVisible()) {
+       if (getWindow() != null && isVisible()) {       // DJ: 06/06/2014
           sumProps.setXWindowLocation(getWindow().getX());
           sumProps.setYWindowLocation(getWindow().getY());
           sumProps.setMag(getCanvas().getMagnification());
@@ -2116,7 +2194,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      * @return ratio properties
      */
     public RatioProps getRatioProps() {
-       if (isVisible()) {
+       if (getWindow() != null && isVisible()) {       // DJ: 06/06/2014
           ratioProps.setXWindowLocation(getWindow().getX());
           ratioProps.setYWindowLocation(getWindow().getY());
           ratioProps.setMag(getCanvas().getMagnification());
@@ -2134,7 +2212,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      */
     public HSIProps getHSIProps() { 
        hsiProps = getHSIProcessor().getHSIProps();
-       if (isVisible()) {
+       if (getWindow() != null && isVisible()) {     // DJ: 06/06/2014
           hsiProps.setXWindowLocation(getWindow().getX());
           hsiProps.setYWindowLocation(getWindow().getY());
           hsiProps.setMag(getCanvas().getMagnification());
@@ -2148,7 +2226,18 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
      *
      * @return ratio properties
      */
-    public CompositeProps getCompositeProps() { return compProps; }
+    public CompositeProps getCompositeProps() 
+    { 
+       // compProps = getCompositeProcessor().getProps();
+        // DJ: 08/04/2014
+        if(getWindow() != null && isVisible()){       // DJ: 06/06/2014
+            compProps.setXWindowLocation(getWindow().getX());
+            compProps.setYWindowLocation(getWindow().getY());
+            // add setMag maybe     
+        }
+       //  compProps.setImageProps(ui.get);    // to be continued...
+        return compProps; 
+    }
 
     /**
      *
@@ -2162,5 +2251,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     public Overlay getGraphOverlay(){
         return graphOverlay;
     }
+    
 
 }

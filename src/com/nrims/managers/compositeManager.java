@@ -23,6 +23,12 @@ public class compositeManager extends javax.swing.JFrame {
 
     private UI ui;
     private javax.swing.DefaultListModel listModel = new javax.swing.DefaultListModel();
+    
+    // DJ: 08/04/2014
+    // arraylist to hold all opened windows' long titles. 
+    private ArrayList<String> wholetitles = new ArrayList<String>();
+    
+
 
     /** Creates new form compositeManager */
     public compositeManager(UI ui) {
@@ -31,9 +37,6 @@ public class compositeManager extends javax.swing.JFrame {
         jList1.setDragEnabled(true); // DJ: 08/01/2014
         this.ui = ui;
         this.setTitle("Composite Manager");
-        
- 
-    //    grayTextField.setDropMode(DropMode.USE_SELECTION);
       
     }
 
@@ -52,11 +55,10 @@ public class compositeManager extends javax.swing.JFrame {
     }
 
     public void addImages(MimsPlus[] imgs) {
+        
         for(int i = 0; i< imgs.length; i++) {
-           
-            // listModel.addElement(imgs[i].getTitle());  // DJ: 08/01/2014 : commented out ths line
-            
            // DJ: 08/01/2014
+           this.wholetitles.add(imgs[i].getTitle());
            listModel.addElement(imgs[i].getTitle().substring(0, imgs[i].getShortTitle().indexOf("[")));
         }
     }
@@ -220,9 +222,40 @@ public class compositeManager extends javax.swing.JFrame {
     }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
-        /*
-        String[] imgNames = {redTextField.getText(),greenTextField.getText(),blueTextField.getText(),grayTextField.getText()};
+        
+
+        String [] imgNames = {"", "", "", ""};
+        
+        int redINDX = -1; boolean is_red_set = false;
+        int grnINDX = -1; boolean is_grn_set = false;
+        int bluINDX = -1; boolean is_blu_set = false;
+        int gryINDX = -1; boolean is_gry_set = false;
+        
+        for(int i = 0; i<listModel.getSize() ; i++){
+            if ( ((String)(listModel.getElementAt(i))).equals(redTextField.getText()) && is_red_set == false){
+                redINDX = i; is_red_set = true;
+            }
+            if ( ((String)(listModel.getElementAt(i))).equals(greenTextField.getText()) && is_grn_set == false){
+                grnINDX = i; is_grn_set = true;
+            }
+            if ( ((String)(listModel.getElementAt(i))).equals(blueTextField.getText()) && is_blu_set == false){
+                bluINDX = i; is_blu_set = true;
+            }
+            if ( ((String)(listModel.getElementAt(i))).equals(grayTextField.getText()) && is_gry_set == false){
+                gryINDX = i; is_gry_set = true;
+            }
+        }
+  
+        if (redINDX != -1 ) imgNames[0] = this.wholetitles.get(redINDX);
+        if (grnINDX != -1 ) imgNames[1] = this.wholetitles.get(grnINDX);
+        if (bluINDX != -1 ) imgNames[2] = this.wholetitles.get(bluINDX);
+        if (gryINDX != -1 ) imgNames[3] = this.wholetitles.get(gryINDX);
+        
+        
+        
         Object[] imgs = new Object[4];
+         
+
         
         for(int i = 0; i<4; i++) {
             MimsPlus nimg = ui.getImageByName(imgNames[i]);
@@ -230,9 +263,7 @@ public class compositeManager extends javax.swing.JFrame {
                 imgs[i] = null;
                 continue;
             }
-            if (nimg.getMimsType() == MimsPlus.HSI_IMAGE) {
-                imgs[i] = nimg.getHSIProps();
-            }
+
             if (nimg.getMimsType() == MimsPlus.RATIO_IMAGE) {
                 imgs[i] = nimg.getRatioProps();
             }
@@ -240,18 +271,18 @@ public class compositeManager extends javax.swing.JFrame {
                 imgs[i] = nimg.getSumProps();
             }
             if (nimg.getMimsType() == MimsPlus.MASS_IMAGE) {
-                imgs[i] = new MassProps(nimg.getMassIndex());
+                imgs[i] = new MassProps(nimg.getMassIndex(), nimg.getMassValue());
             }
             
         }
-
+   /*  
         CompositeProps props = new CompositeProps(imgs);
         MimsPlus img = new MimsPlus(ui, props);
         img.showWindow();
-        this.setVisible(false);
+        this.setVisible(true);
        
-       */
-        
+       
+   
         
       // DJ: 08/01/2014
       // Rewritten so it can handles strings taken from each channel textField as mass string 
@@ -262,33 +293,94 @@ public class compositeManager extends javax.swing.JFrame {
       
       MimsPlus[] allImages = ui.getAllOpenImages();
       
-      for(int i = 0 ; i < allImages.length ; i++){
-          for (int y = 0 ; y < channels.length ; y++){
-             
-              if(channels[y] == null){
-                  imgs[y] = null;
+      MimsPlus[] sumImages = ui.getOpenSumImages();
+      MimsPlus[] rtoImages = ui.getOpenRatioImages();
+      MimsPlus[] mssImages = ui.getOpenMassImages();
+      
+      for (int i = 0; i < channels.length; i++){
+          
+        if (channels[i].equals("")) {
+            imgs[i] = null;
+            continue;
+        }
+        //-----------------------------------------------------
+        for(MimsPlus sumImg : sumImages){
+  //         if (sumImg.getMimsType() == MimsPlus.RATIO_IMAGE){
+               if(channels[i].contains("Sum") && channels[i].contains("/") && sumImg.getShortTitle().contains(channels[i])){
+                  imgs[i] = sumImg.getSumProps();
                   break;
-              }
-              if (allImages[i].getShortTitle().contains(channels[y]) && channels[y].contains("/")){
-                  imgs[y] = allImages[i].getRatioProps();
+               }
+ //          }
+ //          else if(sumImg.getMimsType() == MimsPlus.MASS_IMAGE){
+               if(channels[i].contains("Sum") && !channels[i].contains("/") && sumImg.getShortTitle().contains(channels[i])){
+                  imgs[i] = sumImg.getSumProps();
                   break;
-              }
-              if (allImages[i].getShortTitle().contains(channels[y]) && channels[y].contains("Sum")){
-                  imgs[y] = allImages[i].getSumProps();
+               }               
+ //          }         
+        }
+        
+        //-----------------------------------------------------
+        for(MimsPlus rtoImg : rtoImages){
+            if (rtoImg.getMimsType() == MimsPlus.RATIO_IMAGE){
+               if(channels[i].contains("/") && !channels[i].contains("Sum") && rtoImg.getShortTitle().contains(channels[i])){
+                  imgs[i] = rtoImg.getRatioProps();
                   break;
-              } 
-              if (allImages[i].getShortTitle().contains(channels[y]) && !channels[y].contains("/") && !channels[y].contains("Sum")){
-                  imgs[y] = new MassProps(allImages[i].getMassIndex());
-              }
-          }
-      }
-      CompositeProps props = new CompositeProps(imgs);
+               }
+           }
+        }
+        
+        //-----------------------------------------------------
+        for(MimsPlus mssImg : mssImages){
+            if (mssImg.getMimsType() == MimsPlus.MASS_IMAGE){
+               if(!channels[i].contains("/") && !channels[i].contains("Sum") && mssImg.getShortTitle().contains(channels[i])){
+                  imgs[i] = new MassProps(mssImg.getMassIndex());
+                  break;
+               }
+           }
+        }
+        
+        
+      } 
+     ***************************************************************************************8*/
+      
+   /*   
+      
+        for (MimsPlus mims_image : allImages) {
+   
+            for (int y = 0; y < channels.length; y++) {
+                if (channels[y].equals("")) {
+                    imgs[y] = null;
+                    
+                } else {
+                    
+                    if (mims_image.getMimsType() == MimsPlus.RATIO_IMAGE 
+                            &&  mims_image.getShortTitle().contains(channels[y])
+                            &&  mims_image.getShortTitle().contains("/")
+                            && !mims_image.getShortTitle().contains("Sum")
+                       ) 
+                        imgs[y] = mims_image.getRatioProps();
+                
+                    if (mims_image.getMimsType() == MimsPlus.SUM_IMAGE && (mims_image.getShortTitle().charAt(0) == 'S'))
+                        imgs[y] = mims_image.getSumProps();
+                    
+                    if(  mims_image.getMimsType() == MimsPlus.MASS_IMAGE && mims_image.getShortTitle().contains(channels[y]))
+                        imgs[y] = new MassProps(mims_image.getMassIndex());
+                }
+                
+            }
+        }
+     
+     * 
+     */
+      
+      
+     CompositeProps props = new CompositeProps(imgs);
       MimsPlus img = new MimsPlus(ui, props);
       img.showWindow();
       // set to true -- so the user can add multiple composite images without opening
       // the composite manager all over again.
       // hit OK to add as much composite images as wanted; when done, hit cancel/done Adding
-      this.setVisible(true); 
+      this.setVisible(true);
       
         
         

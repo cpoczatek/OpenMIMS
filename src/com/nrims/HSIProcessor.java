@@ -2,6 +2,8 @@ package com.nrims;
 
 import ij.* ;
 import java.awt.* ;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A worker class that generates the actual values for how the pixels
@@ -468,5 +470,15 @@ public class HSIProcessor implements Runnable {
         ratio = (negOne*ref*bg + decimal*bg - bg - ref*decimal) / (decimal*ref - ref - bg*decimal - 1);
         ratio = Math.round(ratio*sf);
         return ratio;
+    }
+  
+    // DJ: 08/06/2014
+    public void waitForThreadToFinish(){
+       try {
+           if(this.isRunning())
+           this.fThread.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(HSIProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

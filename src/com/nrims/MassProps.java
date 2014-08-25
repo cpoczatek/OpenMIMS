@@ -31,8 +31,8 @@ public class MassProps implements java.io.Serializable{
 
 
     /**
-     * Instatiates a MassProps object.
-     * @param massIndex the index of the mass image for which a sum image is being generated.
+     * Initiates a MassProps object.
+         * @param massIndex the index of the mass image.
      */
     public MassProps(int massIndex) {
        this.massIdx = massIndex;
@@ -41,8 +41,28 @@ public class MassProps implements java.io.Serializable{
        xloc = -1;
        yloc = -1;
        ratioScaleFactor = -1.0;
-    }        
+    }           
+   
+    // DJ: 08/05/2014
+    // to be used in compositeManager.
+    // so composite_props would rely on massValues instead of massindexes
+    // to avoid getting wrong values.
+    // COULD BE USED AS NEEDED.
     
+    /**
+     * Initiates a MassProps object.
+     * @param massIndexthe of the mass image
+     * @param massValue of the mass image
+     */
+   public MassProps(int massIndex, double massValue) {
+       this.massIdx   = massIndex;
+       this.massValue = massValue;
+
+       // Default values.
+       xloc = -1;
+       yloc = -1;
+       ratioScaleFactor = -1.0;
+    }  
 
     /**
      * Two <code>MassProps</code> objects are equal if numerator and denominator
@@ -58,7 +78,26 @@ public class MassProps implements java.io.Serializable{
         else
             return false;
    }
-         
+    // DJ: 08/04/2014
+    /**
+     * Checks equality of two <code>MassProps</code> through
+     * their mass values.
+     * @param sp a <code>MassProps</code> object.
+     * @return <code>true</code> if <code>this</code> and <code>sp</code> are equal.
+     */
+     public boolean equalsThruMassValues(MassProps sp) {
+        if (sp.getMassValue() == massValue)
+            return true;
+        else
+            return false;
+     }
+   
+     public boolean equalsThruMassValues(double mass) {
+        if (mass == massValue)
+            return true;
+        else
+            return false;
+     }
 
     /**
      * Sets the scale factor used to create the image.

@@ -1,6 +1,8 @@
 package com.nrims;
 
 import java.io.Serializable;
+import com.nrims.managers.compositeManager;
+import java.util.ArrayList;
 
 /**
  * A container class for storing properties needed to generate a Composite image.
@@ -19,6 +21,11 @@ public class CompositeProps implements Serializable{
     //------------------------------
     //End of v2
 
+    // DJ:08/04/2014   
+    private int xloc,  yloc;
+    private double mag = 1.0;
+
+    
     
    /**
     * Instantiates a CompositeProps object with images <code>imgs</code>.
@@ -26,8 +33,14 @@ public class CompositeProps implements Serializable{
     */
    public CompositeProps(Object[] imgs) {
        this.imageProps = imgs;
+       
+       // DJ: 08/04/2014  Default values.
+       this.xloc = -1;
+       this.yloc = -1;
    }
 
+   
+   // DJ: 08/04/2014  Modified to use eqaulity check thru mass values instead of mass indexes.
     /**
      * Two <code>CompositeProps</code> objects are equal if the <code>MimsPlus</code>
      * objects that make them up are equal.
@@ -48,33 +61,37 @@ public class CompositeProps implements Serializable{
        for (int i = 0; i < imageProps.length; i++){
            //if neither is null, check if images are equal
            if (cps[i] != null && imageProps[i] != null) {
+              
+               //---------------------------------------------------------------
                if (imageProps[i] instanceof RatioProps) {
-                   if(!(cps[i] instanceof RatioProps)){
-                       if (!((RatioProps) cps[i]).equals((RatioProps) imageProps[i])){
+                   if(!(cps[i] instanceof RatioProps)) 
+                       return false;
+                   if( (cps[i] instanceof RatioProps) && !((RatioProps) cps[i]).equalsThruMassValues((RatioProps) imageProps[i]))
                            return false;
-                       }
-                   }
                }
+               //---------------------------------------------------------------
                if (imageProps[i] instanceof HSIProps) {
-                   if (!(cps[i] instanceof HSIProps)) {
-                       if (!((HSIProps) cps[i]).equals((HSIProps) imageProps[i])) {
+                   if(!(cps[i] instanceof HSIProps)) 
+                       return false;
+                   if( (cps[i] instanceof HSIProps) && !((HSIProps) cps[i]).equalsThruMassValues((HSIProps) imageProps[i]))
                            return false;
-                       }
-                   }
                }
+               //---------------------------------------------------------------
                if (imageProps[i] instanceof SumProps) {
-                   if (!(cps[i] instanceof SumProps)) {
-                       if (!((SumProps) cps[i]).equals((SumProps) imageProps[i])) {
+                   
+                   if (!(cps[i] instanceof SumProps)) return false;
+                   if ( (cps[i] instanceof SumProps) && ((SumProps)(imageProps[i])).getSumType() != ((SumProps) cps[i]).getSumType()) return false;
+                   if ( (cps[i] instanceof SumProps) && ((SumProps)(imageProps[i])).getSumType() == ((SumProps) cps[i]).getSumType()
+                        && ((SumProps) cps[i]).equalsThruMassValues((SumProps) imageProps[i]) == false
+                      )
                            return false;
-                       }
-                   }
                }
+               //---------------------------------------------------------------
                if (imageProps[i] instanceof MassProps) {
-                   if (!(cps[i] instanceof MassProps)) {
-                       if (!((MassProps) cps[i]).equals((MassProps) imageProps[i])) {
+                   if(!(cps[i] instanceof MassProps)) 
+                       return false;
+                   if( (cps[i] instanceof MassProps) && !((MassProps) cps[i]).equalsThruMassValues((MassProps) imageProps[i]))
                            return false;
-                       }
-                   }
                }
            }
            //if one is null and the other not they are unequal
@@ -97,29 +114,46 @@ public class CompositeProps implements Serializable{
     * @return the array of images used to create the composite image.
     */
    public MimsPlus[] getImages(UI ui) {
+   
        MimsPlus[] images = new MimsPlus[imageProps.length];
        MimsPlus[] massImages = ui.getOpenMassImages();
        MimsPlus[] sumImages = ui.getOpenSumImages();
        MimsPlus[] ratioImages = ui.getOpenRatioImages();
        MimsPlus[] hsiImages = ui.getOpenHSIImages();
+      
+
+       
        for (int i = 0; i < imageProps.length; i ++){
+         if(imageProps[i] != null){
+            
+          
            if (imageProps[i] instanceof RatioProps) {
                for (int j = 0; j < ratioImages.length; j++) {
-                   if (ratioImages[j].getRatioProps().equals((RatioProps) imageProps[i])){
+                // DJ: 08/04/2014
+                // check for equality thru masses and not thru indexes.
+                // if (ratioImages[j].getRatioProps().equals((RatioProps) imageProps[i])){  // commented out by DJ
+                   if (ratioImages[j].getRatioProps().equalsThruMassValues((RatioProps) imageProps[i])){
                        images[i] =  ratioImages[j];
                    }
                }
            }
            if (imageProps[i] instanceof HSIProps) {
                for (int j = 0; j < hsiImages.length; j++) {
-                   if (hsiImages[j].getHSIProps().equals((HSIProps) imageProps[i])) {
+                // DJ: 08/04/2014
+                // check for equality thru masses and not thru indexes.
+                // if (hsiImages[j].getHSIProps().equals((HSIProps) imageProps[i])) { // commented out by DJ
+                   if (hsiImages[j].getHSIProps().equalsThruMassValues((HSIProps) imageProps[i])) {
                        images[i] = hsiImages[j];
                    }
                }
            }
            if (imageProps[i] instanceof SumProps) {
                for (int j = 0; j < sumImages.length; j++) {
-                   if (sumImages[j].getSumProps().equals((SumProps) imageProps[i])){
+                   
+                // DJ: 08/04/2014
+                // check for equality thru masses and not thru indexes.
+                // if (sumImages[j].getSumProps().equals((SumProps) imageProps[i])){ // commented out by DJ 
+                   if (sumImages[j].getSumProps().equalsThruMassValues((SumProps) imageProps[i])){
                        images[i] =  sumImages[j];
                    }                   
                }
@@ -127,11 +161,17 @@ public class CompositeProps implements Serializable{
            if (imageProps[i] instanceof MassProps) {
                for (int j = 0; j < massImages.length; j++) {
                    MassProps massProp = (MassProps) imageProps[i];
-                   if (massImages[j].getMassIndex() == massProp.getMassIdx()){
+ 
+                   
+                 // DJ: 08/04/2014
+                 // check for equality thru masses and not thru indexes.
+                 //if (massImages[j].getMassIndex() == massProp.getMassIdx()){  // commented out by DJ
+                   if (UI.massesEqualityCheck( massImages[j].getMassValue(), massProp.getMassValue(), 0.49)){
                        images[i] =  massImages[j];
                    }                      
                }
            }
+         } // end of not null check
        }
        return images;
    }
@@ -141,5 +181,42 @@ public class CompositeProps implements Serializable{
      */
     public void setDataFileName(String fileName) { dataFileName = fileName;}
     public String getDataFileName() { return dataFileName;}
+    
+    // DJ: 08/04/2014  ALL WINDOW/MAG SET/GET STUFF
+   /**
+    * Sets the x-value for the window location.
+    * @param x
+    */
+   public void setXWindowLocation(int x) { this.xloc = x; }
+
+   /**
+    * Gets the x-value for the window location.
+    * @return int
+    */
+   public int getXWindowLocation() { return this.xloc; }
+
+   /**
+    * Sets the y-value for the window location.
+    * @param y y-value.
+    */
+   public void setYWindowLocation(int y) { this.yloc = y; }
+
+   /**
+    * Gets the y-value for the window location.
+    * @return int y-value.
+    */
+   public int getYWindowLocation() { return this.yloc; }
+   
+     /**
+     * Sets the magnification factor.
+     * @param m magnification factor.
+     */
+    public void setMag(double m) { this.mag = m; }
+
+    /**
+     * Gets the magnification factor.
+     * @return magnification factor.
+     */
+    public double getMag() { return this.mag; }
 
 }

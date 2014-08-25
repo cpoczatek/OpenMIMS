@@ -63,6 +63,21 @@ public class RatioProps implements java.io.Serializable {
       else
          return false;
    }
+    
+    // DJ : 08/04/2014
+    /**
+     * Two <code>RatioProps</code> objects are equal if the numerator's and the denominator's
+     * massVales are consecutively the same to the corresponding RatioProp provided.
+     *
+     * @param rp a <code>RatioProps</code> object.
+     * @return <code>true</code> if <code>this</code> and <code>rp</code> are equal.
+     */
+    public boolean equalsThruMassValues(RatioProps rp) {
+      if (rp.getNumMassValue() == numMassValue && rp.getDenMassValue() == denMassValue)
+         return true;
+      else
+         return false;
+   }
 
    /**
     * Overwrites the index of the numerator mass set in the constructor.

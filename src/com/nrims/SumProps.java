@@ -22,6 +22,7 @@ public class SumProps implements java.io.Serializable {
       
    private int parentMassIdx, numMassIdx, denMassIdx;
    private double parentMassValue, numMassValue, denMassValue;
+   
    private int sumType;
    private int xloc, yloc;
    private String dataFileName;
@@ -128,7 +129,30 @@ public class SumProps implements java.io.Serializable {
 
        return false;
    }
-          
+
+    // DJ: 08/04/2014
+   /**
+    * Two <code>SumProps</code> objects are equal if the numerator's and the denominator's
+    *  mass values are the same, in the case of a sum of a ratio image. Or if the parent mass
+    * @param sp
+    * @return 
+    */ 
+   public boolean equalsThruMassValues(SumProps sp) {
+
+       if (sumType != sp.getSumType())
+          return false;
+
+       if (sumType == RATIO_IMAGE) {
+         if (sp.getNumMassValue() == numMassValue && sp.getDenMassValue() == denMassValue)
+            return true;
+      } else if (sumType == MASS_IMAGE) {
+         if (sp.getParentMassValue() == parentMassValue)
+            return true;
+      }
+
+       return false;
+   }
+    
    /**
     * Overwrites the index of the numerator mass set in the constructor.
     * @param numerator mass index (e.g. 0,1,2).

@@ -19,15 +19,11 @@ import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.io.FileSaver;
-import it.sauronsoftware.junique.AlreadyLockedException;
-import it.sauronsoftware.junique.JUnique;
-import it.sauronsoftware.junique.MessageHandler;
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -47,8 +43,6 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.logging.*;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -56,7 +50,6 @@ import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 /**
  * The main user interface of the NRIMS ImageJ plugin.
@@ -538,6 +531,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         task = new FileOpenTask(file, this);
         task.addPropertyChangeListener(this);
         task.execute();
+        
+  //      currentlyOpeningImages = false;  // DJ: 08/06/2014
+        
    }
 
    /**
@@ -625,7 +621,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 for (int y = 0; y < mass_props.length; y++) {
 
                     if (massesEqualityCheck(imgs[i].getMassValue(), mass_props[y].getMassValue(), 0.49)) {
-                        imgs[i].getWindow().setLocation(mass_props[y].getXWindowLocation(), mass_props[y].getYWindowLocation());
+                        imgs[i].getWindow().setLocation(mass_props[y].getXWindowLocation()+9, mass_props[y].getYWindowLocation()+6);
                         imgs[i].getWindow().setVisible(mass_props[y].getVisibility());
                         applyZoom(imgs[i], mass_props[y].getMag());
                         break; // to reduce the looping process.
@@ -1131,11 +1127,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public void recomputeAllImages() {
         recomputeAllHSI();
         recomputeAllRatio();
-        recomputeAllComposite();
         ArrayList<Integer> sumlist = new ArrayList<Integer>();
         for(int i = 1; i <= ui.getmimsAction().getSize(); i++)
             sumlist.add(i);
         recomputeAllSum(sumlist);
+        recomputeAllComposite();
     }
     /**
      * Updates the scroll bar size/placement.
@@ -1402,7 +1398,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
             for (i = 0; i < compImages.length; i++) {
                if (compImages[i] != null)
-                  if (compImages[i].equals(mp))
+                  if (compImages[i].equals(mp))    // DJ: example: it's called when we close a composite image
                     compImages[i] = null;
             }
    }
@@ -2534,6 +2530,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
        // just to tile the the new windows that havent been present in the previous file
        // The states of the ones that were present in the previous file, will be handled by applyStateWindow(mass_props)
+        
+
         tileWindows(); 
         
         applyWindowState(mass_props);
@@ -2550,10 +2548,12 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
        for (int i = 0 ; i < image.getMassNames().length ; i++){ 
          for (int j = 0 ; j < mass_props.length ; j++){
+             
             if(massesEqualityCheck(mass_props[j].getMassValue(), Double.parseDouble((image.getMassNames())[i]), 0.49)){               
                 
                 MassProps m = new MassProps(getOpenMassImages()[i].getMassIndex());
                 m.setMassValue(getOpenMassImages()[i].getMassValue());
+          //      m.setXWindowLocation(m.getXWindowLocation()+10); // DJ: to avoid images shifting LEFT
                 filtered_mass_props.add(m);
                 break;
             }
@@ -2584,6 +2584,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (!same_size)
                     rto_props[i].setMag(1.0);
               
+                rto_props[i].setXWindowLocation(rto_props[i].getXWindowLocation()+9); // DJ: to avoid images shiffting LEFT
+                rto_props[i].setYWindowLocation(rto_props[i].getYWindowLocation()+6); // DJ: to avoid images shiffting UP
+                
                 mp = new MimsPlus(this, rto_props[i]);
                 mp.showWindow();
                 mp.setDisplayRange(rto_props[i].getMinLUT(), rto_props[i].getMaxLUT());
@@ -2613,6 +2616,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
            if (isExist_num && isExist_den){
                 if (!same_size)
                     hsi_props[i].setMag(1.0);
+                
+                hsi_props[i].setXWindowLocation(hsi_props[i].getXWindowLocation()+10); // DJ: to avoid images shiffting LEFT
+                hsi_props[i].setYWindowLocation(hsi_props[i].getYWindowLocation()+6);  // DJ: to avoid images shiffting UP
               
                 mp = new MimsPlus(this, hsi_props[i]);
                 mp.showWindow();
@@ -2622,18 +2628,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        // Generate sum images. DJ: 07/28/2014
        for (int i=0; i<sum_props.length; i++){
            
-           if (sum_props[i].getSumType() == MimsPlus.RATIO_IMAGE) {
+           if (sum_props[i].getSumType() == SumProps.RATIO_IMAGE) {
            boolean isExist_num = false, isExist_den = false;
            
            for(int y=0 ; y < filtered_mass_props.size() ; y++ ){
                
-               if( massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), rto_props[i].getNumMassValue(), 0.49)){
+               if( massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), sum_props[i].getNumMassValue(), 0.49)){
                     isExist_num = true;
-                    hsi_props[i].setNumMassIdx(filtered_mass_props.get(y).getMassIdx());  
+                    sum_props[i].setNumMassIdx(filtered_mass_props.get(y).getMassIdx());  
                }
-               else if (massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), rto_props[i].getDenMassValue(), 0.49) ){
+               else if (massesEqualityCheck(filtered_mass_props.get(y).getMassValue(), sum_props[i].getDenMassValue(), 0.49) ){
                     isExist_den = true;
-                    hsi_props[i].setDenMassIdx(filtered_mass_props.get(y).getMassIdx());
+                    sum_props[i].setDenMassIdx(filtered_mass_props.get(y).getMassIdx());
                }
                if (isExist_num && isExist_den) break;
            }
@@ -2642,13 +2648,16 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 if (!same_size)
                     sum_props[i].setMag(1.0);
               
+                sum_props[i].setXWindowLocation(sum_props[i].getXWindowLocation()+9); // DJ: to avoid images shiffting LEFT
+                sum_props[i].setYWindowLocation(sum_props[i].getYWindowLocation()+9); // DJ: to avoid images shiffting UP
+                
                 mp = new MimsPlus(this, sum_props[i], null);
                 mp.showWindow();
                 mp.setDisplayRange(sum_props[i].getMinLUT(), sum_props[i].getMaxLUT());
            } 
           } 
            
-           else if (sum_props[i].getSumType() == MimsPlus.MASS_IMAGE) {
+           else if (sum_props[i].getSumType() == SumProps.MASS_IMAGE) {
 
                for(int z=0 ; z < filtered_mass_props.size() ; z++ ){
                   if(massesEqualityCheck(filtered_mass_props.get(z).getMassValue(), sum_props[i].getParentMassValue(), 0.49)){
@@ -2658,6 +2667,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                        
                        if (!same_size)
                              sum_props[i].setMag(1.0);
+                       
+                       sum_props[i].setXWindowLocation(sum_props[i].getXWindowLocation()+10); // DJ: to avoid images shiffting LEFT
+                       sum_props[i].setYWindowLocation(sum_props[i].getYWindowLocation()+6);  // DJ: to avoid images shiffting UP
                        
                        mp = new MimsPlus(this, sum_props[i], null);   
                        mp.showWindow();
@@ -2671,60 +2683,52 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
        
        //  DJ: 08/01/2014.
        // Generate composite images.
- //        ArrayList<Object> imgs_collection = new ArrayList<Object>();
-         
+
          for (int z=0; z<composite_props.length; z++){
 
              Object[] channels = new Object[4]; // 4 = four channels : RGBG : Red, Green, Blue, Gray.
              
+             MimsPlus[] imgs       = composite_props[z].getImages(ui);
+             Object[]   imgs_props = composite_props[z].getImageProps();
              
-             MimsPlus[] imgs = composite_props[z].getImages(ui);
-             Object[] imgs_props = composite_props[z].getImageProps();
+             // System.out.println("Composite Images props length is: " + imgs_props.length);
              
-             
-//             System.out.println("Composite Images props length is: " + imgs_props.length);
-             
-
              boolean atLeastOneChannelExists = false; // the least we need to create a composite image is one image either mass, ratio, or sum.
          
-             for(int i=0 ; i<imgs.length ; i++){
+ /* i */      for(int i=0 ; i<imgs.length ; i++){
                  
-                 
-                 if(imgs[i] != null){ // because often the GREY color is not used when a composite image is generated.
+                 if(imgs[i] != null){
                                        
                      // in case the image is a ratio, we JUST loop through the ratio_props and not the rest. 
-                     
-                     //imgs[i].getMimsType() == MimsPlus.RATIO_IMAGE
-                     if(imgs[i].getShortTitle().contains("/")){
-                       
-                         for (int y=0; y<rto_props.length; y++){
-                             if (imgs[i].ratioProps.equals(rto_props[y])){
+                     if(imgs[i].getMimsType() == MimsPlus.RATIO_IMAGE){
+ /* y */                 for (int y=0; y<rto_props.length; y++){
+                             if (imgs[i].ratioProps.equalsThruMassValues(rto_props[y])){
                                  atLeastOneChannelExists = true;
                                  channels[i] = imgs_props[i];
+                                 break;
                              }
                          }
                      }
                      
-                     // in case the image is a ratio, we JUST loop through the ratio_props and not the rest. 
-                     else if(imgs[i].getShortTitle().contains("Sum")){
-                         
-                         for (int y=0; y<hsi_props.length; y++){
-                             if (imgs[i].hsiProps.equals(hsi_props[y])){
+                     // in case the image is a Sum, we JUST loop through the sum_props and not the rest. 
+                     if( imgs[i].getMimsType() == MimsPlus.SUM_IMAGE){
+ /* y */                 for (int y=0; y<sum_props.length; y++){
+                             if (imgs[i].sumProps.equalsThruMassValues(sum_props[y])){
                                  atLeastOneChannelExists = true;
                                  channels[i] = imgs_props[i];
+                                 break;
                              }
-                         }
-                     }
-                     
+                         }                         
+                     }       
                      
                      // in case the image is a not ratio and not Sum, it's autmatically a mass image,
                      // then we JUST loop through the mass_props or more cleanly the filtered_mass_props and not the rest. 
-                     else {
-                     
-                          for (int y=0; y<filtered_mass_props.size(); y++){
+                     if(imgs[i].getMimsType() == MimsPlus.MASS_IMAGE){
+ /* y */                 for (int y=0; y<filtered_mass_props.size(); y++){
                              if (massesEqualityCheck( imgs[i].getMassValue(), filtered_mass_props.get(y).getMassValue(), 0.49)){
                                  atLeastOneChannelExists = true;
                                  channels[i] = imgs_props[i];
+                                 break;
                              }
                          }   
                      }
@@ -2735,28 +2739,20 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
              if(atLeastOneChannelExists == true){
                  
                  composite_props[z].setImageProps(channels);
-                 composite_props[z].setDataFileName(composite_props[z].getDataFileName());
+                 composite_props[z].setXWindowLocation(composite_props[z].getXWindowLocation()+10); // DJ: the "+10" to avoid images shifting LEFT
+                 composite_props[z].setYWindowLocation(composite_props[z].getYWindowLocation()+6);  // DJ: the "+10" to avoid images shifting UP
+                 // need mag
                  
-  //               composite_props[z].setXWindowLocation(composite_props[z].getXWindowLocation());
-  //               composite_props[z].setYWindowLocation(composite_props[z].getYWindowLocation());               
-                 
-
                  mp = new MimsPlus(this, composite_props[z]);
                  mp.showWindow();
-                 
+             //  mp.updateAndRepaintWindow()
              }
            } // end of composite_props LOOP
-               
-             
-            /*
-            Object[] compositeComponents = new Object[imgs.length];
-            System.out.println("There are : " + imgs.length + " composing this CompositeImage" ); 
-            System.out.println("=============================");
-            System.out.println("=============================");
-            */ 
              
          
-       
+
+     //  recomputeAllImages();
+
        
        
        getRoiManager().setVisible(roiManagerVisible);
@@ -4983,7 +4979,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                      }
                  }
                  for (CompositeProps entry : compProps) {
-                     sp = new MimsPlus(ui, entry);
+                     sp = new MimsPlus(ui, entry);                  
                      sp.showWindow();
                  }
                  
@@ -5211,7 +5207,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                     ui.setLocation(p);
                     ui.setVisible(true);
                     ui.setExtendedState(javax.swing.JFrame.NORMAL);
-                    ui.show();
+     //               ui.show();
 
                     OMLOGGER.finer("ui location after: " + ui.getLocation());
 
@@ -5238,12 +5234,14 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                             massImages[i].setSlice(1);
                         }
                         if (isSilentMode() == false) {
+                            
+
                             massImages[i].show();
                             massImages[i].updateAndDraw();
                         }
                     }
                 }
-
+                /*
                 if (isSilentMode() == false) {
                     if (previousFileCanceled == false) {
                  //       applyWindowState();
@@ -5251,7 +5249,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                  //       tileWindows();
                     }
                 }
-                
+                */
 
                 for (int i = 0; i < image.getNMasses(); i++) {
                     if (bOpenMass[i]) {
@@ -5310,7 +5308,7 @@ public void updateLineProfile(double[] newdata, String name, int width, MimsPlus
                     ratioManager = new MimsHSIView.MimsRatioManager(hsiControl, ui);
                     ratioManager.showFrame();
                 } else {
-                    System.out.println("Empty");
+ //                   System.out.println("Empty");
                 }
 
                 jTabbedPane1.addChangeListener(new ChangeListener() {

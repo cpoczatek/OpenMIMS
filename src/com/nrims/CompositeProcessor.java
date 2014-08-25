@@ -1,6 +1,8 @@
 package com.nrims;
 
 import ij.* ;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A processor for generating Composite images.
@@ -161,5 +163,16 @@ public class CompositeProcessor  implements Runnable{
         val = java.lang.Math.round((float)((pix-min)/range)*255);
 
         return val;
+    }
+    
+    // DJ: 08/06/2014
+    public void waitForThreadToFinish(){
+  //      System.out.println("Thread Before: " + fThread.isAlive());
+        try {
+            this.fThread.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(CompositeProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+ //       System.out.println("Thread After: " + fThread.isAlive());
     }
 }
