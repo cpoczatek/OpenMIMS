@@ -895,7 +895,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                                         closedWindowsList.get(j).getYWindowLocation())
                                     );
                                         
-                            mp.getWindow().setLocation(mp.getWindow().getX()+10, mp.getWindow().getY()+7);
+                            mp.getWindow().setLocation(mp.getWindow().getX(), mp.getWindow().getY());
                             mp.setbIgnoreClose(true);
                             closedWindowsList.remove(j);
                             return;

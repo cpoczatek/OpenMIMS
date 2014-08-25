@@ -264,6 +264,9 @@ public class FilesManager extends javax.swing.JFrame {
      */
     private void restoreLastOpenedFile(){
         
+        reOpenWithLastFileSettings(ui.getNameOfLastFileOpened());
+       
+        /*
         File previousFileToLoad = new File(ui.getNameOfLastFileOpened());
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         com.nrims.UI.FileOpenTask fileOpenTask;
@@ -306,7 +309,7 @@ public class FilesManager extends javax.swing.JFrame {
 
         ui.getRoiManager().setVisible(isROIManagerVisible);
         
-
+        */ 
     }
     
     // DJ: 08/21/2014
@@ -377,6 +380,8 @@ public class FilesManager extends javax.swing.JFrame {
             else
                 ui.getRoiManager().addWithoutRenaming(roiList[i]);
         }
+        ui.getRoiManager().setLocations(locations);
+        
         ui.getRoiManager().setVisible(isROIManagerVisible);
     
     }
