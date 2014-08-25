@@ -610,6 +610,20 @@ public class MimsTomography extends javax.swing.JPanel {
 
       return statnames;
    }
+   
+   //DJ: 08/13/2014
+   public String[] getAllStatNames() {
+       
+       int numOfComponents = statJList.getModel().getSize();
+       
+       String[] statNames = new String[numOfComponents];
+       
+       for(int i=0 ; i < numOfComponents ; i++ ){
+           statNames[i] = (String) (statJList.getModel().getElementAt(i));
+       }
+       
+       return statNames;
+   }
 
    /**
     * Gets the planes entered by the user in the textfield.

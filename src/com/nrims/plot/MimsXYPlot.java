@@ -390,7 +390,7 @@ public class MimsXYPlot extends XYPlot {
         //which is bad/recursive
         double aX = getDomainCrosshairValue();
         double aY = getRangeCrosshairValue();
-        System.out.println("after x: " + aX + "  y: " + aY);
+ //       System.out.println("after x: " + aX + "  y: " + aY);
         
         removeAnnotation(xyannot, false);
         removeAnnotation(pixelCoords, false);
@@ -425,7 +425,7 @@ public class MimsXYPlot extends XYPlot {
            
    //Set label
    public void setCrosshairLabel(double x, double y) {
-       System.out.println("MimsXYPlot.setCrosshairLabel() called");
+ //      System.out.println("MimsXYPlot.setCrosshairLabel() called");
       if (isDomainCrosshairVisible() && isRangeCrosshairVisible() && this.crosshairLabelVisible) {
          double xmax = getDomainAxis().getUpperBound();
          double ymax = getRangeAxis().getUpperBound();

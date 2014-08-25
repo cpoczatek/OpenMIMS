@@ -39,6 +39,8 @@ public class CompositeProcessor  implements Runnable{
 
         compProps = props;
         start();
+        
+        
     }
 
     /**
@@ -55,12 +57,16 @@ public class CompositeProcessor  implements Runnable{
             stop();
         }
         try {
-        fThread = new Thread(this);
-        fThread.setPriority(fThread.NORM_PRIORITY);
-        fThread.setContextClassLoader(
+            fThread = new Thread(this);
+            fThread.setPriority(Thread.NORM_PRIORITY); // DJ : thread to Thread for static 
+            fThread.setContextClassLoader(
                 Thread.currentThread().getContextClassLoader());
-        try { fThread.start();}
-        catch( IllegalThreadStateException x){ IJ.log(x.toString()); }
+            try {
+                fThread.start();
+            }
+            catch( IllegalThreadStateException x){ 
+                IJ.log(x.toString()); 
+            }
         } catch (NullPointerException xn) {}
     }
 
@@ -83,6 +89,8 @@ public class CompositeProcessor  implements Runnable{
 
     /** Generates the actual image.*/
     public void run( ) {
+        
+        
         try {
             int [] compPixels;
 
@@ -118,9 +126,8 @@ public class CompositeProcessor  implements Runnable{
                     g = g << 8;
                     compPixels[offset] = r + g + b;
 
-
                     // System.out.print(hsiPixels[offset] + " ");
-                    if (fThread == null || fThread.interrupted()) {
+                    if (fThread == null || fThread.isInterrupted()) {
                         fThread = null;
                         compImage.unlock();
                         return;

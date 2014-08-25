@@ -31,15 +31,6 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
         this.mImp = imp;
         this.ui = ui;      
     }
-    
-    // DJ: 08/06/2014
-    /*
-     public MimsCanvas(MimsPlus imp, UI ui) {
-        super(imp);
-        this.mImp = imp;
-        this.ui = ui;      
-    }
-    */
 
     @Override
     public void paint(Graphics g) {
@@ -239,6 +230,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
                               
                               // DJ: 1st "null" added to represent the new mass_props arg we added to ui.restoreState
                               // DJ: 4th "null" added to represent the new compsite_props arg we added to ui.restoreState
+                              //TODO: explain to DJ
                               ui_tile.restoreState(null, null, hsiProps, null, null, false, false); 
                                                                                               
                               ui_tile.getHSIView().useSum(ui.getIsSum());
@@ -407,6 +399,8 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
          }
       }
    }
+   
+   
 
     private com.nrims.UI ui = null;
     private com.nrims.MimsPlus mImp;

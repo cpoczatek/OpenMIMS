@@ -288,6 +288,12 @@ public class MimsData extends javax.swing.JPanel {
         
         return output;
     }
+    // DJ: 08/18/2014
+    public String getFilePathAndName(){
+        String filePathAndName = "";
+        filePathAndName += jLabel24.getText()+"/"+jLabel9.getText();
+        return filePathAndName;
+    } 
     /**
      * Set the meta -data fields based on the contents
      * of the <code>Opener</code> object.

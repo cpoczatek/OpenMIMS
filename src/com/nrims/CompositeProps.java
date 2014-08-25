@@ -26,7 +26,6 @@ public class CompositeProps implements Serializable{
     private double mag = 1.0;
 
     
-    
    /**
     * Instantiates a CompositeProps object with images <code>imgs</code>.
     * @param imgs set of images used to create the composite image.
@@ -212,11 +211,7 @@ public class CompositeProps implements Serializable{
      * @param m magnification factor.
      */
     public void setMag(double m) { this.mag = m; }
-
-    /**
-     * Gets the magnification factor.
-     * @return magnification factor.
-     */
-    public double getMag() { return this.mag; }
-
+   
+    
+    
 }

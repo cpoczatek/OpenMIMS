@@ -3,6 +3,7 @@ package com.nrims;
 import com.nrims.data.MIMSFileFilter;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -3322,6 +3323,34 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
        return lrois;
     }
 
+    /**
+     * Gets all ROIs sorted by name.
+     *
+     * @return ROI array.
+     */
+    public Roi[] getAllROIsSorted() {
+        /*
+        Roi[] sortedrois = getAllROIs();
+
+        Comparator<Roi> byName = new RoiNameComparator() {
+        };
+        java.util.Arrays.sort(sortedrois, byName);
+
+        return sortedrois;
+        */
+  
+        Roi[] allNumericSorted = getNumericRoisSorted();
+        ArrayList<Roi> allROIsSorted = new ArrayList<Roi>(Arrays.asList(allNumericSorted));
+        Roi[] allROIs = getAllROIs();
+        
+        for(int i=0; i<allROIs.length ; i++){
+            if(allROIsSorted.contains(allROIs[i]) == false )
+                allROIsSorted.add(allROIs[i]);
+        }
+  
+        return allROIsSorted.toArray(new Roi[allROIsSorted.size()]);
+    }
+    
     /** 
      * Gets all ROIs regardless if they're selected or not.
      *

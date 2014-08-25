@@ -221,5 +221,7 @@ public class MassProps implements java.io.Serializable{
     public double getMaxLUT() { return this.maxLUT; }
     public void setCurrentSlice(int slice) { this.currentSlice = slice; }
     public int getCurrentSlice () { return this.currentSlice; }
+
+    
 }
 

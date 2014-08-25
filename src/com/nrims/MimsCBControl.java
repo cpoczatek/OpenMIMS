@@ -457,6 +457,32 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
    applyLutToAllWindows(label, ijlut);
 }
 
+// DJ:  08/07/2014
+public void jComboBox2ActionPerformed() {
+
+   if (holdUpdate)
+      return;
+
+   // Get the selected LUT  
+   String label = (String)jComboBox2.getSelectedItem();
+   boolean ijlut = false;
+
+   // Manipulate the string
+   LutLoader ll = new LutLoader();
+   if (ijLutNameArray.contains(label)) {
+      ijlut = true;
+      if (label.equals("Red/Green"))
+         label = "redgreen";
+      else if (label.equals("Invert LUT"))
+         label = "invert";
+      else
+         label = label.toLowerCase();
+   }
+
+   applyLutToAllWindows(label, ijlut);
+}
+
+
     /**
      * Applies the selected LUT to all possible windows.
      */

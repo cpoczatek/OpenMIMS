@@ -122,7 +122,7 @@ public class HSIProcessor implements Runnable {
 
             // Thread stuff.
             while( hsiImage.lockSilently() == false ) {
-                if(fThread == null || fThread.interrupted()) {
+                if(fThread == null || fThread.isInterrupted()) {
                     return ;
                 }
             }
@@ -147,13 +147,13 @@ public class HSIProcessor implements Runnable {
 
             // More threading stuff...
             while( numerator.lockSilently() == false ){
-                if(fThread == null || fThread.interrupted()) {
+                if(fThread == null || fThread.isInterrupted()) {
                     hsiImage.unlock();
                     return ;
                 }
             }
             while( denominator.lockSilently() == false ) {
-                if(fThread == null || fThread.interrupted()) {
+                if(fThread == null || fThread.isInterrupted()) {
                     hsiImage.unlock();
                     numerator.unlock();
                     return ;
@@ -261,7 +261,7 @@ public class HSIProcessor implements Runnable {
                     hsiPixels[offset] = 0 ;
                 }
                // System.out.print(hsiPixels[offset] + " ");
-                if(fThread == null || fThread.interrupted()) {
+                if(fThread == null || fThread.isInterrupted()) {
                     fThread = null ;
                     hsiImage.unlock() ;
                     denominator.unlock();
