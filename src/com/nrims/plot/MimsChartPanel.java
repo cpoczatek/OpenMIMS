@@ -46,9 +46,41 @@ public class MimsChartPanel extends ChartPanel {
     private String currentSeriesName = null;
     private Object e;
     int colorIdx = 0;
+    /*
     Color[] colorList = {Color.BLACK, Color.BLUE, Color.CYAN, Color.GRAY, Color.GREEN,
                            Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.WHITE,
                            Color.YELLOW};
+    */
+    
+    //DJ: 09/22/2014
+    Color purple     = new Color(153, 0, 255);
+    Color brown      = new Color(153, 102, 0);
+    Color dark_green = new Color(51, 102, 0);
+    Color light_Blue = new Color(102, 153, 255);
+    
+    
+    Color[] colorList = {Color.BLACK, Color.BLUE, Color.GRAY, Color.GREEN, 
+                         Color.RED, Color.YELLOW, purple, brown, Color.ORANGE, dark_green, light_Blue};
+    
+    
+    private final int BLACK      = 0;
+    private final int BLUE       = 1;
+    private final int GRAY       = 2;
+    private final int GREEN      = 3;
+    private final int RED        = 4;
+    private final int YELLOW     = 5;
+    private final int PURPLE     = 6;
+    private final int BROWN      = 7;
+    private final int ORANGE     = 8;
+    private final int DARK_GREEN = 9;
+    private final int LIGHT_BLUE = 10;
+    
+    
+    private float lineThikness = 1.0f;
+    private float minLineThikness = 1.0f;
+    private float maxLineThikness = 30.0f;
+    int numberOfSeries = 0;
+    
     private ArrayList<Integer> hiddenSeries = new ArrayList<Integer>();
     
     //hiding fields in parent class on purpose
@@ -407,7 +439,24 @@ public class MimsChartPanel extends ChartPanel {
             }
         }
     }
-
+    
+    //DJ: 09/22/2014
+    public void setNumberOfSeries(int numberOfSeries_arg){
+        numberOfSeries = numberOfSeries_arg;
+    }
+    //DJ: 09/22/2014
+    public float getLineThikness(){
+        return lineThikness;
+    }
+    //DJ: 09/22/2014
+    public boolean setLineThikness(float lineThikness_arg){
+        boolean result = false;
+        if(lineThikness_arg >= minLineThikness && lineThikness_arg <= maxLineThikness){
+            lineThikness = lineThikness_arg;
+            result = true;
+        }
+        return result;
+    }
     public void keyPressed(KeyEvent e) {
 
       // Get the plot.
@@ -416,6 +465,8 @@ public class MimsChartPanel extends ChartPanel {
       if (!(plot instanceof XYPlot))
          return;
       xyplot = (XYPlot) plot;
+      
+      
 
       // Change color.
       if (e.getKeyChar()=='c') {
@@ -430,7 +481,142 @@ public class MimsChartPanel extends ChartPanel {
          colorIdx++;
          if (colorIdx >= colorList.length)
             colorIdx = 0;
+      }
+      // DJ: 09/22/2014
+      else if(e.getKeyChar() == '+'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
 
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         
+         //renderer.getSeriesStroke(currentSeriesInt)
+         
+         if(setLineThikness(lineThikness+0.5f)){
+            BasicStroke basicStroke = new BasicStroke(lineThikness);
+            for(int i = 0; i<numberOfSeries;i++)
+                renderer.setSeriesStroke(i, basicStroke);
+         }
+         /*
+         if (lineThikness + 0.5f <=  maxLineThikness){
+            lineThikness += 0.5f;
+            BasicStroke basicStroke = new BasicStroke(lineThikness);
+            renderer.setSeriesStroke(currentSeriesInt, basicStroke);
+         }
+         */
+      }
+      // DJ: 09/22/2014
+      else if(e.getKeyChar() == '-'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         
+         //renderer.getSeriesStroke(currentSeriesInt)
+         if(setLineThikness(lineThikness-0.5f)){
+            BasicStroke basicStroke = new BasicStroke(lineThikness);
+            for(int i = 0; i<numberOfSeries;i++)
+                renderer.setSeriesStroke(i, basicStroke); 
+         }
+         /*
+         if (lineThikness - 0.5f >=  minLineThikness){
+            lineThikness -= 0.5f;
+            BasicStroke basicStroke = new BasicStroke(lineThikness);
+            renderer.setSeriesStroke(currentSeriesInt, basicStroke);
+         }
+         */
+      
+         // DJ: 09/22/2014   
+      } else if (e.getKeyChar() == 'a'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[BLACK]);
+      
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'b'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[BLUE]);
+       
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'e'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[GRAY]);
+       
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'g'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[GREEN]);
+      
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'r'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[RED]);
+         
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'y'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[YELLOW]);
+
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'p'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[PURPLE]);
+         
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'w'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[BROWN]);   
+         
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'o'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[ORANGE]);
+
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'd'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[DARK_GREEN]);
+         
+         // DJ: 09/22/2014
+      } else if (e.getKeyChar() == 'l'){
+         // Get the series.
+         if (currentSeriesInt < 0)  return;
+         // Set the color.
+         XYItemRenderer renderer = xyplot.getRenderer();
+         renderer.setSeriesPaint(currentSeriesInt, colorList[LIGHT_BLUE]);
+         
+         
+         
       // Hide the plot.
       } else if (e.getKeyChar()=='h') {
 
@@ -539,6 +725,11 @@ public class MimsChartPanel extends ChartPanel {
                   renderer.setSeriesStroke(i, wideStroke);
                   Thread.sleep(300);
                   renderer.setSeriesStroke(i, thinStroke);
+                  
+                  //// DJ: 09/22/2014
+                  BasicStroke originalStroke = new BasicStroke(getLineThikness());
+                  renderer.setSeriesStroke(i, originalStroke);
+                  
                } catch (InterruptedException ex) {
                  // do nothing
                }

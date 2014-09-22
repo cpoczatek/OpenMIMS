@@ -9,6 +9,7 @@ import com.sun.star.beans.Pair;
 import ij.IJ;
 import ij.gui.*;
 import ij.process.*;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.KeyEventDispatcher;
@@ -23,21 +24,29 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ResourceBundle;
+import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JSlider;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.util.ResourceBundleWrapper;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
 import org.jfree.ui.TextAnchor;
+
+import org.jfree.chart.plot.XYPlot; //DJ: 09/22/2014:
+import org.jfree.chart.renderer.xy.XYItemRenderer; //DJ: 09/22/2014
 
 /**
  * MimsJFreeChart class creates a frame containing a <code>MimsXYPlot</code>.
@@ -64,6 +73,15 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
    private HashMap<String, Pair<MimsPlus, Roi>> map;
    private int pointX = -1;
    private int pointY = -1;
+   
+   // DJ: 09/22/2014
+   
+   private float lineThikness;
+   
+   private static final float minThikness  = 1.0f;
+   private static final float maxThikness  = 30.0f;
+   private static final float initThikness = 1;
+   private JSlider lineThiknessSlider;
    
    public MimsJFreeChart(UI ui) {
       super("Plot");
@@ -100,6 +118,7 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
       pack();
       setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
       setupDragDrop();
+
    }
     public void setupDragDrop(){
         mimsUno = UnoPlugin.getInstance();
@@ -125,7 +144,10 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
           if (mean){
               xaxisname = "Length";
           }
-         JFreeChart chart = createChart(xaxisname);
+         final JFreeChart chart = createChart(xaxisname);
+         chart.setBackgroundPaint(Color.WHITE); //DJ: 09/22/2014
+         
+         
          // Get the data.
           if (mean) {
               data = getLineDataset();
@@ -135,10 +157,26 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
 
          // Apply data to the plot
          MimsXYPlot xyplot = (MimsXYPlot)chart.getPlot();
+         
+         xyplot.setBackgroundPaint(Color.WHITE); //DJ: 09/22/2014
+   
          xyplot.setDataset(data);
          xyplot.setRois(rois);
          xyplot.setParent(this);
-
+         
+         //DJ 09/22/2014
+         final int numberOfSeries = xyplot.getSeriesCount();
+         //System.out.println("number-of-series = " + numberOfSeries);
+         
+         
+         /*
+         System.out.println("range up   limit = " + xyplot.getRangeAxis().getRange().getUpperBound());
+         System.out.println("range down limit = " + xyplot.getRangeAxis().getRange().getLowerBound());
+         System.out.println("domain up   limit = " + xyplot.getDomainAxis().getRange().getUpperBound());
+         System.out.println("domain down limit = " + xyplot.getDomainAxis().getRange().getLowerBound());
+         */
+        
+         
          // Generate the layout.
          //chartpanel = new MimsChartPanel(chart);
          chartpanel = new MimsChartPanel(chart);
@@ -151,7 +189,198 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
             }
          }
          this.add(chartpanel);
+         
+         
+         chartpanel.setNumberOfSeries(numberOfSeries);
 
+         
+         // DJ: 09/22/2014
+         // Add menu item for thikining or the plot lines
+         
+         // increase lines thikness
+         JMenuItem incresaseLinesThikness = new JMenuItem("Increase  Lines Thickness");
+         incresaseLinesThikness.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 //DJ
+                 
+                 lineThikness = chartpanel.getLineThikness();
+                 
+                 if(chartpanel.setLineThikness(lineThikness+0.5f)){
+                    lineThikness = chartpanel.getLineThikness();
+                 //if (lineThikness + 1.0f <= maxThikness) {
+                 //    lineThikness += 1.0f;
+
+                     BasicStroke stroke = new BasicStroke(lineThikness);
+                     Plot plot = chart.getXYPlot();
+
+                     if (plot instanceof CategoryPlot) {
+                         CategoryPlot categoryPlot = chart.getCategoryPlot();
+                         CategoryItemRenderer cir = categoryPlot.getRenderer();
+                         try {
+                             for (int i = 0; i < numberOfSeries ; i++) {
+                                 cir.setSeriesStroke(i, stroke); //series line style
+                             }
+                         } catch (Exception ex) {
+                             System.err.println(ex);
+                         }
+                     } else if (plot instanceof XYPlot) {
+
+                         XYPlot xyPlot = chart.getXYPlot();
+                         XYItemRenderer xyir = xyPlot.getRenderer();
+                         try {
+                             for (int i = 0; i < numberOfSeries; i++) {
+                                 xyir.setSeriesStroke(i, stroke); //series line style
+                             }
+                         } catch (Exception ex) {
+                             System.err.println(ex);
+                         }
+                     }
+                 }
+             }
+         });
+        
+         // increase lines thikness
+         JMenuItem decreaseLinesThikness = new JMenuItem("Decrease Lines Thickness");
+         decreaseLinesThikness.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 //DJ
+                 lineThikness = chartpanel.getLineThikness();
+                 
+                 if(chartpanel.setLineThikness(lineThikness-0.5f)){
+                    lineThikness = chartpanel.getLineThikness();
+                 //if (lineThikness - 1.0f >= minThikness) {
+                 //    lineThikness -= 1.0f;
+
+                     BasicStroke stroke = new BasicStroke(lineThikness);
+                     Plot plot = chart.getXYPlot();
+
+                     if (plot instanceof CategoryPlot) {
+                         CategoryPlot categoryPlot = chart.getCategoryPlot();
+                         CategoryItemRenderer cir = categoryPlot.getRenderer();
+                         try {
+                             for (int i = 0; i < numberOfSeries; i++) {
+                                 cir.setSeriesStroke(i, stroke); //series line style
+                             }
+                         } catch (Exception ex) {
+                             System.err.println(ex);
+                         }
+                     } else if (plot instanceof XYPlot) {
+
+                         XYPlot xyPlot = chart.getXYPlot();
+                         XYItemRenderer xyir = xyPlot.getRenderer();
+                         try {
+                             for (int i = 0; i < numberOfSeries; i++) {
+                                 xyir.setSeriesStroke(i, stroke); //series line style
+                             }
+                         } catch (Exception ex) {
+                             System.err.println(ex);
+                         }
+                     }
+                 }
+             }
+         });
+         
+         chartpanel.getPopupMenu().addSeparator();
+         chartpanel.getPopupMenu().add(incresaseLinesThikness);
+         chartpanel.getPopupMenu().add(decreaseLinesThikness);
+         
+         JMenu changePlotColor      = new JMenu("Change Plot Color");
+         final JMenuItem black      = new JMenuItem("BLACK");
+         final JMenuItem blue       = new JMenuItem("BLUE");
+         final JMenuItem grey       = new JMenuItem("GRAY");
+         final JMenuItem green      = new JMenuItem("GREEN");
+         final JMenuItem red        = new JMenuItem("RED");
+         final JMenuItem yellow     = new JMenuItem("YELLOW");
+         final JMenuItem purple     = new JMenuItem("PURPLE");
+         final JMenuItem brown      = new JMenuItem("BROWN");
+         final JMenuItem orange     = new JMenuItem("ORANGE");
+         final JMenuItem darkGreen  = new JMenuItem("DARK GREEN");
+         final JMenuItem lightBlue  = new JMenuItem("LIGHT BLUE");
+         
+   
+         black.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(black.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 97, 'a');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         blue.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(blue.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 98, 'b');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         grey.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(grey.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 101, 'e');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         green.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(green.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 103, 'g');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         red.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(red.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 114, 'r');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         yellow.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(yellow.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 121, 'y');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         purple.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(purple.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 112, 'p');
+                 chartpanel.keyPressed(ev);
+             }
+         });        
+         brown.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(brown.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 119, 'w');
+                 chartpanel.keyPressed(ev);
+             }
+         });  
+         orange.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(orange.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 111, 'o');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         darkGreen.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(darkGreen.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 100, 'd');
+                 chartpanel.keyPressed(ev);
+             }
+         });        
+         lightBlue.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 KeyEvent ev = new KeyEvent(lightBlue.getComponent(), e.getID(), e.getWhen(), e.getModifiers(), 108, 'l');
+                 chartpanel.keyPressed(ev);
+             }
+         });
+         
+         changePlotColor.add(black);
+         changePlotColor.add(blue);
+         changePlotColor.add(grey);
+         changePlotColor.add(green);
+         changePlotColor.add(red);
+         changePlotColor.add(yellow);
+         changePlotColor.add(purple);
+         changePlotColor.add(brown);
+         changePlotColor.add(orange);
+         changePlotColor.add(darkGreen);
+         changePlotColor.add(lightBlue);
+         
+         chartpanel.getPopupMenu().add(changePlotColor);
+         
+         
+         
          // Add menu item for showing/hiding crosshairs.
          JMenuItem xhairs = new JMenuItem("Show/Hide Crosshairs");
          xhairs.addActionListener(new ActionListener() {
@@ -196,6 +425,14 @@ public class MimsJFreeChart extends JFrame implements WindowListener, MouseListe
          }
       });
      chartpanel.getPopupMenu().add(libreoffice);
+     
+     
+     
+     
+     
+     
+     
+     
          // Replace Save As... menu item.
          chartpanel.getPopupMenu().remove(3);
          JMenuItem saveas = new JMenuItem("Save as...");
