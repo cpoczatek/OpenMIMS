@@ -34,6 +34,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.plot.Zoomable;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYDataset;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 public class MimsChartPanel extends ChartPanel {
     
@@ -47,33 +48,47 @@ public class MimsChartPanel extends ChartPanel {
     private Object e;
     int colorIdx = 0;
     /*
+     * old color_list:
     Color[] colorList = {Color.BLACK, Color.BLUE, Color.CYAN, Color.GRAY, Color.GREEN,
                            Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.WHITE,
                            Color.YELLOW};
     */
     
     //DJ: 09/22/2014
-    Color purple     = new Color(153, 0, 255);
-    Color brown      = new Color(153, 102, 0);
-    Color dark_green = new Color(51, 102, 0);
-    Color light_Blue = new Color(102, 153, 255);
+    Color black       = new Color(0, 0, 0);        // default values for the black 
+    Color blue        = new Color(0, 0, 255);      // default values for the blue
+    Color gray        = new Color(128, 128, 128);  // default values for the gray 
+    Color green       = new Color(0, 255, 0);      // default values for the green 
+    Color red         = new Color(255, 0, 0);      // default values for the red
+    Color dark_yellow = new Color(220, 220, 0);    
+    Color purple      = new Color(153, 0, 255);
+    Color brown       = new Color(153, 102, 0);
+    Color orange      = new Color(255, 200, 0);    // default values for the orange
+    Color dark_green  = new Color(51, 102, 0);
+    Color light_Blue  = new Color(102, 153, 255);
     
+    Color[] colorList = {black, 
+                         blue,
+                         gray, 
+                         green, 
+                         red, 
+                         dark_yellow, 
+                         purple, brown, 
+                         orange, 
+                         dark_green, 
+                         light_Blue};
     
-    Color[] colorList = {Color.BLACK, Color.BLUE, Color.GRAY, Color.GREEN, 
-                         Color.RED, Color.YELLOW, purple, brown, Color.ORANGE, dark_green, light_Blue};
-    
-    
-    private final int BLACK      = 0;
-    private final int BLUE       = 1;
-    private final int GRAY       = 2;
-    private final int GREEN      = 3;
-    private final int RED        = 4;
-    private final int YELLOW     = 5;
-    private final int PURPLE     = 6;
-    private final int BROWN      = 7;
-    private final int ORANGE     = 8;
-    private final int DARK_GREEN = 9;
-    private final int LIGHT_BLUE = 10;
+    private final int BLACK        = 0;
+    private final int BLUE         = 1;
+    private final int GRAY         = 2;
+    private final int GREEN        = 3;
+    private final int RED          = 4;
+    private final int DARK_YELLOW  = 5;
+    private final int PURPLE       = 6;
+    private final int BROWN        = 7;
+    private final int ORANGE       = 8;
+    private final int DARK_GREEN   = 9;
+    private final int LIGHT_BLUE   = 10;
     
     
     private float lineThikness = 1.0f;
@@ -106,6 +121,19 @@ public class MimsChartPanel extends ChartPanel {
             true,  // zoom
             true   // tooltips
         );
+        
+        //DJ: 09/24/2014
+        // Just to extract the DEFAULT rgb values that are used in the default Color class
+          
+         System.out.println("BLACK = "  + Color.BLACK.getRed()  + "," + Color.BLACK.getGreen()  + ", " +Color.BLACK.getBlue());
+         System.out.println("BLUE = "   + Color.BLUE.getRed()   + "," + Color.BLUE.getGreen()   + ", " +Color.BLUE.getBlue());
+         System.out.println("GRAY = "   + Color.GRAY.getRed()   + "," + Color.GRAY.getGreen()   + ", " +Color.GRAY.getBlue());
+         System.out.println("GREEN = "  + Color.GREEN.getRed()  + "," + Color.GREEN.getGreen()  + ", " +Color.GREEN.getBlue());
+         System.out.println("RED = "    + Color.RED.getRed()    + "," + Color.RED.getGreen()    + ", " +Color.RED.getBlue());
+         System.out.println("ORANGE = " + Color.ORANGE.getRed() + "," + Color.ORANGE.getGreen() + ", " +Color.ORANGE.getBlue());
+         
+         Color yellow = Color.YELLOW.darker();
+         System.out.println("DARK-YELLOW = " + yellow.getRed() + "," + yellow.getGreen() + ", " +yellow.getBlue());
         
     }
     
@@ -573,7 +601,7 @@ public class MimsChartPanel extends ChartPanel {
          if (currentSeriesInt < 0)  return;
          // Set the color.
          XYItemRenderer renderer = xyplot.getRenderer();
-         renderer.setSeriesPaint(currentSeriesInt, colorList[YELLOW]);
+         renderer.setSeriesPaint(currentSeriesInt, colorList[DARK_YELLOW]);
 
          // DJ: 09/22/2014
       } else if (e.getKeyChar() == 'p'){
