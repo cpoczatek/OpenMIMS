@@ -52,7 +52,7 @@ public class MimsTomography extends javax.swing.JPanel {
    private MimsChartPanel chartPanel;
 
    /**
-    * The MimsTomography constructor. Assembles the "Tomogrpahy" tab.
+    * The MimsTomography constructor. Assembles the "Tomography" tab.
     *
     * @param ui a pointer to the main UI class.
     */
@@ -304,6 +304,7 @@ public class MimsTomography extends javax.swing.JPanel {
      * containing ROI statistical information.
      */
     private void plotButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_plotButtonActionPerformed
+           
         MimsJFreeChart tomoChart = null;
        // Initialize chart.
        if (!appendCheckBox.isSelected() || tomoChart == null) {
@@ -320,7 +321,6 @@ public class MimsTomography extends javax.swing.JPanel {
        }
 
        // Get selected stats.
-
 
        // Get selected rois.
        MimsRoiManager rm = ui.getRoiManager();
@@ -563,6 +563,26 @@ public class MimsTomography extends javax.swing.JPanel {
 
       return images;
    }
+   
+    //DJ: 09/26/2014
+   // "82/80", "13/12", ...
+    public ArrayList<String> getSelectedHSIImages(){
+        
+        // Get selected images.
+        int[] num = imageJList.getSelectedIndices();
+        ArrayList<String> selectedHSIs = new ArrayList<String>();
+
+        for (int i = 0; i < num.length; i++) {
+            MimsPlus mp = (MimsPlus) imageJList.getModel().getElementAt(num[i]);
+            if(mp.getMimsType()== MimsPlus.HSI_IMAGE){
+                String title = mp.getRoundedTitle();
+               // title = title.substring(title.indexOf(" ") + 1);
+                selectedHSIs.add(title);
+            }
+        }
+        
+        return selectedHSIs;
+    }
 
    /**
     * Sets the statistics to be highlighted.

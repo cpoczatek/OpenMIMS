@@ -12,6 +12,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import javax.swing.*;
 
@@ -651,7 +652,9 @@ public class MimsHSIView extends javax.swing.JPanel {
     }//GEN-LAST:event_rgbMaxjSliderStateChanged
 
     private void rgbMinjSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rgbMinjSliderStateChanged
-        if (bUpdating || (currentImage.getMimsType() != MimsPlus.HSI_IMAGE)) {
+        
+        //DJ: 09/10/2014: modified where the check for : "currentImage == null" is added.
+        if (bUpdating || currentImage == null || (currentImage.getMimsType() != MimsPlus.HSI_IMAGE)) {
             return;
         }
 
@@ -914,6 +917,10 @@ public class MimsHSIView extends javax.swing.JPanel {
         }
         jList1.setForeground(Color.blue);
     }
+    //DJ: 09/08/2014
+    public String[] getSelectedRatios(){
+        return Arrays.copyOf(jList1.getSelectedValues(), jList1.getSelectedValues().length, String[].class);
+    }
 
     public void addShownRatiosToList(RatioProps[] rto_props, HSIProps[] hsi_props) {
 
@@ -1163,7 +1170,26 @@ public class MimsHSIView extends javax.swing.JPanel {
         Double d = (Double) ratioSFjSpinner.getValue();
         return d.floatValue();
     }
-
+    //DJ
+    public int getNumThresh(){
+        Integer value = (Integer)(this.numThresholdjSpinner.getValue());
+        return value.intValue();
+    }
+    //DJ
+    public int getDenThresh(){
+        Integer value = (Integer)(this.denThresholdjSpinner.getValue());
+        return value.intValue();
+    }
+    //DJ
+    public int getMaxRGB(){
+        Integer value = (Integer)(this.rgbMaxjSlider.getValue());
+        return value.intValue();
+    }
+    //DJ
+    public int getMinRGB(){
+        Integer value = (Integer)(this.rgbMinjSlider.getValue());
+        return value.intValue();
+    }
     /**
      * Sets the ratio scale factor spinner.
      *
@@ -1187,6 +1213,7 @@ public class MimsHSIView extends javax.swing.JPanel {
 
         // Adjust processor
         currentImage.getHSIProcessor().setProps(currentImage.getHSIProps());
+        
     }
 
     /**

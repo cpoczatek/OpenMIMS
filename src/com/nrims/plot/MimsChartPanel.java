@@ -124,7 +124,7 @@ public class MimsChartPanel extends ChartPanel {
         
         //DJ: 09/24/2014
         // Just to extract the DEFAULT rgb values that are used in the default Color class
-          
+        /*  
          System.out.println("BLACK = "  + Color.BLACK.getRed()  + "," + Color.BLACK.getGreen()  + ", " +Color.BLACK.getBlue());
          System.out.println("BLUE = "   + Color.BLUE.getRed()   + "," + Color.BLUE.getGreen()   + ", " +Color.BLUE.getBlue());
          System.out.println("GRAY = "   + Color.GRAY.getRed()   + "," + Color.GRAY.getGreen()   + ", " +Color.GRAY.getBlue());
@@ -134,7 +134,7 @@ public class MimsChartPanel extends ChartPanel {
          
          Color yellow = Color.YELLOW.darker();
          System.out.println("DARK-YELLOW = " + yellow.getRed() + "," + yellow.getGreen() + ", " +yellow.getBlue());
-        
+         */
     }
     
         /**

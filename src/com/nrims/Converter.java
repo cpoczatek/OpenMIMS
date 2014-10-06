@@ -3,13 +3,33 @@ package com.nrims;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import javax.swing.SwingWorker;
+//import sun.misc.BASE64Encoder; // DJ: to encode the png images into a string.
+import org.apache.commons.codec.binary.Base64; // DJ: to encode png image into a string.
+import java.io.ByteArrayOutputStream; // DJ:
+import java.io.PrintWriter;
+import java.util.HashMap;
+import javax.imageio.ImageIO; // DJ
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+//import org.jfree.xml.util.Base64;
+
+
+// DJ: 09/06/2014 : libraries to be used to copy the 
+// generated html file's path to clipboard so the user
+// could just paste within the browser to doaplay the page.
+import java.awt.datatransfer.*;
+import java.awt.Toolkit;
 
 public class Converter extends SwingWorker<Void, Void> {
 
@@ -76,6 +96,12 @@ public class Converter extends SwingWorker<Void, Void> {
    ArrayList<String> files = new ArrayList<String>();
    boolean proceed         = true;
    
+   //DJ:
+   boolean isForHTMLManager = false;
+   String htmlTables = ""; 
+   String htmlFile = "";
+   boolean configSpecs = false; // if we used a config filr, it would be true
+   
    public Converter(boolean readProps, boolean bpngs_only, boolean bTrack,
            String sMassToTrack, String propertiesFileString, String keys, String values) {
 
@@ -100,7 +126,7 @@ public class Converter extends SwingWorker<Void, Void> {
             System.out.println("Trouble reading Properties file: " + propertiesFileString);
             return;
          }
-      }      
+      }  
    }
 
    private void readProperties(String propertiesFileString) throws FileNotFoundException, IOException {
@@ -118,9 +144,9 @@ public class Converter extends SwingWorker<Void, Void> {
          massToTrack = defaultProps.getProperty(PROPERTIES_TRACK_MASS, massToTrack);
 
       // Pngs
-      pngs = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_PNGS, Boolean.toString(pngs)));
-      if (pngs) {
-         pngDir = defaultProps.getProperty(PROPERTIES_PNG_DIRECTORY, PNG_DIRECTORY_DEFAULT);        
+      this.pngs = Boolean.parseBoolean(defaultProps.getProperty(PROPERTIES_PNGS, Boolean.toString(pngs)));
+      if (this.pngs) {
+         pngDir = defaultProps.getProperty(PROPERTIES_PNG_DIRECTORY, PNG_DIRECTORY_DEFAULT); 
       } else {
          return;
       }
@@ -207,27 +233,92 @@ public class Converter extends SwingWorker<Void, Void> {
       }
       return written;
    }
-
-   private void generate_pngs() {
-
-      String pngDirectory= new File(ui.getOpener().getImageFile().getParent()).getAbsolutePath();
-      if (pngDir != null)
-         pngDirectory = (new File(ui.getOpener().getImageFile().getParent(), pngDir)).getAbsolutePath();
-
-      File pngDirFile = new File(pngDirectory);
-
-      if (!pngDirFile.exists()) {
-         pngDirFile.mkdir();
-         pngDirFile.setWritable(true, false);
-      }
-
-      if (!pngDirFile.canWrite()) {
-         System.out.println("WARNING: Can not create or write to directory: " + pngDir);
-         return;
-      }
-      generateMassImagePNGs(pngDirFile);
-      generateHSIImagePNGs(pngDirFile);
+   
+   //DJ
+   // to setup the png directory for the convertManger to use it 
+   // in order to generate html page.
+   public void specsForHTMLThruOpenMIMS(String htmlFilePath,
+                            String pngFolderPath, 
+                            String[] HSIs,
+                            String[] numThreshs,
+                            String[] denThreshs,
+                            String[] ratioScaleFactors,
+                            String[] maxRGBs,
+                            String[] minRGBs){
+       this.htmlFile = htmlFilePath;
+       this.isForHTMLManager = true;
+       this.pngDir = pngFolderPath;
+       this.pngs = true;
+      // this.pngs_only = false;
+       this.HSIs = HSIs; 
+       this.threshUppers = numThreshs;
+       this.threshLowers = denThreshs;
+       this.scaleFactors = ratioScaleFactors;
+       this.rgbMaxes = maxRGBs;
+       this.rgbMins = minRGBs;
    }
+   //DJ
+   // To be called when we're using a config file to retrieve the
+   // specs from.
+   public void specsForHtmlThruConfigFile(String htmlFilePath){
+       this.htmlFile = htmlFilePath;
+       this.isForHTMLManager = true;
+       configSpecs = true;
+   }
+   // DJ
+   // to be mainly called from a script
+   public String getPngsDirectoryPath(){
+        String pngDirectory = "";
+        
+        // case that applies just on: 
+        // creating a web page where the specs are collected
+        // from OpenMIMS
+        if (this.isForHTMLManager && configSpecs == false) {
+            pngDirectory = pngDir;
+            
+        // in case the specs are collected from a "CONFIG" file
+        } else {
+            pngDirectory = new File(ui.getOpener().getImageFile().getParent()).getAbsolutePath();
+            if (pngDir != null) // pngDirectory = pngDir;
+            {
+                pngDirectory = (new File(ui.getOpener().getImageFile().getParent(), pngDir)).getAbsolutePath();
+            }
+        }
+        //System.out.println("pngDirectory is: " + pngDirectory);
+        return pngDirectory;
+   }
+   // DJ
+   public String generateHTML(){
+       String html = "";
+       html += "<!DOCTYPE html>";
+       html += "<html lang=\"en\">";
+       html += "  <head><title>OpenMIMS - HTML GENERATOR </title></head>";
+       html += "  <body BGCOLOR=\"#D8D8D8\"><BR><BR><BR>";
+       
+       html += this.htmlTables;
+       
+       html += "  </body>";
+       html += "</html>";
+       
+       return html;
+   }
+    private void generate_pngs() {
+        String pngDirectory = getPngsDirectoryPath();
+
+        File pngDirFile = new File(pngDirectory);
+
+        if (!pngDirFile.exists()) {
+            pngDirFile.mkdir();
+            pngDirFile.setWritable(true, false);
+        }
+
+        if (!pngDirFile.canWrite()) {
+            System.out.println("WARNING: Can not create or write to directory: " + pngDir);
+            return;
+        }
+        generateMassImagePNGs(pngDirFile);
+        generateHSIImagePNGs(pngDirFile);
+    }
 
    private void generateMassImagePNGs(File pngDirFile) {
 
@@ -499,7 +590,7 @@ public class Converter extends SwingWorker<Void, Void> {
    }
 
    @Override
-   protected Void doInBackground() {
+   public Void doInBackground() {
       
       int percentComplete = 0;
       setProgress(percentComplete);
@@ -507,20 +598,26 @@ public class Converter extends SwingWorker<Void, Void> {
       // Make sure we have files.
       if (files.isEmpty())
          System.out.println("No files specified.");
-           
+      
+      //DJ:
+      String[][] tables_Not_sorted = new String[files.size()][2];
       // Open the file, track and save.
       int counter = 0;
       int total = files.size();
-      for (String fileString : files) {
+      //for (String fileString : files) {
+      
+      // System.out.println("Number of files to print is: " + files.size());
+      
+      for (int index = 0; index < files.size(); index++){
 
          if (!proceed) {
             break;
          }
 
             // Open File.
-            boolean opened = openFile(fileString);
+            boolean opened = openFile(files.get(index));
             if (!opened) {
-               System.out.println("Failed to open " + fileString);
+               System.out.println("Failed to open " + files.get(index));
                continue;
             }
 
@@ -531,7 +628,7 @@ public class Converter extends SwingWorker<Void, Void> {
             if (track && !pngs_only) {
                boolean tracked = trackFile();
                if (!tracked) {
-                  System.out.println("Failed to track " + fileString);
+                  System.out.println("Failed to track " + files.get(index));
                   continue;
                }
             }
@@ -555,19 +652,343 @@ public class Converter extends SwingWorker<Void, Void> {
             if (!pngs_only) {
                boolean wrote = writeNrrd();
                if (!wrote) {
-                  System.out.println("Failed to convert " + fileString);
+                  System.out.println("Failed to convert " + files.get(index));
                   continue;
                }
             }
 
             percentComplete = Math.min(Math.round(100*((float)counter+(float)1.0)/(float)total), 100);
-            setProgress(percentComplete);            
+            setProgress(percentComplete);   
+            
 
+          //DJ: generate Table =========================================
+          if (this.isForHTMLManager) {
+
+              String nrrdFileWholePathAndName = files.get(index);
+              
+              if(files.get(index).endsWith(".im")){
+                  nrrdFileWholePathAndName = nrrdFileWholePathAndName.substring(0, nrrdFileWholePathAndName.length()-3) + ".nrrd";
+              }
+              
+              String[] imOrNrrdFilePathAndName_split = files.get(index).split(java.util.regex.Pattern.quote("/"));
+              String imOrNrrdFileName = imOrNrrdFilePathAndName_split[imOrNrrdFilePathAndName_split.length - 1];
+              
+              String tableString = "";
+              tableString += "<TABLE ALIGN=\"LEFT\" BORDER=\"5\" CELLPADDING=\"5\" >";
+              tableString += "  <TR>";
+              tableString += "    <TD>";
+              tableString += "       <TABLE WIDTH=\"400\" height=\"100%\">";
+              tableString += "         <TR>";
+              tableString += "             <TH COLSPAN=\"3\" HEIGHT=\"25\"><FONT SIZE=\"4\">";
+              tableString += "                <a ALIGN=\"CENTER\" href=" + nrrdFileWholePathAndName + ">";
+              tableString +=                     nrrdFileWholePathAndName.substring(nrrdFileWholePathAndName.lastIndexOf("/")+1);
+              tableString += "                </a><FONT></TH>";
+              tableString += "         </TR>";
+
+              int i = 5;
+              String header = com.nrims.data.ImageDataUtilities.getImageHeader(this.ui.getOpener());
+              String[] headerList = header.split("\\r?\\n");
+              while (i < headerList.length - 4) {
+                  String[] infos = headerList[i].split(java.util.regex.Pattern.quote(":"));
+
+                  tableString += "     <TR>";
+                  tableString += "          <TD style=\"color:red\" COLOR=\"RED\" ALIGN=\"RIGHT\" LINEHEIGHT=\"5px\" WIDTH=\"50%\">";
+                  tableString += "                <FONT SIZE=\"2\"> " + infos[0] + "</FONT>";
+                  tableString += "          </TD>";
+                  tableString += "          <TD style=\"LINE-HEIGHT:5px\" ALIGN=\"LEFT\">";
+                  tableString += "                <FONT SIZE=\"2\">";
+
+                  String details = "";
+                  int idx = 1;
+                  while (idx < infos.length) {
+                      details += infos[idx];
+                      if (idx + 1 < infos.length) {
+                          details += ":";
+                      }
+                      idx += 1;
+                  }
+                  tableString += details;
+                  tableString += "                </FONT>";
+                  tableString += "          </TD>";
+                  tableString += "     </TR>";
+                  i += 1;
+                  
+                  // this "if" singles out the date in which the file was created.
+                  if(infos[0].equals("Sample date")){
+                      
+                      details = details.trim();
+                      String[] day_month_year = details.split("\\.");
+                      
+                      String day = day_month_year[0];
+                      String month = day_month_year[1];
+                      int year = Integer.parseInt(day_month_year[2]);
+
+                      // DJ: fixing the two year digits date to be 4 digits for comparison purposes
+                      // exp: date1: 00  and date2 = 99 ; in comparison 00 is less than 99 
+                      // so we need to make 00 to be represtented as year 2000 
+                      // and 99 to be represented as year 1999 so the comparison
+                      // between for example year 2000 and 1999 would hold the correct result.
+                      if (year >= 0 && year < 80)
+                          year += 2000;
+                      else 
+                          year += 1900;
+                      
+                      tables_Not_sorted[index][0] = Integer.toString(year) + month + day;
+                  }
+       
+                  // this "if" singles out the date in which the file was created.
+                  if(infos[0].equals("Sample hour")){
+                      
+                      details = details.trim();
+                      String[] hour_minutes = details.split(":");
+                      
+                      String hour    = hour_minutes[0];
+                      String minutes = hour_minutes[1];
+              
+                      tables_Not_sorted[index][0] += "." + hour + minutes;
+                  }
+              }
+              tableString += "      </TABLE>";
+              tableString += "    </TD>";
+              
+              
+              ArrayList<String> pngFileNames = new ArrayList<String>(); // As a reference. to be used later on for comparison and sorting. 
+              HashMap<String, String> pngFileName_to_encoding_MAP = new HashMap<String, String>();
+              
+              final File folder = new File(getPngsDirectoryPath()); // was: pngDir
+              for (final File pngFile : folder.listFiles()){
+                  
+                  String[] pngFilePathAndName_split = pngFile.getName().split(java.util.regex.Pattern.quote("/"));
+                  String pngfilename = pngFilePathAndName_split[pngFilePathAndName_split.length-1];
+                               // just to help us get the filename without extension
+                  int extension_length = 0;
+                  if (files.get(index).endsWith(".im")) {
+                      extension_length = 3;
+                  } else if (files.get(index).endsWith(".nrrd")) {
+                      extension_length = 5;
+                  }
+
+                  String imOrNrrdFileName_No_Extention = imOrNrrdFileName.substring(0, imOrNrrdFileName.length() - extension_length);
+
+                  
+                  if (pngfilename.contains(imOrNrrdFileName_No_Extention)){
+
+                      pngFileNames.add(pngfilename);
+                      String png_string = "";
+                      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+                      try {
+                          /*
+                          BufferedImage pngImage = ImageIO.read(pngFile);
+                          ImageIO.write(pngImage, "png", byteArrayOutputStream);
+                          byteArrayOutputStream.flush();
+                          
+                          byte[] imageBytes = byteArrayOutputStream.toByteArray();
+                          
+                          
+                          // using the first library
+                          //BASE64Encoder encoder = new BASE64Encoder();
+                          //png_string += encoder.encode(imageBytes);
+                          */
+                          
+                          // Reading a Image file from file system
+                          FileInputStream imageInFile = new FileInputStream(pngFile);
+                          byte imageData[] = new byte[(int) pngFile.length()];
+                          imageInFile.read(imageData);
+
+                          // Converting Image byte array into Base64 String
+                          png_string += Base64.encodeBase64String(imageData);
+                          
+                          //alternative base64
+                          //png_string += Base64.encodeBase64URLSafeString(byteArrayOutputStream.toByteArray());
+                          
+                          pngFileName_to_encoding_MAP.put(pngfilename, png_string);
+                          
+                          byteArrayOutputStream.close();
+                      } catch (IOException e) {
+                          e.printStackTrace();
+                      }
+/*
+                      tableString += "<TD ALIGN=\"CENTER\">";
+                      tableString += " <img src=\"data:image/png;base64," + png_string + "\" alt=\"" + pngFile.getName() + "\">";
+                      tableString += "<BR>";
+                      tableString += pngfilename.substring(imOrNrrdFileName_No_Extention.length()+1, pngfilename.length()-4);
+                      tableString += "<BR>&nbsp";
+                      tableString += "</TD>";
+*/
+                  }
+              }/*
+               // at this step, we reposition the hsi's to be last in the list
+              String[] pngFileNamesArray = pngFileNames.toArray(new String[pngFileNames.size()]);
+              
+              Arrays.sort(pngFileNamesArray);
+              ArrayList<String> pngFileNames_sorted = new ArrayList<String>();
+              ArrayList<String> png_hsis = new ArrayList<String>();
+              
+              String the_zero_mass_image = null;
+              
+              for(int m = 0 ; m < pngFileNamesArray.length; m++){
+                  if(pngFileNamesArray[m].contains("hsi") == false){
+                      if(pngFileNamesArray[m].contains("_m0_") == false){
+                        pngFileNames_sorted.add(pngFileNamesArray[m]);
+                      } else{
+                          the_zero_mass_image = pngFileNamesArray[m];
+                      }
+                      
+                  }else
+                      png_hsis.add(pngFileNamesArray[m]);
+              }
+              if(the_zero_mass_image != null)
+                pngFileNames_sorted.add(the_zero_mass_image);
+              // now, we add the png_hsis to the end.
+              pngFileNames_sorted.addAll(png_hsis);
+              */
+              
+              // at this step, we re-position the hsi's to be first in the list of images we display
+              String[] pngFileNamesArray = pngFileNames.toArray(new String[pngFileNames.size()]);
+              
+              Arrays.sort(pngFileNamesArray);
+              ArrayList<String> pngFileNames_sorted = new ArrayList<String>();
+              ArrayList<String> png_masses = new ArrayList<String>();
+              
+              String the_zero_mass_image = null;
+              
+              for(int m = 0 ; m < pngFileNamesArray.length; m++){
+                  if(pngFileNamesArray[m].contains("hsi") == true){
+                      pngFileNames_sorted.add(pngFileNamesArray[m]);
+                  }else
+                      if(pngFileNamesArray[m].contains("_m0_") == false){
+                        png_masses.add(pngFileNamesArray[m]);
+                      } else{
+                        the_zero_mass_image = pngFileNamesArray[m];
+                      }
+                      
+              }
+              // now, we add the png_hsis to the end.
+              pngFileNames_sorted.addAll(png_masses);
+              // now, we add the zero mass if it exists
+              if(the_zero_mass_image != null)
+                pngFileNames_sorted.add(the_zero_mass_image);
+              
+              
+              // embedding the pngs into the html web page
+              for(int k=0 ; k<pngFileNames_sorted.size() ; k++){
+                      tableString += "<TD ALIGN=\"CENTER\">";
+                      tableString += " <img src=\"data:image/png;base64," + pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k)) + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
+                      tableString += "<BR>";
+                      tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m")+1, pngFileNames_sorted.get(k).length()-4);
+                      tableString += "<BR>&nbsp";
+                      tableString += "</TD>";
+              }
+              
+              tableString += "  </TR>";
+              tableString += "</TABLE><BR><BR>";
+              
+              tables_Not_sorted[index][1] = tableString;
+              
+             // this.htmlTables += tableString;
+          } //============================================================
+           
             ui.closeCurrentImage();
             counter++;
       }
+      
+      //DJ: just for debugging purposes:
+      //for (int index = 0; index < files.size(); index++){
+      //    System.out.println(tables_Not_sorted[index][1]);
+      //}
+
+      
+      // DJ: enhancement - sorting by the date and time of creation.
+      // Most recent to the most old.
+      
+      double[] datesTimesArray = new double[tables_Not_sorted.length];
+      for(int x = 0 ; x<tables_Not_sorted.length; x++){
+          datesTimesArray[x] = Double.parseDouble(tables_Not_sorted[x][0]);
+      }
+      Arrays.sort(datesTimesArray);
+      
+       for (int dt = datesTimesArray.length - 1; dt >= 0; dt--) {
+           for (int j = 0; j < tables_Not_sorted.length; j++) {
+               double d1 = datesTimesArray[dt];
+               double d2 = Double.parseDouble(tables_Not_sorted[j][0]);
+               int retval = Double.compare(d1, d2);
+
+               if (retval == 0) {
+                   this.htmlTables += tables_Not_sorted[j][1];
+               }
+           }
+       }
+       
+       //DJ just for debugging:
+       //System.out.println(htmlTables);
+
+       if (com.nrims.managers.convertManager.getInstance() != null) {
+
+           StringBuilder builder = new StringBuilder(this.generateHTML());
+
+           String html = builder.toString();
+           try {
+               PrintWriter writer = new PrintWriter(new File(htmlFile));
+               writer.println(html);
+               writer.close();
+
+           } catch (IOException ex) {
+               Logger.getLogger(UI.class.getName()).log(Level.SEVERE, null, ex);
+           }
+           
+           
+           
+           // DJ: 09/06/2014
+           
+           // copy the web page link to clipboard:
+           StringSelection stringSelection = new StringSelection(htmlFile);
+           Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+           clipboard.setContents(stringSelection, null);
+           
+           // Make a new small frame to inform the user that the link was copied to
+           // his/her clipboard and ask weither to open it in a browser or not.
+           ij.gui.GenericDialog messageBox = new ij.gui.GenericDialog("DONE");
+           String message = "SUCCESS...WEB PAGE CREATED (link is copied to your clipboard)";
+           message += "\n\nWOULD YOU LIKE TO OPEN THE LINK IN A WEB BROWSER ?";
+           messageBox.addMessage(message);
+           messageBox.setOKLabel("YES");
+           messageBox.setCancelLabel("NO");
+           messageBox.centerDialog(true);
+
+           messageBox.showDialog();
+           
+           // In case the user agrees to open the link in a browser
+           if (messageBox.wasOKed()) {
+               java.awt.Desktop desktop = java.awt.Desktop.isDesktopSupported() ? java.awt.Desktop.getDesktop() : null;
+               try {
+                   if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+                       try {
+                           //java.net.URI uri = new java.net.URI("http://www.google.com"); // test
+                           java.net.URI uri = new java.net.URI("file://" + htmlFile);
+                           desktop.browse(uri);
+                       } catch (Exception e) {
+                           e.printStackTrace();
+                       }
+                   }
+               } catch (Exception e) {
+                   e.printStackTrace();
+               }
+           }
+  
+           // in case we collected the specs from OpenMIMS,
+           // we just remove the pngs and their folder which are located
+           // in the "tmp" directory.
+           if(configSpecs == false){
+               // delete the tmp directory that has the pngs
+               File directory = new File(pngDir);
+               for (File pngFile : directory.listFiles()) {
+                   pngFile.delete();
+               }
+               directory.delete();
+           }
+       }
 
       return null;
    }
-
 }

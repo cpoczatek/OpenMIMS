@@ -11,6 +11,7 @@ import com.nrims.RatioProps;
 import com.nrims.SumProps;
 import com.nrims.UI;
 import ij.gui.Roi;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.io.File;
 import java.util.ArrayList;
@@ -37,14 +38,47 @@ public class FilesManager extends javax.swing.JFrame {
     private UI ui;
     private String chosenFile  = "";
     private int chosenSettings;
+    private boolean LoadFileProcessStopped = false;
     
     // Dj; 08/20/2014
     /**
      * Creates new form FilesManager
      */
-    public FilesManager(UI ui) {
+    public FilesManager(UI ui, String[] filesPreviouslyOpened, boolean LoadFileProcessStopped, String openedFilePath) {
+        
         initComponents();
         this.ui = ui;
+        
+        this.LoadFileProcessStopped = LoadFileProcessStopped;
+        
+        if (filesPreviouslyOpened == null)
+            filesPreviouslyOpened = new String[0];
+
+        
+        if(LoadFileProcessStopped == false){
+            info_Label.setText("");
+            jSeparator1.setVisible(false);
+            jSeparator1.setVisible(false);
+            
+            openedFileInfoLabel.setVisible(true);
+            
+            openedFileLabel.setText(openedFilePath);
+            openedFileLabel.setForeground(Color.BLUE);
+            openedFileLabel.setVisible(true);
+            
+            jSeparator3.setVisible(true);
+        }
+        else{
+             info_Label.setText("STATUS: LOADING FILE PROCESS STOPPED.");
+             jSeparator1.setVisible(true);
+             jSeparator2.setVisible(true);
+             
+             openedFileLabel.setVisible(false);
+             openedFileInfoLabel.setVisible(false);
+             jSeparator3.setVisible(false);
+        }
+        
+        
         files_jComboBox.setModel(comboBoxModel);
         chosenSettings = FILE_SETTINGS;
         rb0.setActionCommand("0");
@@ -53,6 +87,15 @@ public class FilesManager extends javax.swing.JFrame {
         
         rb0.setSelected(true);
         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        
+        addImageFiles(filesPreviouslyOpened);
+        
+        //DJ:09/06/2014
+        if(filesPreviouslyOpened.length == 0){
+            reload_button.setEnabled(false);
+            cancel_button.setEnabled(false);
+        }
+        
         instance = this;
     }
     
@@ -80,6 +123,25 @@ public class FilesManager extends javax.swing.JFrame {
     public void showWindow() {
         this.setVisible(true);
     }
+    public void activate_disactivate_components(){
+        
+        if(comboBoxModel == null || comboBoxModel.getSize() == 0){
+            rb0.setEnabled(false);
+            rb1.setEnabled(false);
+            rb2.setEnabled(false);
+            
+            reload_button.setEnabled(false);
+            cancel_button.setEnabled(false);
+        } else{
+            rb0.setEnabled(true);
+            rb1.setEnabled(true);
+            rb2.setEnabled(true);
+            
+            reload_button.setEnabled(true);
+            cancel_button.setEnabled(true);
+        }
+
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -102,6 +164,9 @@ public class FilesManager extends javax.swing.JFrame {
         files_jComboBox = new javax.swing.JComboBox();
         jSeparator1 = new javax.swing.JSeparator();
         jSeparator2 = new javax.swing.JSeparator();
+        openedFileLabel = new javax.swing.JLabel();
+        openedFileInfoLabel = new javax.swing.JLabel();
+        jSeparator3 = new javax.swing.JSeparator();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Files Manager");
@@ -138,29 +203,16 @@ public class FilesManager extends javax.swing.JFrame {
 
         files_jComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        openedFileLabel.setText("jLabel1");
+
+        openedFileInfoLabel.setText("ACTUAL OPENED FILE IS: ");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(reload_button)
-                .addGap(26, 26, 26)
-                .addComponent(cancel_button)
-                .addGap(32, 32, 32))
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator1)
-                    .addComponent(jSeparator2))
-                .addContainerGap())
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(29, 29, 29)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(files_jComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(filesList_jLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(32, 32, 32)
                         .addComponent(info_Label, javax.swing.GroupLayout.PREFERRED_SIZE, 436, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -172,8 +224,30 @@ public class FilesManager extends javax.swing.JFrame {
                             .addComponent(rb1)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(203, 203, 203)
-                        .addComponent(jLabel3)))
-                .addContainerGap(290, Short.MAX_VALUE))
+                        .addComponent(jLabel3))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(files_jComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(filesList_jLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 801, Short.MAX_VALUE)
+                            .addComponent(openedFileInfoLabel)
+                            .addComponent(openedFileLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap(32, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(reload_button)
+                        .addGap(26, 26, 26)
+                        .addComponent(cancel_button)
+                        .addGap(32, 32, 32))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.LEADING))
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -183,12 +257,18 @@ public class FilesManager extends javax.swing.JFrame {
                 .addGap(4, 4, 4)
                 .addComponent(info_Label)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(openedFileInfoLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(openedFileLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(filesList_jLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(files_jComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 77, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 41, Short.MAX_VALUE)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -212,8 +292,11 @@ public class FilesManager extends javax.swing.JFrame {
 
            
     private void cancel_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancel_buttonActionPerformed
-        restoreLastOpenedFile();
-        this.closeWindow();
+        
+        if (LoadFileProcessStopped == true)
+            restoreLastOpenedFile();
+        
+        closeWindow();
        
     }//GEN-LAST:event_cancel_buttonActionPerformed
 
@@ -238,10 +321,12 @@ public class FilesManager extends javax.swing.JFrame {
             setCursor(null);
         }
         
-        this.dispose();
+      //  this.dispose();
     }//GEN-LAST:event_reload_buttonActionPerformed
 
     public void addImageFiles(String[] imageFilesNames) {
+        
+        
         if (imageFilesNames == null) {
             return;
         }
@@ -253,63 +338,35 @@ public class FilesManager extends javax.swing.JFrame {
                 comboBoxModel.addElement(imageFilesNames[i]);
             }
         }
-
     }
+    public void removeImagefromList(String imageFileName){
+        if (imageFileName == null) {
+            return;
+        }
+        int indexToBeRemoved = -1;
+        for(int i=0 ; i<=comboBoxModel.getSize() ; i++){
+            if( ((String)(comboBoxModel.getElementAt(i))).equals(imageFileName)){
+                indexToBeRemoved = i;
+                break;
+            }
+        }
+        if(indexToBeRemoved == -1)
+            return;
+        
+        comboBoxModel.removeElementAt(indexToBeRemoved);
+        ui.removeFileFromFileProps(imageFileName);
+        files_jComboBox.repaint();
     
+    }
     // DJ: 08/21/2014
     /**
      * ReOpens the last non-canceled file 
-     * with its settings, derived images, and ROIs
-     * @param chosenFile 
+     * with its settings, derived images, and ROIs 
      */
     private void restoreLastOpenedFile(){
-        
-        reOpenWithLastFileSettings(ui.getNameOfLastFileOpened());
-       
-        /*
-        File previousFileToLoad = new File(ui.getNameOfLastFileOpened());
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        com.nrims.UI.FileOpenTask fileOpenTask;
-        fileOpenTask = ui.new FileOpenTask(previousFileToLoad, ui);
-
-        Vector allProps = ui.getFileSettings(ui.getNameOfLastFileOpened());
-        
-        //------------------------------------
-        MassProps[] massP = (MassProps[]) (allProps.get(0));
-        RatioProps[] ratioP = (RatioProps[]) (allProps.get(1));
-        HSIProps[] hsiP = (HSIProps[]) (allProps.get(2));
-        SumProps[] sumP = (SumProps[]) (allProps.get(3));
-        CompositeProps[] compP = (CompositeProps[]) (allProps.get(4));
-        
-        //-------------------------------------
-        if((Boolean)(allProps.get(5)) == true){
-            com.nrims.managers.CompositeManager cm = new com.nrims.managers.CompositeManager(ui);
-            cm.setVisible(true);
-        }
-        //------------------------------------
-        ArrayList roiProps = (ArrayList)(allProps.get(6));
-
-        boolean isROIManagerVisible = (Boolean) (roiProps.get(0));
-        Roi[] roiList = (Roi[]) (roiProps.get(1));
-        HashMap<String, ArrayList<Integer[]>> locations = (HashMap<String, ArrayList<Integer[]>>) (roiProps.get(2));
-        ArrayList<String> groups = (ArrayList<String>) (roiProps.get(3));
-        HashMap<String, String> groupsMap = (HashMap<String, String>) (roiProps.get(4));
-
-        //------------------------------------
-        boolean opened = fileOpenTask.doInBackground(
-                massP, ratioP, hsiP, sumP, compP, false, false);
-        
-        //------------------------------------
-        ui.getRoiManager().dispose();
-        ui.getRoiManager();
-       
-        ui.getRoiManager().setLocations(locations);
-        ui.getRoiManager().setGroups(groups);
-        ui.getRoiManager().setGroupMap(groupsMap);
-
-        ui.getRoiManager().setVisible(isROIManagerVisible);
-        
-        */ 
+      //  reOpenWithLastFileSettings(ui.getNameOfLastFileOpened());
+        reOpenWithFileSettings(ui.getNameOfLastFileOpened());
+        closeWindow(); //DJ: 09/24/2014
     }
     
     // DJ: 08/21/2014
@@ -327,8 +384,10 @@ public class FilesManager extends javax.swing.JFrame {
         fileOpenTask = ui.new FileOpenTask(previousFileToLoad, ui);
 
         boolean opened = fileOpenTask.doInBackground(null, null, null, null, null, false, false);
-        ui.getRoiManager().delete(false);
+        ui.resetRoiManager();
 
+        removeImagefromList(chosenFile);
+        closeWindow(); //DJ: 09/24/2014
     }
     
     // DJ: 08/21/2014
@@ -373,6 +432,9 @@ public class FilesManager extends javax.swing.JFrame {
         }
         //------------------------------------
         ui.resetRoiManager();
+        
+        for(String group : groups)
+            ui.getRoiManager().addGroup(group);
 
         for(int i = 0 ; i<roiList.length; i++ ){
             if(groupsMap.keySet().contains(roiList[i].getName()))
@@ -381,9 +443,11 @@ public class FilesManager extends javax.swing.JFrame {
                 ui.getRoiManager().addWithoutRenaming(roiList[i]);
         }
         ui.getRoiManager().setLocations(locations);
-        
         ui.getRoiManager().setVisible(isROIManagerVisible);
     
+        removeImagefromList(chosenFile);
+        
+        closeWindow(); //DJ: 09/24/2014
     }
     
     // DJ: 08/21/2014
@@ -428,18 +492,10 @@ public class FilesManager extends javax.swing.JFrame {
             com.nrims.managers.CompositeManager cm = new com.nrims.managers.CompositeManager(ui);
             cm.setVisible(true);
         }
-        //------------------------------------
-        /*
-        ui.resetRoiManager();
-
-        for(int i = 0 ; i<roiList.length; i++ ){
-            if(groupsMap.keySet().contains(roiList[i].getName()))
-                ui.getRoiManager().addToGroupWithoutRenaming(roiList[i], groupsMap.get(roiList[i].getName()));
-            else
-                ui.getRoiManager().addWithoutRenaming(roiList[i]);
-        }
-        ui.getRoiManager().setVisible(isROIManagerVisible);
-        */
+        
+        removeImagefromList(chosenFile);
+        
+        closeWindow(); //DJ: 09/24/2014
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -450,6 +506,9 @@ public class FilesManager extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JSeparator jSeparator3;
+    private javax.swing.JLabel openedFileInfoLabel;
+    private javax.swing.JLabel openedFileLabel;
     private javax.swing.ButtonGroup radioButtonsGroup;
     private javax.swing.JRadioButton rb0;
     private javax.swing.JRadioButton rb1;

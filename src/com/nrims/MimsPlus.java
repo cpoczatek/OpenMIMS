@@ -997,7 +997,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             }
 
         } catch (Exception e) {
-            System.out.println("DJ: in MimsPlus.show() :  " + e);
+            System.out.println("DJ- Exception detected at MimsPlus.show() :  " + e);
         } finally {
             this.unlock();
         }
@@ -1070,8 +1070,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             // to keep it updated on the window location before it closes.
             if (this.nType == MASS_IMAGE) {
                 MassProps windowMP = new MassProps(this.getMassIndex(), this.getMassValue());
-                windowMP.setXWindowLocation(p.x);
-                windowMP.setYWindowLocation(p.y);
+                windowMP.setXWindowLocation(p.x+9);
+                windowMP.setYWindowLocation(p.y+8);
                 ui.addToClosedWindowsList(windowMP);
             }
                     
