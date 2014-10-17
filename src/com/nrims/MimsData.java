@@ -286,6 +286,9 @@ public class MimsData extends javax.swing.JPanel {
         output += "DT Corrected: " + jLabel27.getText() + "\n";
         output += "QSA Corrected: " + jLabel30.getText() + "\n";
         
+        //DJ: 10/13/2014
+        
+        
         return output;
     }
     // DJ: 08/18/2014
@@ -319,6 +322,9 @@ public class MimsData extends javax.swing.JPanel {
             jLabel22.setText("0");
             jLabel28.setText("false");
             jLabel30.setText("false");
+            
+            
+            
             syncjCheckBox.setEnabled(false);        
         } else {
             String tempstring = "";

@@ -41,6 +41,13 @@ public interface Opener {
     public static final String Mims_ASPos = "Mims_ASPos";
     public static final String Mims_D1Pos = "Mims_D1Pos";
     public static final String Mims_Radius = "Mims_Radius";
+    
+    
+    //DJ: 10/13/2014
+    public static final String Mims_PrimL1 = "Mims_PrimL1";
+    public static final String Mims_PrimL0 = "Mims_PrimL0";
+    public static final String Mims_CsHv = "Mims_CsHv";
+    
 
     // Field that do not define parameters about the image
     // but are still userful. Not found in original IM header.
@@ -99,6 +106,11 @@ public interface Opener {
     public String getASPos();
     public String getD1Pos();
     public String getRadius();
+    
+    
+    public String getNPrimL1(); //DJ: 10/13/2014
+    public String getNPrimL0(); //DJ: 10/13/2014
+    public String getNCsHv();   //DJ: 10/13/2014
 
     //Setable metadata
     public void setStackPositions(String[] names);

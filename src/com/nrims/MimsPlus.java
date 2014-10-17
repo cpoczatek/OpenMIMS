@@ -1377,7 +1377,17 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 }
             } else {
                 System.out.println("release captured");
-                mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
+                
+                //DJ:10/17/2014
+                //DO NOT CHANGE NEITHER THE STRINGS NOR THEIR ORDER - THEY GET PARSED AT THE UNOPLUGIN.JAVA
+                String fullDescription = ui.getDescription();
+                fullDescription += "Plane Number    : " + this.getCurrentSlice() + "\n";
+                fullDescription += "Contrast   Level: " + ui.getMimsPlusImageContrast(this)   + "\n";
+                fullDescription += "Brightness Level: " + ui.getMimsPlusImageBrightness(this) + "\n";
+                
+                
+                //mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
+                mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, fullDescription);
             }
 
         }

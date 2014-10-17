@@ -100,6 +100,7 @@ public class ImageDataUtilities {
         String[] symbols = im.getMassSymbols();
 
         String str = "\nHeader: \n";
+
         str += "Path: " + im.getImageFile().getAbsolutePath() + "\n";
         str += "Masses: ";
         for (int i = 0; i < im.getNMasses(); i++) {str += names[i] + " ";}
@@ -109,6 +110,7 @@ public class ImageDataUtilities {
         if(symbols!=null) {
             for (int i = 0; i < im.getNMasses(); i++) {str += symbols[i] + " ";}
         }
+        
         str += "\n";
 
         str += "Pixels: " + im.getWidth() + "x" + im.getHeight() + "\n";
@@ -118,8 +120,10 @@ public class ImageDataUtilities {
         str += "Dwell time (ms/xy): " + im.getDwellTime() + "\n";
         str += "Stage Position: " + im.getPosition() + "\n";
         str += "Z Position: " + im.getZPosition() + "\n";
+        
         str += "Sample date: " + im.getSampleDate() + "\n";
         str += "Sample hour: " + im.getSampleHour() + "\n";
+        
         str += "Pixel width (nm): " + im.getPixelWidth() + "\n";
         str += "Pixel height (nm): " + im.getPixelHeight() + "\n";
 
@@ -140,8 +144,23 @@ public class ImageDataUtilities {
               str += "\tFC Objective: " + im.getFCObjective() + "\n";
            
         }
-
         
+        //DJ: 10/13/2014
+        str += "nPrime Current TO   : " + im.getPrimCurrentT0()   + "\n";
+        str += "nPrime Current END : " + im.getPrimCurrentTEnd() + "\n";
+        str += "D1 Pos : " + im.getD1Pos() + "\n";
+        str += "ES Pos : " + im.getESPos() + "\n";
+        str += "AS Pos : " + im.getASPos() + "\n";
+        
+        if(im.getNPrimL1() != null)
+            str += "Prim L1 : " + im.getNPrimL1() + "\n";
+        
+        if(im.getNPrimL0() != null)
+            str += "Prim L0 : " + im.getNPrimL0() + "\n";
+        
+        if(im.getNCsHv() != null)
+            str += "CS HV   : " + im.getNCsHv() + "\n";
+
         str += "End header.\n\n";
         return str;
     }

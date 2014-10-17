@@ -657,4 +657,20 @@ public class Nrrd_Reader implements Opener {
    public String getRadius() {
       return fi.Radius;
    }
+   
+   // DJ: 10/13/2014: "fi" to be enhanced to handle:
+   // PrimL1, PrimL2, and CsHv
+   
+   // DJ: 10/13/2014
+   public String getNPrimL1(){ 
+       return fi.PrimL1;
+   }
+   // DJ: 10/13/2014
+   public String getNPrimL0(){
+       return fi.PrimL0;
+   }
+   // DJ: 10/13/2014
+   public String getNCsHv(){
+       return fi.CsHv;
+   }
 }

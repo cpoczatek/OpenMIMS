@@ -63,6 +63,10 @@ public class Mims_Reader implements Opener {
     private String ESPos;           // Entrance slit position
     private String ASPos;           // Aperture slit position
     
+    private String primL1;  //DJ: 10/13/2014
+    private String primL0;  //DJ: 10/13/2014
+    private String csHv;    //DJ: 10/13/2014
+    
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
 
@@ -662,6 +666,8 @@ public class Mims_Reader implements Opener {
        in.seek(position_of_pszComment);
        pszComment = getChar(256);
        
+       
+       
        // nPrimCurrentT0, nPrimCurrentTEnd
        long position_of_Anal_primary_nano = position_of_Anal_param_nano + (16+4+4+4+4+256);
        long position_of_nPrimCurrentT0 = position_of_Anal_primary_nano + (8);
@@ -670,13 +676,73 @@ public class Mims_Reader implements Opener {
        int nPrimCurrentTEnd = in.readIntEndian();
        PrimCurrentT0 = Integer.toString(nPrimCurrentT0);
        PrimCurrentTEnd = Integer.toString(nPrimCurrentTEnd);
+       
+       // DJ: 10/13/2014
+       // nPrimL1
+       long position_of_nPrimL1 = position_of_Anal_primary_nano + (8+4+4+4);
+       in.seek(position_of_nPrimL1);
+       int nprimL1 = in.readIntEndian();
+       primL1 = Integer.toString(nprimL1);
 
        // nD1Pos
-       long position_of_nD1Pos = position_of_nPrimCurrentT0 + (8+4+4+4+4+4+4+4+4);
+       //long position_of_nD1Pos = position_of_nPrimCurrentT0 + (8+4+4+4+4+4+4+4+4); // original -- not accurate
+       long position_of_nD1Pos = position_of_Anal_primary_nano + (8+4+4+4+4+4+(4*10)+4+(4*10)); // DJ: works
        in.seek(position_of_nD1Pos);
        int nD1Pos = in.readIntEndian();
        D1Pos = Integer.toString(nD1Pos);
+       
+       
+       // DJ: 10/13/2014
+       // nPrimL0, csHV
+       //long position_of_nPrimL0 = position_of_Anal_primary_nano + (8+4+4+4+4+4+(4*10)+4+(4*10)+4+(4*10)+8+8+8+8+32);  
+       long size_Ap_primary_nano_1 = 552;
+       long position_Ap_secondary_nano_1 = position_of_Anal_primary_nano + (size_Ap_primary_nano_1);
+       long position_of_nPrimL0 = position_Ap_secondary_nano_1 - ((67*4)+(4*10)+4+4+4+4);
+       in.seek(position_of_nPrimL0);
+       int nprimL0 = in.readIntEndian();
+       int nCsHv   = in.readIntEndian();
+       primL0 = Integer.toString(nprimL0);
+       csHv   = Integer.toString(nCsHv);
+       
+  
+       /*
+       // DJ: just testing
+       long position_of_ion = position_of_Anal_primary_nano ;
+       in.seek(position_of_ion);
+       int test = -99;
+       System.out.println("=======");
+       System.out.println(getChar(8));
+       System.out.println("=======");
+       //position_of_ion = position_of_Anal_primary_nano + (8) ;
+       //in.seek(position_of_ion);
+       for (int i = 1; i <= 44 ; i++){
+           
+           if (i <= 37) {
+               test = in.readIntEndian();
 
+               if ((i >= 6 && i <= 15) || (i >= 17 && i <= 26) || (i >= 28 && i <= 37)) {
+                   System.out.println("\t =====> i = " + i + "  (" + test + ")");
+               } else {
+                   System.out.println("=====> i = " + i + "  (" + test + ")");
+               }
+           } 
+           else if(i>=38 && i<=41){
+               double test_d = in.readDouble();
+               System.out.println("=====> i = " + i + "  (" + test_d + ")");
+           }
+           else if(i>41 && i<43){
+               System.out.println("=====> i = " + i + "  (" + getChar(32) + ")");
+               
+           }
+           else if (i>=43){
+               test = in.readIntEndian();
+               System.out.println("=====> i = " + i + "  (" + test + ")");
+           }
+       }
+       System.out.println("=======");
+       */
+
+       
        // nESPos
        long size_Ap_primary_nano = 552;
        long position_Ap_secondary_nano = position_of_Anal_primary_nano + (size_Ap_primary_nano);
@@ -1248,6 +1314,37 @@ public class Mims_Reader implements Opener {
     */
     public String getASPos() {
        return ASPos;
+    }
+    
+    
+    //DJ: 10/13/2014
+   /**
+    * Get nPrimL1.
+    *
+    * @return nPrimL1
+    */
+    public String getNPrimL1() {
+       return primL1;
+    }
+    
+    //DJ: 10/13/2014
+   /**
+    * Get nPrimL0.
+    *
+    * @return nPrimL0
+    */
+    public String getNPrimL0() {
+       return primL0;
+    }
+    
+    //DJ: 10/13/2014
+   /**
+    * Get nCsHv.
+    *
+    * @return nCsHv
+    */
+    public String getNCsHv() {
+       return csHv;
     }
 
     /*

@@ -71,6 +71,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.jfree.ui.ExtensionFileFilter;
 
+
 /**
  * The main user interface of the NRIMS ImageJ plugin. A multi-tabbed window
  * with a file menu, the UI class serves as the central hub for all classes
@@ -2714,8 +2715,17 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         // just to tile the the new windows that were not present in the previous file
         // The states of the ones that were present in the previous file, will be handled by applyStateWindow(mass_props)
-
-   
+        
+        
+        MimsPlus[] coll = getAllOpenImages();
+        
+        for(int i=0; i<=coll.length; i++){
+            //System.out.println(coll[i].getShortTitle() + " => " + coll[i].getWindow().getCanvas(). );
+        }
+        
+        
+        
+        
         tileWindows();
         
         applyWindowState(mass_props);
@@ -3813,7 +3823,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     }//GEN-LAST:event_openNewWriterActionPerformed
 
     private void insertPicFrameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertPicFrameActionPerformed
-        if (image != null) {
+                                                                                                                                                                                                              if (image != null) {
             UnoPlugin.insertEmptyOLEObject(image.getImageFile().getName(), getImageDir() + File.separator);
         } else {
             UnoPlugin.insertEmptyOLEObject("", "");
@@ -4657,6 +4667,16 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      */
     public MimsCBControl getCBControl() {
         return cbControl;
+    }
+    //DJ:10/17/2014
+    public int getMimsPlusImageContrast(MimsPlus mp){
+        setActiveMimsPlus(mp);
+        return cbControl.getContrastLevel();
+    }
+    //DJ:10/17/2014
+    public int getMimsPlusImageBrightness(MimsPlus mp){
+        setActiveMimsPlus(mp);
+        return cbControl.getBrightnessLevel();
     }
 
     /**

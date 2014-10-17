@@ -516,6 +516,15 @@ private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {
       return this.isVisible();
    }
    
+   //DJ:10/17/2014
+   public int getContrastLevel(){
+       return contrastAdjuster1.getImageContrastValue();
+   }
+   //DJ:10/17/2014
+   public int getBrightnessLevel(){
+       return contrastAdjuster1.getImageBrightnessValue();
+   }
+   
    private com.nrims.ContrastAdjuster contrastAdjuster1;
    private javax.swing.JComboBox jComboBox1;
    private javax.swing.JComboBox jComboBox2;

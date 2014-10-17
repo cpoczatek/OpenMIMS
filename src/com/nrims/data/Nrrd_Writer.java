@@ -428,6 +428,11 @@ class NrrdFileInfo extends FileInfo {
    public String Radius;	        // Trolley radius
    public String ESPos;           // Entrance slit position
    public String ASPos;           // Aperture slit position
+   
+   // DJ: 10/13/2014
+   public String PrimL1;
+   public String PrimL0;
+   public String CsHv;
 	
 	// Additional compression modes for fi.compression
 	public static final int GZIP = 1001;

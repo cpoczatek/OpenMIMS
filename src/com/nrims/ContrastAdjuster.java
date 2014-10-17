@@ -1032,6 +1032,14 @@ public class ContrastAdjuster extends JPanel implements Runnable,
                                 hold = false;		
     }
     
+    //DJ:10/17/2014
+    public int getImageContrastValue(){
+        return contrastSlider.getValue();
+    }
+    //DJ:10/17/2014
+    public int getImageBrightnessValue(){
+        return brightnessSlider.getValue();
+    }
 } // ContrastAdjuster class
 
 
