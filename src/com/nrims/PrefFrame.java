@@ -35,6 +35,9 @@ public class PrefFrame extends PlugInJFrame {
     int tileY = 0;
     int autoSaveInterval = 120;
     String formatString = "M[S]:F";
+    
+    //DJ: 10/24/2014
+    String myNotesPath = "";
 
     final String PREFS_KEY = "openmims.";
 
@@ -76,6 +79,8 @@ public class PrefFrame extends PlugInJFrame {
         jLabel10 = new javax.swing.JLabel();
         formatStringTextField = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
+        myNotes_jLabel = new javax.swing.JLabel();
+        myNotes_jTextField1 = new javax.swing.JTextField();
 
         jLabel5.setText("Percent turnover, background:");
 
@@ -125,6 +130,8 @@ public class PrefFrame extends PlugInJFrame {
 
         jLabel11.setText("Title Format String(single)");
 
+        myNotes_jLabel.setText("My Notes File:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -136,40 +143,6 @@ public class PrefFrame extends PlugInJFrame {
                         .addComponent(jButton1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel2)
-                                    .addComponent(jLabel3))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(ratioSpanTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(scaleFactorTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(sumCheckbox)
-                                    .addComponent(massCheckbox)
-                                    .addComponent(HSIcheckbox)
-                                    .addComponent(ratioCheckbox)
-                                    .addComponent(ratioReciprocalsCheckBox)))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel7))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(referenceTextField)
-                            .addComponent(backgroundTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(numDecimalPlacesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -179,14 +152,51 @@ public class PrefFrame extends PlugInJFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(AutoSaveIntervalTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE)
                             .addComponent(tileYTextField))
-                        .addGap(113, 113, 113)))
+                        .addGap(113, 113, 113))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(myNotes_jLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(myNotes_jTextField1))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel1)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel2)
+                                            .addComponent(jLabel3))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(ratioSpanTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(scaleFactorTextbox, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(12, 12, 12)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(sumCheckbox)
+                                            .addComponent(massCheckbox)
+                                            .addComponent(HSIcheckbox)
+                                            .addComponent(ratioCheckbox)
+                                            .addComponent(ratioReciprocalsCheckBox)))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel4)
+                                            .addComponent(jLabel7))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(referenceTextField)
+                                            .addComponent(backgroundTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE)))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel8)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(numDecimalPlacesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel11)
+                                        .addGap(28, 28, 28)
+                                        .addComponent(formatStringTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(0, 0, Short.MAX_VALUE)))))
                 .addContainerGap())
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel11)
-                .addGap(28, 28, 28)
-                .addComponent(formatStringTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -235,7 +245,11 @@ public class PrefFrame extends PlugInJFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(formatStringTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel11))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(myNotes_jLabel)
+                    .addComponent(myNotes_jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton2)
                     .addComponent(jButton1))
@@ -271,6 +285,9 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         this.tileYTextField.setText(new Integer(tileY).toString());
         this.AutoSaveIntervalTextField.setText(new Integer(autoSaveInterval).toString());
         this.formatStringTextField.setText(formatString);
+        
+        //DJ: 10/24/2014
+        this.myNotes_jTextField1.setText(myNotesPath);
     }
 
     /** Reads the preferences and sets member variables accordingly.*/
@@ -290,6 +307,9 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         tileY = (int)Prefs.get(PREFS_KEY + "tileY", tileY);
         autoSaveInterval = (int)Prefs.get(PREFS_KEY + "autoSaveInterval", autoSaveInterval);
         formatString = Prefs.get(PREFS_KEY + "formatString", formatString);
+        
+        //DJ: 10/24/2014
+        myNotesPath = Prefs.get(PREFS_KEY + "myNotesPath", myNotesPath);
     }
 
     /** Saves the preferences file.*/
@@ -356,6 +376,13 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
            IJ.error("Malformed \"formatString\" value.");
            return;
         }
+        //DJ: 10/24/2014
+        try {
+           myNotesPath = myNotes_jTextField1.getText();
+        } catch (Exception e) {
+           IJ.error("Malformed \"myNotesPath\" value.");
+           return;
+        }
         Prefs.set(PREFS_KEY + "includeHSI", includeHSI);
         Prefs.set(PREFS_KEY + "includeSum", includeSum);
         Prefs.set(PREFS_KEY + "includeMass", includeMass);
@@ -371,6 +398,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         Prefs.set(PREFS_KEY + "tileY", tileY);
         Prefs.set(PREFS_KEY + "autoSaveInterval", autoSaveInterval);
         Prefs.set(PREFS_KEY + "formatString", formatString);
+        //DJ: 10/24/2014
+        Prefs.set(PREFS_KEY + "myNotesPath", myNotesPath);
         Prefs.savePreferences();
         close();
     }
@@ -500,6 +529,14 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     String getFormatString(){
         return formatString;
     }
+    //Dj: 10/24/2014
+    /**
+     * Get the Notes path string used to determine the user's notes file
+     * @return 
+     */
+    String getMyNotesPath(){
+        return myNotesPath;
+    }
     /**
      * Get the list of ratio images preferred by the user.
      */
@@ -614,6 +651,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JCheckBox massCheckbox;
+    private javax.swing.JLabel myNotes_jLabel;
+    private javax.swing.JTextField myNotes_jTextField1;
     private javax.swing.JSpinner numDecimalPlacesSpinner;
     private javax.swing.JCheckBox ratioCheckbox;
     private javax.swing.JCheckBox ratioReciprocalsCheckBox;

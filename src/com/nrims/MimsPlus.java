@@ -8,13 +8,11 @@ import ij.ImagePlus;
 import ij.gui.*;
 import ij.io.FileInfo;
 import ij.measure.Calibration;
-import ij.plugin.ContrastEnhancer;
 import ij.plugin.filter.RankFilters;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import java.awt.Image;
 
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
@@ -133,7 +131,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             ipp = new ij.process.FloatProcessor(w, h, pixels);
         }
         //String titleString = "m" + ui.getTitleStringSymbol(index) + ": " + ui.getImageFilePrefix();
-        title = ImageDataUtilities.formatTitle(index, false, ui.getPreferences().getFormatString(), ui.getOpener());
+        title = ImageDataUtilities.formatTitle(index, true, ui.getPreferences().getFormatString(), ui.getOpener());
+        //title = 
         libreTitle = ImageDataUtilities.formatLibreTitle(index, ui.getOpener(), this);
         setProcessor(title, ipp);
 
@@ -1380,14 +1379,77 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 
                 //DJ:10/17/2014
                 //DO NOT CHANGE NEITHER THE STRINGS NOR THEIR ORDER - THEY GET PARSED AT THE UNOPLUGIN.JAVA
-                String fullDescription = ui.getDescription();
-                fullDescription += "Plane Number    : " + this.getCurrentSlice() + "\n";
-                fullDescription += "Contrast   Level: " + ui.getMimsPlusImageContrast(this)   + "\n";
-                fullDescription += "Brightness Level: " + ui.getMimsPlusImageBrightness(this) + "\n";
                 
+                
+                String[] allDescriptions = new String[5];
+                
+                String imageType   = "";
+                String displayMin  = "";
+                String displayMax  = "";
+                String planeNumber = "";
+                String fileDescription = ui.getDescription();
+
+                
+                switch(this.getMimsType()){
+                    case MimsPlus.MASS_IMAGE:      
+                        imageType   += "MASS_IMAGE";  
+                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+                        planeNumber += this.getSlice();
+                        break;
+                        
+                    case MimsPlus.SUM_IMAGE:       
+                        imageType   += "SUM_IMAGE";
+                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+                        planeNumber += "N/A";
+                        break;
+                        
+                    case MimsPlus.RATIO_IMAGE:     
+                        imageType   += "RATIO_IMAGE";
+                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+                        if(ui.getIsSum())
+                            planeNumber += "N/A";
+                        else
+                            planeNumber += this.getNumeratorImage().getSlice();
+
+                        break;
+                        
+                    case MimsPlus.HSI_IMAGE:       
+                        imageType   += "HSI_IMAGE"; 
+                        displayMin  += "N/A";
+                        displayMax  += "N/A";
+                        if(ui.getIsSum())
+                            planeNumber += "N/A";
+                        else
+                            planeNumber += this.getNumeratorImage().getSlice();
+                        
+                        break;
+                        
+                    case MimsPlus.COMPOSITE_IMAGE: 
+                        imageType   += "COMPOSITE_IMAGE";
+                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+                        planeNumber += "N/A";
+                        break;
+                        
+                    default: 
+                        imageType   += "NON_MIMSIMAGE";
+                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+                        planeNumber += "N/A";
+                }
+                
+                
+                allDescriptions[0] = imageType;
+                allDescriptions[1] = displayMin;
+                allDescriptions[2] = displayMax;
+                allDescriptions[3] = planeNumber;
+                allDescriptions[4] = fileDescription;  
                 
                 //mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
-                mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, fullDescription);
+                mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, allDescriptions);
             }
 
         }

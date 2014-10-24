@@ -44,12 +44,15 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +74,9 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.jfree.ui.ExtensionFileFilter;
 
+//DJ: 10/20/2014
+import java.util.Properties; // to be used to read the config files where html links are located 
+                            //  for OpenMIMS Documentation as well as the Sample Data link + other possible links.
 
 /**
  * The main user interface of the NRIMS ImageJ plugin. A multi-tabbed window
@@ -180,6 +186,18 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public SwingWorker task;
     boolean previousFileCanceled = true;
     private final static Logger OMLOGGER = OMLogger.getOMLogger(UI.class.getName());
+    
+    //DJ: 10/20/2014 
+    // to be used as a backup in case the config file for links doesn't exist or doesn't get read/parsed.
+    String DEFAULT_DOCUMENTATION_LINK = "http://nrims.partners.org/wiki/";
+    String DEFAULT_SAMPLE_DATA_LINK   = "http://nrims.partners.org/sampledata/";
+    
+    //DJ: 10/20/2014
+    String documentationLink = DEFAULT_DOCUMENTATION_LINK; // to be actualized later on while parsing the "OpenMIMSLinks.cfg"
+    String sampleDataLink    = DEFAULT_SAMPLE_DATA_LINK; // to be actualized later on while parsing the "OpenMIMSLinks.cfg"
+
+    //DJ:10/20/2014
+    private Properties defaultLinks; // for reading and parsing the "OpenMIMSLinks.cfg"
 
     public UI() {
         this(false);
@@ -364,10 +382,72 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         
         
-        //DJ: 10/06/2014
-        // add some tool tips for buttons:
-        docButton.setToolTipText(" OPEN LINK:  http://nrims.harvard.edu/files/nrims/files/openmims-manual.pdf");
-        sampleDataButton.setToolTipText("OPEN LINK:  http://nrims.partners.org/sampledata/");
+        // DJ: 10/06/2014
+        // try to read the "OpenMIMSLinks.cfg" config file that contain web links to (exp: Documentation, Sample Data, ...
+        // the "OpenMIMSLinks.cfg" could be extended as desired as long as the parsing happens at this stage.
+        try{
+            defaultLinks = new Properties();
+            //This would allow us to both:
+            // 1) read the "OpenMIMSLinks.cfg" right here from eclipse IDE and
+            // 2) within the  "OpenMIMS.jar" located in the fiji.app/plugins while it's running
+            InputStream in = getClass().getResourceAsStream("/OpenMIMSLinks.cfg"); 
+            
+            //If in case the "OpenMIMSLinks.cfg" file is provided, we read/parse it
+            // otherwise, we just the default links that were previously declared.
+            if (in != null) {
+                defaultLinks.load(in);
+                //defaultLinks.list(System.out); //  prints out.
+                in.close();
+
+                documentationLink = defaultLinks.getProperty("DOCUMENTATION_LINK", DEFAULT_DOCUMENTATION_LINK);
+                sampleDataLink = defaultLinks.getProperty("SAMPLE_DATA_LINK", DEFAULT_SAMPLE_DATA_LINK);
+
+                // for debugging purposes:
+                /*
+                System.out.println("==> " + documentationLink);
+                System.out.println("==> " + sampleDataLink);
+                */
+            }
+            
+        } catch(FileNotFoundException e) {
+            System.out.println(e);
+        } catch (IOException e_io){
+            System.out.println(e_io);
+        }
+        
+        boolean documentationWebPageExists = false;
+        try {
+            final java.net.URL documentationURL = new java.net.URL(documentationLink);
+            java.net.HttpURLConnection huc = (java.net.HttpURLConnection) documentationURL.openConnection();
+            huc.setRequestMethod("HEAD");
+            
+            int response = huc.getResponseCode();
+
+            if (response == 200)
+                documentationWebPageExists = true;
+                
+
+        } catch (MalformedURLException e) {
+            //System.err.println(e);
+        } catch (IOException io_e) {
+            //System.out.println(io_e);
+        }
+        finally{
+            if(documentationWebPageExists)
+                System.out.println("ONLINE Documentation Web Page Exists");
+           else
+                System.out.println("ONLINE Documentation Web Page Does Not Exists");
+        }
+        // in here we check would have the local documentation pdf file to be shown \
+        // instead of the online version because it simply doesn't exist.
+        
+
+
+        // DJ: 20/10/2014:
+        // we produce a tip text whenever the mouse pointer hovers over the Documentation Button
+        // as well as the Sample Data Button.
+        docButton.setToolTipText(" OPEN LINK:  " + documentationLink);
+        sampleDataButton.setToolTipText("OPEN LINK:  " + sampleDataLink);
         
     }
 
@@ -1560,6 +1640,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         utilitiesMenu = new javax.swing.JMenu();
         generateReportMenuItem = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
+        openMyNotes_jMenuItem = new javax.swing.JMenuItem();
         openNewWriter = new javax.swing.JMenuItem();
         openNewDraw = new javax.swing.JMenuItem();
         openNewImpress = new javax.swing.JMenuItem();
@@ -1576,6 +1657,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         findStackFile = new javax.swing.JMenuItem();
         jMenuItem4 = new javax.swing.JMenuItem();
         exportjMenu = new javax.swing.JMenu();
+        jMenuItem7 = new javax.swing.JMenuItem();
         exportPNGjMenuItem = new javax.swing.JMenuItem();
         exportQVisMenuItem = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JSeparator();
@@ -1798,6 +1880,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
 
+        openMyNotes_jMenuItem.setText("Open My Note's File");
+        openMyNotes_jMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openMyNotes_jMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu1.add(openMyNotes_jMenuItem);
+
         openNewWriter.setText("Open new writer doc");
         openNewWriter.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1913,6 +2003,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 exportjMenuActionPerformed(evt);
             }
         });
+
+        jMenuItem7.setText("Current Image");
+        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem7ActionPerformed(evt);
+            }
+        });
+        exportjMenu.add(jMenuItem7);
 
         exportPNGjMenuItem.setText("All Derived (png)");
         exportPNGjMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -2717,6 +2815,9 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         // The states of the ones that were present in the previous file, will be handled by applyStateWindow(mass_props)
         
         
+        
+        
+        
         MimsPlus[] coll = getAllOpenImages();
         
         for(int i=0; i<=coll.length; i++){
@@ -3185,7 +3286,8 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     message += "\n\n";
     message += "Developed by:\n Doug Benson (RIP), Collin Poczatek \n ";
     message += "Boris Epstein, Philipp Gormanns\n Stefan Reckow, ";
-    message += "Zeke Kaufman, \n Farah Kashem, William Ang.";
+    message += "Zeke Kaufman, \n Farah Kashem, William Ang,\n ";
+    message += "Djamel-Eddine Sia.";
     message += "\n\n";
     message += "OpenMIMS has modified, uses, or depends upon: \n";
     message += "    ImageJ: http://rsbweb.nih.gov/ij/\n";
@@ -3466,12 +3568,51 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
         }
     }
 }//GEN-LAST:event_closeAllSumMenuItemActionPerformed
+    //DJ: 10/22/2014
+    public void exportCurrentlySelectedToPNG(){
+        
+        File file = image.getImageFile();
+        System.out.println(file.getParent() + File.separator);
+        String dir = file.getParent() + File.separator;
+        
+        MimsPlus selectedImage = (MimsPlus) ij.WindowManager.getCurrentImage();
+        
+        ij.io.FileSaver saver = new ij.io.FileSaver(ij.WindowManager.getCurrentImage());
+        
+        if(selectedImage.getMimsType() == MimsPlus.MASS_IMAGE){
+            selectedImage.getWindow().toFront();
+            Image screenShot =  ui.getScreenCaptureCurrentImage();
+            saver = new ij.io.FileSaver(new ImagePlus(selectedImage.title, screenShot));
+        }
+        
+        String name = getExportName(selectedImage) + ".png";
+        File saveName = new File(dir + name);
+        if (saveName.exists()) {
+            for (int j = 1; j < 1000; j++) {
+                name = getExportName(selectedImage) + "_" + j + ".png";
+                saveName = new File(dir + name);
+                if (!saveName.exists()) {
+                    break;
+                }
+            }
+        }
+        String msg = "Folder Writting Permission Denied.\n Choose Another Folder ?";
+        File folder = com.nrims.data.FileUtilities.checkWritePermissions(saveName, ui, msg);
 
+        if(folder != null && folder.exists()){
+          File fileToSave = new File(folder.getAbsolutePath() + "/" + name );
+            saver.saveAsPng(fileToSave.getAbsolutePath());
+        }
+        
+    }
     /**
      * Exports all open sum images, HSI images, ratio images and composite
      * images as .png files.
      */
     public void exportPNGs() {
+        
+        String msg = "Folder Writting Permission Denied.\n Choose Another Folder ?";
+        
         File file = image.getImageFile();
         System.out.println(file.getParent() + File.separator);
         String dir = file.getParent() + File.separator;
@@ -3479,8 +3620,12 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
         // DJ: 08/27/2014 TESTing
         MimsPlus[] mass = getOpenMassImages();
         for (int i = 0; i < mass.length; i++) {
-            ImagePlus img = (ImagePlus) mass[i];
-            ij.io.FileSaver saver = new ij.io.FileSaver(img);
+            //ImagePlus img = (ImagePlus) mass[i];
+            ij.WindowManager.setCurrentWindow(mass[i].getWindow());
+            //mass[i].setActivated();
+            mass[i].getWindow().toFront();
+            Image screenShot =  ui.getScreenCaptureCurrentImage();
+            ij.io.FileSaver saver = new ij.io.FileSaver(new ImagePlus(mass[i].title, screenShot));
             String name = getExportName(mass[i]) + ".png";
             File saveName = new File(dir + name);
             if (saveName.exists()) {
@@ -3492,7 +3637,15 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
                     }
                 }
             }
-            saver.saveAsPng(dir + name);
+            
+            // DJ: 10/24/2014
+            File folder = com.nrims.data.FileUtilities.checkWritePermissions(saveName, ui, msg);
+            if (folder != null && folder.exists()) {
+                File fileToSave = new File(folder.getAbsolutePath() + "/" + name);
+                saver.saveAsPng(fileToSave.getAbsolutePath());
+            }else
+                return;
+
         }    
         
         MimsPlus[] sum = getOpenSumImages();
@@ -3510,7 +3663,13 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
                     }
                 }
             }
-            saver.saveAsPng(dir + name);
+            // DJ: 10/24/2014
+            File folder = com.nrims.data.FileUtilities.checkWritePermissions(saveName, ui, msg);
+            if (folder != null && folder.exists()) {
+                File fileToSave = new File(folder.getAbsolutePath() + "/" + name);
+                saver.saveAsPng(fileToSave.getAbsolutePath());
+            } else
+                return;
         }
 
         MimsPlus[] hsi = getOpenHSIImages();
@@ -3528,7 +3687,13 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
                     }
                 }
             }
-            saver.saveAsPng(dir + name);
+            // DJ: 10/24/2014
+            File folder = com.nrims.data.FileUtilities.checkWritePermissions(saveName, ui, msg);
+            if (folder != null && folder.exists()) {
+                File fileToSave = new File(folder.getAbsolutePath() + "/" + name);
+                saver.saveAsPng(fileToSave.getAbsolutePath());
+            } else
+                return;
         }
 
         MimsPlus[] ratios = getOpenRatioImages();
@@ -3546,7 +3711,13 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
                     }
                 }
             }
-            saver.saveAsPng(dir + name);
+            // DJ: 10/24/2014
+            File folder = com.nrims.data.FileUtilities.checkWritePermissions(saveName, ui, msg);
+            if (folder != null && folder.exists()) {
+                File fileToSave = new File(folder.getAbsolutePath() + "/" + name);
+                saver.saveAsPng(fileToSave.getAbsolutePath());
+            } else
+                return;
         }
 
 
@@ -3565,7 +3736,13 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
                     }
                 }
             }
-            saver.saveAsPng(dir + name);
+            // DJ: 10/24/2014
+            File folder = com.nrims.data.FileUtilities.checkWritePermissions(saveName, ui, msg);
+            if (folder != null && folder.exists()) {
+                File fileToSave = new File(folder.getAbsolutePath() + "/" + name);
+                saver.saveAsPng(fileToSave.getAbsolutePath());
+            } else
+                return;
         }
 
     }
@@ -3920,7 +4097,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
                 try {
-                    java.net.URI uri = new java.net.URI("http://nrims.harvard.edu/files/nrims/files/openmims-manual.pdf");
+                    java.net.URI uri = new java.net.URI(documentationLink);
                     desktop.browse(uri);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -3936,7 +4113,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
                 try {
-                    java.net.URI uri = new java.net.URI("http://nrims.harvard.edu/files/nrims/files/openmims-manual.pdf");
+                    java.net.URI uri = new java.net.URI(documentationLink);
                     desktop.browse(uri);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -3953,7 +4130,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
                 try {
-                    java.net.URI uri = new java.net.URI("http://nrims.partners.org/sampledata/");
+                    java.net.URI uri = new java.net.URI(sampleDataLink);
                     desktop.browse(uri);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -3963,6 +4140,39 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             e.printStackTrace();
         }
     }//GEN-LAST:event_sampleDataButtonActionPerformed
+
+    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+        // TODO add your handling code here:
+        exportCurrentlySelectedToPNG();
+    }//GEN-LAST:event_jMenuItem7ActionPerformed
+
+    //DJ: 10/24/2014
+    private void openMyNotes_jMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMyNotes_jMenuItemActionPerformed
+        
+        String notesPath = prefs.getMyNotesPath();
+        //System.out.println("my note's path = " + notesPath);
+        if(notesPath.isEmpty()){
+            IJ.error("The note's document path is empty - check: Edit>Preferences ");
+            return;
+        }
+        if (!notesPath.endsWith(".odt") && !notesPath.endsWith(".doc") && !notesPath.endsWith(".docx")) {
+            IJ.error("Incorrect Document Format - check: Edit>Preferences ");
+            return;
+        } else{
+            File noteFile = new File(notesPath);
+            if(!noteFile.exists()){
+                IJ.error("Note's file does not exist - check: Edit>Preferences ");
+                return;
+            }
+            if(!noteFile.canRead()){
+                IJ.error("Note's file read-access denied - check the file's permissions ");
+                return;
+            }
+            else{
+               UnoPlugin.openDoc(notesPath);
+            }
+        }
+    }//GEN-LAST:event_openMyNotes_jMenuItemActionPerformed
 
     /**
      * Applies a correction to the current image and writes the file to
@@ -6209,6 +6419,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JMenuItem jMenuItem6;
+    private javax.swing.JMenuItem jMenuItem7;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;
@@ -6221,6 +6432,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private javax.swing.JSeparator jSeparator7;
     private javax.swing.JSeparator jSeparator8;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JMenuItem openMyNotes_jMenuItem;
     private javax.swing.JMenuItem openNewDraw;
     private javax.swing.JMenuItem openNewImpress;
     private javax.swing.JMenuItem openNewMenuItem;

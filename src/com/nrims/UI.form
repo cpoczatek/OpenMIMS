@@ -218,6 +218,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenu1ActionPerformed"/>
               </Events>
               <SubComponents>
+                <MenuItem class="javax.swing.JMenuItem" name="openMyNotes_jMenuItem">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Open My Note&apos;s File"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="openMyNotes_jMenuItemActionPerformed"/>
+                  </Events>
+                </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="openNewWriter">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Open new writer doc"/>
@@ -339,6 +347,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportjMenuActionPerformed"/>
               </Events>
               <SubComponents>
+                <MenuItem class="javax.swing.JMenuItem" name="jMenuItem7">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Current Image"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem7ActionPerformed"/>
+                  </Events>
+                </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="exportPNGjMenuItem">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="All Derived (png)"/>
