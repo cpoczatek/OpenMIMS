@@ -146,10 +146,19 @@ public class ImageDataUtilities {
         }
         
         //DJ: 10/13/2014
-        str += "nPrime Current TO   : " + im.getPrimCurrentT0()   + "\n";
-        str += "nPrime Current END : " + im.getPrimCurrentTEnd() + "\n";
+        if(im.getPrimCurrentT0() != null)
+        str += "FCP Current T0   : " + im.getPrimCurrentT0()   + "\n";
+        
+        if(im.getPrimCurrentTEnd() != null)
+        str += "FCP Current END : " + im.getPrimCurrentTEnd() + "\n";
+        
+        if(im.getD1Pos() != null)
         str += "D1 Pos : " + im.getD1Pos() + "\n";
+        
+        if(im.getESPos() != null)
         str += "ES Pos : " + im.getESPos() + "\n";
+        
+        if(im.getASPos() != null)
         str += "AS Pos : " + im.getASPos() + "\n";
         
         if(im.getNPrimL1() != null)

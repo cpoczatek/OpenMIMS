@@ -237,7 +237,7 @@ public class Converter extends SwingWorker<Void, Void> {
    //DJ
    // to setup the png directory for the convertManger to use it 
    // in order to generate html page.
-   public void specsForHTMLThruOpenMIMS(String htmlFilePath,
+   public void hsiImageSpecsForHTML(String htmlFilePath,
                             String pngFolderPath, 
                             String[] HSIs,
                             String[] numThreshs,
@@ -318,6 +318,7 @@ public class Converter extends SwingWorker<Void, Void> {
         }
         generateMassImagePNGs(pngDirFile);
         generateHSIImagePNGs(pngDirFile);
+       // generateRatioImagePNGs(pngDirFile); // Dj: 10/27/2014 just fe testing as of now.
     }
 
    private void generateMassImagePNGs(File pngDirFile) {
@@ -418,7 +419,7 @@ public class Converter extends SwingWorker<Void, Void> {
                hsiprops.setRatioScaleFactor(rfactor);
             } catch (NumberFormatException nfe) {
                hsiprops.setRatioScaleFactor(SCALE_FACTOR_DEFAULT);
-               System.out.println("WARNING: Bad format for min RGB: " + rgbMins[counter] + ". Auto setting");
+               System.out.println("WARNING: Bad format for scale factor: " + scaleFactors[counter] + ". Auto setting");
             }
          }
 
@@ -440,7 +441,6 @@ public class Converter extends SwingWorker<Void, Void> {
       }
 
    }
-
    private boolean trackFile(){
 
       try {

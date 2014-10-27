@@ -910,12 +910,35 @@ public class MimsHSIView extends javax.swing.JPanel {
         for (int i = 0; i < imgs.length; i++) {
             for (int y = 0; y < imgs.length; y++) {
                 if (imgs[i] != null && imgs[y] != null && symbols[i] != null && symbols[y] != null) {
-                    if (com.nrims.UI.validRatioChecker(symbols[i], symbols[y])) 
+                    if (com.nrims.UI.validRatioChecker(symbols[i], symbols[y])) {
                         listModel.addElement(imgs[i].getMassIndex() + ":" + imgs[y].getMassIndex());
+                    }
                 }
             }
         }
-        jList1.setForeground(Color.blue);
+        
+        // DJ: 10/27/2014
+        // removing duplicates from the list of valid ratios -------------------
+        ArrayList<Integer> indexesOfDuplicates = new ArrayList<Integer>();
+        for(int i=0; i<listModel.getSize(); i++){
+            if(i == listModel.getSize()-1){
+                break;
+            } else {
+                for(int j=i+1; j<listModel.getSize(); j++){
+                    if(listModel.getElementAt(i).toString().equals(listModel.getElementAt(j).toString())){
+                        indexesOfDuplicates.add(new Integer(j));
+                    }
+                }
+            }
+        }
+        if(indexesOfDuplicates.isEmpty() == false){
+            // DJ: descending instead of ascending is crucial here: avoids null pointer exception
+            for(int i = indexesOfDuplicates.size()-1 ; i>=0 ;  i--){
+                listModel.remove(indexesOfDuplicates.get(i).intValue());
+            }
+        } //--------------------------------------------------------------------
+        
+        //jList1.setForeground(Color.blue); // just makes the items displayed in blue.
     }
     //DJ: 09/08/2014
     public String[] getSelectedRatios(){

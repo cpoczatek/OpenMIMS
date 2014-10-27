@@ -1,5 +1,5 @@
-/*
- * UI.java
+/*//GEN-FIRST:event_exportHSI_RGBAActionPerformed
+ * UI.java//GEN-LAST:event_exportHSI_RGBAActionPerformed
  *
  * Created on May 1, 2006, 12:59 PM
  */
@@ -1604,7 +1604,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public void initComponentsTesting() {
         this.testingMenu.setVisible(true);
     }
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jMenuItem9 = new javax.swing.JMenuItem();
@@ -2149,7 +2149,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         getAccessibleContext().setAccessibleDescription("NRIMS Analyais Module");
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                        
 
     /**
      * Restores the image to its unmodified state. Undoes and compression,
@@ -2414,14 +2414,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     /**
      * An action method for the Edit>Preferences... menu item.
      */
-    private void preferencesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_preferencesMenuItemActionPerformed
+    private void preferencesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                    
 
         if (this.prefs == null) {
             prefs = new PrefFrame(this);
         }
         prefs.showFrame();
 
-    }//GEN-LAST:event_preferencesMenuItemActionPerformed
+    }                                                   
 
     /**
      * Action method for the View>Tile Windows menu item.
@@ -3201,7 +3201,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Action method for changing tabs. Im not sure but I dont think this should
      * be needed. Possible future delete.
      */
-    private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
+    private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {                                          
         //if (this.mimsTomography != null) {
         //    this.mimsTomography.resetImageNamesList();
         //}
@@ -3209,21 +3209,21 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         //    this.mimsStackEditing.resetTrueIndexLabel();
         //    this.mimsStackEditing.resetSpinners();
         //}
-    }//GEN-LAST:event_jTabbedPane1StateChanged
+    }                                         
 
     /**
      * Action method File>Exit menu item. Closes the application.
      */
-private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
+private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                             
     WindowEvent wev = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
     Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
-}//GEN-LAST:event_exitMenuItemActionPerformed
+}                                            
 
     /**
      * Action method for Utilities>Sum all Open menu item. Generates sum images
      * for all open mass and ration images.
      */
-private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sumAllMenuItemActionPerformed
+private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                               
 
     SumProps sumProps;
     MimsPlus[] openmass = this.getOpenMassImages();
@@ -3259,13 +3259,13 @@ private void sumAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GE
         MimsPlus mp = new MimsPlus(this, sumProps, null);
         mp.showWindow();
     }
-}//GEN-LAST:event_sumAllMenuItemActionPerformed
+}                                              
 
     /**
      * Action method for File>About menu item. Displays basic information about
      * the Open Mims plugins.
      */
-private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
+private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                              
 
     String message = "OpenMIMS v2.5 (rev: " + revisionNumber + ")";
     message += "\n\n";
@@ -3322,13 +3322,13 @@ private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN
     frame.setLocation(x, y);
     frame.setVisible(true);
 
-}//GEN-LAST:event_aboutMenuItemActionPerformed
+}                                             
 
     /**
      * Action method for Utilities>Capture Current Image menu item. Generates a
      * .png screen capture for the most recently clicked image.
      */
-private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_captureImageMenuItemActionPerformed
+private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                     
 
     // Captures the active image window and returns it as an ImagePlus.
     MimsPlus imp = (MimsPlus) ij.WindowManager.getCurrentImage();
@@ -3372,7 +3372,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
     } finally {
         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
-}//GEN-LAST:event_captureImageMenuItemActionPerformed
+}                                                    
 
     /**
      * Gets a screen capture for the current image.
@@ -3420,7 +3420,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
      * Action method for the Utilities>Import .im List menu item. Loads a list
      * of images caontained in a text file and concatenates them.
      */
-private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importIMListMenuItemActionPerformed
+private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                     
     com.nrims.data.LoadImageList testLoad = new com.nrims.data.LoadImageList(this);
     boolean read;
     read = testLoad.openList();
@@ -3430,13 +3430,13 @@ private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt)
 
     testLoad.printList();
     testLoad.simpleIMImport();
-}//GEN-LAST:event_importIMListMenuItemActionPerformed
+}                                                    
 
     /**
      * Action method for the Utilities>Generate Stack menu item. Turns a ratio
      * or HSI image into a stack.
      */
-private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_genStackMenuItemActionPerformed
+private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                 
 
     MimsPlus img;
     //grab current window and try to cast
@@ -3449,7 +3449,7 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
 
     ImageDataUtilities.generateStack(img, this);
 
-}//GEN-LAST:event_genStackMenuItemActionPerformed
+}                                                
 
     /**
      * Action method Utilities>Test menu item. Reserved for testing code.
@@ -3458,10 +3458,10 @@ private void genStackMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//
      * Action method for File>Save Image and File>Save Session menu items.
      * Brings up a JFileChooser for saving the current image (or session).
      */
-private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveMIMSjMenuItemActionPerformed
+private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                  
     saveMIMS(evt);
     //TODO should add check if return false show error message
-}//GEN-LAST:event_saveMIMSjMenuItemActionPerformed
+}                                                 
 
     /**
      * Called by the saveMIMSjMenuItemActionPerformed method and can be used to
@@ -3534,40 +3534,40 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
      * Action method for the Utilities>Close>Close All Ratio Images. Closes all
      * ratio images.
      */
-private void closeAllRatioMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeAllRatioMenuItemActionPerformed
+private void closeAllRatioMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                      
 
     for (int i = 0; i < ratioImages.length; i++) {
         if (ratioImages[i] != null) {
             ratioImages[i].close();
         }
     }
-}//GEN-LAST:event_closeAllRatioMenuItemActionPerformed
+}                                                     
 
     /**
      * Action method for the Utilities>Close>Close All HSI Images. Closes all
      * HSI images.
      */
-private void closeAllHSIMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeAllHSIMenuItemActionPerformed
+private void closeAllHSIMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                    
 
     for (int i = 0; i < hsiImages.length; i++) {
         if (hsiImages[i] != null) {
             hsiImages[i].close();
         }
     }
-}//GEN-LAST:event_closeAllHSIMenuItemActionPerformed
+}                                                   
 
     /**
      * Action method for the Utilities>Close>Close All Sum Images. Closes all
      * sum images.
      */
-private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeAllSumMenuItemActionPerformed
+private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                    
 
     for (int i = 0; i < sumImages.length; i++) {
         if (sumImages[i] != null) {
             sumImages[i].close();
         }
     }
-}//GEN-LAST:event_closeAllSumMenuItemActionPerformed
+}                                                   
     //DJ: 10/22/2014
     public void exportCurrentlySelectedToPNG(){
         
@@ -3751,23 +3751,23 @@ private void closeAllSumMenuItemActionPerformed(java.awt.event.ActionEvent evt) 
      * Action method for Utilities>Export>Export All Derived. Exports all
      * derived images and .png's.
      */
-private void exportPNGjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportPNGjMenuItemActionPerformed
+private void exportPNGjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                   
     exportPNGs();
-}//GEN-LAST:event_exportPNGjMenuItemActionPerformed
+}                                                  
 
     /**
      * Action method for Utilities>Image Notes. Opens a text area for adding
      * notes.
      */
-private void imageNotesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageNotesMenuItemActionPerformed
+private void imageNotesMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                   
     this.imgNotes.setVisible(true);
-}//GEN-LAST:event_imageNotesMenuItemActionPerformed
+}                                                  
 
     /**
      * Action method for Utilities>Composite menu item. Shows the compisite
      * manager interface.
      */
-private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compositeMenuItemActionPerformed
+private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                  
     //DJ: 08/14/2014
     // to avoid openning a new composite manager 
     // while another one still exists.
@@ -3777,7 +3777,7 @@ private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
         cbControl.showCompositeManager();
     else
         this.compManager.toFront();
-}//GEN-LAST:event_compositeMenuItemActionPerformed
+}                                                 
 
     /**
      * Action method for Utilities>Debug menu item.
@@ -3785,20 +3785,20 @@ private void compositeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
     /**
      * Not used. Unable to delete. Stupid netbeans.
      */
-private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportHSI_RGBAActionPerformed
+private void exportHSI_RGBAActionPerformed(java.awt.event.ActionEvent evt) {                                               
     // Empty
-}//GEN-LAST:event_exportHSI_RGBAActionPerformed
+}                                              
 
     /**
      * Action method for View>Roi Manager menu item. Display the Roi Manager.
      */
-private void roiManagerMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roiManagerMenuItemActionPerformed
+private void roiManagerMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                   
     getRoiManager().viewManager();
-}//GEN-LAST:event_roiManagerMenuItemActionPerformed
+}                                                  
 
-private void generateReportMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateReportMenuItemActionPerformed
+private void generateReportMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                       
     openReportGenerator();
-}//GEN-LAST:event_generateReportMenuItemActionPerformed
+}                                                      
 
     /*
      * Method for opening report generator. If user closed or cancelled old report dialog,
@@ -3814,11 +3814,11 @@ private void generateReportMenuItemActionPerformed(java.awt.event.ActionEvent ev
         }
     }
 
-private void batch2nrrdMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_batch2nrrdMenuItemActionPerformed
+private void batch2nrrdMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                   
     convertManager cm = new convertManager(this, false);
     cm.setVisible(true);
     cm.selectFiles();
-}//GEN-LAST:event_batch2nrrdMenuItemActionPerformed
+}                                                  
 
 //DJ: 08/21/2014
 /**
@@ -3845,7 +3845,7 @@ public String getNameOfLastFileOpened(){
     return allFilesPaths[allFilesPaths.length-1];
 }
 
-private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
+private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
     
     if(filesManager != null)
         filesManager.dispose();
@@ -3866,9 +3866,9 @@ private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
        filesManager.setVisible(true);
     }
 
-}//GEN-LAST:event_stopButtonActionPerformed
+}                                          
 
-private void DTCorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DTCorrectionMenuItemActionPerformed
+private void DTCorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                     
     if (image == null) {
         return;
     }
@@ -3901,25 +3901,25 @@ private void DTCorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt)
         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
     }
-}//GEN-LAST:event_DTCorrectionMenuItemActionPerformed
+}                                                    
 
-private void QSACorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QSACorrectionMenuItemActionPerformed
+private void QSACorrectionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                      
     if (qsam == null) {
         qsam = new QSAcorrectionManager(this);
     }
     qsam.setVisible(true);
-}//GEN-LAST:event_QSACorrectionMenuItemActionPerformed
+}                                                     
 
-private void emptyTestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emptyTestMenuItemActionPerformed
+private void emptyTestMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                  
     //empty?
     //String foo = "{{\\b DATE: }2012/11/08 12:45\\par}";
     //System.out.println("foo = "+foo);
 
     com.nrims.experimental.warp warp = new com.nrims.experimental.warp();
     warp.cellWarp(this);
-}//GEN-LAST:event_emptyTestMenuItemActionPerformed
+}                                                 
 
-private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportQVisMenuItemActionPerformed
+private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                   
 
     MimsPlus img;
     try {
@@ -3985,37 +3985,37 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         IJ.error("Error: writing file failed.");
     }
     this.getOpenMassImages()[0].setSlice(startplane);
-}//GEN-LAST:event_exportQVisMenuItemActionPerformed
+}                                                  
 
-    private void openNextMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNextMenuItemActionPerformed
+    private void openNextMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                 
         openNext();
-    }//GEN-LAST:event_openNextMenuItemActionPerformed
+    }                                                
 
-    private void RecomputeAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RecomputeAllMenuItemActionPerformed
+    private void RecomputeAllMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                     
         recomputeAllImages();
-    }//GEN-LAST:event_RecomputeAllMenuItemActionPerformed
+    }                                                    
 
-    private void openNewWriterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewWriterActionPerformed
+    private void openNewWriterActionPerformed(java.awt.event.ActionEvent evt) {                                              
         UnoPlugin.newDoc();
-    }//GEN-LAST:event_openNewWriterActionPerformed
+    }                                             
 
-    private void insertPicFrameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertPicFrameActionPerformed
+    private void insertPicFrameActionPerformed(java.awt.event.ActionEvent evt) {                                               
                                                                                                                                                                                                               if (image != null) {
             UnoPlugin.insertEmptyOLEObject(image.getImageFile().getName(), getImageDir() + File.separator);
         } else {
             UnoPlugin.insertEmptyOLEObject("", "");
         }
-    }//GEN-LAST:event_insertPicFrameActionPerformed
+    }                                              
 
-    private void openNewDrawActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewDrawActionPerformed
+    private void openNewDrawActionPerformed(java.awt.event.ActionEvent evt) {                                            
         UnoPlugin.newDraw();
-    }//GEN-LAST:event_openNewDrawActionPerformed
+    }                                           
 
-    private void openNewImpressActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openNewImpressActionPerformed
+    private void openNewImpressActionPerformed(java.awt.event.ActionEvent evt) {                                               
         UnoPlugin.newImpress();
-    }//GEN-LAST:event_openNewImpressActionPerformed
+    }                                              
 
-    private void findMosaicActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findMosaicActionPerformed
+    private void findMosaicActionPerformed(java.awt.event.ActionEvent evt) {                                           
         File file = FileUtilities.getMosaic(image.getImageFile());
         if (file != null) {
             FileUtilities.openInNewUI(file, ui);
@@ -4025,13 +4025,13 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                     "File not found",
                     JOptionPane.WARNING_MESSAGE);
         }
-    }//GEN-LAST:event_findMosaicActionPerformed
+    }                                          
 
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {                                           
         ImageDataUtilities.centerMassAutoTrack(ui);
-    }//GEN-LAST:event_jMenuItem4ActionPerformed
+    }                                          
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {                                           
         MimsJFileChooser fc = new MimsJFileChooser(this);
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "Non-MIMS Images", "png", "tif", "jpg");
@@ -4050,9 +4050,9 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             tiff.close();
             newImage.show();
         }
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    }                                          
 
-    private void findStackFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findStackFileActionPerformed
+    private void findStackFileActionPerformed(java.awt.event.ActionEvent evt) {                                              
         File file = FileUtilities.getStack(image.getImageFile());
         if (file != null) {
             FileUtilities.openInNewUI(file, ui);
@@ -4062,9 +4062,9 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                     "File not found",
                     JOptionPane.WARNING_MESSAGE);
         }
-    }//GEN-LAST:event_findStackFileActionPerformed
+    }                                             
 
-    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {                                           
         // TODO add your handling code here:
         String[] allFilesPaths = new String[0];
         if (filesProps != null) 
@@ -4077,21 +4077,21 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         FilesManager.getInstance().showWindow();
         
         
-    }//GEN-LAST:event_jMenuItem5ActionPerformed
+    }                                          
 
-    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
+    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {                                           
 
         htmlGenerator = new convertManager(this, true);
         htmlGenerator.setVisible(true);
         htmlGenerator.selectFiles();
         
-    }//GEN-LAST:event_jMenuItem6ActionPerformed
+    }                                          
 
-    private void exportjMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportjMenuActionPerformed
+    private void exportjMenuActionPerformed(java.awt.event.ActionEvent evt) {                                            
         // TODO add your handling code here:
-    }//GEN-LAST:event_exportjMenuActionPerformed
+    }                                           
 
-    private void jMenu1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu1ActionPerformed
+    private void jMenu1ActionPerformed(java.awt.event.ActionEvent evt) {                                       
         // TODO add your handling code here:
         java.awt.Desktop desktop = java.awt.Desktop.isDesktopSupported() ? java.awt.Desktop.getDesktop() : null;
         try {
@@ -4106,9 +4106,9 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }//GEN-LAST:event_jMenu1ActionPerformed
+    }                                      
     //DJ: 10/08/2014
-    private void docButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_docButtonActionPerformed
+    private void docButtonActionPerformed(java.awt.event.ActionEvent evt) {                                          
         java.awt.Desktop desktop = java.awt.Desktop.isDesktopSupported() ? java.awt.Desktop.getDesktop() : null;
         try {
             if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
@@ -4122,10 +4122,10 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }//GEN-LAST:event_docButtonActionPerformed
+    }                                         
     
     //DJ: 10/08/2014
-    private void sampleDataButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sampleDataButtonActionPerformed
+    private void sampleDataButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                 
         java.awt.Desktop desktop = java.awt.Desktop.isDesktopSupported() ? java.awt.Desktop.getDesktop() : null;
         try {
             if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
@@ -4139,15 +4139,15 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }//GEN-LAST:event_sampleDataButtonActionPerformed
+    }                                                
 
-    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {                                           
         // TODO add your handling code here:
         exportCurrentlySelectedToPNG();
-    }//GEN-LAST:event_jMenuItem7ActionPerformed
+    }                                          
 
     //DJ: 10/24/2014
-    private void openMyNotes_jMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMyNotes_jMenuItemActionPerformed
+    private void openMyNotes_jMenuItemActionPerformed(java.awt.event.ActionEvent evt) {                                                      
         
         String notesPath = prefs.getMyNotesPath();
         //System.out.println("my note's path = " + notesPath);
@@ -4172,7 +4172,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                UnoPlugin.openDoc(notesPath);
             }
         }
-    }//GEN-LAST:event_openMyNotes_jMenuItemActionPerformed
+    }                                                     
 
     /**
      * Applies a correction to the current image and writes the file to
@@ -6382,7 +6382,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         }
         
     }
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
     public javax.swing.JCheckBoxMenuItem QSACorrectionMenuItem;
     private javax.swing.JMenuItem RecomputeAllMenuItem;
@@ -6449,5 +6449,5 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private javax.swing.JMenuItem tileWindowsMenuItem;
     private javax.swing.JMenu utilitiesMenu;
     private javax.swing.JMenu viewMenu;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
 }

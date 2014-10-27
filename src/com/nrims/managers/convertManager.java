@@ -62,6 +62,14 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         
         this.isHTML = isHTML;
         
+        
+        // DJ: Implementation decisions/thoughts:
+        // We decided to include this double functionality of this class due to the job similarity 
+        // between what this class ititially peroforms and what we actually want from the Html Generator.
+        // So making the fusion between the two in the same class was the best option as of now.
+        // So here are the two cases:
+        
+        // The case where this class is used as an Html Gererator instead of the basic "ConvertManger".
         if(isHTML == true){
             this.setTitle("HTML GENERATOR");
             config_file_label.setText(" ");
@@ -69,16 +77,32 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             choose_config_Button.setEnabled(false);
             config_file_label.setEnabled(false);
             
-            openMimsSpecs_radioButton.setSelected(true);
-            openMimsSpecs_radioButton.setToolTipText("HSI/MASS IMAGES selected at the Tomography Tab");
+            allOpenedImages_radioButton.setSelected(true);
+            
+            //openMimsSpecs_radioButton.setToolTipText("HSI/MASS IMAGES selected at the Tomography Tab");
+            allOpenedImages_radioButton.setToolTipText("All the images that are shown on the screen.");
             configFile_radioButton.setToolTipText("config file of type \".cgf\" that has specs to collect");
+            
+            /*
+            //DJ: 10/27/2014 : just a thought:
+            // in case there is no image that is currently open,
+            // we force the user to use a config.cfg file because there is no way 
+            // to get the information otherwise.
+            if(ui.getHSIView() == null){
+                allOpenedImages_radioButton.setSelected(false);
+                allOpenedImages_radioButton.setEnabled(false);
+                configFile_radioButton.setSelected(true);
+            } 
+            */
             
             
             
         }
+        // The case where this class is used as a "ConvertManger" instead of an "Html Gererator"
         else {
             this.setTitle("Convert Manager");
-            this.remove(openMimsSpecs_radioButton);
+            //this.remove(openMimsSpecs_radioButton);
+            this.remove(allOpenedImages_radioButton);
             this.remove(configFile_radioButton);
             this.remove(choose_config_Button);
             this.remove(config_file_label);
@@ -135,10 +159,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         jLabel1 = new javax.swing.JLabel();
         progressBar = new javax.swing.JProgressBar();
         selectFilesButton1 = new javax.swing.JButton();
-        openMimsSpecs_radioButton = new javax.swing.JRadioButton();
         configFile_radioButton = new javax.swing.JRadioButton();
         config_file_label = new javax.swing.JLabel();
         choose_config_Button = new javax.swing.JButton();
+        allOpenedImages_radioButton = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -191,14 +215,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             }
         });
 
-        buttonGroup1.add(openMimsSpecs_radioButton);
-        openMimsSpecs_radioButton.setText("Use specs from OpenMIMS");
-        openMimsSpecs_radioButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                openMimsSpecs_radioButtonActionPerformed(evt);
-            }
-        });
-
         buttonGroup1.add(configFile_radioButton);
         configFile_radioButton.setText("Choose a \"CONFIG\" file");
         configFile_radioButton.addActionListener(new java.awt.event.ActionListener() {
@@ -216,6 +232,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             }
         });
 
+        buttonGroup1.add(allOpenedImages_radioButton);
+        allOpenedImages_radioButton.setText("Use all the actual opened images");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -227,7 +246,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         .addComponent(fileListComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(trackCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE)
+                        .addComponent(trackCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(massTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -238,27 +257,25 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(selectFilesButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(openMimsSpecs_radioButton)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(configFile_radioButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(choose_config_Button, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(21, 21, 21)
-                                .addComponent(config_file_label)))
-                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(progressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 2, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addGap(0, 0, Short.MAX_VALUE)
                                 .addComponent(cancelButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(progressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(configFile_radioButton)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(choose_config_Button, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(21, 21, 21)
+                                        .addComponent(config_file_label))
+                                    .addComponent(allOpenedImages_radioButton))
+                                .addGap(71, 71, 71)))
                         .addContainerGap())))
         );
         layout.setVerticalGroup(
@@ -276,20 +293,20 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     .addComponent(massTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(openMimsSpecs_radioButton)
+                .addComponent(allOpenedImages_radioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(configFile_radioButton)
                     .addComponent(choose_config_Button))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(config_file_label)
-                .addGap(32, 32, 32)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancelButton)
                     .addComponent(okButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(18, 18, 18)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(29, Short.MAX_VALUE))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         bindingGroup.bind();
@@ -367,7 +384,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
        // In case we are using this converterManager as an HTML generator. 
        if(this.isHTML == true){
             
-           JFileChooser chooser = new JFileChooser(".");
+           JFileChooser chooser = new JFileChooser(ui.getLastFolder());
            FileFilter filter = new ExtensionFileFilter("html", new String("html"));
            chooser.setFileFilter(filter);
 
@@ -391,18 +408,17 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                
                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
+               /*
                String[] HSIsArray =             new String[0];
                String[] numThreshArray =        new String[0];
                String[] denThreshArray =        new String[0];
                String[] ratioScaleFactorArray = new String[0];
                String[] maxRGBArray =           new String[0];
                String[] minRGBArray =           new String[0];
+               */  
                
-               
-            //   if(ui.getmimsTomography() != null && ui.getmimsTomography().getI)
-               
-               
-               
+            //=======================================================================================
+
                /*
                // we get the selected HSIs at the HSIView ( the Process Tab when you run OpenMIMS )
                if (ui.getHSIView() != null && ui.getHSIView().getSelectedRatios() != null) {
@@ -462,8 +478,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                    }
                }
                */
-
-   
+               //=======================================================================================
+               // TO UNCOMMENT THIS AND HAVE IT WORKING THE RADIO BUTTONS SHOULD BE RESTORED AS WELL
+               /*
                // we get the selected HSIs at the mimsTomography level ( the 5th tab of OpenMIMS )
                if (ui.getmimsTomography() != null && ui.getmimsTomography().getSelectedHSIImages() != null) {
                    
@@ -512,7 +529,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                    co.setFiles(fileNames);
                    // We prepare/setup the props that the converter need in order
                    // to generate the html file.
-                   co.specsForHTMLThruOpenMIMS(selectedFile.getAbsolutePath(),
+                   co.specsForHTMLThruSelectedImages(
+                           selectedFile.getAbsolutePath(),
                            temp_folder_path,
                            HSIsArray,
                            numThreshArray, denThreshArray,
@@ -521,6 +539,89 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                    co.addPropertyChangeListener(this);
                    co.execute();
 
+               }
+               
+               //=======================================================================================
+               */
+               if(allOpenedImages_radioButton.isSelected()){
+                   
+                   //MimsPlus[] openedMassImages = ui.getOpenMassImages();
+                   //MimsPlus[] openedSumImages = ui.getOpenSumImages();
+                   //MimsPlus[] openedRatioImages = ui.getOpenRatioImages();
+                   MimsPlus[] openedHSIImages  = ui.getOpenHSIImages();
+                   //MimsPlus[] openedCompositeImages = ui.getOpenCompositeImages();
+                   
+                   /*
+                   ArrayList<Integer> massImages      = new ArrayList<Integer>();
+                   ArrayList<Integer> sumImages       = new ArrayList<Integer>();
+                   ArrayList<Integer> ratioImages     = new ArrayList<Integer>();
+                   ArrayList<Integer> hsiImages       = new ArrayList<Integer>();
+                   ArrayList<Integer> compositeImages = new ArrayList<Integer>();
+                   
+                   // we collect the mass images that have just one plane.
+                   for(MimsPlus massImage: openedMassImages){
+                       if(massImage.getSlice() == 1){
+                           massImages.add(new Integer((int) Math.round(massImage.getMassValue())));
+                       }
+                   }
+                   for(MimsPlus sumImage: openedSumImages){
+                           sumImages.add(new Integer((int) Math.round(sumImage.getMassValue())));
+                   }
+                   for(MimsPlus ratioImage: openedRatioImages){
+                           // to be populated
+                   }
+                   for(MimsPlus hsiImage: openedHSIImages){
+                           // to be populated
+                   }
+                   for(MimsPlus compositeImage: openedCompositeImages){
+                           // to be populated
+                   }
+                   */
+                   int number_of_HSIs = openedHSIImages.length;
+                   String[] HSIsArray = new String[number_of_HSIs];
+                   String[] numThreshArray = new String[number_of_HSIs];
+                   String[] denThreshArray = new String[number_of_HSIs];
+                   String[] ratioScaleFactorArray = new String[number_of_HSIs];
+                   String[] maxRGBArray = new String[number_of_HSIs];
+                   String[] minRGBArray = new String[number_of_HSIs];
+                   
+                   for (int i = 0; i < openedHSIImages.length; i++) {
+                       MimsPlus openedHSIimage = openedHSIImages[i];
+                       String title = openedHSIimage.getTitle().substring(openedHSIimage.getTitle().indexOf(':')+2, openedHSIimage.getTitle().indexOf('['));
+                       HSIsArray[i] = title;
+                       numThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio());
+                       denThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMinRatio());
+                       ratioScaleFactorArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getRatioScaleFactor())).intValue());
+                       maxRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRGB())).intValue());
+                       minRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMinRGB())).intValue());
+                   }
+                   
+                   
+                   String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
+                   File directory = new File(temp_folder_path);
+
+                   // make directory in the system's temporary folder
+                   boolean isMKDIR = directory.mkdir();
+
+                   if (isMKDIR == false) {
+                       System.out.println("Could't make a directory for the png file..EXITING...");
+                       return;
+                   }
+                   // Initialize and run Converter object.
+                   co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
+                   co.setFiles(fileNames);
+                   // We prepare/setup the props that the converter need in order
+                   // to generate the html file.
+                   co.hsiImageSpecsForHTML(
+                          selectedFile.getAbsolutePath(),
+                           temp_folder_path,
+                           HSIsArray,
+                           numThreshArray, denThreshArray,
+                           ratioScaleFactorArray,
+                           maxRGBArray, minRGBArray);
+                   co.addPropertyChangeListener(this);
+                   co.execute();
+                   
                }
                // USING SPECS IN THE CONFIG FILE
                else{
@@ -580,13 +681,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         config_file_label.setEnabled(true);
     }//GEN-LAST:event_configFile_radioButtonActionPerformed
 
-    private void openMimsSpecs_radioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMimsSpecs_radioButtonActionPerformed
-        // TODO add your handling code here:
-        
-        choose_config_Button.setEnabled(false);
-        config_file_label.setEnabled(false);
-    }//GEN-LAST:event_openMimsSpecs_radioButtonActionPerformed
-
     private void choose_config_ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_choose_config_ButtonActionPerformed
         // TODO add your handling code here:
         JFileChooser chooser = new JFileChooser(".");
@@ -629,6 +723,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JRadioButton allOpenedImages_radioButton;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton cancelButton;
     private javax.swing.JButton choose_config_Button;
@@ -638,7 +733,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField massTextField;
     private javax.swing.JButton okButton;
-    private javax.swing.JRadioButton openMimsSpecs_radioButton;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JButton selectFilesButton;
     private javax.swing.JButton selectFilesButton1;
