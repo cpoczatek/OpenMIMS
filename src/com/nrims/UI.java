@@ -2617,6 +2617,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             return false;
         }
     }
+    
 
     /**
      * DJ: 07/28/2014 Check whether two masses are close enough within the
@@ -2813,19 +2814,6 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         // just to tile the the new windows that were not present in the previous file
         // The states of the ones that were present in the previous file, will be handled by applyStateWindow(mass_props)
-        
-        
-        
-        
-        
-        MimsPlus[] coll = getAllOpenImages();
-        
-        for(int i=0; i<=coll.length; i++){
-            //System.out.println(coll[i].getShortTitle() + " => " + coll[i].getWindow().getCanvas(). );
-        }
-        
-        
-        
         
         tileWindows();
         

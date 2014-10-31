@@ -1381,7 +1381,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 //DO NOT CHANGE NEITHER THE STRINGS NOR THEIR ORDER - THEY GET PARSED AT THE UNOPLUGIN.JAVA
                 
                 
-                String[] allDescriptions = new String[5];
+                String[] allDescriptions = new String[6];
                 
                 String imageType   = "";
                 String displayMin  = "";
@@ -1443,10 +1443,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 
                 
                 allDescriptions[0] = imageType;
-                allDescriptions[1] = displayMin;
-                allDescriptions[2] = displayMax;
-                allDescriptions[3] = planeNumber;
-                allDescriptions[4] = fileDescription;  
+                allDescriptions[1] = ui.getOpener().getImageFile().getName();
+                allDescriptions[2] = displayMin;
+                allDescriptions[3] = displayMax;
+                allDescriptions[4] = planeNumber;
+                allDescriptions[5] = fileDescription;  
                 
                 //mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
                 mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, allDescriptions);
