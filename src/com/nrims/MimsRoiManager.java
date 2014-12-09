@@ -53,21 +53,21 @@ import javax.swing.border.EtchedBorder;
  */
 public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
-    File roiFile = null;
+    File roiFile = null;                                                                       //added
     JPanel panel;
-    MimsJTable table;
+    MimsJTable table;                                                                             // added
     Frame instance;
-    static final String DEFAULT_GROUP = "...";
-    static final String GROUP_FILE_NAME = "group";
-    static final String GROUP_MAP_FILE_NAME = "group_map";
-    JList roijlist;
-    JList groupjlist;
+    static final String DEFAULT_GROUP = "...";                                             // added 
+    static final String GROUP_FILE_NAME = "group";                                    // added 
+    static final String GROUP_MAP_FILE_NAME = "group_map";                    // added 
+    JList roijlist;                                                                                // added 
+    JList groupjlist;                                                                               // added 
     
-    public DefaultListModel roiListModel;
-    public DefaultListModel groupListModel;
+    public DefaultListModel roiListModel;                                                    // added 
+    public DefaultListModel groupListModel;                                               // added 
     
-    Hashtable rois = new Hashtable();
-    boolean canceled;
+    Hashtable rois = new Hashtable();                                                       // added
+    boolean canceled;                                                        //added
     boolean macro;
     boolean ignoreInterrupts;
     JPopupMenu pm;
@@ -79,13 +79,13 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     JCheckBox cbHideLabels;
     JSpinner xPosSpinner, yPosSpinner, widthSpinner, heightSpinner;
     JLabel xLabel, yLabel, wLabel, hLabel;
-    boolean holdUpdate = false;
-    private UI ui = null;
-    private String savedpath = "";
-    boolean previouslySaved = false;
-    boolean bAllPlanes = true;
+    boolean holdUpdate = false;                                                                        // added
+    private UI ui = null;                                                                                    // added
+    private String savedpath = "";                                                                      // added
+    boolean previouslySaved = false;                                                                 // added
+    boolean bAllPlanes = true;                                                                        // added
     
-    //add to something
+    //add to something                                                                                 // all added
     HashMap locations = new HashMap<String, ArrayList<Integer[]>>();
     HashMap groupsMap = new HashMap<String, String>();
     ArrayList groups = new ArrayList<String>();
@@ -95,9 +95,9 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
     String hideAllRois = "Hide All Rois";
     String moveAllRois = "Move All";
     String hideAllLabels = "Hide Labels";
-    ListSelectionListener groupSelectionListener;
-    ListSelectionListener roiSelectionListener;
-    boolean needsToBeSaved = false;
+    ListSelectionListener groupSelectionListener;                                       // added
+    ListSelectionListener roiSelectionListener;                                            // added
+    boolean needsToBeSaved = false;                                                       // added
 
    /**
     * Creates a new instance of MimsRoiManager.
@@ -315,6 +315,8 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         needsToBeSaved = bool;
     }
             
+    
+    
    /**
     * Action Method for the "new" group button.
     */

@@ -38,7 +38,7 @@ public class coreyEdge {
         prl("m26: "+m26.getTitle());
 
         //get rm
-        com.nrims.MimsRoiManager rm = ui.getRoiManager();
+        com.nrims.MimsRoiManager2 rm = ui.getRoiManager();
 
         //stack size, should be 256
         int zsize = ui.getMassImage(0).getStackSize();
@@ -99,7 +99,7 @@ public class coreyEdge {
 
     public ShapeRoi getEdgeROI(int plane) {
         //get rm
-        com.nrims.MimsRoiManager rm = ui.getRoiManager();
+        com.nrims.MimsRoiManager2 rm = ui.getRoiManager();
         //get 3 core rois, hard coded, so sue me
         Roi c1 = rm.getRoiByName("1-1");
         Roi c2 = rm.getRoiByName("2-1");
@@ -151,7 +151,7 @@ public class coreyEdge {
         prl("m26: "+m26.getTitle());
 
         //get rm
-        com.nrims.MimsRoiManager rm = ui.getRoiManager();
+        com.nrims.MimsRoiManager2 rm = ui.getRoiManager();
 
         //stack size, should be 256
         int zsize = ui.getMassImage(0).getStackSize();
@@ -229,7 +229,7 @@ public class coreyEdge {
         prl("m26: " + m26.getTitle());
 
         //get rm
-        com.nrims.MimsRoiManager rm = ui.getRoiManager();
+        com.nrims.MimsRoiManager2 rm = ui.getRoiManager();
 
         //stack size, should be 256
         int zsize = ui.getMassImage(0).getStackSize();

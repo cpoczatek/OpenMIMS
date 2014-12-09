@@ -17,6 +17,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
+import ij.gui.DialogListener;
+import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
@@ -24,6 +26,7 @@ import ij.io.FileSaver;
 import it.sauronsoftware.junique.AlreadyLockedException;
 import it.sauronsoftware.junique.JUnique;
 import it.sauronsoftware.junique.MessageHandler;
+import java.awt.AWTEvent;
 import java.awt.AWTException;
 import java.awt.Button;
 import java.awt.Color;
@@ -157,12 +160,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     private FilesManager filesManager = null; // DJ:08/26/2014
     private String nameOfFileNowOpened = null; // DJ:08/26/2014
     
+   private boolean usedForTables = false; // DJ:11/21/2014
+    
 
     private MimsData mimsData = null;
     private MimsLog mimsLog = null;
     private MimsCBControl cbControl = new MimsCBControl(this);
     private MimsStackEditor mimsStackEditing = null;
-    private MimsRoiManager roiManager = null;
+    private MimsRoiManager2 roiManager = null;
     private MimsTomography mimsTomography = null;
     private MimsHSIView hsiControl = null;
     private CompositeManager compManager = null;
@@ -187,6 +192,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     boolean previousFileCanceled = true;
     private final static Logger OMLOGGER = OMLogger.getOMLogger(UI.class.getName());
     
+    
+    
     //DJ: 10/20/2014 
     // to be used as a backup in case the config file for links doesn't exist or doesn't get read/parsed.
     String DEFAULT_DOCUMENTATION_LINK = "http://nrims.partners.org/wiki/";
@@ -210,8 +217,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         //NOTE: Trying to leave strictly UI related code in here, and remove the rest
         //As such, autosaveroi is now called in NRIMS_Plugin
         super("OpenMIMS");
-
+        
         OMLOGGER.info("");
+        
+        
 
         // Is this to surpress what was going to stdout, 
         // that should have been going to stderr?
@@ -264,7 +273,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         }
 
+        //DJ: 11/19/2014
         prefs = new PrefFrame(this);
+        UnoPlugin.setNotesPath(prefs.getMyNotesPath());
+        UnoPlugin.setOpenStatus(prefs.getMyNotesPath());
 
         //initialize empty image arrays
         if (image == null) {
@@ -1490,7 +1502,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (evt.getAttribute() == MimsPlusEvent.ATTR_MOUSE_RELEASE) {
                 ij.gui.Roi roi = evt.getRoi();
                 if (roi != null && roi.getState() != Roi.CONSTRUCTING) {
-                    MimsRoiManager rm = getRoiManager();
+                    MimsRoiManager2 rm = getRoiManager();
                     rm.add();
                     if (rm.isVisible() == false) {
                         rm.showFrame();
@@ -1499,7 +1511,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
 
         } else if (evt.getAttribute() == MimsPlusEvent.ATTR_ROI_MOVED) {
-            MimsRoiManager rm = getRoiManager();
+            MimsRoiManager2 rm = getRoiManager();
             Roi roi = evt.getRoi();
 
             // Lines have to be treated specially.
@@ -1662,6 +1674,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         exportQVisMenuItem = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JSeparator();
         jMenuItem6 = new javax.swing.JMenuItem();
+        jMenuItem8 = new javax.swing.JMenuItem();
         genStackMenuItem = new javax.swing.JMenuItem();
         compositeMenuItem = new javax.swing.JMenuItem();
         correctionsMenu = new javax.swing.JMenu();
@@ -1695,11 +1708,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 719, Short.MAX_VALUE)
+            .add(0, 711, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 419, Short.MAX_VALUE)
+            .add(0, 425, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Images", jPanel1);
@@ -2038,6 +2051,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
         });
         utilitiesMenu.add(jMenuItem6);
+
+        jMenuItem8.setText("Generate Table(s)");
+        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem8ActionPerformed(evt);
+            }
+        });
+        utilitiesMenu.add(jMenuItem8);
 
         genStackMenuItem.setText("Generate Stack");
         genStackMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -2815,6 +2836,66 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         // just to tile the the new windows that were not present in the previous file
         // The states of the ones that were present in the previous file, will be handled by applyStateWindow(mass_props)
         
+        
+        /*
+        ij.gui.GenericDialog gd = new ij.gui.GenericDialog("Options Chooser");
+        String[] choices = {"ch 0", "ch 1", "ch 2", "ch 3", "ch 4", "ch 5", "ch 6", "ch 7"};
+        boolean[] defChoices = {false, true, false, true, false, true, false, true};
+        gd.addCheckboxGroup(4, 2, choices, defChoices);
+        gd.validate();
+        
+        
+        
+        
+        gd.showDialog();
+        
+        
+        
+        if(gd.wasOKed()){
+            System.out.println("wasOked");
+            System.out.println("ch 0  = " + ((java.awt.Checkbox) gd.getCheckboxes().elementAt(0)).getState());
+            System.out.println("ch 1  = " + ((java.awt.Checkbox) gd.getCheckboxes().elementAt(1)).getState());
+            System.out.println("ch 2  = " + ((java.awt.Checkbox) gd.getCheckboxes().elementAt(2)).getState());
+            System.out.println("ch 3  = " + ((java.awt.Checkbox) gd.getCheckboxes().elementAt(3)).getState());
+
+        }else
+            System.out.println("wasCancelled");
+        
+        //ij.gui.YesNoCancelDialog dialogBox = new ij.gui.YesNoCancelDialog(this, "Options Chooser", "");
+        //dialogBox.
+        * 
+        */
+        
+        
+        
+        /*
+        System.out.println("================================");
+        try {
+            String line;
+            Process p = Runtime.getRuntime().exec("ps -e");
+            BufferedReader input =
+                    new BufferedReader(new InputStreamReader(p.getInputStream()));
+            while ((line = input.readLine()) != null) {
+                System.out.println(line); //<-- Parse data here.
+            }
+            input.close();
+        } catch (Exception err) {
+            err.printStackTrace();
+        }
+        System.out.println("================================");
+        */
+        
+        
+        
+        
+        
+        
+        //MimsRoiManager2 rm2 = new MimsRoiManager2(this);
+        //rm2.setVisible(true);
+        
+        
+        
+        
         tileWindows();
         
         applyWindowState(mass_props);
@@ -3099,8 +3180,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         
         resetViewMenu(); //DJ: 08/18/2014
         getRoiManager().setVisible(roiManagerVisible);
-        hsiControl.addShownRatiosToList(rto_props, hsi_props); //DJ: 08/14/2014
+        
+        if(!usedForTables)
+            hsiControl.addShownRatiosToList(rto_props, hsi_props); //DJ: 08/14/2014
     
+    }
+    
+    public void setUsedForTable(boolean b){
+        usedForTables = b;
     }
 
     /**
@@ -4159,11 +4246,131 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 return;
             }
             else{
-               UnoPlugin.openDoc(notesPath);
+                UnoPlugin.setNotesPath(notesPath);
+                UnoPlugin.openDoc(notesPath);
             }
         }
     }//GEN-LAST:event_openMyNotes_jMenuItemActionPerformed
 
+    
+    // DJ: Generate tables button
+    private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
+        System.out.println("Generate Tables Button Hit");
+        
+        File[] nrrdFiles = null;;
+        File[] roiFiles = null;
+        JFileChooser chooser;
+        FileFilter filter;
+        int returnVal;
+        
+        //-----------------------------------------------------
+        // getting the nrrd files : 
+        //-----------------------------------------------------
+        chooser = new JFileChooser(ui.getLastFolder());
+        chooser.setMultiSelectionEnabled(true);
+        chooser.setDialogTitle("CHOOSE NRRD FILES");
+        filter = new ExtensionFileFilter("nrrd", new String("nrrd"));
+        chooser.setFileFilter(filter);
+        
+        returnVal= chooser.showOpenDialog(prefs);
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            nrrdFiles = chooser.getSelectedFiles();
+        } else {
+            System.out.println("No Nrrd Files chosen --   exiting ...");
+            return;
+        }
+        //-----------------------------------------------------
+        // getting the roi files : 
+        //-----------------------------------------------------
+        chooser = new JFileChooser(ui.getLastFolder());
+        chooser.setMultiSelectionEnabled(true);
+        chooser.setDialogTitle("CHOOSE ROI FILES");
+        filter = new ExtensionFileFilter("roi.zip", new String("rois.zip"));
+        chooser.setFileFilter(filter);
+        
+        returnVal= chooser.showOpenDialog(prefs);
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            roiFiles = chooser.getSelectedFiles();
+        } else {
+            System.out.println("No Roi Files chosen --   exiting ...");
+            return;
+        }
+        //------------------------------------------------------
+        // Check of images/rois counts correspondance : 
+        //------------------------------------------------------
+        if (nrrdFiles.length != roiFiles.length){
+            System.out.println("Number of Image Files DOES NOT MATCH The Number of Roi Files ...Existing! ");
+            return;
+        } 
+        
+        //------------------------------------------------------
+        // Get the Statistics
+        //------------------------------------------------------
+        
+        //------------------------------------------------------
+        // Get the Images:
+        //------------------------------------------------------
+        MimsPlus[] massImages = getOpenMassImages();
+        MimsPlus[] ratioImages  = getOpenRatioImages();
+        MimsPlus[] HSIImages    = getOpenHSIImages();
+        MimsPlus[] sumImages = getOpenSumImages();
+
+        UI newUI = new UI();
+        newUI = getInstance();
+        
+        newUI.setVisible(true);
+        
+        newUI.openFile(nrrdFiles[0]);
+        newUI.openFile(roiFiles[0]);
+        
+        int[] selectedStats = new int[2];
+        selectedStats[0] = 0;
+        selectedStats[0] = 1;
+        
+        int[] selectedImages = new int[2];
+        selectedImages[0] = 0;
+        selectedImages[0] = 1;
+        
+        
+        newUI.getmimsTomography().setSelectedStatIndices(selectedStats);
+        newUI.getmimsTomography().setSelectedImagesIndices(selectedImages);
+        
+       // newUI.mimsTomography.
+        
+        /*
+        HSIProps[] hsiProps = new HSIProps[hsiImages.length];
+        for(int indx = 0 ; indx < HSIImages.length ; indx++){
+            hsiProps[indx] = HSIImages[indx].getHSIProps();
+            System.out.println("hsi props = " + hsiProps[indx].getNumMassValue() + "/" + hsiProps[indx].getDenMassValue());
+        }
+        */
+      
+        SumProps[] sumProps = new SumProps[sumImages.length];
+        for (int indx = 0; indx < sumImages.length; indx++) {
+            sumProps[indx] = sumImages[indx].getSumProps();
+            System.out.println("sum props = " + sumProps[0].getSumType());
+        }
+        
+        //newUI.setUsedForTable(true);
+        
+        //System.out.println("===== before restore state:");
+        
+        
+        
+        //newUI.restoreState(null, null, null, sumProps, null, false, false);
+        
+        
+        
+        // System.out.println("===== After restore state:");
+         
+        
+        
+    }//GEN-LAST:event_jMenuItem8ActionPerformed
+
+    
+    
     /**
      * Applies a correction to the current image and writes the file to
      * fileName.
@@ -4228,16 +4435,16 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      *
      * @return an instance of the RoiManager.
      */
-    public MimsRoiManager getRoiManager() {
+    public MimsRoiManager2 getRoiManager() {
         //roiManager = getRoiManager().getInstance();
         if (roiManager == null) {
-            roiManager = new MimsRoiManager(this);
+            roiManager = new MimsRoiManager2(this);
         }
         return roiManager;
     }
     public void resetRoiManager(){
         roiManager = null;
-        roiManager = new MimsRoiManager(this);
+        roiManager = new MimsRoiManager2(this);
     }
 
     /**
@@ -5719,7 +5926,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             }
 
             // Set up roi manager.
-            MimsRoiManager rm = getRoiManager();
+            MimsRoiManager2 rm = getRoiManager();
             if (rm != null) {
                 rm.resetRoiLocationsLength();
             }
@@ -5986,7 +6193,9 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             boolean isNRRD = false;
             int progress = 0;
             closeCurrentImage();
-            getRoiManager().roijlist.clearSelection();
+            
+            //DJ: 12/05/2014
+            getRoiManager().clearRoiJList();  //getRoiManager().roijlist.clearSelection();
 
             try {
 
@@ -6410,6 +6619,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JMenuItem jMenuItem6;
     private javax.swing.JMenuItem jMenuItem7;
+    private javax.swing.JMenuItem jMenuItem8;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;

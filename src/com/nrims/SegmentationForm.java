@@ -25,7 +25,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
     private SegmentationEngine activeEngine;
     private String activeClass;
     private SegUtils segUtil;
-    private MimsRoiManager roiManager;
+    private MimsRoiManager2 roiManager;
     private UI mimsUi;
     // members for current model setup
     private ClassManager trainClasses;
@@ -245,7 +245,9 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         //Need to make segmentation "play better" with roi groups
         System.out.println("BAD METHOD HIT");
         if(true) return;
-        if (roiManager.roijlist.getModel().getSize() > 0) {
+        //DJ: 12/05/2014
+        //if (roiManager.roijlist.getModel().getSize() > 0) {
+        if (roiManager.getRoiList().getModel().getSize() > 0) { // added by DJ: 12/05/2014
             roiManager.selectAll();
             roiManager.delete(false);
             roiManager.getImage().setRoi((Roi) null);

@@ -43,7 +43,7 @@ public class MimsCanvas extends ij.gui.ImageCanvas {
 
     // Handles the drawing of Rois on the Canvas.
     void drawOverlay(Graphics g) {
-        MimsRoiManager roiManager = ui.getRoiManager();
+        MimsRoiManager2 roiManager = ui.getRoiManager();
         Hashtable rois = roiManager.getROIs();
         boolean drawLabel = true;
         if (rois == null || rois.isEmpty() || roiManager.getHideRois()) {

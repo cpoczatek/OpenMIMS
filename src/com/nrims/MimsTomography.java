@@ -323,7 +323,7 @@ public class MimsTomography extends javax.swing.JPanel {
        // Get selected stats.
 
        // Get selected rois.
-       MimsRoiManager rm = ui.getRoiManager();
+       MimsRoiManager2 rm = ui.getRoiManager();
        Roi[] rois = rm.getSelectedROIs();
        int numLine = 0;
        if (rois.length == 0) {
@@ -399,9 +399,15 @@ public class MimsTomography extends javax.swing.JPanel {
      * than the output will be similar to that of a Sum image.
      */
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+       
+        // DJ: 11/21/2014 : moved all the implementation that was in here to generateTable method
+        // since we need to call generateTable method from else where as well.
+        generateTable();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
-       // initialize variables.
-       MimsRoiManager rm = ui.getRoiManager();
+    public void generateTable(){
+        // initialize variables.
+       MimsRoiManager2 rm = ui.getRoiManager();
 
        if (!appendCheckBox.isSelected() || table == null) {
           table = new MimsJTable(ui);
@@ -441,13 +447,16 @@ public class MimsTomography extends javax.swing.JPanel {
        MimsPlus[] images = getImages();
        if (images.length >= 1) {
           MimsPlus[] imagesToSend = new MimsPlus[images.length];
+          //int[] originalMimsTypesToSend = new int[images.length]; //DJ: 11/14/2014
           for (int i = 0; i < images.length; i++) {
+              //originalMimsTypesToSend[i] = images[i].getMimsType();  //DJ: 11/14/2014
              if (images[i].getMimsType() == MimsPlus.HSI_IMAGE || images[i].getMimsType() == MimsPlus.RATIO_IMAGE)
                 imagesToSend[i] = images[i].internalRatio;
              else
                 imagesToSend[i] = images[i];
           }
           table.setImages(imagesToSend);
+          //table.setOriginalImagesTypes(originalMimsTypesToSend); // DJ
        } else {
           System.out.println("No images selected");
           return;
@@ -482,8 +491,7 @@ public class MimsTomography extends javax.swing.JPanel {
           table.createSumTable(appendCheckBox.isSelected());
        }
        table.showFrame();
-    }//GEN-LAST:event_jButton1ActionPerformed
-
+    }
     /**
      * Action method for the "Line Profile" button. generates a line plot
      * representing pixel values along a line ROI.
@@ -601,6 +609,11 @@ public class MimsTomography extends javax.swing.JPanel {
     */
    public void setSelectedStatIndices(int[] indices) {
       statJList.setSelectedIndices(indices);
+   }
+   
+   //DJ
+   public void setSelectedImagesIndices(int[] indices){
+       imageJList.setSelectedIndices(indices);
    }
 
    /**

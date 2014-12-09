@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 // could just paste within the browser to doaplay the page.
 import java.awt.datatransfer.*;
 import java.awt.Toolkit;
+import org.apache.commons.io.FilenameUtils;
 
 public class Converter extends SwingWorker<Void, Void> {
 
@@ -84,12 +85,17 @@ public class Converter extends SwingWorker<Void, Void> {
    String keys             = KEYS_DEFAULT;
    String values           = VALUES_DEFAULT;
    String massToTrack      = TRACK_MASS_DEFAULT;
+   String[] SUMs           = new String[0]; //DJ
+   String[] RATIOs         = new String[0]; //DJ
    String[] HSIs           = new String[0];
+   String[] r_threshUppers = new String[0];
+   String[] r_threshLowers = new String[0];
    String[] threshUppers   = new String[0];
    String[] threshLowers   = new String[0];
    String[] rgbMaxes       = new String[0];
    String[] rgbMins        = new String[0];
-   String[] scaleFactors    = new String[0];
+   String[] r_scaleFactors = new String[0];
+   String[] scaleFactors   = new String[0];
    int      trackIndex     = 0;
    double medianizeRadius  = MEDIANIZE_RADIUS_DEFAULT;
    String pngDir           = PNG_DIRECTORY_DEFAULT;
@@ -235,21 +241,39 @@ public class Converter extends SwingWorker<Void, Void> {
    }
    
    //DJ
-   // to setup the png directory for the convertManger to use it 
-   // in order to generate html page.
-   public void hsiImageSpecsForHTML(String htmlFilePath,
-                            String pngFolderPath, 
+   public void setForHtml(String htmlFilePath, String pngFolderPath){
+       this.htmlFile = htmlFilePath;
+       pngDir = pngFolderPath;
+       this.pngs = true;
+       this.isForHTMLManager = true;
+   }
+   
+   //DJ
+   public void sumImageSpecsForHTML(String[] SUMs){
+       this.SUMs = SUMs; 
+   }
+   
+    //DJ
+   public void ratioImageSpecsForHTML( 
+                            String[] RATIOs,
+                            String[] r_numThreshs,
+                            String[] r_denThreshs,
+                            String[] r_ratioScaleFactors){
+       this.RATIOs = RATIOs; 
+       this.r_threshUppers = r_numThreshs;
+       this.r_threshLowers = r_denThreshs;
+       this.r_scaleFactors = r_ratioScaleFactors;
+
+   }
+   
+   //DJ
+   public void hsiImageSpecsForHTML( 
                             String[] HSIs,
                             String[] numThreshs,
                             String[] denThreshs,
                             String[] ratioScaleFactors,
                             String[] maxRGBs,
                             String[] minRGBs){
-       this.htmlFile = htmlFilePath;
-       this.isForHTMLManager = true;
-       this.pngDir = pngFolderPath;
-       this.pngs = true;
-      // this.pngs_only = false;
        this.HSIs = HSIs; 
        this.threshUppers = numThreshs;
        this.threshLowers = denThreshs;
@@ -287,17 +311,146 @@ public class Converter extends SwingWorker<Void, Void> {
         //System.out.println("pngDirectory is: " + pngDirectory);
         return pngDirectory;
    }
+   
+    // http://mrpmorris.blogspot.com/2007/05/convert-absolute-path-to-relative-path.html
+    public static String convertToRelativePath(String absolutePath, String relativeTo) {
+        StringBuilder relativePath = null;
+
+        absolutePath = absolutePath.replaceAll("\\\\", "/");
+        relativeTo = relativeTo.replaceAll("\\\\", "/");
+
+        if (absolutePath.equals(relativeTo) == true) {
+        } 
+        else {
+            String[] absoluteDirectories = absolutePath.split("/");
+            String[] relativeDirectories = relativeTo.split("/");
+
+            //Get the shortest of the two paths
+            int length = absoluteDirectories.length < relativeDirectories.length
+                    ? absoluteDirectories.length : relativeDirectories.length;
+
+            //Use to determine where in the loop we exited
+            int lastCommonRoot = -1;
+            int index;
+
+            //Find common root
+            for (index = 0; index < length; index++) {
+                if (absoluteDirectories[index].equals(relativeDirectories[index])) {
+                    lastCommonRoot = index;
+                } else {
+                    break;
+            //If we didn't find a common prefix then throw
+                }
+            }
+            if (lastCommonRoot != -1) {
+            //Build up the relative path
+                relativePath = new StringBuilder();
+            //Add on the ..
+                for (index = lastCommonRoot + 1; index < absoluteDirectories.length; index++) {
+                    if (absoluteDirectories[index].length() > 0) {
+                        relativePath.append("../");
+                    }
+                }
+                for (index = lastCommonRoot + 1; index < relativeDirectories.length - 1; index++) {
+                    relativePath.append(relativeDirectories[index] + "/");
+                }
+                relativePath.append(relativeDirectories[relativeDirectories.length - 1]);
+            }
+        }
+        return relativePath == null ? null : relativePath.toString();
+    }
+   
+    
+    
+    public static String getRelativePath(String targetPath, String basePath, String pathSeparator) {
+
+        // Normalize the paths
+        String normalizedTargetPath = FilenameUtils.normalizeNoEndSeparator(targetPath);
+        String normalizedBasePath = FilenameUtils.normalizeNoEndSeparator(basePath);
+
+        // Undo the changes to the separators made by normalization
+        if (pathSeparator.equals("/")) {
+            normalizedTargetPath = FilenameUtils.separatorsToUnix(normalizedTargetPath);
+            normalizedBasePath = FilenameUtils.separatorsToUnix(normalizedBasePath);
+
+        } else if (pathSeparator.equals("\\")) {
+            normalizedTargetPath = FilenameUtils.separatorsToWindows(normalizedTargetPath);
+            normalizedBasePath = FilenameUtils.separatorsToWindows(normalizedBasePath);
+
+        } else {
+            throw new IllegalArgumentException("Unrecognised dir separator '" + pathSeparator + "'");
+        }
+
+        String[] base = normalizedBasePath.split(Pattern.quote(pathSeparator));
+        String[] target = normalizedTargetPath.split(Pattern.quote(pathSeparator));
+
+        // First get all the common elements. Store them as a string,
+        // and also count how many of them there are.
+        StringBuffer common = new StringBuffer();
+
+        int commonIndex = 0;
+        while (commonIndex < target.length && commonIndex < base.length
+                && target[commonIndex].equals(base[commonIndex])) {
+            common.append(target[commonIndex] + pathSeparator);
+            commonIndex++;
+        }
+
+        if (commonIndex == 0) {
+            // No single common path element. This most
+            // likely indicates differing drive letters, like C: and D:.
+            // These paths cannot be relativized.
+            throw new PathResolutionException("No common path element found for '" + normalizedTargetPath + "' and '" + normalizedBasePath
+                    + "'");
+        }   
+
+        // The number of directories we have to backtrack depends on whether the base is a file or a dir
+        // For example, the relative path from
+        //
+        // /foo/bar/baz/gg/ff to /foo/bar/baz
+        // 
+        // ".." if ff is a file
+        // "../.." if ff is a directory
+        //
+        // The following is a heuristic to figure out if the base refers to a file or dir. It's not perfect, because
+        // the resource referred to by this path may not actually exist, but it's the best I can do
+        boolean baseIsFile = true;
+
+        File baseResource = new File(normalizedBasePath);
+
+        if (baseResource.exists()) {
+            baseIsFile = baseResource.isFile();
+
+        } else if (basePath.endsWith(pathSeparator)) {
+            baseIsFile = false;
+        }
+
+        StringBuffer relative = new StringBuffer();
+
+        if (base.length != commonIndex) {
+            int numDirsUp = baseIsFile ? base.length - commonIndex - 1 : base.length - commonIndex;
+
+            for (int i = 0; i < numDirsUp; i++) {
+                relative.append(".." + pathSeparator);
+            }
+        }
+        relative.append(normalizedTargetPath.substring(common.length()));
+        return relative.toString();
+    }
+   
+   
+   
+   
    // DJ
    public String generateHTML(){
        String html = "";
-       html += "<!DOCTYPE html>";
-       html += "<html lang=\"en\">";
-       html += "  <head><title>OpenMIMS - HTML GENERATOR </title></head>";
-       html += "  <body BGCOLOR=\"#D8D8D8\"><BR><BR><BR>";
+       html += "<!DOCTYPE html>" + "\n";
+       html += "<html lang=\"en\">" + "\n";
+       html += "  <head><title>OpenMIMS - HTML GENERATOR </title></head>" + "\n";
+       html += "  <body BGCOLOR=\"#D8D8D8\"><BR><BR><BR>" + "\n";
        
        html += this.htmlTables;
        
-       html += "  </body>";
+       html += "  </body>" + "\n";
        html += "</html>";
        
        return html;
@@ -318,7 +471,7 @@ public class Converter extends SwingWorker<Void, Void> {
         }
         generateMassImagePNGs(pngDirFile);
         generateHSIImagePNGs(pngDirFile);
-       // generateRatioImagePNGs(pngDirFile); // Dj: 10/27/2014 just fe testing as of now.
+        generateRatioImagePNGs(pngDirFile); // Dj: 10/27/2014 just fe testing as of now.
     }
 
    private void generateMassImagePNGs(File pngDirFile) {
@@ -330,17 +483,124 @@ public class Converter extends SwingWorker<Void, Void> {
       File saveName;
       MimsPlus[] mp = ui.getOpenMassImages();
       SumProps sp;
-      for (int i = 0; i < mp.length; i++) {
-         sp = new SumProps(i);
-         img = new MimsPlus(ui, sp, null);
-         name = ui.getExportName(img) + ".png";
-         saveName = new File(pngDirFile, name);         
+      if(isForHTMLManager){
+          for (int j = 0; j < SUMs.length; j++) {
+              for (int i = 0; i < mp.length; i++) {
+                  double sum1 = Double.parseDouble(SUMs[j]);
+                  double sum2 = mp[i].getMassValue();
+                  System.out.println("sum1 = " + sum1);
+                  System.out.println("sum2 = " + sum2);
+                  if(Math.abs(sum2-sum1) < 0.49){
+                      System.out.println("\t => same");
+                      
+                      sp = new SumProps(i);
+                      img = new MimsPlus(ui, sp, null);
+                      name = ui.getExportName(img) + ".png";
+                      saveName = new File(pngDirFile, name);
+                      System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
+                      ui.autoContrastImage(img);
+                      saver = new ij.io.FileSaver(img);
+                      saver.saveAsPng(saveName.getAbsolutePath());
+                      saveName.setWritable(true, false);
+                      
+                      break;
+                  }
+              }
+          }
+      }
+       else {
+           for (int i = 0; i < mp.length; i++) {
+               sp = new SumProps(i);
+               img = new MimsPlus(ui, sp, null);
+               name = ui.getExportName(img) + ".png";
+               saveName = new File(pngDirFile, name);
+               System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
+               ui.autoContrastImage(img);
+               saver = new ij.io.FileSaver(img);
+               saver.saveAsPng(saveName.getAbsolutePath());
+               saveName.setWritable(true, false);
+           }
+       }
+   }
+   
+   private void generateRatioImagePNGs(File pngDirFile) {
+
+      // Generate hsi images.
+      int numIdx, denIdx;
+      double numMass, denMass;
+      int upperThresh, lowerThresh;
+      double rfactor;
+      String numerator, denominator;
+      int counter = 0;
+      MimsPlus ratio_mp;
+      FileSaver saver;
+      File saveName;
+      for (String ratio : RATIOs) {
+         try {
+            numerator = ratio.substring(0, ratio.indexOf("/"));
+            denominator = ratio.substring(ratio.indexOf("/")+1, ratio.length());
+            numMass = (new Double(numerator)).doubleValue();
+            denMass = (new Double(denominator)).doubleValue();
+            numIdx = ui.getClosestMassIndices(numMass, 0.49);
+            denIdx = ui.getClosestMassIndices(denMass, 0.49);
+         } catch (Exception e) {
+            System.out.println("Skipping \"" + ratio + "\".");
+            continue;
+         }
+
+         RatioProps ratioProps;
+         if (numIdx >= 0 && denIdx >= 0)
+            ratioProps = new RatioProps(numIdx, denIdx);
+         else
+            continue;
+
+         if (counter < r_threshUppers.length) {
+            try {
+               upperThresh = (new Integer(r_threshUppers[counter])).intValue();
+               ratioProps.setNumThreshold(upperThresh);
+            } catch (NumberFormatException nfe) {
+               System.out.println("WARNING: Bad format for upper threshold: " + r_threshUppers[counter] + ". Auto thresholding");
+            }
+         }
+
+         if (counter < r_threshLowers.length) {
+            try {
+               lowerThresh = (new Integer(r_threshLowers[counter])).intValue();
+               ratioProps.setDenThreshold(lowerThresh);
+            } catch (NumberFormatException nfe) {
+               System.out.println("WARNING: Bad format for lower threshold: " + r_threshLowers[counter] + ". Auto thresholding");
+            }
+         }
+
+         if (counter < r_scaleFactors.length) {
+            try {
+               rfactor = new Double(r_scaleFactors[counter]);
+               ratioProps.setRatioScaleFactor(rfactor);
+            } catch (NumberFormatException nfe) {
+               ratioProps.setRatioScaleFactor(SCALE_FACTOR_DEFAULT);
+               System.out.println("WARNING: Bad format for scale factor: " + r_scaleFactors[counter] + ". Auto setting");
+            }
+         }
+
+         ratio_mp = new MimsPlus(ui, ratioProps);
+         String name = ui.getExportName(ratio_mp) + ".png";
+         saveName = new File(pngDirFile,name);
          System.out.println("       PNG-ing... " + saveName.getAbsolutePath());
-         ui.autoContrastImage(img);
-         saver = new ij.io.FileSaver(img);
+         /*
+         while (ratio_mp.getHSIProcessor().isRunning()) {
+            try {
+               Thread.sleep(100);
+            } catch (InterruptedException ie) {
+               // do nothing
+            }
+         }
+         */
+         saver = new FileSaver(ratio_mp);
          saver.saveAsPng(saveName.getAbsolutePath());
          saveName.setWritable(true, false);
+         counter++;
       }
+
    }
 
    private void generateHSIImagePNGs(File pngDirFile) {
@@ -666,24 +926,39 @@ public class Converter extends SwingWorker<Void, Void> {
 
               String nrrdFileWholePathAndName = files.get(index);
               
+              /* relative file path example:
+                 String path = "/var/data/stuff/xyz.dat";
+                 String base = "/var/data";
+                 String relative = new File(base).toURI().relativize(new File(path).toURI()).getPath();
+               */
+              
+              // in our case, we want to make the html file path as our base path
+              String base = this.htmlFile; //.substring(0, this.htmlFile.lastIndexOf("/")+1);
+              
+              
               if(files.get(index).endsWith(".im")){
                   nrrdFileWholePathAndName = nrrdFileWholePathAndName.substring(0, nrrdFileWholePathAndName.length()-3) + ".nrrd";
+                  // now, we make the nrrd file path relative to the html file path
+                  // in order to solve the issue of making selecting multiple im files from multiple locations.
+                  //nrrdFileWholePathAndName = new File(base).toURI().relativize(new File(nrrdFileWholePathAndName).toURI()).getPath();
+                  //nrrdFileWholePathAndName = convertToRelativePath(nrrdFileWholePathAndName, this.htmlFile);
+                  nrrdFileWholePathAndName = getRelativePath(nrrdFileWholePathAndName, htmlFile, "/");
               }
               
               String[] imOrNrrdFilePathAndName_split = files.get(index).split(java.util.regex.Pattern.quote("/"));
               String imOrNrrdFileName = imOrNrrdFilePathAndName_split[imOrNrrdFilePathAndName_split.length - 1];
               
-              String tableString = "";
-              tableString += "<TABLE ALIGN=\"LEFT\" BORDER=\"5\" CELLPADDING=\"5\" >";
-              tableString += "  <TR>";
-              tableString += "    <TD>";
-              tableString += "       <TABLE WIDTH=\"400\" height=\"100%\">";
-              tableString += "         <TR>";
-              tableString += "             <TH COLSPAN=\"3\" HEIGHT=\"25\"><FONT SIZE=\"4\">";
+              String tableString = "\t";
+              tableString += "<TABLE ALIGN=\"LEFT\" BORDER=\"5\" CELLPADDING=\"5\" >" + "\n";
+              tableString += "  <TR>" + "\n";
+              tableString += "    <TD>" + "\n";
+              tableString += "       <TABLE WIDTH=\"400\" height=\"100%\">" + "\n";
+              tableString += "         <TR>" + "\n";
+              tableString += "             <TH COLSPAN=\"3\" HEIGHT=\"25\"><FONT SIZE=\"4\">" + "\n";
               tableString += "                <a ALIGN=\"CENTER\" href=" + nrrdFileWholePathAndName + ">";
               tableString +=                     nrrdFileWholePathAndName.substring(nrrdFileWholePathAndName.lastIndexOf("/")+1);
-              tableString += "                </a><FONT></TH>";
-              tableString += "         </TR>";
+              tableString += "                </a></FONT></TH>" + "\n";
+              tableString += "         </TR>" + "\n";
 
               int i = 5;
               String header = com.nrims.data.ImageDataUtilities.getImageHeader(this.ui.getOpener());
@@ -691,11 +966,11 @@ public class Converter extends SwingWorker<Void, Void> {
               while (i < headerList.length - 4) {
                   String[] infos = headerList[i].split(java.util.regex.Pattern.quote(":"));
 
-                  tableString += "     <TR>";
-                  tableString += "          <TD style=\"color:red\" COLOR=\"RED\" ALIGN=\"RIGHT\" LINEHEIGHT=\"5px\" WIDTH=\"50%\">";
-                  tableString += "                <FONT SIZE=\"2\"> " + infos[0] + "</FONT>";
-                  tableString += "          </TD>";
-                  tableString += "          <TD style=\"LINE-HEIGHT:5px\" ALIGN=\"LEFT\">";
+                  tableString += "     <TR>" + "\n";
+                  tableString += "          <TD style=\"color:red\" COLOR=\"RED\" ALIGN=\"RIGHT\" LINEHEIGHT=\"5px\" WIDTH=\"50%\">" + "\n";
+                  tableString += "                <FONT SIZE=\"2\">" + infos[0] + "</FONT>" + "\n";
+                  tableString += "          </TD>" + "\n";
+                  tableString += "          <TD style=\"LINE-HEIGHT:5px\" ALIGN=\"LEFT\">" + "\n";
                   tableString += "                <FONT SIZE=\"2\">";
 
                   String details = "";
@@ -707,10 +982,9 @@ public class Converter extends SwingWorker<Void, Void> {
                       }
                       idx += 1;
                   }
-                  tableString += details;
-                  tableString += "                </FONT>";
-                  tableString += "          </TD>";
-                  tableString += "     </TR>";
+                  tableString += details   + "   </FONT>" + "\n";
+                  tableString += "          </TD>" + "\n";
+                  tableString += "     </TR>" + "\n";
                   i += 1;
                   
                   // this "if" singles out the date in which the file was created.
@@ -748,8 +1022,8 @@ public class Converter extends SwingWorker<Void, Void> {
                       tables_Not_sorted[index][0] += "." + hour + minutes;
                   }
               }
-              tableString += "      </TABLE>";
-              tableString += "    </TD>";
+              tableString += "      </TABLE>" + "\n";
+              tableString += "    </TD>" + "\n";
               
               
               ArrayList<String> pngFileNames = new ArrayList<String>(); // As a reference. to be used later on for comparison and sorting. 
@@ -873,12 +1147,28 @@ public class Converter extends SwingWorker<Void, Void> {
               
               // embedding the pngs into the html web page
               for(int k=0 ; k<pngFileNames_sorted.size() ; k++){
-                      tableString += "<TD ALIGN=\"CENTER\">";
-                      tableString += " <img src=\"data:image/png;base64," + pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k)) + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
-                      tableString += "<BR>";
-                      tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m")+1, pngFileNames_sorted.get(k).length()-4);
-                      tableString += "<BR>&nbsp";
-                      tableString += "</TD>";
+                  /*
+                  String stringOfImage = pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k));
+                  String cleanStringImage = "\n";
+                  int EIGHTY = 80;
+                  int count  = 0;
+                  for(int ii=0 ; ii<stringOfImage.length(); ii++){
+                      if(count == EIGHTY){
+                        cleanStringImage += "\n"; 
+                        count = 0;
+                      }
+                      cleanStringImage += stringOfImage.charAt(ii);
+                      count++;                        
+                  }
+                  cleanStringImage += "\n"; 
+                  */
+                  
+                  tableString += "<TD ALIGN=\"CENTER\">" + "\n";
+                  tableString += " <img src=\"data:image/png;base64," + "\n" + pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k))  + "\n" + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
+                  tableString += "<BR>";
+                  tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m") + 1, pngFileNames_sorted.get(k).length() - 4);
+                  tableString += "<BR>"; // "<BR>&nbsp";
+                  tableString += "</TD>";
               }
               
               tableString += "  </TR>";
@@ -991,4 +1281,12 @@ public class Converter extends SwingWorker<Void, Void> {
 
       return null;
    }
+   
+   
+   static class PathResolutionException extends RuntimeException {
+        PathResolutionException(String msg) {
+            super(msg);
+        }
+    }
+   
 }

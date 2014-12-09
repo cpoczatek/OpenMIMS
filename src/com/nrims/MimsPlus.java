@@ -868,6 +868,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         return roundedTitle;
     }
+    
+    //DJ: 11/14/2014
+    public String getTitleForTables(){
+        return this.title.substring(this.title.indexOf('[')+1, this.title.indexOf(']'));
+    }
 
     /**
      * Returns extended title information with properties Mass: contrast range
@@ -1116,13 +1121,13 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         }
         //??? can/should add reports?
 
-        MimsRoiManager rm = ui.getRoiManager();
+        MimsRoiManager2 rm = ui.getRoiManager();
         if (rm == null) {
             return;
         }
 
-        MimsRoiManager.ParticlesManager pm = rm.getParticlesManager();
-        MimsRoiManager.SquaresManager sm = rm.getSquaresManager();
+        MimsRoiManager2.ParticlesManager pm = rm.getParticlesManager();
+        MimsRoiManager2.SquaresManager sm = rm.getSquaresManager();
 
         if (pm != null) {
             pm.resetImage(this);

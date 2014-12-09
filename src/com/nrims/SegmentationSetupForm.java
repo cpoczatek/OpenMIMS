@@ -23,7 +23,7 @@ public class SegmentationSetupForm extends javax.swing.JDialog {
     private String activeClass;
     private String previousClass;
     private boolean ignoreEvents;   // flag to ignore combo box events; necessary during certain GUI operations
-    private MimsRoiManager roiManager;
+    private MimsRoiManager2 roiManager;
     private SegmentationProperties props;
     private SegmentationForm form;
     private Checkbox[] massBoxes;
@@ -34,7 +34,7 @@ public class SegmentationSetupForm extends javax.swing.JDialog {
     private EngineSetupDialog engineSetup;
 
     /** Creates new form SVMSegmentationSetupForm */
-    public SegmentationSetupForm(UI ui, SegmentationForm form, MimsRoiManager roiManager, ClassManager classes, boolean[] massImageFeatures,
+    public SegmentationSetupForm(UI ui, SegmentationForm form, MimsRoiManager2 roiManager, ClassManager classes, boolean[] massImageFeatures,
             boolean[] ratioImageFeatures, int[] localFeatures, int colorImageIndex, SegmentationProperties props) {
         super(ui, false);
         initComponents();

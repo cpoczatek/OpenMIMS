@@ -546,10 +546,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                if(allOpenedImages_radioButton.isSelected()){
                    
                    //MimsPlus[] openedMassImages = ui.getOpenMassImages();
-                   //MimsPlus[] openedSumImages = ui.getOpenSumImages();
-                   //MimsPlus[] openedRatioImages = ui.getOpenRatioImages();
+                   MimsPlus[] openedSumImages = ui.getOpenSumImages();
+                   MimsPlus[] openedRatioImages = ui.getOpenRatioImages();
                    MimsPlus[] openedHSIImages  = ui.getOpenHSIImages();
-                   //MimsPlus[] openedCompositeImages = ui.getOpenCompositeImages();
+                   MimsPlus[] openedCompositeImages = ui.getOpenCompositeImages();
                    
                    /*
                    ArrayList<Integer> massImages      = new ArrayList<Integer>();
@@ -577,6 +577,42 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                            // to be populated
                    }
                    */
+                   //-----------------------------------------------------------
+                   // Handling SUM images:
+                   //-----------------------------------------------------------
+                   int number_of_SUMs = openedSumImages.length;
+                   String[] sumArray = new String[number_of_SUMs];
+                   for (int i = 0; i < openedSumImages.length; i++) {
+                       MimsPlus openedSumImage = openedSumImages[i];
+                       String title = openedSumImage.getTitle().substring(openedSumImage.getTitle().indexOf(':')+2, openedSumImage.getTitle().indexOf('['));
+                       sumArray[i]  = title; 
+                   }
+                   
+                   //-----------------------------------------------------------
+                   // Handling Ratio images:
+                   //-----------------------------------------------------------
+                   
+                   int number_of_Ratios = openedRatioImages.length;
+                   String[] RatiosArray = new String[number_of_Ratios];
+                   String[] ratioNumThreshArray = new String[number_of_Ratios];
+                   String[] ratioDenThreshArray = new String[number_of_Ratios];
+                   String[] r_ratioScaleFactorArray = new String[number_of_Ratios];
+
+                   for (int i = 0; i < openedRatioImages.length; i++) {
+                       MimsPlus openedRatioImage = openedRatioImages[i];
+                       // title should be like 82.36/80.02
+                       String title = openedRatioImage.getTitle().substring(0, openedRatioImage.getTitle().indexOf('['));
+                       RatiosArray[i] = title;
+                       openedRatioImage.getRatioProps().getNumThreshold();
+                       ratioNumThreshArray[i] = Integer.toString(openedRatioImage.getRatioProps().getNumThreshold());
+                       ratioDenThreshArray[i] = Integer.toString(openedRatioImage.getRatioProps().getDenThreshold());
+                       r_ratioScaleFactorArray[i] = Integer.toString((new Double(openedRatioImage.getRatioProps().getRatioScaleFactor())).intValue());
+                   }
+                   
+                   
+                   //-----------------------------------------------------------
+                   // Handling HSI images:
+                   //-----------------------------------------------------------
                    int number_of_HSIs = openedHSIImages.length;
                    String[] HSIsArray = new String[number_of_HSIs];
                    String[] numThreshArray = new String[number_of_HSIs];
@@ -587,6 +623,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                    
                    for (int i = 0; i < openedHSIImages.length; i++) {
                        MimsPlus openedHSIimage = openedHSIImages[i];
+                       // title should be like 82.36/80.02
                        String title = openedHSIimage.getTitle().substring(openedHSIimage.getTitle().indexOf(':')+2, openedHSIimage.getTitle().indexOf('['));
                        HSIsArray[i] = title;
                        numThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio());
@@ -595,6 +632,14 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                        maxRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRGB())).intValue());
                        minRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMinRGB())).intValue());
                    }
+                   
+                   //-----------------------------------------------------------
+                   // Handling Composite images:
+                   //-----------------------------------------------------------
+                   int number_of_composites = openedCompositeImages.length;
+                   String[] compositesArray = new String[number_of_composites];
+                   
+                   
                    
                    
                    String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
@@ -612,13 +657,20 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                    co.setFiles(fileNames);
                    // We prepare/setup the props that the converter need in order
                    // to generate the html file.
+                   
+                   co.setForHtml(selectedFile.getAbsolutePath(), temp_folder_path);
+                   co.sumImageSpecsForHTML(sumArray);
+                   co.ratioImageSpecsForHTML(
+                           RatiosArray,
+                           ratioNumThreshArray, 
+                           ratioDenThreshArray,
+                           r_ratioScaleFactorArray);
                    co.hsiImageSpecsForHTML(
-                          selectedFile.getAbsolutePath(),
-                           temp_folder_path,
                            HSIsArray,
                            numThreshArray, denThreshArray,
                            ratioScaleFactorArray,
                            maxRGBArray, minRGBArray);
+                   
                    co.addPropertyChangeListener(this);
                    co.execute();
                    

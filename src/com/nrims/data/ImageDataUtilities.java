@@ -6,7 +6,7 @@ package com.nrims.data;
 
 import com.nrims.MimsJTable;
 import com.nrims.MimsPlus;
-import com.nrims.MimsRoiManager;
+import com.nrims.MimsRoiManager2;
 import com.nrims.UI;
 import ij.ImagePlus;
 import ij.WindowManager;
@@ -407,7 +407,7 @@ public class ImageDataUtilities {
      */
     public static void centerMassAutoTrack(UI ui) {
         MimsPlus image = (MimsPlus) WindowManager.getCurrentImage();
-        MimsRoiManager roiManager = ui.getRoiManager();
+        MimsRoiManager2 roiManager = ui.getRoiManager();
         Roi roi = roiManager.getRoi();
         Integer[] xy = ui.getRoiManager().getRoiLocation(roi.getName(), 1);
         roi.setLocation(xy[0], xy[1]);

@@ -2,6 +2,7 @@ package com.nrims;
 
 import com.nrims.data.MIMSFileFilter;
 import com.nrims.logging.OMLogger;
+//import com.sun.xml.internal.bind.v2.runtime.unmarshaller.TagName;  // commented by DJ: 12/08/2014
 import ij.IJ;
 import ij.gui.Roi;
 import ij.process.ImageStatistics;
@@ -40,6 +41,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
+import javax.swing.JTextArea; //DJ
+
 /**
  * MimsJTable class creates a frame containing a <code>JTable</code>.
  * This class is used to generate frame that contain data, usually
@@ -53,6 +56,7 @@ public class MimsJTable {
    JTable table;
    String[] stats;
    MimsPlus images[];
+   //int originalImagesTypes[];   // DJ
    Roi[] rois;
    ArrayList planes;
    JFrame frame;
@@ -65,11 +69,12 @@ public class MimsJTable {
    static String GROUP = "group";
    static String FILENAME = "file";
    static String ROIGROUP = "Roi group";
+   static String ROITAGS = "Roi tags";                   //DJ: 12/08/2014
    static String ROINAME = "Roi name";
    static String SLICE = "Slice";
    static String TRUE = "True Index";
-   static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROINAME};
-   static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, SLICE};
+   static String[] SUM_IMAGE_MANDOTORY_COLUMNS = {FILENAME, ROIGROUP, ROITAGS, ROINAME};      //DJ: 12/08/2014
+   static String[] ROIMANAGER_MANDATORY_COLUMNS = {ROINAME, ROIGROUP, ROITAGS, SLICE};                         // DJ: 12/08/2014
    private final static Logger OMLOGGER = OMLogger.getOMLogger(MimsJTable.class.getName());
 
    public static final int mOptions = ImageStatistics.AREA+ImageStatistics.MEAN+ImageStatistics.STD_DEV +
@@ -155,7 +160,7 @@ public class MimsJTable {
          displayTable(data, columnNames);
    }
 
-  /**
+   /**
    * Generates a table for listing Roi info (name and group) and their pixel values.
    * Correct order is required and ArrayLists must have the same length.
    * Output table will look something like the following:
@@ -241,6 +246,129 @@ public class MimsJTable {
          data[i][5] = (Double)denValues.get(i);
       }
       String[] columnNames = {FILENAME, ROIGROUP, ROINAME, "Med. pixel value", "Num pixel value", "Den pixel value"};
+
+      displayTable(data, columnNames);
+   }
+   
+   
+   // DJ: 12/08/2014 :  added tags to the table
+  /**
+   * Generates a table for listing Roi info (name and group) and their pixel values.
+   * Correct order is required and ArrayLists must have the same length.
+   * Output table will look something like the following:
+   *
+   * Group  |  Tags   |  Name  | Pixel Value
+   * ------------------------------
+   * group1 | t1, ...  |  name1 | pixel value 1
+   * group1 | t1, ...  |  name1 | pixel value 2
+   * group1 | t1, ...  |  name2 | pixel value 3
+   * group2 | t1, ...  |  name1 | pixel value 1
+   * group2 | t1, ...  |  name2 | pixel value 2
+   * group3 | t1, ...  |  name1 | pixel value 1
+   * group3 | t1, ...  |  name2 | pixel value 2
+   * group3 | t1, ...  |  name3 | pixel value 3
+   * group3 | t1, ...  |  name3 | pixel value 4
+   *
+   * @param groups ArrayList of roi names. Repeats expected.
+   * @param groups ArrayList of groups. Repeats expected.
+   * @param groups ArrayList of pixel values.
+   */
+   void createPixelTable(String file, ArrayList<String> names, ArrayList<String> groups, ArrayList<String> tags, ArrayList<Double> values) {
+      
+       if(tags == null){
+           System.out.println("in creatPixelTable: tags arraylist passed is NULL ");
+       } else {
+           System.out.println("in creatPixelTable: tags arraylist passed is FINE ");
+       }
+       
+      // Input checks.
+      if (names == null || groups == null || values == null)
+         return;
+      if (names.isEmpty() || groups.isEmpty() || values.isEmpty())
+         return;
+      if ((groups.size() != values.size()) || (names.size() != values.size()))
+         return;
+      //DJ: 12/08/2014
+      if ((tags.size() != values.size()) || (names.size() != values.size()))
+         return;
+
+      // Get data.
+      Object[][] data = new Object[values.size()][5];  // DJ: 12/08/2014  : ARG was 4 initially
+      String group, name, commaSeparatedTags = "";  // DJ: 12/08/2014
+      for(int i = 0; i < values.size(); i++) {
+         name = (String)names.get(i);
+         group = (String)groups.get(i);
+         commaSeparatedTags  = (String)tags.get(i);  // DJ: 12/08/2014
+         if (group == null)
+            group = "null";
+         if (commaSeparatedTags == null)                       // DJ: 12/08/2014
+            commaSeparatedTags = "null";
+         if (name == null)
+            name = "null";
+         if (group.trim().length() == 0)
+            group = "null";
+         if (commaSeparatedTags.trim().length() == 0)         // DJ: 12/08/2014
+            commaSeparatedTags = "null";
+         if (name.trim().length() == 0)
+            name = "null";
+         data[i][0] = file;
+         data[i][1] = group;
+         data[i][2] = commaSeparatedTags;                   // DJ: 12/08/2014
+         data[i][3] = name;
+         data[i][4] = (Double)values.get(i);
+      }
+      String[] columnNames = {FILENAME, ROIGROUP, ROITAGS, ROINAME, "Pixel value"};
+
+      displayTable(data, columnNames);
+   }
+   
+      // DJ: 12/08/2014  added tags to teh table.
+      void createPixelTableNumDen(String file, ArrayList<String> names, ArrayList<String> groups, ArrayList<String> tags, ArrayList<Double> values, ArrayList<Double> numValues, ArrayList<Double> denValues) {
+      if(tags == null){
+           System.out.println("in creatPixelTableNUMDEN: tags arraylist passed is NULL ");
+       } else {
+           System.out.println("in creatPixelTableNUMDEN: tags arraylist passed is FINE ");
+       }
+      // Input checks.
+      if (names == null || groups == null || values == null)
+         return;
+      if (names.isEmpty() || groups.isEmpty() || values.isEmpty())
+         return;
+      if ((groups.size() != values.size()) || (names.size() != values.size()))
+         return;
+      if ((tags.size() != values.size()) || (names.size() != values.size()))  // DJ: 12/08/2014
+         return;
+
+      // Get data.
+      Object[][] data = new Object[values.size()][7];    // DJ: 12/08/2014 : initially the argument was 6
+      String group, name, commaSeparatedTags = "";   // DJ: 12/08/2014 
+      for(int i = 0; i < values.size(); i++) {
+         name = (String)names.get(i);
+         group = (String)groups.get(i);
+         commaSeparatedTags  = (String)tags.get(i);  // DJ: 12/08/2014
+         if (group == null)
+            group = "null";
+         if (commaSeparatedTags == null)                       // DJ: 12/08/2014
+            commaSeparatedTags = "null";
+         if (name == null)
+            name = "null";
+         if (group.trim().length() == 0)
+            group = "null";
+         if (commaSeparatedTags.trim().length() == 0)         // DJ: 12/08/2014
+            commaSeparatedTags = "null";
+         if (name.trim().length() == 0)
+            name = "null";
+         data[i][0] = file;
+         data[i][1] = group;
+         data[i][2] = commaSeparatedTags;                       // DJ: 12/08/2014
+         data[i][3] = name;
+         data[i][4] = (Double)values.get(i);
+         data[i][5] = (Double)numValues.get(i);
+         data[i][6] = (Double)denValues.get(i);
+      }
+      
+      // DJ: 12/08/2014 : ROITAGS added
+      String[] columnNames = {FILENAME, ROIGROUP, ROITAGS, ROINAME, "Med. pixel value", "Num pixel value", "Den pixel value"};
 
       displayTable(data, columnNames);
    }
@@ -467,7 +595,28 @@ public class MimsJTable {
                if (group == null)
                   group = "null";
                data[row][col] = group;
-            } else if (stat.equals(ROINAME))
+            } 
+            // DJ: 12/08/2014
+            else if(stat.equals(ROITAGS)){
+                String commaSeparatedTags = "";
+                ArrayList<String> tags = gui.getRoiManager().getRoiTags(roi.getName());
+                if(tags == null)
+                    commaSeparatedTags += "null";
+                else{
+                    for(int ii=0 ; ii<tags.size() ; ii++){
+                        System.out.println(tags.get(ii));
+                        if(ii == tags.size()-1){
+                            commaSeparatedTags += tags.get(ii);
+                        } else {
+                            commaSeparatedTags += tags.get(ii)+ " ,";
+                        }
+                    }
+                }
+                data[row][col] = commaSeparatedTags;
+            }
+            
+            
+            else if (stat.equals(ROINAME))
                data[row][col] = roi.getName();
             else
                data[row][col] = "null";
@@ -575,7 +724,79 @@ public class MimsJTable {
    * Returns the column names.
    */
    public String[] getColumnNames(){
+       
+       //DJ: 11/14/2014
+       // initialze variables.
+      ArrayList<String> columnNamesArray = new ArrayList<String>();
+      String header = "";
+      columnNamesArray.add(SLICE);
+      String tableOnly = "(table only)";
+      
 
+      // Generate header based on image, roi, stat.
+      int col = 1;
+      for (int j = 0; j < images.length; j++) {
+         for (int i = 0; i < rois.length; i++) {
+            for (int k = 0; k < stats.length; k++) {
+               String stat = stats[k];
+               if (j == 0) {
+                  if (stats[k].startsWith(GROUP))
+                     stat = GROUP;
+               } else {
+                  if ((stats[k].startsWith(GROUP) || stats[k].equalsIgnoreCase(AREA)))
+                     continue;
+               }  
+               
+               header = images[j].getTitleForTables() + " ";
+               
+                if (images[j].getMimsType() == MimsPlus.SUM_IMAGE) {
+                    header = images[j].getTitleForTables() + " SUM ";
+                    
+                }
+                /*
+                // DJ
+                else if (images[j].getMimsType() == MimsPlus.RATIO_IMAGE) {
+                 
+                    if(originalImagesTypes != null){
+                        if(originalImagesTypes[j] == MimsPlus.HSI_IMAGE){
+                            header = images[j].getTitleForTables() + " HSI ";
+                        }
+                    }
+                }
+                */
+                
+                 header += System.getProperty("line.separator") + stat + " ROI " + rois[i].getName();
+                 
+               
+               /*
+               String prefix = "_";
+               if (images[j].getMimsType() == MimsPlus.MASS_IMAGE || images[j].getMimsType() == MimsPlus.RATIO_IMAGE)
+                  prefix = "_m";
+                  */
+               //header = images[j].getTitleForTables() + "\n" + stat;
+                System.out.println(header + "\n");
+               
+               
+               //header = stat + prefix + images[j].getRoundedTitle(true) + "_r" + rois[i].getName();
+               if (stat.matches(AREA) || stat.matches(GROUP))
+                  header = stat + " ROI " + rois[i].getName();
+               columnNamesArray.add(header);
+               col++;
+            }
+         }
+      }
+
+      // Fill in columnNames array.
+      String[] columnNames = new String[columnNamesArray.size()];
+      for (int i = 0; i < columnNames.length; i++) {
+         columnNames[i] = columnNamesArray.get(i);
+      }
+
+      return columnNames;
+       
+       
+       /*
+       // ORIGINAL IMPLEMENTATION:
       // initialze variables.
       ArrayList<String> columnNamesArray = new ArrayList<String>();
       String header = "";
@@ -614,6 +835,7 @@ public class MimsJTable {
       }
 
       return columnNames;
+      */ 
    }
 
   /**
@@ -633,6 +855,8 @@ public class MimsJTable {
             columnNamesArray.add(FILENAME);
          else if (header.equals(ROIGROUP))
             columnNamesArray.add(ROIGROUP);
+         else if (header.equals(ROITAGS))                // DJ: 12/08/2014
+            columnNamesArray.add(ROITAGS);
          else if (header.equals(ROINAME))
             columnNamesArray.add(ROINAME);
          else
@@ -644,8 +868,22 @@ public class MimsJTable {
          image = images[col1];
          for (int col2 = 0; col2 < stats.length; col2++) {
             stat = stats[col2];
-            String label = stat + " " + image.getRoundedTitle(true);
-
+            //String label = stat + " " + image.getRoundedTitle(true);  // commented out by DJ: 11/14/2014
+            String label = image.getTitleForTables() + " " + stat;
+            
+            /*
+            // DJ: 11/14/2014
+             if (image.getMimsType() == MimsPlus.RATIO_IMAGE) {
+                 if (originalImagesTypes != null) {
+                     if (originalImagesTypes[col1] == MimsPlus.HSI_IMAGE) {
+                         label = images[col1].getTitleForTables() + " HSI ";
+                     }
+                 }
+             }
+             */
+            
+            
+            
             if (stat.startsWith(GROUP))
                continue;
 
@@ -755,7 +993,10 @@ public class MimsJTable {
                   value = "null";
                else
                   value = objVal.toString();
-               if ((objVal instanceof String && !table.getColumnName(j).equals(new String("Slice")))|| table.getColumnName(j).equals(ROINAME)|| table.getColumnName(j).equals(ROIGROUP)){
+               if ((objVal instanceof String && !table.getColumnName(j).equals(new String("Slice")))|| 
+                       table.getColumnName(j).equals(ROINAME)|| 
+                       table.getColumnName(j).equals(ROIGROUP) ||
+                       table.getColumnName(j).equals(ROITAGS)){    // DJ: 12/08/2014
                   out.print('"' + value + '"');
                }else{
                    out.print(value);
@@ -810,7 +1051,14 @@ public class MimsJTable {
    public void setImages(MimsPlus[] images){      
       this.images = images;
    }
-
+   
+   /*
+   // DJ
+   public void setOriginalImagesTypes(int[] mimsTypes){      
+      this.originalImagesTypes = mimsTypes;
+   }
+   */
+   
    /**
     * Sets the statistics to be included in the table.
     *
@@ -1020,6 +1268,8 @@ public class MimsJTable {
     * Sets the renderers for the various columns.
     */
    public void setColumnRenderer() {
+       //table.setRowHeight(0, table.getRowHeight(0)*2);
+       //table.get
       for(int i = 0; i < table.getColumnCount(); i++) {
           table.getColumnModel().getColumn(i).setCellRenderer(new OpenMIMSTableFormatRenderer() );
       }
@@ -1032,12 +1282,45 @@ public class MimsJTable {
 
       private DecimalFormat formatter = new DecimalFormat("0.00");
       private DecimalFormat wholeNumberFormatter = new DecimalFormat("##");
-
+      
       @Override
       public Component getTableCellRendererComponent(
               JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
          // First format the cell value as required
-         
+         formatter.setMaximumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
+         formatter.setMinimumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
+
+         String colName = table.getColumnName(column);
+         if (colName.startsWith(GROUP) || colName.matches(FILENAME) || colName.matches(TRUE) ||
+             colName.matches(ROIGROUP) || colName.matches(ROINAME)  || colName.matches(SLICE) ||
+             colName.matches(ROITAGS)) {              //DJ: 12/08/2014
+             setHorizontalAlignment(JLabel.LEFT);
+         } else if (colName.startsWith(AREA)) {
+             value = wholeNumberFormatter.format((Number) value);
+         } else {
+             
+             value = formatter.format((Number) value);
+             /*
+             Object[] objects = {"Hello", System.getProperty("line.separator"), "There"};
+             java.text.MessageFormat mFormater = new java.text.MessageFormat("{0}{1}{2}{1}");
+             value = mFormater.format(objects);
+             System.out.println(value);
+             */
+         }
+
+         // And pass it on to parent class
+         return super.getTableCellRendererComponent(
+                 table, value, isSelected, hasFocus, row, column);
+      }
+   }
+   /*
+   public class LineWrapCellRenderer  extends JTextArea implements TableCellRenderer {
+
+       private DecimalFormat formatter = new DecimalFormat("0.00");
+       private DecimalFormat wholeNumberFormatter = new DecimalFormat("##");
+       
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            // First format the cell value as required
          formatter.setMaximumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
          formatter.setMinimumFractionDigits(gui.getPreferences().getNumDecimalPlaces());
 
@@ -1048,14 +1331,25 @@ public class MimsJTable {
          } else if (colName.startsWith(AREA)) {
              value = wholeNumberFormatter.format((Number) value);
          } else {
+             
              value = formatter.format((Number) value);
+             /*
+             Object[] objects = {"Hello", System.getProperty("line.separator"), "There"};
+             java.text.MessageFormat mFormater = new java.text.MessageFormat("{0}{1}{2}{1}");
+             value = mFormater.format(objects);
+             System.out.println(value);
+             
          }
 
          // And pass it on to parent class
          return super.getTableCellRendererComponent(
                  table, value, isSelected, hasFocus, row, column);
       }
+       
    }
+   */
+  
+   
 }
 
 // This subclass adds a method to retrieve the columnIdentifiers

@@ -506,7 +506,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
       //check for roi
       if (options.contains("roi")) {
-         MimsRoiManager roimanager = ui.getRoiManager();
+         MimsRoiManager2 roimanager = ui.getRoiManager();
          if (roimanager == null) {
             JOptionPane.showMessageDialog(atManager,
                 "No ROI selected.",
@@ -1881,7 +1881,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
       ImageStack tempStack = img.getImageStack();
 
-      MimsRoiManager roimanager = ui.getRoiManager();
+      MimsRoiManager2 roimanager = ui.getRoiManager();
       if (roimanager == null) {
          return null;
       }
