@@ -37,6 +37,7 @@ import static java.awt.Frame.NORMAL;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.HierarchyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
@@ -143,13 +144,14 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
     ParticlesManager partManager;
     SquaresManager squaresManager;
     
+   // ImageJ ij;
+    
     /**
      * Creates new form MimsRoiManager2
      */
     public MimsRoiManager2(UI ui) {
         super("MIMS ROI Manager ver 2");
-        //setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        
         initComponents();
         
         this.ui = ui;
@@ -162,10 +164,410 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
         ImageJ ij = IJ.getInstance();
         addKeyListener(ij);
         
-        
-        //==============================================================
+         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    
         //  ROIS
-        //==============================================================
+        //=============
+        roisHandler(ij);
+        
+        //  GROUPS
+        //=============
+        groupsHandler();
+        
+        //  TAGS
+        //=============
+        tagsHandler();
+        
+        //  SPINNERS
+        //=============
+        spinnersHandler();
+
+        //  CHECKBOXES:
+        //=============
+        checkBoxesHandler();
+        
+        
+    } // end of constructor
+    
+    
+    
+    private void groupsHandler(){
+        
+        // JList stuff - for Groups
+        groupListModel = new DefaultListModel();
+        groupListModel.addElement(DEFAULT_GROUP);
+        groupjlist.setModel(groupListModel);
+        groupjlist.setCellRenderer(new ComboBoxRenderer());
+        
+        //groupjlist = new JList(groupListModel);
+        groupSelectionListener = new ListSelectionListener() {
+           public void valueChanged(ListSelectionEvent listSelectionEvent) {
+             groupValueChanged(listSelectionEvent);
+           }
+        };
+        groupjlist.addListSelectionListener(groupSelectionListener);
+        groupjlist.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                check(e);
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                check(e);
+            }
+
+            public void check(MouseEvent e) {
+
+                // construct the menu for each item
+                final javax.swing.JPopupMenu jPopupMenu = new javax.swing.JPopupMenu();
+                
+                if (groupjlist.getSelectedIndices().length == 1) {
+
+                    javax.swing.JMenuItem newGroupItem = new javax.swing.JMenuItem("New group");
+                    newGroupItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            createNewGroupActionPerformed(e);
+                        }
+                    });
+
+                    javax.swing.JMenuItem renameGroupItem = new javax.swing.JMenuItem("Rename group");
+                    renameGroupItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            renameGroupActionPerformed(e);
+                        }
+                    });
+
+                    javax.swing.JMenuItem deleteGroupItem = new javax.swing.JMenuItem("Delete group");
+                    deleteGroupItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            if(groupjlist.getSelectedIndex() == 0){
+                               IJ.error("Cannot delete the Defaut Group ");
+                            } else {
+                                deleteGroupActionPerformed(e);
+                            }
+                        }
+                    });
+
+
+                    //  item.addActionListener(actionListener);
+                    jPopupMenu.add(newGroupItem);
+                    jPopupMenu.add(renameGroupItem);
+                    jPopupMenu.add(deleteGroupItem);
+
+                    if (e.isPopupTrigger()) { //if the event shows the menu
+                        groupjlist.setSelectedIndex(groupjlist.locationToIndex(e.getPoint())); //select the item
+                        jPopupMenu.show(groupjlist, e.getX(), e.getY()); //and show the menu
+                    }
+                }
+                
+                else if (groupjlist.getSelectedIndices().length > 1) {
+                    javax.swing.JMenuItem deleteSelectedGroups = new javax.swing.JMenuItem("Delete Selected Groups");
+                    deleteSelectedGroups.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                           // int[] Roiidxs = groupjlist.getSelectedIndices();
+                            //for (int i = 0; i < Roiidxs.length; i++) {
+                                
+                                //String roiName = (String) roiListModel.get(Roiidxs[i]);
+                                //groupsMap.remove(roiName);
+                                
+                               // System.out.println("index is = " + Roiidxs[i] );
+                               // if(Roiidxs[i] != 0) {  // we don't delete the default group.
+                                    deleteGroupActionPerformed(e);
+                               // }
+                            //}
+                            needsToBeSaved = true;
+                            groupjlist.setSelectedValue(DEFAULT_GROUP, true);
+                        }
+                    });
+                    
+                    
+                    jPopupMenu.add(deleteSelectedGroups);
+                    
+                    
+                    if (e.isPopupTrigger()) { //if the event shows the menu
+                        jPopupMenu.show(groupjlist, e.getX(), e.getY()); //and show the menu
+                    }
+                    
+                }
+            
+            } // end of check
+        });
+
+        // Group scrollpane.
+        //JScrollPane groupscrollpane = new JScrollPane(groupjlist);
+        //groupscrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+    }
+    
+    private void tagsHandler(){
+        
+         // JList stuff - for Groups
+        tagListModel = new DefaultListModel();
+        tagListModel.addElement(DEFAULT_TAG);
+        tagjlist.setModel(tagListModel);
+        tagjlist.setCellRenderer(new ComboBoxRenderer());
+        
+        //groupjlist = new JList(groupListModel);
+        tagSelectionListener = new ListSelectionListener() {
+           public void valueChanged(ListSelectionEvent listSelectionEvent) {
+             tagValueChanged(listSelectionEvent);
+           }
+        };
+        tagjlist.addListSelectionListener(tagSelectionListener);
+        tagjlist.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                check(e);
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                check(e);
+            }
+
+            public void check(MouseEvent e) {
+
+                // construct the menu for each item
+                final javax.swing.JPopupMenu jPopupMenu = new javax.swing.JPopupMenu();
+                
+                javax.swing.JMenuItem newTagItem = new javax.swing.JMenuItem("New tag");
+                newTagItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                         createNewTagActionPerformed(e);
+                    }
+                });
+                                
+                javax.swing.JMenuItem renameTagItem = new javax.swing.JMenuItem("Rename tag");
+                renameTagItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                         renameTagActionPerformed(e);
+                    }
+                });
+                
+                javax.swing.JMenuItem deleteTagItem = new javax.swing.JMenuItem("Delete tag");
+                deleteTagItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if(tagjlist.getSelectedIndex() == 0){
+                               IJ.error("Cannot delete the Defaut Tag ");
+                        } else { 
+                            deleteTagActionPerformed(e);
+                        }
+                    }
+                });
+
+                //  item.addActionListener(actionListener);
+                jPopupMenu.add(newTagItem);
+                jPopupMenu.add(renameTagItem);
+                jPopupMenu.add(deleteTagItem);
+
+                if (e.isPopupTrigger()) { //if the event shows the menu
+                    tagjlist.setSelectedIndex(tagjlist.locationToIndex(e.getPoint())); //select the item
+                    jPopupMenu.show(tagjlist, e.getX(), e.getY()); //and show the menu
+                }
+            }
+        });
+        
+    }
+    
+    
+    private void spinnersHandler(){
+        
+        xPosSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
+        yPosSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
+        
+        xPosSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                posSpinnerStateChanged(evt);
+            }
+        });
+        yPosSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                posSpinnerStateChanged(evt);
+            }
+        });
+        
+        widthSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
+        heightSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
+
+        widthSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                hwSpinnerStateChanged(evt);
+            }
+        });
+        heightSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                hwSpinnerStateChanged(evt);
+            }
+        });
+        
+    }
+    
+    private void checkBoxesHandler(){
+        
+        cbAllPlanes.setSelected(true);
+        
+        cbAllPlanes.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                bAllPlanes = cbAllPlanes.isSelected();
+            }
+        });
+        
+        cbHideAll.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                hideAll();
+            }
+        });
+        
+        cbHideLabels.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                hideLabels();
+            }
+        });
+        
+    }
+    
+    
+    
+        /**
+     * Returns if the user has selected the "hide Rois" checkbox.
+     *
+     * @return <code>true</code> if checked, otherwise <code>false>/code>.
+     */
+    public boolean getHideRois() {
+        boolean bEnabled = cbHideAll.isSelected();
+        return bEnabled;
+    }
+
+    /**
+     * Returns if the user has selected the "hide Roi labels" checkbox.
+     *
+     * @return <code>true</code> if checked, otherwise <code>false>/code>.
+     */
+    public boolean getHideLabel() {
+        return cbHideLabels.isSelected();
+    }
+   
+    /** updates the images so that ROI are not shown. */
+    private void hideAll() {
+       if (getImage() != null) {
+            ui.updateAllImages();
+        }
+    } 
+    /** updates the images so that ROI labels are not shown. */
+    private void hideLabels() {
+       if (getImage() != null) {
+            ui.updateAllImages();
+        }
+    }
+    
+    // DJ: 12/10/2014
+    // to force the focus of the any component within a frame.
+    // to be used with create new group/tag JOptionPane
+    private class RequestFocusListener implements java.awt.event.HierarchyListener {
+
+        @Override
+        public void hierarchyChanged(HierarchyEvent e) {
+            final Component c = e.getComponent();
+            if (c.isShowing() && (e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+                java.awt.Window toplevel = javax.swing.SwingUtilities.getWindowAncestor(c);
+                toplevel.addWindowFocusListener(new java.awt.event.WindowAdapter() {
+                    //@Override
+                    public void windowGainedFocus(WindowEvent e) {
+                        c.requestFocus();
+                    }
+                });
+            }
+        }
+    }
+    
+     /**
+    * Action Method for the "new" group menu item.
+    */
+    private void createNewGroupActionPerformed(ActionEvent e) {
+        javax.swing.JTextArea textArea = new javax.swing.JTextArea();
+        textArea.setEditable(true);
+        textArea.requestFocusInWindow();
+        textArea.addHierarchyListener( new RequestFocusListener() );
+        
+        //Dimension d = new Dimension(textArea.getWidth(), textArea.getHeight()*2);
+       // textArea.setSize(d);
+       
+        
+        JScrollPane scrollPane = new JScrollPane(textArea) {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(320, 70);
+            }
+
+            @Override
+            public void setFocusable(boolean focusable) {
+                super.setFocusable(true); //To change body of generated methods, choose Tools | Templates.
+            }
+        };       
+ 
+        
+        java.io.StringWriter writer = new java.io.StringWriter();
+		     
+        textArea.setText(writer.toString());
+        JOptionPane.showMessageDialog(this, scrollPane, "Enter new group(s) name(s):", JOptionPane.PLAIN_MESSAGE);
+        
+       
+        
+       // String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
+        //            JOptionPane.PLAIN_MESSAGE,null,null,"");
+       
+        String[] names = textArea.getText().split("\n");
+        
+        for(String name : names)
+            addGroup(name);
+        
+        if(partManager != null) partManager.updateGroups();
+        if(squaresManager != null) squaresManager.updateGroups();
+    }
+    
+     /**
+    * Renames the selected group.
+    */
+    private void renameGroupActionPerformed(ActionEvent e) {
+
+       // Make sure only 1 group is selected.
+       int[] idxs = groupjlist.getSelectedIndices();
+       if(idxs.length==0)
+          return;
+       if(idxs.length>1) {
+          error("Please select only one group to rename.");
+          return;
+       }
+
+       // Prompt user for new name and validate.
+       int index = idxs[0];
+       String groupName = (String)groupListModel.get(index);
+       String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
+          JOptionPane.PLAIN_MESSAGE,null,null,groupName);
+       if (newName == null)
+          return;
+       newName = newName.trim();
+       if (newName.equals("") || newName.equals(DEFAULT_GROUP))
+          return;
+
+       // Get all rois that belong to that group before we actually rename it.
+       Roi[] g_rois = getAllROIsInList();
+
+        if (addGroup(newName)) {
+
+          // Remove old group entry.
+          groups.remove(groupName);
+          groupListModel.removeElement(groupName);
+
+          // Overwrite all previous maps.
+          for (int i = 0; i < g_rois.length; i++)
+             groupsMap.put(g_rois[i].getName(), newName);
+
+          // Select new group.
+          groupjlist.setSelectedValue(newName, true);
+       }
+        if(partManager != null) partManager.updateGroups();
+        if(squaresManager != null) squaresManager.updateGroups();
+    }
+    
+    
+    private void roisHandler(ImageJ ij){
         
         // JList stuff - for ROIs
         roiListModel = new DefaultListModel();
@@ -499,6 +901,11 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
                             assignAllToTag.add(tagItem);
                     }
                     
+                    
+                    
+                    
+                   // javax.swing.JMenu deAssignTags = new javax.swing.JMenu("Deassign tags");
+                    
                     javax.swing.JMenuItem deAssignAllTags = new javax.swing.JMenuItem("Deassign all tags");
                     deAssignAllTags.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
@@ -514,6 +921,48 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
                             tagjlist.setSelectedValue(DEFAULT_TAG, true);
                         }
                     });
+                    //deAssignTags.add(deAssignAllTags);
+                    
+                    /*
+                    for(int idx = 0; idx< tags.size(); idx++){
+                         javax.swing.JMenuItem tagItem = new javax.swing.JMenuItem(tags.get(idx).toString());
+                         tagItem.addActionListener(new ActionListener() {
+
+                             public void actionPerformed(ActionEvent e) {
+                                 
+                                String tagName = e.getActionCommand();
+                                for(int selectedIndex : roijlist.getSelectedIndices()){
+                                    String roiName = (roiListModel.elementAt(selectedIndex)).toString();
+                                    
+                                    ArrayList<String> associatedTags = (ArrayList<String>) tagsMap.get(roiName);
+                                    
+                                    if(associatedTags != null &&  associatedTags.contains(tagName)){
+                                        associatedTags.remove(tagName);
+                                        tagsMap.put(roiName, associatedTags);
+                                    }
+                                    
+                                    
+                                }
+                                needsToBeSaved = true;
+                                
+                                if(tagjlist.getSelectedValue().equals(DEFAULT_TAG)){
+                                    System.out.println("DEF_TAG_WAS_HIGHLIGHTED");
+                                    tagjlist.setSelectedValue(tagName , true);
+                                } else {
+                                    System.out.println("DEF_TAG_WAS_NOT_HIGHLIGHTED");
+                                    tagjlist.setSelectedValue(DEFAULT_TAG, true);
+                                }
+                                groupjlist.setSelectedValue(DEFAULT_GROUP, true);
+                                 
+                             }
+                         });
+                         
+                         deAssignTags.add(tagItem);
+                         
+                    }
+                    */
+                    
+                    
                     
                     jPopupMenu.add(assignAllToGroup);
                     jPopupMenu.add(deAssignAllGroups);
@@ -528,347 +977,11 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
             
         });
         
-        
-        //==============================================================
-        //  GROUPS
-        //==============================================================
-        
-        // JList stuff - for Groups
-        groupListModel = new DefaultListModel();
-        groupListModel.addElement(DEFAULT_GROUP);
-        groupjlist.setModel(groupListModel);
-        groupjlist.setCellRenderer(new ComboBoxRenderer());
-        
-        //groupjlist = new JList(groupListModel);
-        groupSelectionListener = new ListSelectionListener() {
-           public void valueChanged(ListSelectionEvent listSelectionEvent) {
-             groupValueChanged(listSelectionEvent);
-           }
-        };
-        groupjlist.addListSelectionListener(groupSelectionListener);
-        groupjlist.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                check(e);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                check(e);
-            }
-
-            public void check(MouseEvent e) {
-
-                // construct the menu for each item
-                final javax.swing.JPopupMenu jPopupMenu = new javax.swing.JPopupMenu();
-                
-                if (groupjlist.getSelectedIndices().length == 1) {
-
-                    javax.swing.JMenuItem newGroupItem = new javax.swing.JMenuItem("New group");
-                    newGroupItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            createNewGroupActionPerformed(e);
-                        }
-                    });
-
-                    javax.swing.JMenuItem renameGroupItem = new javax.swing.JMenuItem("Rename group");
-                    renameGroupItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            renameGroupActionPerformed(e);
-                        }
-                    });
-
-                    javax.swing.JMenuItem deleteGroupItem = new javax.swing.JMenuItem("Delete group");
-                    deleteGroupItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            if(groupjlist.getSelectedIndex() == 0){
-                               IJ.error("Cannot delete the Defaut Group ");
-                            } else {
-                                deleteGroupActionPerformed(e);
-                            }
-                        }
-                    });
-
-
-                    //  item.addActionListener(actionListener);
-                    jPopupMenu.add(newGroupItem);
-                    jPopupMenu.add(renameGroupItem);
-                    jPopupMenu.add(deleteGroupItem);
-
-                    if (e.isPopupTrigger()) { //if the event shows the menu
-                        groupjlist.setSelectedIndex(groupjlist.locationToIndex(e.getPoint())); //select the item
-                        jPopupMenu.show(groupjlist, e.getX(), e.getY()); //and show the menu
-                    }
-                }
-                
-                else if (groupjlist.getSelectedIndices().length > 1) {
-                    javax.swing.JMenuItem deleteSelectedGroups = new javax.swing.JMenuItem("Delete Selected Groups");
-                    deleteSelectedGroups.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                           // int[] Roiidxs = groupjlist.getSelectedIndices();
-                            //for (int i = 0; i < Roiidxs.length; i++) {
-                                
-                                //String roiName = (String) roiListModel.get(Roiidxs[i]);
-                                //groupsMap.remove(roiName);
-                                
-                               // System.out.println("index is = " + Roiidxs[i] );
-                               // if(Roiidxs[i] != 0) {  // we don't delete the default group.
-                                    deleteGroupActionPerformed(e);
-                               // }
-                            //}
-                            needsToBeSaved = true;
-                            groupjlist.setSelectedValue(DEFAULT_GROUP, true);
-                        }
-                    });
-                    
-                    
-                    jPopupMenu.add(deleteSelectedGroups);
-                    
-                    
-                    if (e.isPopupTrigger()) { //if the event shows the menu
-                        jPopupMenu.show(groupjlist, e.getX(), e.getY()); //and show the menu
-                    }
-                    
-                }
-            
-            } // end of check
-        });
-
-        // Group scrollpane.
-        //JScrollPane groupscrollpane = new JScrollPane(groupjlist);
-        //groupscrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        
-        
-        //==============================================================
-        //  TAGS
-        //==============================================================
-        
-         // JList stuff - for Groups
-        tagListModel = new DefaultListModel();
-        tagListModel.addElement(DEFAULT_TAG);
-        tagjlist.setModel(tagListModel);
-        tagjlist.setCellRenderer(new ComboBoxRenderer());
-        
-        //groupjlist = new JList(groupListModel);
-        tagSelectionListener = new ListSelectionListener() {
-           public void valueChanged(ListSelectionEvent listSelectionEvent) {
-             tagValueChanged(listSelectionEvent);
-           }
-        };
-        tagjlist.addListSelectionListener(tagSelectionListener);
-        tagjlist.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                check(e);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                check(e);
-            }
-
-            public void check(MouseEvent e) {
-
-                // construct the menu for each item
-                final javax.swing.JPopupMenu jPopupMenu = new javax.swing.JPopupMenu();
-                
-                javax.swing.JMenuItem newTagItem = new javax.swing.JMenuItem("New tag");
-                newTagItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                         createNewTagActionPerformed(e);
-                    }
-                });
-                                
-                javax.swing.JMenuItem renameTagItem = new javax.swing.JMenuItem("Rename tag");
-                renameTagItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                         renameTagActionPerformed(e);
-                    }
-                });
-                
-                javax.swing.JMenuItem deleteTagItem = new javax.swing.JMenuItem("Delete tag");
-                deleteTagItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if(tagjlist.getSelectedIndex() == 0){
-                               IJ.error("Cannot delete the Defaut Tag ");
-                        } else { 
-                            deleteTagActionPerformed(e);
-                        }
-                    }
-                });
-
-                //  item.addActionListener(actionListener);
-                jPopupMenu.add(newTagItem);
-                jPopupMenu.add(renameTagItem);
-                jPopupMenu.add(deleteTagItem);
-
-                if (e.isPopupTrigger()) { //if the event shows the menu
-                    tagjlist.setSelectedIndex(tagjlist.locationToIndex(e.getPoint())); //select the item
-                    jPopupMenu.show(tagjlist, e.getX(), e.getY()); //and show the menu
-                }
-            }
-        });
-        
-        //==============================================================
-        //  SPINNERS
-        //==============================================================
-        
-        xPosSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
-        yPosSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
-        
-        xPosSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                posSpinnerStateChanged(evt);
-            }
-        });
-        yPosSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                posSpinnerStateChanged(evt);
-            }
-        });
-        
-        widthSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
-        heightSpinner.setModel(new javax.swing.SpinnerNumberModel(0, -9999, 9999, 1));
-
-        widthSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                hwSpinnerStateChanged(evt);
-            }
-        });
-        heightSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                hwSpinnerStateChanged(evt);
-            }
-        });
- 
-        //==============================================================
-        //  CHECKBOXES:
-        //==============================================================
-        
-        cbAllPlanes.setSelected(true);
-        
-        cbAllPlanes.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                bAllPlanes = cbAllPlanes.isSelected();
-            }
-        });
-        
-        cbHideAll.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                hideAll();
-            }
-        });
-        
-        cbHideLabels.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                hideLabels();
-            }
-        });
-        
-        
-    } // end of constructor
-    
-    
-        /**
-     * Returns if the user has selected the "hide Rois" checkbox.
-     *
-     * @return <code>true</code> if checked, otherwise <code>false>/code>.
-     */
-    public boolean getHideRois() {
-        boolean bEnabled = cbHideAll.isSelected();
-        return bEnabled;
-    }
-
-    /**
-     * Returns if the user has selected the "hide Roi labels" checkbox.
-     *
-     * @return <code>true</code> if checked, otherwise <code>false>/code>.
-     */
-    public boolean getHideLabel() {
-        return cbHideLabels.isSelected();
-    }
-   
-    /** updates the images so that ROI are not shown. */
-    private void hideAll() {
-       if (getImage() != null) {
-            ui.updateAllImages();
-        }
-    } 
-    /** updates the images so that ROI labels are not shown. */
-    private void hideLabels() {
-       if (getImage() != null) {
-            ui.updateAllImages();
-        }
     }
     
-     /**
-    * Action Method for the "new" group menu item.
-    */
-    private void createNewGroupActionPerformed(ActionEvent e) {
-        javax.swing.JTextArea textArea = new javax.swing.JTextArea();
-        textArea.setEditable(true);
-        //textArea.setSize(40, 80);
-        //String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
-        //            JOptionPane.PLAIN_MESSAGE,null,null,"");
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        
-        java.io.StringWriter writer = new java.io.StringWriter();
-
-		     
-        textArea.setText(writer.toString());
-        JOptionPane.showMessageDialog(this, scrollPane, "Enter new group name:", JOptionPane.PLAIN_MESSAGE);
-       // String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
-        //            JOptionPane.PLAIN_MESSAGE,null,null,"");
-       
-        String[] names = textArea.getText().split("\n");
-        
-        for(String name : names)
-            addGroup(name);
-        
-        if(partManager != null) partManager.updateGroups();
-        if(squaresManager != null) squaresManager.updateGroups();
-    }
     
-     /**
-    * Renames the selected group.
-    */
-    private void renameGroupActionPerformed(ActionEvent e) {
-
-       // Make sure only 1 group is selected.
-       int[] idxs = groupjlist.getSelectedIndices();
-       if(idxs.length==0)
-          return;
-       if(idxs.length>1) {
-          error("Please select only one group to rename.");
-          return;
-       }
-
-       // Prompt user for new name and validate.
-       int index = idxs[0];
-       String groupName = (String)groupListModel.get(index);
-       String newName = (String)JOptionPane.showInputDialog(this,"Enter new name for group "+ groupName +" :\n","Enter",
-          JOptionPane.PLAIN_MESSAGE,null,null,groupName);
-       if (newName == null)
-          return;
-       newName = newName.trim();
-       if (newName.equals("") || newName.equals(DEFAULT_GROUP))
-          return;
-
-       // Get all rois that belong to that group before we actually rename it.
-       Roi[] g_rois = getAllROIsInList();
-
-        if (addGroup(newName)) {
-
-          // Remove old group entry.
-          groups.remove(groupName);
-          groupListModel.removeElement(groupName);
-
-          // Overwrite all previous maps.
-          for (int i = 0; i < g_rois.length; i++)
-             groupsMap.put(g_rois[i].getName(), newName);
-
-          // Select new group.
-          groupjlist.setSelectedValue(newName, true);
-       }
-        if(partManager != null) partManager.updateGroups();
-        if(squaresManager != null) squaresManager.updateGroups();
-    }
+    
+    
     
     // DJ: 12/05/2014
     /**
@@ -967,11 +1080,24 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
         */
         
         javax.swing.JTextArea textArea = new javax.swing.JTextArea();
-        textArea.setEditable(true);
-        //textArea.setSize(40, 80);
-        //String s = (String)JOptionPane.showInputDialog(this,"Enter new group name:\n","Enter",
-        //            JOptionPane.PLAIN_MESSAGE,null,null,"");
-        JScrollPane scrollPane = new JScrollPane(textArea);
+        textArea.requestFocusInWindow();
+        textArea.addHierarchyListener( new RequestFocusListener() );
+        
+        //Dimension d = new Dimension(textArea.getWidth(), textArea.getHeight()*2);
+       // textArea.setSize(d);
+       
+        
+        JScrollPane scrollPane = new JScrollPane(textArea) {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(320, 70);
+            }
+
+            @Override
+            public void setFocusable(boolean focusable) {
+                super.setFocusable(true); //To change body of generated methods, choose Tools | Templates.
+            }
+        };
         
         java.io.StringWriter writer = new java.io.StringWriter();
 
@@ -1389,8 +1515,15 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
                 defaultGroupSelected = true;
           }
           // DJ:
-          // Get the selected groups.
+          // Get the selected tags.
           int[] tagIndices = tagjlist.getSelectedIndices();
+          if(tagIndices == null || tagIndices.length==0){
+              tagjlist.setSelectedValue(DEFAULT_TAG, true);
+              tagIndices = tagjlist.getSelectedIndices();
+              //tagIndices = new int[1];
+              //tagIndices[0]=0;
+          }
+          
           String[] tagNames = new String[tagIndices.length];
           for (int i = 0; i < tagIndices.length; i++){
              tagNames[i] = (String)tagListModel.getElementAt(tagIndices[i]);
@@ -1406,7 +1539,7 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
              roiName = (String)object;
              boolean isGroupContainsRoi = groupContainsRoi(groupNames, roiName);
              boolean isTagContainsRoi = tagContainsRoi(tagNames, roiName);            // DJ
-             if (isGroupContainsRoi && isTagContainsRoi ) {                                       // DJ
+             if (isGroupContainsRoi && isTagContainsRoi) {                                        // DJ
                  roiListModel.addElement(roiName);
              }
           }
@@ -1451,6 +1584,7 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
           String[] tagNames = new String[indices.length];
           for (int i = 0; i < indices.length; i++){
              tagNames[i] = (String)tagListModel.getElementAt(indices[i]);
+             // System.out.println(tagNames[i]);
              if (tagNames[i].equals(DEFAULT_TAG))
                 defaultTagSelected = true;
           }
@@ -1458,6 +1592,16 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
           // DJ:
           // Get the selected groups.
           int[] grIndices = groupjlist.getSelectedIndices();
+          
+          
+          if(grIndices == null || grIndices.length==0){
+              groupjlist.setSelectedValue(DEFAULT_GROUP, true);
+              grIndices = groupjlist.getSelectedIndices();
+              //tagIndices = new int[1];
+              //tagIndices[0]=0;
+          }
+          
+          
           String[] groupNames = new String[grIndices.length];
           for (int i = 0; i < grIndices.length; i++){
              groupNames[i] = (String)groupListModel.getElementAt(grIndices[i]);
@@ -1472,7 +1616,7 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
              roiName = (String)object;
              boolean isTagContainsRoi = tagContainsRoi(tagNames, roiName);
              boolean isGroupContainsRoi = groupContainsRoi(groupNames, roiName); //DJ
-             if (isTagContainsRoi && isGroupContainsRoi ) {
+             if ((isTagContainsRoi && isGroupContainsRoi) ) {
                  roiListModel.addElement(roiName);
              }
           }
@@ -1518,6 +1662,8 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
      * Checks to see if the tag assigned to roiName is contained within tagNames.
      */
     private boolean tagContainsRoi(String[] tagNames, String roiName){
+        
+        
        for (String tagName : tagNames) {
           if (tagName.equals(DEFAULT_TAG))
              return true;
@@ -1680,9 +1826,7 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
         } else if (indices.length == 1) {
            String roiName = (String)roiListModel.getElementAt(indices[0]);
            String groupName = (String)groupsMap.get(roiName);
-           
-          // DJ: 12/08/2014
-           ArrayList<String> associatedTags = (ArrayList<String>) tagsMap.get(roiName);
+           ArrayList<String> associatedTags = (ArrayList<String>) tagsMap.get(roiName); // DJ: 12/08/2014
 
            // This is my attempt at setting the selection of the
            // groupjlist WITHOUT triggering the ListSelectionListener.
@@ -1697,11 +1841,8 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
            groupjlist.addListSelectionListener(groupSelectionListener);
            
            
-           // DJ: 12/08/2014
-           tagjlist.removeListSelectionListener(tagSelectionListener);
-           
+           tagjlist.removeListSelectionListener(tagSelectionListener); // DJ: 12/08/2014
            ArrayList<Integer> ArrayListAssociatedTagsIndices = new ArrayList<Integer>();
-           
             if (associatedTags == null || associatedTags.isEmpty()) {
                 tagjlist.setSelectedValue(DEFAULT_TAG, true);
 
@@ -1716,8 +1857,9 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
                     AssociatedTagsIndices[indx] = ArrayListAssociatedTagsIndices.get(indx).intValue();
                 }
                 tagjlist.setSelectedIndices(AssociatedTagsIndices);
-                tagjlist.addListSelectionListener(tagSelectionListener);
             }
+            
+            tagjlist.addListSelectionListener(tagSelectionListener);
         }
 
         holdUpdate = false;
