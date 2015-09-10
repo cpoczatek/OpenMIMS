@@ -2847,7 +2847,7 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
            }
        }
 
-       // HSIs pixel data is stored in the internal ratio image.
+       // Ratio or HSIs pixel data is stored in the internal ratio image.
         if(img.getMimsType()==MimsPlus.HSI_IMAGE || img.getMimsType()==MimsPlus.RATIO_IMAGE) {
             img = img.internalRatio;
             numImg = ui.getMassImage(img.getRatioProps().getNumMassIdx());
@@ -2868,21 +2868,29 @@ public class MimsRoiManager2 extends javax.swing.JFrame implements ActionListene
             String group = getRoiGroup(roi.getName());
             ArrayList<String> tags = getRoiTags(roi.getName()); // DJ: 12/08/2014
             for (double pixel : roipixels) {
-                if (img.getMimsType()==MimsPlus.RATIO_IMAGE)
+                //TODO, clean. Is this if=else missing braces? Based on indent, yes
+                // Based on logic, no? This is not python
+                //Quick and dirty fix
+                if (img.getMimsType()==MimsPlus.RATIO_IMAGE) {
 		             values.add(Double.valueOf(twoDForm.format(pixel)));
-                else
+                }
+                else {
                    values.add(pixel);
-                    lgroups.add(group);
-                    names.add(roi.getName());
-                    
+                }
+                lgroups.add(group);
+                names.add(roi.getName());
                    // DJ: 12/08/2014
                     String commaSeparatedTagsString = "";
-                    for(int j=0 ; j<tags.size() ; j++){
-                        if(j==tags.size()-1)
+                // was mising null check
+                if (tags != null) {
+                    for (int j = 0; j < tags.size(); j++) {
+                        if (j == tags.size() - 1) {
                             commaSeparatedTagsString += tags.get(j);
-                        else
+                        } else {
                             commaSeparatedTagsString += tags.get(j) + ", ";
+                        }
                     }
+                }
                     ltags.add(commaSeparatedTagsString);
                     
             }
