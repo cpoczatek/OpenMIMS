@@ -1928,7 +1928,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
     */
    public ImagePlus getSubStack(ImagePlus img, ArrayList<Integer> includeList) {
       ImageStack imgStack = img.getImageStack();
-      ImageStack tempStack = new ImageStack(img.getHeight(), img.getWidth());
+      ImageStack tempStack = new ImageStack(img.getWidth(), img.getHeight());
       for (int i = 0; i < imgStack.getSize(); i++) {
          if (includeList.contains(i + 1)) {
             tempStack.addSlice(Integer.toString(i + 1), imgStack.getProcessor(i + 1));
@@ -2163,6 +2163,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
                
                //tempImage.close();
             } catch (Exception ex) {
+                ex.printStackTrace();
                notifyComplete(null);
             }
          }
