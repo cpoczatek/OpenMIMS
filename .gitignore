@@ -1,0 +1,20 @@
+
+# /
+/build
+/dist
+/nbproject
+/buildnum.txt
+/liblist.txt
+
+# /lib/
+/lib/.README.swp
+
+# /nbproject/
+/nbproject/private
+/nbproject/build-impl.xml
+/nbproject/project.properties
+/nbproject/project.xml
+/nbproject/genfiles.properties
+
+# /nbproject/private/
+/nbproject/private/*
