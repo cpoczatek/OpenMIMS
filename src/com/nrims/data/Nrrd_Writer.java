@@ -56,8 +56,13 @@ public class Nrrd_Writer {
        op = opener;
     }
 
-    //
-	public File save(ImagePlus[] imp, String directory, String file) {
+    //Change missing from svn->git migration
+    public Opener getOpener() {
+        return op;
+    }
+    //end
+    
+    public File save(ImagePlus[] imp, String directory, String file) {
 		if (imp == null) {
 			IJ.showMessage(noImages);
 			return null;

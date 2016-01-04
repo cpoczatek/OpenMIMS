@@ -838,7 +838,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         if (mass_props == null) {
             return;
         }
-
+        //Change missing from svn->git migration
+        if (mass_props.length == 0) {
+            return;
+        }
+        //end
         try {
             MimsPlus[] imgs = getOpenMassImages();
             
@@ -2485,6 +2489,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (imgNotes != null) {
                 getOpener().setNotes(imgNotes.getOutputFormatedText());
             }
+            //Change missing from svn->git migration
+            String[] pos = FileUtilities.validStackPositions(getOpenMassImages()[0]);
+            getOpener().setStackPositions(pos);
+            //end
             if (mimsAction.getIsTracked()) {
                 double max_delta = mimsAction.getMaxDelta();
                 DecimalFormat twoDForm = new DecimalFormat("#.##");
@@ -2894,12 +2902,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         //rm2.setVisible(true);
         
         
-        
-        
+        //Change missing from svn->git migration
+        //Do basic screen positioning/contrast
         tileWindows();
-        
+        autoContrastImages(getOpenMassImages());
+        //Apply previous state, if it esists
         applyWindowState(mass_props);
-
+        //end
+        
         if (mass_props == null) {
             mass_props = new MassProps[0];
         }
@@ -3555,6 +3565,11 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
                 saveImageOnly = true;
                 System.out.println("Save image only.");
                 MimsJFileChooser fc = new MimsJFileChooser(this);
+                //Change missing from svn->git migration
+                if (this.getImageFilePrefix() != null) {
+                        fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
+                }
+                //end
                 int returnVal = fc.showSaveDialog(jTabbedPane1);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     fileName = fc.getSelectedFile().getAbsolutePath();

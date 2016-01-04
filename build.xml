@@ -13,7 +13,12 @@
 
 <!-- Added to create svn revision number in file    -->
     <target name="-pre-jar">
-      <exec executable="svnversion" output="buildnum.txt" >
+      <!-- This doesn't makes sense now using git.
+           Add dummy file.
+      <exec executable="svnversion" output="buildnum.txt" ></exec>
+      -->
+      <exec executable="echo" output="buildnum.txt">
+        <arg line="'git'" />
       </exec>
       <copy file="buildnum.txt" todir="${build.classes.dir}"/>
 <!-- Added to create list of /lib jars in file    -->

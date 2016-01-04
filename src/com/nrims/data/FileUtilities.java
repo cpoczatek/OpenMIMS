@@ -7,6 +7,7 @@ package com.nrims.data;
 import com.nrims.CompositeProps;
 import com.nrims.HSIProps;
 import com.nrims.MassProps;
+import com.nrims.MimsAction;
 import com.nrims.MimsCanvas;
 import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
@@ -902,4 +903,55 @@ public class FileUtilities {
        }
        return exportedData;
     }
+    
+    //Change missing from svn->git migration
+    public static String[] validStackPositions(MimsPlus image) {
+        ArrayList<String> output = new ArrayList();
+        ImageStack imageStack = image.getImageStack();
+        for (int i = 0; i < imageStack.getSize(); i++) {
+            output.add(imageStack.getSliceLabel(i + 1));
+        }
+        return output.toArray(new String[output.size()]);
+    }
+    
+    /**
+     * UNUSED, This may be the wrong place to put this....
+     */
+    
+    /**
+     * Return a string of "stack positions" that includes only the names of
+     * files that are currently in the stack, ie deleted planes are not included.
+     * String is formatted to be placed directly in a nrrd header as the value
+     * of key 'mims_stack_positions'.
+     * @param ui
+     * @param op
+     * @return string of stack positions with those of deleted planes removed.
+     */
+    public static String trimStackPositions(UI ui, Opener op) {
+        //ArrayList filenames = new ArrayList(String);
+        String[] filenames = op.getStackPositions();
+        MimsAction action = ui.getmimsAction();
+       // int size = action.get().size();
+        String raw = "";
+        String trimmed = "";
+        try {
+            for (int i = 0; i < filenames.length; i++) {
+                raw += filenames[i];
+                if (!ui.getmimsAction().isDropped(i)) {
+                    trimmed += filenames[i] + ";";
+                }
+            }
+        } catch (Exception e) {
+            //Catch all exceptions and return a non-empty error string.
+            //This string will be written to the header.
+            System.out.println(e.toString());
+            return "Error-exception_trimming_stack_positions;";
+        }
+
+        System.out.println("raw: " + raw);
+        System.out.println("trimmed: " + raw);
+
+        return trimmed;
+    }
+    //end
 }

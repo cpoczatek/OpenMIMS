@@ -106,7 +106,11 @@ public class exportQVis {
 
             for (int i = 0; i < pix.length; i++) {
                 float ratioval = pix[i];
-
+                //kludge
+                if (ratioval < props.getMinRatio()) {
+                    ratioval = (float)props.getMinRatio();
+                }
+                
                 int iratio = 0;
                 if (ratioval > props.getMinRatio()) {
                     if (ratioval < props.getMaxRatio()) {
@@ -142,15 +146,21 @@ public class exportQVis {
                 alpha = java.lang.Math.min(alpha, max);
                 alpha = (alpha-min) / (max - min);
 
-/*
                 //kludge to do ratio value alpha-ing
+                //the kludge it burns
                 alpha = java.lang.Math.max(ratioval, min);
                 alpha = java.lang.Math.min(alpha, max);
                 alpha = (alpha-min) / (max - min);
-                if(denpix[i] < 5000.0) {
+
+//WTF is this?
+/*                if(denpix[i] < 5000.0) {
                     alpha = (double)0.0;
                 }
 */
+                if(j==50) {
+                    System.out.println("pix: " + i + " alpha: " + alpha);
+                }
+                
                 plane_rgba[i][3] = (byte) (255 * alpha);
 
             }

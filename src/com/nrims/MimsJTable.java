@@ -368,8 +368,11 @@ public class MimsJTable {
       }
       
       // DJ: 12/08/2014 : ROITAGS added
-      String[] columnNames = {FILENAME, ROIGROUP, ROITAGS, ROINAME, "Med. pixel value", "Num pixel value", "Den pixel value"};
-
+      //Change missing from svn->git migration
+      //String[] columnNames = {FILENAME, ROIGROUP, ROITAGS, ROINAME, "Med. pixel value", "Num pixel value", "Den pixel value"};
+      String[] columnNames = {FILENAME, ROIGROUP, ROITAGS, ROINAME, "Ratio pixel value", "Num pixel value", "Den pixel value"};
+      //end
+      
       displayTable(data, columnNames);
    }
   /**

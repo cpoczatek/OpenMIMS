@@ -207,5 +207,12 @@ public class NRIMS_Plugin implements PlugIn {
             }
         }
     }
+    //Change missing from svn->git migration
+    //TODO, was this added for scripting access to UI?
+    public static UI getUI() {
+        return ui;
+    }
+    //end
+    
     private static com.nrims.UI ui = null;
 }
