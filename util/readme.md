@@ -19,15 +19,17 @@ OpenMIMS.app.zip - an OSX app wrapper around a 1 line bash script, written in Au
 To install, copy .zip somewhere, unzip, copy OpenMIMS.app to /Applications/
 
 The script being wrapped is:
+```
 open -n -a Fiji --args --allow-multiple -eval "run('Open MIMS Image', '$@'); run('Install...', 'install=/Applications/Fiji.app/macros/openmims_tools.fiji.ijm');"
+```
 
 Details of above command:
-open : general OSX command
--n : start new instance
--a Fiji : use application 'Fiji', assumes Fiji.app in in /Applications/
---args : following are args to application (Fiji)
---allow-multiple : allow multiple Fiji instances (difference from -n)
--eval : evaluate following macro commands, there are 2 commands between the "quotes"
+- open : general OSX command
+- -n : start new instance
+- -a Fiji : use application 'Fiji', assumes Fiji.app in in /Applications/
+- --args : following are args to application (Fiji)
+- --allow-multiple : allow multiple Fiji instances (difference from -n)
+- -eval : evaluate following macro commands, there are 2 commands between the "quotes"
 "run('Open ...[snip]... ); : 1st macro, run OpenMIMS and pass it the arguments to this script, eg filename.
 run('Install ...[snip]...);" : 2nd macro, install the custom OpenMIMS toosls in the toolbar, assumes Fiji is in /Applications/
 
