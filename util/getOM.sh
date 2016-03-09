@@ -32,6 +32,9 @@ cd ~/bin/
 ln -s ./Fiji.app/ImageJ-linux64 ./fiji
 ln -s ./Fiji.app/lib/runOpenMIMS.sh ./openmims
 
+# sketch of handling the .desktop file
+# cp ./Fiji.app/lib/OpenMIMS.desktop ~/.local/share/applications/
+
 if [[ ":$PATH:" == *":$HOME/bin:"* ]]; then
     echo "~/bin/ is in path"
 else
