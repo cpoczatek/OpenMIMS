@@ -27,6 +27,7 @@ echo -e "${green} Adding OpenMIMS update site... ${reset}"
 ./ImageJ-linux64 --update add-update-site OpenMIMS http://nrims.partners.org/OpenMIMS-Fiji/
 echo -e "${green} Updating Fiji... ${reset}"
 ./ImageJ-linux64 --update update
+mkdir logs
 
 cd ~/bin/
 ln -s ./Fiji.app/ImageJ-linux64 ./fiji
