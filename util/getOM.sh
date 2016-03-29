@@ -46,8 +46,8 @@ fi
 echo "${green} Create .desktop file and add .im and .nrrd mimetypes...${reset}"
 
 cat > ~/.local/share/applications/OpenMIMS.desktop <<- EOM
-#edited from Fiji.desktop
-Version=1.0
+[Desktop Entry]
+Version=2.5
 Name=OpenMIMS
 GenericName=OpenMIMS
 X-GNOME-FullName=OpenMIMS
