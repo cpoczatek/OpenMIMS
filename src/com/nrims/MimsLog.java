@@ -81,6 +81,7 @@ public class MimsLog extends javax.swing.JPanel {
 
     /**
      * Action to be performed when "clear" button pressed.
+     * All text in textArea it deleted.
      */
 private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
     this.Clear();
