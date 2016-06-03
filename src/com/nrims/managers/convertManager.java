@@ -16,15 +16,10 @@ import java.awt.Cursor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JProgressBar;
-import javax.swing.JRadioButton;
+import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileFilter;
 import org.jfree.ui.ExtensionFileFilter;
@@ -320,52 +315,71 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     public void selectFiles() {
        MimsJFileChooser mjfc = new MimsJFileChooser(ui);
-       mjfc.setMultiSelectionEnabled(true);
-       mjfc.setPreferredSize(new java.awt.Dimension(650, 500));
-       int returnVal = mjfc.showOpenDialog(this);
+        mjfc.setMultiSelectionEnabled(true);
+        mjfc.setPreferredSize(new java.awt.Dimension(650, 500));
+        int returnVal = mjfc.showOpenDialog(this);
 
-       // Open file or return null.
-       if (returnVal == JFileChooser.APPROVE_OPTION) {
-          files = mjfc.getSelectedFiles();
-       } else
-          return;
+        // Open file or return null.
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (mjfc.isCurrentDirReadOnly()) {
+                File currentDirectory = mjfc.getCurrentDirectory();
+                String currentDirStr = currentDirectory.getPath();
+                //ij.IJ.error("The directory " + currentDirStr + " is read-only.");
 
-       for (File file : files) {
-          if (file.isFile() && fileNames.contains(file.getAbsolutePath())== false){
-             fileListComboBox.addItem(file.getName());
-             fileNames.add(file.getAbsolutePath());
-          }
-       }
+                Object[] options = {"Make dir writable and continue",
+                    "Select different directory"};
+
+                int buttonNum = JOptionPane.showOptionDialog(this,
+                        "The directory " + currentDirStr + " is read-only.",
+                        "Selected directory is read-only",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE,
+                        null,
+                        options,
+                        options[1]);
+
+                if (buttonNum == 1) {
+                    return;
+                } else {
+                    currentDirectory.setWritable(true);
+                }
+
+            }
+            files = mjfc.getSelectedFiles();
+        } else {
+            return;
+        }
+
+        for (File file : files) {
+            if (file.isFile() && fileNames.contains(file.getAbsolutePath()) == false) {
+                fileListComboBox.addItem(file.getName());
+                fileNames.add(file.getAbsolutePath());
+            }
+        }
     }
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
        
-       if (co != null)
-          co.proceed(false);
-       setCursor(null);
-       close();
+        if (co != null) {
+            co.proceed(false);
+        }
+        setCursor(null);
+        close();
     }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
 
        // Return if file list is empty (user did not select files).
        // or if all files were deleted from the Combo Box. 
-       if (files == null || fileListComboBox.getModel().getSize() == 0) {
-          ij.IJ.error("No files selected");
-          setCursor(null);
-          okButton.setEnabled(true);
-          return;
-       }
-       /*
-       // Add selected files to ArrayList.
-       ArrayList<String> fileNames = new ArrayList<String>();
-       for (File file : files) {
-          fileNames.add(file.getAbsolutePath());
-       }
-       */
+        if (files == null || fileListComboBox.getModel().getSize() == 0) {
+           ij.IJ.error("No files selected");
+           setCursor(null);
+           okButton.setEnabled(true);
+           return;
+        }
 
-       // Make sure user enters valid mass.
-       if (trackCheckBox.isSelected()) {
+        // Make sure user enters valid mass.
+        if (trackCheckBox.isSelected()) {
             try {
                 double massString = new Double(massTextField.getText());
             } catch (Exception e) {
@@ -380,323 +394,323 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         //=======================================================================
         
-       // DJ:
-       // In case we are using this converterManager as an HTML generator. 
-       if(this.isHTML == true){
-            
-           JFileChooser chooser = new JFileChooser(ui.getLastFolder());
-           FileFilter filter = new ExtensionFileFilter("html", new String("html"));
-           chooser.setFileFilter(filter);
+        // DJ:
+        // In case we are using this converterManager as an HTML generator. 
+        if(this.isHTML == true) {
 
-           int returnVal = chooser.showSaveDialog(this);
+            JFileChooser chooser = new JFileChooser(ui.getLastFolder());
+            FileFilter filter = new ExtensionFileFilter("html", new String("html"));
+            chooser.setFileFilter(filter);
 
-           if (returnVal == JFileChooser.CANCEL_OPTION) {
-               chooser.setVisible(false);
-               this.setEnabled(true);
-               this.setVisible(true);
-           }
-           if (returnVal == JFileChooser.APPROVE_OPTION) {
-               File selectedFile = chooser.getSelectedFile();
+            int returnVal = chooser.showSaveDialog(this);
+
+            if (returnVal == JFileChooser.CANCEL_OPTION) {
+                chooser.setVisible(false);
+                this.setEnabled(true);
+                this.setVisible(true);
+            }
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = chooser.getSelectedFile();
+
+                // We check if the html file name ends with ".html".
+                // if it doesn't, we add the extension ".html"
+                String fileExtension = selectedFile.getAbsolutePath().substring(selectedFile.getAbsolutePath().length()-5);
+                if (fileExtension.equals(".html") == false) {
+                    selectedFile = new File(selectedFile.getAbsolutePath() + ".html");
+                }
+
+
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                /*
+                String[] HSIsArray =             new String[0];
+                String[] numThreshArray =        new String[0];
+                String[] denThreshArray =        new String[0];
+                String[] ratioScaleFactorArray = new String[0];
+                String[] maxRGBArray =           new String[0];
+                String[] minRGBArray =           new String[0];
+                */  
+
+             //=======================================================================================
+
+                /*
+                // we get the selected HSIs at the HSIView ( the Process Tab when you run OpenMIMS )
+                if (ui.getHSIView() != null && ui.getHSIView().getSelectedRatios() != null) {
+
+                    String[] massNames = ui.getOpener().getMassNames();
+                    String[] selectedRatios = ui.getHSIView().getSelectedRatios();
+
+                    //System.out.println("selected ratios' length is: " + selectedRatios.length);
+
+                    HSIsArray = new String[selectedRatios.length];
+                    numThreshArray = new String[selectedRatios.length];
+                    denThreshArray = new String[selectedRatios.length];
+                    ratioScaleFactorArray = new String[selectedRatios.length];
+                    maxRGBArray = new String[selectedRatios.length];
+                    minRGBArray = new String[selectedRatios.length];
+
+                    //----- GET THE NUM THRESHHOLD  --------
+                    int numThresh = ui.getHSIView().getNumThresh();
+                    //System.out.println(" numThresh = " + numThresh);
+
+                    //----- GET THE DEN THRESHHOLD   --------
+                    int denThresh = ui.getHSIView().getDenThresh();
+                    //System.out.println(" denThresh = " + denThresh);
+
+                    //----- GET THE RATIO SCALE FACTOR --------
+                    int ratioScaleFactor = (int)(Math.round(ui.getHSIView().getRatioScaleFactor()));
+                    //System.out.println(" Ratio Scale Factor = " + ratioScaleFactor);
+
+                    //----- GET THE MAXIMUM RGB FACTOR --------
+                    int maxRGB = ui.getHSIView().getMaxRGB();
+                    //System.out.println(" maxRGB = " + maxRGB);
+
+                    //----- GET THE MINIMUM RGB FACTOR --------
+                    int minRGB = ui.getHSIView().getMinRGB();
+                    //System.out.println(" minRGB = " + minRGB);
+
+
+                    //----- GET THE HSIsArray --------
+                    for (int i = 0; i < selectedRatios.length; i++) {
+
+                        String[] num_den = selectedRatios[i].split(":");
+
+                        Double num_massValue = Double.parseDouble( massNames[Integer.parseInt(num_den[0])]);
+                        Double den_massValue = Double.parseDouble( massNames[Integer.parseInt(num_den[1])]);
+
+                        long num_massValueRounded = Math.round(num_massValue);
+                        long den_massValueRounded = Math.round(den_massValue);
+
+                        String HSI = Long.toString(num_massValueRounded) + "/" + Long.toString(den_massValueRounded);
+
+                        HSIsArray[i] = HSI;
+                        numThreshArray[i] = String.valueOf(numThresh);
+                        denThreshArray[i] = String.valueOf(denThresh);
+                        ratioScaleFactorArray[i] = String.valueOf(ratioScaleFactor);
+                        maxRGBArray[i] = String.valueOf(maxRGB);
+                        minRGBArray[i] = String.valueOf(minRGB);
+                    }
+                }
+                */
+                //=======================================================================================
+                // TO UNCOMMENT THIS AND HAVE IT WORKING THE RADIO BUTTONS SHOULD BE RESTORED AS WELL
+                /*
+                // we get the selected HSIs at the mimsTomography level ( the 5th tab of OpenMIMS )
+                if (ui.getmimsTomography() != null && ui.getmimsTomography().getSelectedHSIImages() != null) {
+
+                    String[] massNames = ui.getOpener().getMassNames();
+                    String[] selectedHSIs = new String[ui.getmimsTomography().getSelectedHSIImages().size()];
+                    ui.getmimsTomography().getSelectedHSIImages().toArray(selectedHSIs);
+
+                    HSIsArray = new String[selectedHSIs.length];
+                    numThreshArray = new String[selectedHSIs.length];
+                    denThreshArray = new String[selectedHSIs.length];
+                    ratioScaleFactorArray = new String[selectedHSIs.length];
+                    maxRGBArray = new String[selectedHSIs.length];
+                    minRGBArray = new String[selectedHSIs.length];
+
+                    //----- Collect all the props we need for each HSI image.
+                    for (int i = 0; i < selectedHSIs.length; i++) {
+                        for(MimsPlus openedHSIimage: ui.getOpenHSIImages()){
+                            if(selectedHSIs[i].equals(openedHSIimage.getRoundedTitle())){
+                                String title = selectedHSIs[i].substring(selectedHSIs[i].indexOf(" ") + 1);
+                                HSIsArray[i]             = title;
+                                numThreshArray[i]        = Integer.toString(openedHSIimage.getHSIProcessor().getHSIProps().getNumThreshold());
+                                denThreshArray[i]        = Integer.toString(openedHSIimage.getHSIProcessor().getHSIProps().getDenThreshold());
+                                ratioScaleFactorArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getRatioScaleFactor())).intValue());
+                                maxRGBArray[i]           = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio())).intValue());
+                                minRGBArray[i]           = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMinRatio())).intValue());
+                            }
+                        }
+                    }
+                } 
+
+                // USING THE SPECS COLLECTED FROM OPENMIMS
+                if (openMimsSpecs_radioButton.isSelected()) {
+
+                    String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
+                    File directory = new File(temp_folder_path);
+
+                    // make directory in the system's temporary folder
+                    boolean isMKDIR = directory.mkdir();
+
+                    if (isMKDIR == false) {
+                        System.out.println("Could't make a directory for the png file..EXITING...");
+                        return;
+                    }
+                    // Initialize and run Converter object.
+                    co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
+                    co.setFiles(fileNames);
+                    // We prepare/setup the props that the converter need in order
+                    // to generate the html file.
+                    co.specsForHTMLThruSelectedImages(
+                            selectedFile.getAbsolutePath(),
+                            temp_folder_path,
+                            HSIsArray,
+                            numThreshArray, denThreshArray,
+                            ratioScaleFactorArray,
+                            maxRGBArray, minRGBArray);
+                    co.addPropertyChangeListener(this);
+                    co.execute();
+
+                }
                
-               // We check if the html file name ends with ".html".
-               // if it doesn't, we add the extension ".html"
-               String fileExtension = selectedFile.getAbsolutePath().substring(selectedFile.getAbsolutePath().length()-5);
-               if (fileExtension.equals(".html") == false) {
-                   selectedFile = new File(selectedFile.getAbsolutePath() + ".html");
-               }
+                //=======================================================================================
+                */
+                if(allOpenedImages_radioButton.isSelected()){
 
-               
-               setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    //MimsPlus[] openedMassImages = ui.getOpenMassImages();
+                    MimsPlus[] openedSumImages = ui.getOpenSumImages();
+                    MimsPlus[] openedRatioImages = ui.getOpenRatioImages();
+                    MimsPlus[] openedHSIImages  = ui.getOpenHSIImages();
+                    MimsPlus[] openedCompositeImages = ui.getOpenCompositeImages();
 
-               /*
-               String[] HSIsArray =             new String[0];
-               String[] numThreshArray =        new String[0];
-               String[] denThreshArray =        new String[0];
-               String[] ratioScaleFactorArray = new String[0];
-               String[] maxRGBArray =           new String[0];
-               String[] minRGBArray =           new String[0];
-               */  
-               
-            //=======================================================================================
+                    /*
+                    ArrayList<Integer> massImages      = new ArrayList<Integer>();
+                    ArrayList<Integer> sumImages       = new ArrayList<Integer>();
+                    ArrayList<Integer> ratioImages     = new ArrayList<Integer>();
+                    ArrayList<Integer> hsiImages       = new ArrayList<Integer>();
+                    ArrayList<Integer> compositeImages = new ArrayList<Integer>();
 
-               /*
-               // we get the selected HSIs at the HSIView ( the Process Tab when you run OpenMIMS )
-               if (ui.getHSIView() != null && ui.getHSIView().getSelectedRatios() != null) {
-                   
-                   String[] massNames = ui.getOpener().getMassNames();
-                   String[] selectedRatios = ui.getHSIView().getSelectedRatios();
-                   
-                   //System.out.println("selected ratios' length is: " + selectedRatios.length);
-                   
-                   HSIsArray = new String[selectedRatios.length];
-                   numThreshArray = new String[selectedRatios.length];
-                   denThreshArray = new String[selectedRatios.length];
-                   ratioScaleFactorArray = new String[selectedRatios.length];
-                   maxRGBArray = new String[selectedRatios.length];
-                   minRGBArray = new String[selectedRatios.length];
-                   
-                   //----- GET THE NUM THRESHHOLD  --------
-                   int numThresh = ui.getHSIView().getNumThresh();
-                   //System.out.println(" numThresh = " + numThresh);
-                   
-                   //----- GET THE DEN THRESHHOLD   --------
-                   int denThresh = ui.getHSIView().getDenThresh();
-                   //System.out.println(" denThresh = " + denThresh);
-                   
-                   //----- GET THE RATIO SCALE FACTOR --------
-                   int ratioScaleFactor = (int)(Math.round(ui.getHSIView().getRatioScaleFactor()));
-                   //System.out.println(" Ratio Scale Factor = " + ratioScaleFactor);
-                   
-                   //----- GET THE MAXIMUM RGB FACTOR --------
-                   int maxRGB = ui.getHSIView().getMaxRGB();
-                   //System.out.println(" maxRGB = " + maxRGB);
-                   
-                   //----- GET THE MINIMUM RGB FACTOR --------
-                   int minRGB = ui.getHSIView().getMinRGB();
-                   //System.out.println(" minRGB = " + minRGB);
-                   
+                    // we collect the mass images that have just one plane.
+                    for(MimsPlus massImage: openedMassImages){
+                        if(massImage.getSlice() == 1){
+                            massImages.add(new Integer((int) Math.round(massImage.getMassValue())));
+                        }
+                    }
+                    for(MimsPlus sumImage: openedSumImages){
+                            sumImages.add(new Integer((int) Math.round(sumImage.getMassValue())));
+                    }
+                    for(MimsPlus ratioImage: openedRatioImages){
+                            // to be populated
+                    }
+                    for(MimsPlus hsiImage: openedHSIImages){
+                            // to be populated
+                    }
+                    for(MimsPlus compositeImage: openedCompositeImages){
+                            // to be populated
+                    }
+                    */
+                    //-----------------------------------------------------------
+                    // Handling SUM images:
+                    //-----------------------------------------------------------
+                    int number_of_SUMs = openedSumImages.length;
+                    String[] sumArray = new String[number_of_SUMs];
+                    for (int i = 0; i < openedSumImages.length; i++) {
+                        MimsPlus openedSumImage = openedSumImages[i];
+                        String title = openedSumImage.getTitle().substring(openedSumImage.getTitle().indexOf(':')+2, openedSumImage.getTitle().indexOf('['));
+                        sumArray[i]  = title; 
+                    }
 
-                   //----- GET THE HSIsArray --------
-                   for (int i = 0; i < selectedRatios.length; i++) {
+                    //-----------------------------------------------------------
+                    // Handling Ratio images:
+                    //-----------------------------------------------------------
 
-                       String[] num_den = selectedRatios[i].split(":");
+                    int number_of_Ratios = openedRatioImages.length;
+                    String[] RatiosArray = new String[number_of_Ratios];
+                    String[] ratioNumThreshArray = new String[number_of_Ratios];
+                    String[] ratioDenThreshArray = new String[number_of_Ratios];
+                    String[] r_ratioScaleFactorArray = new String[number_of_Ratios];
 
-                       Double num_massValue = Double.parseDouble( massNames[Integer.parseInt(num_den[0])]);
-                       Double den_massValue = Double.parseDouble( massNames[Integer.parseInt(num_den[1])]);
+                    for (int i = 0; i < openedRatioImages.length; i++) {
+                        MimsPlus openedRatioImage = openedRatioImages[i];
+                        // title should be like 82.36/80.02
+                        String title = openedRatioImage.getTitle().substring(0, openedRatioImage.getTitle().indexOf('['));
+                        RatiosArray[i] = title;
+                        openedRatioImage.getRatioProps().getNumThreshold();
+                        ratioNumThreshArray[i] = Integer.toString(openedRatioImage.getRatioProps().getNumThreshold());
+                        ratioDenThreshArray[i] = Integer.toString(openedRatioImage.getRatioProps().getDenThreshold());
+                        r_ratioScaleFactorArray[i] = Integer.toString((new Double(openedRatioImage.getRatioProps().getRatioScaleFactor())).intValue());
+                    }
 
-                       long num_massValueRounded = Math.round(num_massValue);
-                       long den_massValueRounded = Math.round(den_massValue);
 
-                       String HSI = Long.toString(num_massValueRounded) + "/" + Long.toString(den_massValueRounded);
-                       
-                       HSIsArray[i] = HSI;
-                       numThreshArray[i] = String.valueOf(numThresh);
-                       denThreshArray[i] = String.valueOf(denThresh);
-                       ratioScaleFactorArray[i] = String.valueOf(ratioScaleFactor);
-                       maxRGBArray[i] = String.valueOf(maxRGB);
-                       minRGBArray[i] = String.valueOf(minRGB);
-                   }
-               }
-               */
-               //=======================================================================================
-               // TO UNCOMMENT THIS AND HAVE IT WORKING THE RADIO BUTTONS SHOULD BE RESTORED AS WELL
-               /*
-               // we get the selected HSIs at the mimsTomography level ( the 5th tab of OpenMIMS )
-               if (ui.getmimsTomography() != null && ui.getmimsTomography().getSelectedHSIImages() != null) {
-                   
-                   String[] massNames = ui.getOpener().getMassNames();
-                   String[] selectedHSIs = new String[ui.getmimsTomography().getSelectedHSIImages().size()];
-                   ui.getmimsTomography().getSelectedHSIImages().toArray(selectedHSIs);
-                              
-                   HSIsArray = new String[selectedHSIs.length];
-                   numThreshArray = new String[selectedHSIs.length];
-                   denThreshArray = new String[selectedHSIs.length];
-                   ratioScaleFactorArray = new String[selectedHSIs.length];
-                   maxRGBArray = new String[selectedHSIs.length];
-                   minRGBArray = new String[selectedHSIs.length];
+                    //-----------------------------------------------------------
+                    // Handling HSI images:
+                    //-----------------------------------------------------------
+                    int number_of_HSIs = openedHSIImages.length;
+                    String[] HSIsArray = new String[number_of_HSIs];
+                    String[] numThreshArray = new String[number_of_HSIs];
+                    String[] denThreshArray = new String[number_of_HSIs];
+                    String[] ratioScaleFactorArray = new String[number_of_HSIs];
+                    String[] maxRGBArray = new String[number_of_HSIs];
+                    String[] minRGBArray = new String[number_of_HSIs];
 
-                   //----- Collect all the props we need for each HSI image.
-                   for (int i = 0; i < selectedHSIs.length; i++) {
-                       for(MimsPlus openedHSIimage: ui.getOpenHSIImages()){
-                           if(selectedHSIs[i].equals(openedHSIimage.getRoundedTitle())){
-                               String title = selectedHSIs[i].substring(selectedHSIs[i].indexOf(" ") + 1);
-                               HSIsArray[i]             = title;
-                               numThreshArray[i]        = Integer.toString(openedHSIimage.getHSIProcessor().getHSIProps().getNumThreshold());
-                               denThreshArray[i]        = Integer.toString(openedHSIimage.getHSIProcessor().getHSIProps().getDenThreshold());
-                               ratioScaleFactorArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getRatioScaleFactor())).intValue());
-                               maxRGBArray[i]           = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio())).intValue());
-                               minRGBArray[i]           = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMinRatio())).intValue());
-                           }
-                       }
-                   }
-               } 
-               
-               // USING THE SPECS COLLECTED FROM OPENMIMS
-               if (openMimsSpecs_radioButton.isSelected()) {
-                   
-                   String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
-                   File directory = new File(temp_folder_path);
+                    for (int i = 0; i < openedHSIImages.length; i++) {
+                        MimsPlus openedHSIimage = openedHSIImages[i];
+                        // title should be like 82.36/80.02
+                        String title = openedHSIimage.getTitle().substring(openedHSIimage.getTitle().indexOf(':')+2, openedHSIimage.getTitle().indexOf('['));
+                        HSIsArray[i] = title;
+                        numThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio());
+                        denThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMinRatio());
+                        ratioScaleFactorArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getRatioScaleFactor())).intValue());
+                        maxRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRGB())).intValue());
+                        minRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMinRGB())).intValue());
+                    }
 
-                   // make directory in the system's temporary folder
-                   boolean isMKDIR = directory.mkdir();
+                    //-----------------------------------------------------------
+                    // Handling Composite images:
+                    //-----------------------------------------------------------
+                    int number_of_composites = openedCompositeImages.length;
+                    String[] compositesArray = new String[number_of_composites];
 
-                   if (isMKDIR == false) {
-                       System.out.println("Could't make a directory for the png file..EXITING...");
-                       return;
-                   }
-                   // Initialize and run Converter object.
-                   co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-                   co.setFiles(fileNames);
-                   // We prepare/setup the props that the converter need in order
-                   // to generate the html file.
-                   co.specsForHTMLThruSelectedImages(
-                           selectedFile.getAbsolutePath(),
-                           temp_folder_path,
-                           HSIsArray,
-                           numThreshArray, denThreshArray,
-                           ratioScaleFactorArray,
-                           maxRGBArray, minRGBArray);
-                   co.addPropertyChangeListener(this);
-                   co.execute();
 
-               }
-               
-               //=======================================================================================
-               */
-               if(allOpenedImages_radioButton.isSelected()){
-                   
-                   //MimsPlus[] openedMassImages = ui.getOpenMassImages();
-                   MimsPlus[] openedSumImages = ui.getOpenSumImages();
-                   MimsPlus[] openedRatioImages = ui.getOpenRatioImages();
-                   MimsPlus[] openedHSIImages  = ui.getOpenHSIImages();
-                   MimsPlus[] openedCompositeImages = ui.getOpenCompositeImages();
-                   
-                   /*
-                   ArrayList<Integer> massImages      = new ArrayList<Integer>();
-                   ArrayList<Integer> sumImages       = new ArrayList<Integer>();
-                   ArrayList<Integer> ratioImages     = new ArrayList<Integer>();
-                   ArrayList<Integer> hsiImages       = new ArrayList<Integer>();
-                   ArrayList<Integer> compositeImages = new ArrayList<Integer>();
-                   
-                   // we collect the mass images that have just one plane.
-                   for(MimsPlus massImage: openedMassImages){
-                       if(massImage.getSlice() == 1){
-                           massImages.add(new Integer((int) Math.round(massImage.getMassValue())));
-                       }
-                   }
-                   for(MimsPlus sumImage: openedSumImages){
-                           sumImages.add(new Integer((int) Math.round(sumImage.getMassValue())));
-                   }
-                   for(MimsPlus ratioImage: openedRatioImages){
-                           // to be populated
-                   }
-                   for(MimsPlus hsiImage: openedHSIImages){
-                           // to be populated
-                   }
-                   for(MimsPlus compositeImage: openedCompositeImages){
-                           // to be populated
-                   }
-                   */
-                   //-----------------------------------------------------------
-                   // Handling SUM images:
-                   //-----------------------------------------------------------
-                   int number_of_SUMs = openedSumImages.length;
-                   String[] sumArray = new String[number_of_SUMs];
-                   for (int i = 0; i < openedSumImages.length; i++) {
-                       MimsPlus openedSumImage = openedSumImages[i];
-                       String title = openedSumImage.getTitle().substring(openedSumImage.getTitle().indexOf(':')+2, openedSumImage.getTitle().indexOf('['));
-                       sumArray[i]  = title; 
-                   }
-                   
-                   //-----------------------------------------------------------
-                   // Handling Ratio images:
-                   //-----------------------------------------------------------
-                   
-                   int number_of_Ratios = openedRatioImages.length;
-                   String[] RatiosArray = new String[number_of_Ratios];
-                   String[] ratioNumThreshArray = new String[number_of_Ratios];
-                   String[] ratioDenThreshArray = new String[number_of_Ratios];
-                   String[] r_ratioScaleFactorArray = new String[number_of_Ratios];
 
-                   for (int i = 0; i < openedRatioImages.length; i++) {
-                       MimsPlus openedRatioImage = openedRatioImages[i];
-                       // title should be like 82.36/80.02
-                       String title = openedRatioImage.getTitle().substring(0, openedRatioImage.getTitle().indexOf('['));
-                       RatiosArray[i] = title;
-                       openedRatioImage.getRatioProps().getNumThreshold();
-                       ratioNumThreshArray[i] = Integer.toString(openedRatioImage.getRatioProps().getNumThreshold());
-                       ratioDenThreshArray[i] = Integer.toString(openedRatioImage.getRatioProps().getDenThreshold());
-                       r_ratioScaleFactorArray[i] = Integer.toString((new Double(openedRatioImage.getRatioProps().getRatioScaleFactor())).intValue());
-                   }
-                   
-                   
-                   //-----------------------------------------------------------
-                   // Handling HSI images:
-                   //-----------------------------------------------------------
-                   int number_of_HSIs = openedHSIImages.length;
-                   String[] HSIsArray = new String[number_of_HSIs];
-                   String[] numThreshArray = new String[number_of_HSIs];
-                   String[] denThreshArray = new String[number_of_HSIs];
-                   String[] ratioScaleFactorArray = new String[number_of_HSIs];
-                   String[] maxRGBArray = new String[number_of_HSIs];
-                   String[] minRGBArray = new String[number_of_HSIs];
-                   
-                   for (int i = 0; i < openedHSIImages.length; i++) {
-                       MimsPlus openedHSIimage = openedHSIImages[i];
-                       // title should be like 82.36/80.02
-                       String title = openedHSIimage.getTitle().substring(openedHSIimage.getTitle().indexOf(':')+2, openedHSIimage.getTitle().indexOf('['));
-                       HSIsArray[i] = title;
-                       numThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio());
-                       denThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMinRatio());
-                       ratioScaleFactorArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getRatioScaleFactor())).intValue());
-                       maxRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRGB())).intValue());
-                       minRGBArray[i] = Integer.toString((new Double(openedHSIimage.getHSIProcessor().getHSIProps().getMinRGB())).intValue());
-                   }
-                   
-                   //-----------------------------------------------------------
-                   // Handling Composite images:
-                   //-----------------------------------------------------------
-                   int number_of_composites = openedCompositeImages.length;
-                   String[] compositesArray = new String[number_of_composites];
-                   
-                   
-                   
-                   
-                   String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
-                   File directory = new File(temp_folder_path);
 
-                   // make directory in the system's temporary folder
-                   boolean isMKDIR = directory.mkdir();
+                    String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
+                    File directory = new File(temp_folder_path);
 
-                   if (isMKDIR == false) {
-                       System.out.println("Could't make a directory for the png file..EXITING...");
-                       return;
-                   }
-                   // Initialize and run Converter object.
-                   co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-                   co.setFiles(fileNames);
-                   // We prepare/setup the props that the converter need in order
-                   // to generate the html file.
+                    // make directory in the system's temporary folder
+                    boolean isMKDIR = directory.mkdir();
+
+                    if (isMKDIR == false) {
+                        System.out.println("Could't make a directory for the png file..EXITING...");
+                        return;
+                    }
+                    // Initialize and run Converter object.
+                    co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
+                    co.setFiles(fileNames);
+                    // We prepare/setup the props that the converter need in order
+                    // to generate the html file.
+
+                    co.setForHtml(selectedFile.getAbsolutePath(), temp_folder_path);
+                    co.sumImageSpecsForHTML(sumArray);
+                    co.ratioImageSpecsForHTML(
+                            RatiosArray,
+                            ratioNumThreshArray, 
+                            ratioDenThreshArray,
+                            r_ratioScaleFactorArray);
+                    co.hsiImageSpecsForHTML(
+                            HSIsArray,
+                            numThreshArray, denThreshArray,
+                            ratioScaleFactorArray,
+                            maxRGBArray, minRGBArray);
                    
-                   co.setForHtml(selectedFile.getAbsolutePath(), temp_folder_path);
-                   co.sumImageSpecsForHTML(sumArray);
-                   co.ratioImageSpecsForHTML(
-                           RatiosArray,
-                           ratioNumThreshArray, 
-                           ratioDenThreshArray,
-                           r_ratioScaleFactorArray);
-                   co.hsiImageSpecsForHTML(
-                           HSIsArray,
-                           numThreshArray, denThreshArray,
-                           ratioScaleFactorArray,
-                           maxRGBArray, minRGBArray);
+                    co.addPropertyChangeListener(this);
+                    co.execute();
                    
-                   co.addPropertyChangeListener(this);
-                   co.execute();
-                   
-               }
-               // USING SPECS IN THE CONFIG FILE
-               else{
+                }
+                // USING SPECS IN THE CONFIG FILE
+                else {
                    // IF THE CONFIG FILE IS VALID
-                   if(configFile.getName().endsWith(".cfg") || configFile.getName().endsWith(".CFG")){
-                       // Initialize and run Converter object.
-                       co = new Converter(true, false, trackCheckBox.isSelected(), massTextField.getText(), configFile.getAbsolutePath(), "", "");
-                       co.setFiles(fileNames);
+                    if(configFile.getName().endsWith(".cfg") || configFile.getName().endsWith(".CFG")){
+                        // Initialize and run Converter object.
+                        co = new Converter(true, false, trackCheckBox.isSelected(), massTextField.getText(), configFile.getAbsolutePath(), "", "");
+                        co.setFiles(fileNames);
+
+                        // We indicate the html file thst the user have chosen to generate.
+                        co.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
+
+                        co.addPropertyChangeListener(this);
+                        co.execute();
                        
-                       // We indicate the html file thst the user have chosen to generate.
-                       co.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
-                       
-                       co.addPropertyChangeListener(this);
-                       co.execute();
-                       
-                   }
-                   // IN CASE THE CONFIG FILE IS NOT VALID
-                   else{
-                       IJ.error("CONFIG FILE ERROR MESSAGE", 
-                                "THE CONFIG FILE CHOSEN IS NOT VALID, PLEASE CHOOSE A VALID ONE.");
-                   }
-               }
-           }
+                    }
+                    // IN CASE THE CONFIG FILE IS NOT VALID
+                    else {
+                        IJ.error("CONFIG FILE ERROR MESSAGE",
+                               "THE CONFIG FILE CHOSEN IS NOT VALID, PLEASE CHOOSE A VALID ONE.");
+                    }
+                }
+            }
            return;
        }
 
@@ -765,13 +779,13 @@ public class convertManager extends JFrame implements PropertyChangeListener {
      * Invoked when task's progress property changes.
      */
     public void propertyChange(PropertyChangeEvent evt) {
-       if ("progress".equals(evt.getPropertyName())) {
-          int progress = (Integer) evt.getNewValue();
-          progressBar.setValue(progress);
-       } else if (evt.getPropertyName().matches("state") && evt.getNewValue().toString().matches("DONE")) {
-          setCursor(null);
-          close();
-       }
+        if ("progress".equals(evt.getPropertyName())) {
+            int progress = (Integer) evt.getNewValue();
+            progressBar.setValue(progress);
+        } else if (evt.getPropertyName().matches("state") && evt.getNewValue().toString().matches("DONE")) {
+            setCursor(null);
+            close();
+        }
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -792,7 +806,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 
-   private void close() {
-      setVisible(false);
-   }
+    private void close() {
+        setVisible(false);
+    }   
 }
