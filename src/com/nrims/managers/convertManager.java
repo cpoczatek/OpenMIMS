@@ -3,7 +3,6 @@
  *
  * Created on Jul 5, 2011, 3:54:47 PM
  */
-
 package com.nrims.managers;
 
 import com.nrims.Converter;
@@ -16,6 +15,9 @@ import java.awt.Cursor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -23,8 +25,6 @@ import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileFilter;
 import org.jfree.ui.ExtensionFileFilter;
-
-
 
 /**
  *
@@ -37,47 +37,47 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     ArrayList<String> fileNames = new ArrayList<String>();
     Converter co;
     File configFile;
-    
+
     String html_string = "Yo";
     static JFrame instance;
-    
+
     // DJ
     // to indicate whether this class 
     // is used to generate html web page or just to convert IMs and NRRDs.
     boolean isHTML; // true if this converter is used to genrate html
-                    // false if it is used to convert to nrrd only.
+    // false if it is used to convert to nrrd only.
 
-    /** Creates new form convertManager */
+    /**
+     * Creates new form convertManager
+     */
     public convertManager(UI ui, boolean isHTML) {
-        
+
         initComponents();
         massTextField.setForeground(Color.BLUE);
         fileListComboBox.setForeground(Color.BLUE);
         config_file_label.setForeground(Color.BLUE);
-        
+
         this.isHTML = isHTML;
-        
-        
+
         // DJ: Implementation decisions/thoughts:
         // We decided to include this double functionality of this class due to the job similarity 
         // between what this class ititially peroforms and what we actually want from the Html Generator.
         // So making the fusion between the two in the same class was the best option as of now.
         // So here are the two cases:
-        
         // The case where this class is used as an Html Gererator instead of the basic "ConvertManger".
-        if(isHTML == true){
+        if (isHTML == true) {
             this.setTitle("HTML GENERATOR");
             config_file_label.setText(" ");
 
             choose_config_Button.setEnabled(false);
             config_file_label.setEnabled(false);
-            
+
             allOpenedImages_radioButton.setSelected(true);
-            
+
             //openMimsSpecs_radioButton.setToolTipText("HSI/MASS IMAGES selected at the Tomography Tab");
             allOpenedImages_radioButton.setToolTipText("All the images that are shown on the screen.");
             configFile_radioButton.setToolTipText("config file of type \".cgf\" that has specs to collect");
-            
+
             /*
             //DJ: 10/27/2014 : just a thought:
             // in case there is no image that is currently open,
@@ -88,12 +88,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 allOpenedImages_radioButton.setEnabled(false);
                 configFile_radioButton.setSelected(true);
             } 
-            */
-            
-            
-            
-        }
-        // The case where this class is used as a "ConvertManger" instead of an "Html Gererator"
+             */
+        } // The case where this class is used as a "ConvertManger" instead of an "Html Gererator"
         else {
             this.setTitle("Convert Manager");
             //this.remove(openMimsSpecs_radioButton);
@@ -101,43 +97,44 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             this.remove(configFile_radioButton);
             this.remove(choose_config_Button);
             this.remove(config_file_label);
-            
-            setSize((new Double(getSize().getWidth())).intValue(), 
-                    (new Double(getSize().getHeight())).intValue()-70);
-            
+
+            setSize((new Double(getSize().getWidth())).intValue(),
+                    (new Double(getSize().getHeight())).intValue() - 70);
+
         }
-        
-        this.ui=ui;
-        
-        setLocation(ui.getLocation().x+50, ui.getLocation().y+50);
+
+        this.ui = ui;
+
+        setLocation(ui.getLocation().x + 50, ui.getLocation().y + 50);
         massTextField.setEditable(false);
-        
+
         // DJ
         // so ehen the "X" closing logo button is hit, just this manager
         // gets closed and not the OpenMIMS plugin as a whole.
         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        
+
         instance = this;
     }
+
     // DJ : 09/19/2014 : 
     public static convertManager getInstance() {
         return (convertManager) instance;
     }
-    
+
     // DJ : 09/19/2014 : 
-    public void setHtmlString(String html){
+    public void setHtmlString(String html) {
         html_string = html;
     }
-    
+
     // DJ : 09/19/2014 : 
-    public String getHtmlString(){
+    public String getHtmlString() {
         return html_string;
     }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -310,19 +307,66 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     }// </editor-fold>//GEN-END:initComponents
 
     private void selectFilesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectFilesButtonActionPerformed
-       selectFiles();
+        selectFiles();
     }//GEN-LAST:event_selectFilesButtonActionPerformed
 
     public void selectFiles() {
-       MimsJFileChooser mjfc = new MimsJFileChooser(ui);
+        MimsJFileChooser mjfc = new MimsJFileChooser(ui);
         mjfc.setMultiSelectionEnabled(true);
         mjfc.setPreferredSize(new java.awt.Dimension(650, 500));
         int returnVal = mjfc.showOpenDialog(this);
 
         // Open file or return null.
         if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File currentDirectory = mjfc.getCurrentDirectory();
+            
+            // First see if the current user has ownership of this directory.
+            //String osName = System.getProperty("os.name").toLowerCase();
+            String osName = System.getProperties().getProperty("os.name");
+
+            String userName = System.getProperty("user.name");
+            String userID = System.getProperties().getProperty("user.name");
+
+            if (osName.toLowerCase().contains("windows")) {
+                //userName = new com.sun.security.auth.module.NTSystem().getName();
+                userName = System.getenv().get("USERNAME");
+            } else if (osName.toLowerCase().contains("linux")) {
+                userName = new com.sun.security.auth.module.UnixSystem().getUsername();
+            } else if (osName.contains("solaris") || osName.contains("sunos")) {
+                //userName = new com.sun.security.auth.module.SolarisSystem().getUsername();
+            } else if (osName.contains("Mac OS X")) {
+                userName = new com.sun.security.auth.module.UnixSystem().getUsername();
+            }
+
+            try {
+                // Path thePath = FileSystems.getDefault().getPath("logs", "access.log");
+                Path thePath = currentDirectory.toPath();   //toPath
+                UserPrincipal owner = java.nio.file.Files.getOwner(thePath);
+
+                owner = java.nio.file.Files.getOwner(thePath);  // on OSX, all show same
+                String ownerStr = owner.toString();
+                ownerStr = owner.getName();
+                if (!ownerStr.contains(userID)) {
+                    JOptionPane.showMessageDialog(this,
+                            "You cannot use files in this directory because you are not the owner of the directory.",
+                            "Not directory owner",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this,
+                        "OpenMIMS attempted to find the directory owner, but failed.",
+                        " Error retrieving directory owner",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+                    
+                    
+                    
+            // User has ownership of the directory, now see if it is read-only       
             if (mjfc.isCurrentDirReadOnly()) {
-                File currentDirectory = mjfc.getCurrentDirectory();
+                
                 String currentDirStr = currentDirectory.getPath();
                 //ij.IJ.error("The directory " + currentDirStr + " is read-only.");
 
@@ -338,10 +382,28 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         options,
                         options[1]);
 
-                if (buttonNum == 1) {
+                if (buttonNum == JOptionPane.NO_OPTION) {
                     return;
                 } else {
-                    currentDirectory.setWritable(true);
+                     
+                    try {
+                        
+                        if (!currentDirectory.setWritable(true, true)) {
+                            JOptionPane.showMessageDialog(this,
+                                "OpenMIMS attempted to make the current directory writeable, but failed. /n"
+                                + "You will have to make the directory writeable manually.",
+                                "setWritable Error",
+                                JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                    } catch (SecurityException se) {
+                        JOptionPane.showMessageDialog(this,
+                                "OpenMIMS attempted to make the current directory writeable, but failed. /n"
+                                + "You will have to make the directory writeable manually.",
+                                "Security Exception Error",
+                                JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                 }
 
             }
@@ -359,7 +421,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     }
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
-       
+
         if (co != null) {
             co.proceed(false);
         }
@@ -369,13 +431,13 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
 
-       // Return if file list is empty (user did not select files).
-       // or if all files were deleted from the Combo Box. 
+        // Return if file list is empty (user did not select files).
+        // or if all files were deleted from the Combo Box. 
         if (files == null || fileListComboBox.getModel().getSize() == 0) {
-           ij.IJ.error("No files selected");
-           setCursor(null);
-           okButton.setEnabled(true);
-           return;
+            ij.IJ.error("No files selected");
+            setCursor(null);
+            okButton.setEnabled(true);
+            return;
         }
 
         // Make sure user enters valid mass.
@@ -389,14 +451,14 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 return;
             }
         }
-       
+
         okButton.setEnabled(true); //DJ: changed to "false"; originally was "true"
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         //=======================================================================
-        
+
         // DJ:
         // In case we are using this converterManager as an HTML generator. 
-        if(this.isHTML == true) {
+        if (this.isHTML == true) {
 
             JFileChooser chooser = new JFileChooser(ui.getLastFolder());
             FileFilter filter = new ExtensionFileFilter("html", new String("html"));
@@ -414,11 +476,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
                 // We check if the html file name ends with ".html".
                 // if it doesn't, we add the extension ".html"
-                String fileExtension = selectedFile.getAbsolutePath().substring(selectedFile.getAbsolutePath().length()-5);
+                String fileExtension = selectedFile.getAbsolutePath().substring(selectedFile.getAbsolutePath().length() - 5);
                 if (fileExtension.equals(".html") == false) {
                     selectedFile = new File(selectedFile.getAbsolutePath() + ".html");
                 }
-
 
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
@@ -429,9 +490,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 String[] ratioScaleFactorArray = new String[0];
                 String[] maxRGBArray =           new String[0];
                 String[] minRGBArray =           new String[0];
-                */  
-
-             //=======================================================================================
+                 */
+                //=======================================================================================
 
                 /*
                 // we get the selected HSIs at the HSIView ( the Process Tab when you run OpenMIMS )
@@ -491,7 +551,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         minRGBArray[i] = String.valueOf(minRGB);
                     }
                 }
-                */
+                 */
                 //=======================================================================================
                 // TO UNCOMMENT THIS AND HAVE IT WORKING THE RADIO BUTTONS SHOULD BE RESTORED AS WELL
                 /*
@@ -556,13 +616,13 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 }
                
                 //=======================================================================================
-                */
-                if(allOpenedImages_radioButton.isSelected()){
+                 */
+                if (allOpenedImages_radioButton.isSelected()) {
 
                     //MimsPlus[] openedMassImages = ui.getOpenMassImages();
                     MimsPlus[] openedSumImages = ui.getOpenSumImages();
                     MimsPlus[] openedRatioImages = ui.getOpenRatioImages();
-                    MimsPlus[] openedHSIImages  = ui.getOpenHSIImages();
+                    MimsPlus[] openedHSIImages = ui.getOpenHSIImages();
                     MimsPlus[] openedCompositeImages = ui.getOpenCompositeImages();
 
                     /*
@@ -590,7 +650,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     for(MimsPlus compositeImage: openedCompositeImages){
                             // to be populated
                     }
-                    */
+                     */
                     //-----------------------------------------------------------
                     // Handling SUM images:
                     //-----------------------------------------------------------
@@ -598,14 +658,13 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     String[] sumArray = new String[number_of_SUMs];
                     for (int i = 0; i < openedSumImages.length; i++) {
                         MimsPlus openedSumImage = openedSumImages[i];
-                        String title = openedSumImage.getTitle().substring(openedSumImage.getTitle().indexOf(':')+2, openedSumImage.getTitle().indexOf('['));
-                        sumArray[i]  = title; 
+                        String title = openedSumImage.getTitle().substring(openedSumImage.getTitle().indexOf(':') + 2, openedSumImage.getTitle().indexOf('['));
+                        sumArray[i] = title;
                     }
 
                     //-----------------------------------------------------------
                     // Handling Ratio images:
                     //-----------------------------------------------------------
-
                     int number_of_Ratios = openedRatioImages.length;
                     String[] RatiosArray = new String[number_of_Ratios];
                     String[] ratioNumThreshArray = new String[number_of_Ratios];
@@ -623,7 +682,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         r_ratioScaleFactorArray[i] = Integer.toString((new Double(openedRatioImage.getRatioProps().getRatioScaleFactor())).intValue());
                     }
 
-
                     //-----------------------------------------------------------
                     // Handling HSI images:
                     //-----------------------------------------------------------
@@ -638,7 +696,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     for (int i = 0; i < openedHSIImages.length; i++) {
                         MimsPlus openedHSIimage = openedHSIImages[i];
                         // title should be like 82.36/80.02
-                        String title = openedHSIimage.getTitle().substring(openedHSIimage.getTitle().indexOf(':')+2, openedHSIimage.getTitle().indexOf('['));
+                        String title = openedHSIimage.getTitle().substring(openedHSIimage.getTitle().indexOf(':') + 2, openedHSIimage.getTitle().indexOf('['));
                         HSIsArray[i] = title;
                         numThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMaxRatio());
                         denThreshArray[i] = Double.toString(openedHSIimage.getHSIProcessor().getHSIProps().getMinRatio());
@@ -652,9 +710,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     //-----------------------------------------------------------
                     int number_of_composites = openedCompositeImages.length;
                     String[] compositesArray = new String[number_of_composites];
-
-
-
 
                     String temp_folder_path = System.getProperty("java.io.tmpdir") + "/OpenMIMS_HTMLGEN_" + String.valueOf(System.currentTimeMillis());
                     File directory = new File(temp_folder_path);
@@ -676,7 +731,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     co.sumImageSpecsForHTML(sumArray);
                     co.ratioImageSpecsForHTML(
                             RatiosArray,
-                            ratioNumThreshArray, 
+                            ratioNumThreshArray,
                             ratioDenThreshArray,
                             r_ratioScaleFactorArray);
                     co.hsiImageSpecsForHTML(
@@ -684,48 +739,44 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                             numThreshArray, denThreshArray,
                             ratioScaleFactorArray,
                             maxRGBArray, minRGBArray);
-                   
+
                     co.addPropertyChangeListener(this);
                     co.execute();
-                   
-                }
-                // USING SPECS IN THE CONFIG FILE
+
+                } // USING SPECS IN THE CONFIG FILE
+                else // IF THE CONFIG FILE IS VALID
+                if (configFile.getName().endsWith(".cfg") || configFile.getName().endsWith(".CFG")) {
+                    // Initialize and run Converter object.
+                    co = new Converter(true, false, trackCheckBox.isSelected(), massTextField.getText(), configFile.getAbsolutePath(), "", "");
+                    co.setFiles(fileNames);
+
+                    // We indicate the html file thst the user have chosen to generate.
+                    co.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
+
+                    co.addPropertyChangeListener(this);
+                    co.execute();
+
+                } // IN CASE THE CONFIG FILE IS NOT VALID
                 else {
-                   // IF THE CONFIG FILE IS VALID
-                    if(configFile.getName().endsWith(".cfg") || configFile.getName().endsWith(".CFG")){
-                        // Initialize and run Converter object.
-                        co = new Converter(true, false, trackCheckBox.isSelected(), massTextField.getText(), configFile.getAbsolutePath(), "", "");
-                        co.setFiles(fileNames);
-
-                        // We indicate the html file thst the user have chosen to generate.
-                        co.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
-
-                        co.addPropertyChangeListener(this);
-                        co.execute();
-                       
-                    }
-                    // IN CASE THE CONFIG FILE IS NOT VALID
-                    else {
-                        IJ.error("CONFIG FILE ERROR MESSAGE",
-                               "THE CONFIG FILE CHOSEN IS NOT VALID, PLEASE CHOOSE A VALID ONE.");
-                    }
+                    IJ.error("CONFIG FILE ERROR MESSAGE",
+                            "THE CONFIG FILE CHOSEN IS NOT VALID, PLEASE CHOOSE A VALID ONE.");
                 }
             }
-           return;
-       }
+            return;
+        }
 
-       // Initialize and run Converter object.
-       co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-       co.setFiles(fileNames);
-       co.addPropertyChangeListener(this);
-       co.execute();
+        // Initialize and run Converter object.
+        co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
+        co.setFiles(fileNames);
+        co.addPropertyChangeListener(this);
+        co.execute();
 
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void trackCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_trackCheckBoxActionPerformed
-        if (trackCheckBox.isSelected()){
+        if (trackCheckBox.isSelected()) {
             massTextField.setEditable(true);
-        }else{
+        } else {
             massTextField.setEditable(false);
         }
     }//GEN-LAST:event_trackCheckBoxActionPerformed
@@ -733,7 +784,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     private void selectFilesButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectFilesButton1ActionPerformed
         // DJ:
         int indx = fileListComboBox.getSelectedIndex();
-        if(indx == -1){
+        if (indx == -1) {
             return;
         }
         fileListComboBox.removeItemAt(indx);
@@ -742,7 +793,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     private void configFile_radioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configFile_radioButtonActionPerformed
         // TODO add your handling code here:
-        
+
         choose_config_Button.setEnabled(true);
         config_file_label.setEnabled(true);
     }//GEN-LAST:event_configFile_radioButtonActionPerformed
@@ -750,15 +801,15 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     private void choose_config_ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_choose_config_ButtonActionPerformed
         // TODO add your handling code here:
         JFileChooser chooser = new JFileChooser(".");
-        
+
         // At this point, we just accept the config files type: "cfg",
         FileFilter filter = new ExtensionFileFilter("cfg", new String("cfg"));
         chooser.setFileFilter(filter);
-        
+
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        
+
         int returnVal = chooser.showOpenDialog(this);
-        
+
         if (returnVal == JFileChooser.CANCEL_OPTION) {
             chooser.setVisible(false);
             this.setEnabled(true);
@@ -768,14 +819,14 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             configFile = chooser.getSelectedFile();
             config_file_label.setText(configFile.getName());
         }
-        
+
     }//GEN-LAST:event_choose_config_ButtonActionPerformed
 
     private void massTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_massTextFieldActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_massTextFieldActionPerformed
-  
-   /**
+
+    /**
      * Invoked when task's progress property changes.
      */
     public void propertyChange(PropertyChangeEvent evt) {
@@ -787,7 +838,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             close();
         }
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JRadioButton allOpenedImages_radioButton;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -808,5 +859,5 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     private void close() {
         setVisible(false);
-    }   
+    }
 }
