@@ -31,7 +31,7 @@
                   <KeyStroke key="Ctrl+O"/>
                 </Property>
                 <Property name="mnemonic" type="int" value="111"/>
-                <Property name="text" type="java.lang.String" value="Open MIMS Image"/>
+                <Property name="text" type="java.lang.String" value="Open MIMS Image..."/>
                 <Property name="toolTipText" type="java.lang.String" value="Open a MIMS image from an existing .im file."/>
               </Properties>
               <AccessibilityProperties>
@@ -43,7 +43,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem3">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Open Non-MIMS Image"/>
+                <Property name="text" type="java.lang.String" value="Open Non-MIMS Image..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem3ActionPerformed"/>
@@ -89,7 +89,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem5">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Files Manager"/>
+                <Property name="text" type="java.lang.String" value="Files Manager ..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem5ActionPerformed"/>

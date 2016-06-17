@@ -111,6 +111,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     
     private boolean bSyncStack = true;
     private boolean bUpdating = false;
+    private boolean onlyReadHeader = false;
     private boolean currentlyOpeningImages = false;
     private boolean bCloseOldWindows = true;
     private boolean medianFilterRatios = false;
@@ -326,15 +327,15 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                             "Would you like to open a stacked version of these multiple images or just open the first one?",
                             "Multiple images detected",
                             JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                    if (n == 0) {
+                    if (n == JOptionPane.YES_OPTION) {
                         setLastFolder(file.getParentFile());
                         setIJDefaultDir(file.getParent());
-                        boolean proceed = checkCurrentFileStatusBeforeOpening();
+                        boolean proceed = checkCurrentFileStatusBeforeOpening();  
                         if (proceed) {
                             openFileInBackground(FileUtilities.stackImages(files, ui));
                         }
                         return;
-                    } else if (n == 2) {
+                    } else if (n == JOptionPane.CANCEL_OPTION) {
                         return;
                     }
                 }
@@ -636,7 +637,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            boolean opened = openFile(file);
+            boolean opened = openFile(file, false);
             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             if (opened) {
                 return file;
@@ -649,7 +650,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     }
 
     /**
-     * Opens a MIMS file in the background. Do no call this method if your code
+     * Opens a MIMS file in the background. Do not call this method if your code
      * does work with the file once opened, instead call openFile.
      *
      * @param file to be opened.
@@ -733,9 +734,14 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         currentlyOpeningImages = true;
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         stopButton.setEnabled(true);
-        task = new FileOpenTask(file, this);
+        task = new FileOpenTask(file, this, false);
         task.addPropertyChangeListener(this);
         task.execute();
+    }
+    
+    public boolean openFile(File file) {
+        onlyReadHeader = false;
+        return(openFile(file, onlyReadHeader));
     }
 
     /**
@@ -743,8 +749,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      *
      * @param file to be opened.
      */
-    public boolean openFile(File file) {
-        
+    public boolean openFile(File file, boolean onlyReadHeader) {
+        this.onlyReadHeader = onlyReadHeader;
         //----------------------------------------------------------------------
         // DJ: 08/19/2014 - Saving all the props of the "to-be-closed-file".
         if (mimsData != null) {
@@ -815,18 +821,20 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         }//---------------------------------------------------------------------
         nameOfFileNowOpened = file.getPath();
         
-        boolean opened;
+        boolean opened = false;
         try {
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            FileOpenTask fileOpenTask = new FileOpenTask(file, this);
-            opened = fileOpenTask.doInBackground();
+            FileOpenTask fileOpenTask = new FileOpenTask(file, this, onlyReadHeader);
+            opened = fileOpenTask.doInBackground();                          
+        } catch (Exception e) {
+           e.printStackTrace(); 
         } finally {
             setCursor(null);
 
         }
         return opened;
     }
-
+    
     /**
      * restores the windows positioning as well as the zoom and the hiding
      * properties of all windows based on the massProps[] given.
@@ -1712,11 +1720,11 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 711, Short.MAX_VALUE)
+            .add(0, 723, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 425, Short.MAX_VALUE)
+            .add(0, 422, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Images", jPanel1);
@@ -1741,7 +1749,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
         openNewMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
         openNewMenuItem.setMnemonic('o');
-        openNewMenuItem.setText("Open MIMS Image");
+        openNewMenuItem.setText("Open MIMS Image...");
         openNewMenuItem.setToolTipText("Open a MIMS image from an existing .im file.");
         openNewMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1751,7 +1759,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         fileMenu.add(openNewMenuItem);
         openNewMenuItem.getAccessibleContext().setAccessibleDescription("Open a MIMS Image");
 
-        jMenuItem3.setText("Open Non-MIMS Image");
+        jMenuItem3.setText("Open Non-MIMS Image...");
         jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem3ActionPerformed(evt);
@@ -1786,7 +1794,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         fileMenu.add(saveMIMSjMenuItem);
         fileMenu.add(jSeparator5);
 
-        jMenuItem5.setText("Files Manager");
+        jMenuItem5.setText("Files Manager ...");
         jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem5ActionPerformed(evt);
@@ -4337,8 +4345,8 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         
         newUI.setVisible(true);
         
-        newUI.openFile(nrrdFiles[0]);
-        newUI.openFile(roiFiles[0]);
+        newUI.openFile(nrrdFiles[0], false);
+        newUI.openFile(roiFiles[0], false);
         
         int[] selectedStats = new int[2];
         selectedStats[0] = 0;
@@ -4491,6 +4499,24 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     public String getImageDir() {
         String path = image.getImageFile().getParent();
         return path;
+    }
+    
+    /**
+     * Returns true if image header was fixed.
+     *
+     * @return true if image header was fixed.
+     */
+    public boolean getImageHeaderWasFixed() {
+        return image.getWasHeaderFixed();
+    }
+    
+    /**
+     * Returns true if image header was bad.
+     *
+     * @return true if image header was bad.
+     */
+    public boolean getIsHeaderBad() {
+        return image.getIsHeaderBad();
     }
 
     /**
@@ -5701,10 +5727,14 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
         UI ui;
         File file;
+        boolean onlyReadHeader = false;
+        
+ 
 
-        public FileOpenTask(File file, UI ui) {
+        public FileOpenTask(File file, UI ui, boolean onlyReadHeader) {
             this.file = file;
             this.ui = ui;
+            this.onlyReadHeader = onlyReadHeader;
             
             // DJ:08/13/2014: just a separator -for better visibility purposes only
             System.out.println("-------------------------------------------------"); 
@@ -5712,13 +5742,15 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             OMLOGGER.info("OpenMIMS: UI.FileOpenTask(): " + file.getAbsolutePath());
         }
         
-
+        public FileOpenTask(File file, UI ui) {
+            this(file, ui, false);
+        }
+        
         /*
          * Main task. Executed in background thread.
          */
         @Override
         public Boolean doInBackground() {
-
             mass_props = getOpenMassProps();
             rto_props = getOpenRatioProps();
             hsi_props = getOpenHSIProps();
@@ -5728,12 +5760,12 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             boolean roiManagerVisible = getRoiManager().isVisible();
             
             composite_props = getOpenCompositeProps();  // DJ: 08/01/2014
-            boolean sucess = doInBackground(mass_props, rto_props, 
+            boolean success = doInBackground(mass_props, rto_props, 
                 hsi_props, sum_props, composite_props,
                 true, roiManagerVisible);
             
             
-            return sucess;
+            return success;
             
             
             
@@ -5831,7 +5863,6 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         public Boolean doInBackground(MassProps[] mass_props, RatioProps[] rto_props, 
                 HSIProps[] hsi_props, SumProps[] sum_props, CompositeProps[] composite_props,
                 boolean same_size, boolean roiManagerVisible) {
-            
             
             //----------------------------------------------------------------------
             // DJ: 09/24/2014 - Saving all the props of the "to-be-closed-file"
@@ -5936,7 +5967,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
             // Perform some checks to see if we wanna restore state.          
             boolean isImageFile = (file.getAbsolutePath().endsWith(NRRD_EXTENSION) || file.getAbsolutePath().endsWith(MIMS_EXTENSION));
-            if (isImageFile) {
+            if (isImageFile && !onlyReadHeader) {
                 restoreState(mass_props, rto_props, hsi_props, sum_props, composite_props, same_size, roiManagerVisible);
             }
 
@@ -5969,8 +6000,6 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             }
             QSACorrectionMenuItem.setSelected(isQSACorrected);
             QSACorrectionMenuItem.setEnabled(!isQSACorrected);
-            
-  
             
             return true;
         }
@@ -6011,7 +6040,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 IJ.error("Unable to open files of type: " + fileType);
                 return false;
             }
-
+            
             lastFolder = file.getParent();
             setIJDefaultDir(lastFolder);
             Object obj;
@@ -6019,14 +6048,14 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 if (file.getAbsolutePath().endsWith(NRRD_EXTENSION)
                         || file.getAbsolutePath().endsWith(MIMS_EXTENSION) || file.getAbsolutePath().endsWith(NRRD_HEADER_EXTENSION)) {
                     onlyShowDraggedFile = false;
-                    if (!loadMIMSFile(file)) {
+                    if (!loadMIMSFileInBackground(file)) {
                         return false;
                     }
                 } else if (file.getAbsolutePath().endsWith(RATIO_EXTENSION)) {
                     if ((obj = FileUtilities.readObjectFromXML(file)) instanceof RatioProps) {
                         RatioProps ratioprops = (RatioProps) obj;
                         File dataFile = new File(file.getParent(), ratioprops.getDataFileName());
-                        if (!loadMIMSFile(dataFile)) {
+                        if (!loadMIMSFileInBackground(dataFile)) {
                             return false;
                         }
                         doneLoadingFile();
@@ -6038,7 +6067,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                     if ((obj = FileUtilities.readObjectFromXML(file)) instanceof HSIProps) {
                         HSIProps hsiprops = (HSIProps) obj;
                         File dataFile = new File(file.getParent(), hsiprops.getDataFileName());
-                        if (!loadMIMSFile(dataFile)) {
+                        if (!loadMIMSFileInBackground(dataFile)) {
                             return false;
                         }
                         doneLoadingFile();
@@ -6050,7 +6079,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                     if ((obj = FileUtilities.readObjectFromXML(file)) instanceof SumProps) {
                         SumProps sumprops = (SumProps) obj;
                         File dataFile = new File(file.getParent(), sumprops.getDataFileName());
-                        if (!loadMIMSFile(dataFile)) {
+                        if (!loadMIMSFileInBackground(dataFile)) {
                             return false;
                         }
                         doneLoadingFile();
@@ -6078,11 +6107,11 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                             SumProps sumprops = (SumProps) entry;
                             if (!sessionOpened) {
                                 try {
-                                    if (!loadMIMSFile(new File(file.getParent(), sumprops.getDataFileName()))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), sumprops.getDataFileName()))) {
                                         return false;
                                     }
                                 } catch (Exception e) {
-                                    if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), sessionname))) {
                                         return false;
                                     }
                                 }
@@ -6095,12 +6124,12 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                             RatioProps ratioprops = (RatioProps) entry;
                             if (!sessionOpened) {
                                 try {
-                                    if (!loadMIMSFile(new File(file.getParent(), ratioprops.getDataFileName()))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), ratioprops.getDataFileName()))) {
                                         return false;
 
                                     }
                                 } catch (Exception e) {
-                                    if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), sessionname))) {
                                         return false;
                                     }
                                 }
@@ -6113,12 +6142,12 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                             HSIProps hsiprops = (HSIProps) entry;
                             if (!sessionOpened) {
                                 try {
-                                    if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName()))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), hsiprops.getDataFileName()))) {
                                         return false;
 
                                     }
                                 } catch (Exception e) {
-                                    if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), sessionname))) {
                                         return false;
                                     }
                                 }
@@ -6131,12 +6160,12 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                             HSIProps hsiprops = (HSIProps) entry;
                             if (!sessionOpened) {
                                 try {
-                                    if (!loadMIMSFile(new File(file.getParent(), hsiprops.getDataFileName()))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), hsiprops.getDataFileName()))) {
                                         return false;
 
                                     }
                                 } catch (Exception e) {
-                                    if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), sessionname))) {
                                         return false;
                                     }
                                 }
@@ -6148,12 +6177,12 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                         } else if (entry instanceof CompositeProps) {
                             if (!sessionOpened) {
                                 try {
-                                    if (!loadMIMSFile(new File(file.getParent(), ((CompositeProps) entry).getDataFileName()))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), ((CompositeProps) entry).getDataFileName()))) {
                                         return false;
 
                                     }
                                 } catch (Exception e) {
-                                    if (!loadMIMSFile(new File(file.getParent(), sessionname))) {
+                                    if (!loadMIMSFileInBackground(new File(file.getParent(), sessionname))) {
                                         return false;
                                     }
                                 }
@@ -6180,16 +6209,21 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 e.printStackTrace();
                 return false;
             }
-
-            updateScrollbars();
-
+            
+            // Don't attempt to update scrollbars if we are just ready the header of a file.  Gives
+            // a null point exception if you do.
+            if (onlyReadHeader) {
+                //System.out.println("Reading header only.");                            
+            }  else {
+               updateScrollbars();
+            }
+            
             if (onlyShowDraggedFile) {
                 MimsPlus[] mps = getOpenMassImages();
                 for (int i = 0; i < mps.length; i++) {
                     mps[i].hide();
                 }
             }
-
             return true;
         }
 
@@ -6199,7 +6233,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
          * @param file absolute file path.
          * @throws java.lang.NullPointerException
          */
-        public synchronized boolean loadMIMSFile(File file) throws NullPointerException {
+        public synchronized boolean loadMIMSFileInBackground(File file) throws NullPointerException {
             if (!file.exists()) {
                 throw new NullPointerException("File " + file.getAbsolutePath() + " does not exist!");
             }
@@ -6231,11 +6265,36 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 // Make sure there is agreement between the file size and header.
                 boolean checks_out = image.performFileSanityCheck();
                 if (checks_out == false) {
-                    if (ui.silentMode == true) {
+                    if (ui.silentMode == true) {    // SilentMode allows the use of certain utility
+                        // methods in the UI class.  Ideally, those utility methods might be moved to
+                        // some other utility class.   Silent mode is NOT used for single file open or drag and drop,
+                        // but is used for batch convert.
+                        
+                        // Mark this file as having a bad header
+                        image.setIsHeaderBad(true);
                         OMLOGGER.warning("File has a bad header.");
-                        return false;
+                        // Mark file as having bad header and attempt to fix.  Keep array of info about fix status
+                        // When all fixed have been processed, show user status of fixes and give user the option
+                        // to invoke the OpenManager to manually fix the problem.
+                        
+                        // Attempt to fix bad header.
+                        boolean headerWasFixed = image.fixBadHeader();
+                        
+                        if (headerWasFixed) {
+                            OMLOGGER.warning("File has a bad header, but it was fixed.");
+                            image.setWasHeaderFixed(headerWasFixed);
+                        }
                     } else {
-                        OpenerManager opg = new OpenerManager(ui, image);
+                        // Attempt to fix bad header
+                        int numPlanes = 0;
+                        int priorNumPlanes = image.getNImages();
+                        boolean headerWasFixed = image.fixBadHeader();
+                        if (headerWasFixed) {
+                            numPlanes = image.getNImages();
+                        }
+                        // Show dialog that reports bad header information.
+                        //OpenerManager opg = new OpenerManager(ui, image);
+                        OpenerManager opg = new OpenerManager(ui, image, headerWasFixed);
                         opg.setModal(true);
                         opg.setLocation(ui.getLocation().x + 50, ui.getLocation().y + 50);
                         opg.setVisible(true);
@@ -6245,13 +6304,18 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                     }
                 }
 
+                if (onlyReadHeader) {
+                    return true;
+                }
+                
                 // Make sure we have enough memory.
                 // This code has not been maintained for a long time and probably
                 // contains some errors. At the very least the nImages of the
                 // Opener object should be updated. Should be phased out or updated.
                 int nMasses = image.getNMasses();
                 int nImages = image.getNImages();
-                long memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * ((long) 2) * ((long) nImages);
+                long memRequired = ((long) nMasses) * ((long) image.getWidth()) * ((long) image.getHeight()) * 
+                        ((long) 2) * ((long) nImages);
                 long maxMemory = IJ.maxMemory() - (128000000);
                 for (int i = 0; i < nMasses; i++) {
                     bOpenMass[i] = true;
@@ -6357,8 +6421,8 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                 long duration = endTime - startTime;
                // System.out.println(duration);
             } catch (Exception e) {
-                if (!ui.silentMode) {
-                    IJ.error("Failed to open " + file + ":" + e.getMessage() + "\n");
+                if (!ui.silentMode) {                 
+                    IJ.error("Failed to open " + file + ":" + e.getMessage() + "\n" + "File may be corrupted.");
                     e.printStackTrace();
                 } else {
                     e.printStackTrace();
@@ -6595,7 +6659,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             currentlyOpeningImages = false;
         }
         
-    }
+    }  // End inner class FileOpenTask  
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JCheckBoxMenuItem DTCorrectionMenuItem;
     public javax.swing.JCheckBoxMenuItem QSACorrectionMenuItem;
