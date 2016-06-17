@@ -445,6 +445,10 @@ public class Nrrd_Reader implements Opener {
     public int getNImages() {
         return fi.nImages;
     }
+    
+    public int getPreviousNImages() {
+        return fi.nImages;
+    }
 
     public int getWidth() {
         return fi.width;
@@ -596,6 +600,26 @@ public class Nrrd_Reader implements Opener {
          return true;
       else
          return false;
+   }
+   
+   public boolean fixBadHeader() {
+       return true;
+   }
+   
+   public boolean getWasHeaderFixed() {
+       return false;
+   }
+   
+   public boolean getIsHeaderBad() {
+       return false;
+   }
+   
+   public void setIsHeaderBad(boolean bad) {
+       
+   }
+   
+   public void setWasHeaderFixed(boolean fixed) {
+       
    }
 
    public long getHeaderSize() {
