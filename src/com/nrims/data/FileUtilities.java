@@ -577,7 +577,7 @@ public class FileUtilities {
                 }
             }
             //open up the first file to do our work in
-            ui.openFile(tempFiles.get(0));
+            ui.openFile(tempFiles.get(0), false);
             MimsPlus[] images;
 
             for (int i = 0; i < tempFiles.size(); i++) {
@@ -586,7 +586,7 @@ public class FileUtilities {
                 if (i != 0) {
                     Opener image = ui.getOpener();
                     UI tempUi = new UI();
-                    tempUi.openFile(tempFile);
+                    tempUi.openFile(tempFile, false);
                     Opener tempImage = tempUi.getOpener();
                     
                     MimsStackEditor mimStack = ui.getmimsStackEditing();
