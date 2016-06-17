@@ -6,11 +6,13 @@
 package com.nrims.managers;
 
 import com.nrims.Converter;
+import com.nrims.Converter.FileHeaderCheckStatus;
 import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
 import com.nrims.UI;
 import ij.IJ;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,9 +21,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
+import java.util.ListIterator;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.ListCellRenderer;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileFilter;
 import org.jfree.ui.ExtensionFileFilter;
@@ -32,7 +40,9 @@ import org.jfree.ui.ExtensionFileFilter;
  */
 public class convertManager extends JFrame implements PropertyChangeListener {
 
-    UI ui;
+    UI ui;    
+    static Color[] colors = {Color.BLUE, Color.GRAY, Color.RED};
+
     File[] files;
     ArrayList<String> fileNames = new ArrayList<String>();
     Converter co;
@@ -40,7 +50,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     String html_string = "Yo";
     static JFrame instance;
-
+    private boolean onlyReadHeader = false;
+    ArrayList<FileHeaderCheckStatus> fileStatusList;
+    ComboBoxRenderer renderer;
+    
     // DJ
     // to indicate whether this class 
     // is used to generate html web page or just to convert IMs and NRRDs.
@@ -55,6 +68,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         initComponents();
         massTextField.setForeground(Color.BLUE);
         fileListComboBox.setForeground(Color.BLUE);
+        renderer = new ComboBoxRenderer(fileListComboBox);
+        jLabelFilesHadBadHeaders.setVisible(false);
+        jLabelFilesHadBadHeaders.setText("<html>Some files had bad headers.<br>Click on the list above</html>");
+        
         config_file_label.setForeground(Color.BLUE);
 
         this.isHTML = isHTML;
@@ -104,6 +121,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         }
 
         this.ui = ui;
+        fileStatusList = new ArrayList<com.nrims.Converter.FileHeaderCheckStatus>();
 
         setLocation(ui.getLocation().x + 50, ui.getLocation().y + 50);
         massTextField.setEditable(false);
@@ -155,6 +173,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         config_file_label = new javax.swing.JLabel();
         choose_config_Button = new javax.swing.JButton();
         allOpenedImages_radioButton = new javax.swing.JRadioButton();
+        jLabelFilesHadBadHeaders = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -185,6 +204,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 cancelButtonActionPerformed(evt);
             }
         });
+
+        fileListComboBox.setToolTipText("<html>Blue:  files with good headers.  <br>Green:  files with bad headers that were fixed upon reading them.   <br>Red:  Files with bad headers that could not be fixed.</html>");
 
         selectFilesButton.setText("Select files...");
         selectFilesButton.addActionListener(new java.awt.event.ActionListener() {
@@ -227,6 +248,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         buttonGroup1.add(allOpenedImages_radioButton);
         allOpenedImages_radioButton.setText("Use all the actual opened images");
 
+        jLabelFilesHadBadHeaders.setForeground(new java.awt.Color(255, 0, 0));
+        jLabelFilesHadBadHeaders.setText("Some files had bad headers.  Check the list.");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -243,7 +267,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         .addComponent(massTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)
-                        .addGap(217, 217, 217))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
+                        .addComponent(jLabelFilesHadBadHeaders)
+                        .addContainerGap(75, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(selectFilesButton, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -283,7 +309,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(trackCheckBox)
                     .addComponent(massTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
+                    .addComponent(jLabel1)
+                    .addComponent(jLabelFilesHadBadHeaders))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(allOpenedImages_radioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -315,6 +342,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         mjfc.setMultiSelectionEnabled(true);
         mjfc.setPreferredSize(new java.awt.Dimension(650, 500));
         int returnVal = mjfc.showOpenDialog(this);
+        
+        fileNames.clear();
+        fileListComboBox.removeAllItems();
+        jLabelFilesHadBadHeaders.setVisible(false);
 
         // Open file or return null.
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -418,6 +449,17 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 fileNames.add(file.getAbsolutePath());
             }
         }
+        
+        // Check file headers.
+        co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
+        onlyReadHeader = true;
+        co.setFiles(fileNames, onlyReadHeader);
+        co.addPropertyChangeListener(this);   // having this here screws up file reading somehow
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        co.execute();
+        
+
+
     }
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
@@ -723,7 +765,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     }
                     // Initialize and run Converter object.
                     co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-                    co.setFiles(fileNames);
+                    co.setFiles(fileNames, false);
                     // We prepare/setup the props that the converter need in order
                     // to generate the html file.
 
@@ -748,7 +790,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 if (configFile.getName().endsWith(".cfg") || configFile.getName().endsWith(".CFG")) {
                     // Initialize and run Converter object.
                     co = new Converter(true, false, trackCheckBox.isSelected(), massTextField.getText(), configFile.getAbsolutePath(), "", "");
-                    co.setFiles(fileNames);
+                    co.setFiles(fileNames, false);
 
                     // We indicate the html file thst the user have chosen to generate.
                     co.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
@@ -764,13 +806,33 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             }
             return;
         }
-
-        // Initialize and run Converter object.
+        
+        // Initialize and run Converter object.  Do not attempt to read files that had been previously marked as
+        // corrupted.
+        int numStatus = fileStatusList.size();
+        int numFiles = fileNames.size();
+        if (numStatus != numFiles) {
+            IJ.error("Unmated number of files and status message",
+                            ".");
+        }
+        ListIterator<String> listIterator = fileNames.listIterator();
+        ListIterator<FileHeaderCheckStatus> iter = fileStatusList.listIterator();      
+        while (listIterator.hasNext()) {
+            String item = listIterator.next();
+            //System.out.println(item);
+            FileHeaderCheckStatus status = iter.next();
+            if (status.openFailed || ((status.wasHeaderBad) && (!status.wasHeaderFixed))) {
+                listIterator.remove();
+                iter.remove();
+            }
+        }
+     
         co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-        co.setFiles(fileNames);
+        onlyReadHeader = false;
+        co.setFiles(fileNames, onlyReadHeader);
         co.addPropertyChangeListener(this);
         co.execute();
-
+        
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void trackCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_trackCheckBoxActionPerformed
@@ -835,8 +897,39 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             progressBar.setValue(progress);
         } else if (evt.getPropertyName().matches("state") && evt.getNewValue().toString().matches("DONE")) {
             setCursor(null);
-            close();
+    
+            if (onlyReadHeader) {                     
+                // Get file status for all files, and don't call close, which will get rid of the dialog.
+                fileStatusList = co.getFileOpenStatusList();
+                //System.out.println("fileStatusList size is " + fileStatusList.size());
+                int numItems = fileStatusList.size();
+                String[] files = new String[numItems];
+                Color[] colors = new Color[numItems];
+                boolean badHeaders = false;
+                for (int i=0; i<numItems; i++) {
+                    if (!(fileStatusList.get(i).wasHeaderBad) && !(fileStatusList.get(i).wasHeaderFixed)) {
+                        colors[i] = Color.BLUE;
+                    }  else if ((fileStatusList.get(i).wasHeaderBad) && (fileStatusList.get(i).wasHeaderFixed)) {
+                        colors[i] = Color.GREEN;
+                        badHeaders = true;
+                    } else if ((fileStatusList.get(i).wasHeaderBad) && !(fileStatusList.get(i).wasHeaderFixed)) {
+                        colors[i] = Color.RED;
+                        badHeaders = true;
+                    } else if (fileStatusList.get(i).openFailed) {
+                        colors[i] = Color.RED;
+                    } 
+                }
+                if (badHeaders) {
+                    jLabelFilesHadBadHeaders.setVisible(true);
+                }
+                renderer.setStrings(files);
+                renderer.setColors(colors);
+                fileListComboBox.setRenderer(renderer);
+            } else {
+                close();
+            }
         }
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -848,6 +941,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     private javax.swing.JLabel config_file_label;
     private javax.swing.JComboBox fileListComboBox;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabelFilesHadBadHeaders;
     private javax.swing.JTextField massTextField;
     private javax.swing.JButton okButton;
     private javax.swing.JProgressBar progressBar;
@@ -859,5 +953,61 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     private void close() {
         setVisible(false);
+    }
+}
+
+
+class ComboBoxRenderer extends JPanel implements ListCellRenderer {
+
+    private static final long serialVersionUID = -1L;
+    private Color[] colors;
+    private String[] strings;
+
+    JPanel textPanel;
+    JLabel text;
+
+    public ComboBoxRenderer(JComboBox combo) {
+        textPanel = new JPanel();
+        textPanel.add(this);
+        text = new JLabel();
+        text.setOpaque(true);
+        text.setFont(combo.getFont());
+        textPanel.add(text);
+    }
+
+    public void setColors(Color[] col)  {
+        colors = col;
+    }
+
+    public void setStrings(String[] str) {
+        strings = str;
+    }
+
+    public Color[] getColors() {
+        return colors;
+    }
+
+    public String[] getStrings() {
+        return strings;
+    }
+
+    @Override
+    public Component getListCellRendererComponent(JList list, Object value,
+            int index, boolean isSelected, boolean cellHasFocus) {
+
+        if (isSelected){
+            setBackground(list.getSelectionBackground());
+        }
+        else {
+            setBackground(Color.WHITE);
+        }
+
+        text.setBackground(getBackground());
+
+        text.setText(value.toString());
+        if (index>-1) {
+            text.setForeground(colors[index]);
+        }
+        return text;
     }
 }
