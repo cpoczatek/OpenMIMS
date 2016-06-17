@@ -59,6 +59,7 @@ public interface Opener {
     public File getImageFile();
     public int getNMasses();
     public int getNImages();
+    public int getPreviousNImages();
     public int getWidth();
     public int getHeight();
     public Object getPixels(int index) throws IndexOutOfBoundsException, IOException;
@@ -67,6 +68,12 @@ public interface Opener {
     public void setStackIndex(int currentIndex);
     public void close();
     public boolean performFileSanityCheck();
+    public boolean getIsHeaderBad();
+    public void setIsHeaderBad(boolean headerState);
+    public boolean getWasHeaderFixed();
+    public void setWasHeaderFixed(boolean headerFixedState);
+    public boolean fixBadHeader();
+    
     public void setWidth(int width);
     public void setHeight(int height);
     public void setNMasses(int nmasses);
