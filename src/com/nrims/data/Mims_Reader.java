@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class Mims_Reader implements Opener {
 
     /**
-     * The number of bits per image pixel.  This is currently always 16.
+     * The number of bits per image pixel. This is currently always 16.
      */
     //BITS_PER_PIXEL appeared nowhere ???  and why not bytes?
     public static final int BITS_PER_PIXEL = 16;
@@ -31,6 +31,7 @@ public class Mims_Reader implements Opener {
     private MaskSampleStageImage maskSampleStageIm;
     private MaskImage maskIm;
     private int currentIndex = 0;
+    private int uncorrectedNumImages = 0;
     public static final int IHDR_SIZE = 84;
     private String[] massNames;
     private String[] massSymbols;
@@ -44,7 +45,10 @@ public class Mims_Reader implements Opener {
     private String[] tilePositions = null;
     private String[] stackPositions = null;
     private HashMap metaData = new HashMap();
-
+    
+    private boolean isHeaderBad = false;
+    private boolean wasHeaderFixed = false;
+    
     // These field were specifically selected by analysts as having importance.
     // Rather than create a class for the structure, we just want the field.
     //
@@ -62,11 +66,11 @@ public class Mims_Reader implements Opener {
     private String Radius;	         // Trolley radius
     private String ESPos;           // Entrance slit position
     private String ASPos;           // Aperture slit position
-    
+
     private String primL1;  //DJ: 10/13/2014
     private String primL0;  //DJ: 10/13/2014
     private String csHv;    //DJ: 10/13/2014
-    
+
     /* flag describing the byte order in file */
     private boolean big_endian_flag = true;
 
@@ -75,10 +79,12 @@ public class Mims_Reader implements Opener {
     private static final int MIMS_LINE_SCAN_IMAGE = 39;
     private static final int MIMS_SAMPLE_STAGE_IMAGE = 41;
 
-    private Mims_Reader() {}
+    private Mims_Reader() {
+    }
 
     /**
      * Opens and reads a SIMS image from an image file.
+     *
      * @param imageFile file of the image to be loaded.
      * @throws IOException if there is a problem reading the image file
      * @throws NullPointerException if the imagename is null or empty.
@@ -86,14 +92,15 @@ public class Mims_Reader implements Opener {
     public Mims_Reader(File imageFile) throws IOException, NullPointerException {
 
         this.file = imageFile;
-        if (!file.exists())
+        if (!file.exists()) {
             throw new NullPointerException("File " + imageFile + " does not exist.");
+        }
 
         // Read the header.
         try {
-           fi = getHeaderInfo();
+            fi = getHeaderInfo();
         } catch (IOException io) {
-           io.printStackTrace();
+            io.printStackTrace();
         }
 
     }
@@ -147,65 +154,66 @@ public class Mims_Reader implements Opener {
      * @throws IOException If there is an error reading in the pixel data.
      */
     public Object getPixels(int index) throws IndexOutOfBoundsException, IOException {
-      
-       checkMassIndex(index);
-       
-       // Set up a temporary header to read the pixels from the file.
-       MimsFileInfo fi_clone = (MimsFileInfo)fi.clone();
 
-       int pixelsPerImage = fi_clone.width * fi_clone.height;
-       int bytesPerMass = pixelsPerImage * bytes_per_pixel;
-       
-       // Calculate offset
-       long offset = (long)dhdr.header_size + (long)currentIndex * (long)fi_clone.nMasses * (long)bytesPerMass;
-       if (index > 0)
-          offset += index * bytesPerMass;
-             
-       fi_clone.longOffset = offset;
-       fi_clone.nImages = 1; // only going to read 1 image.
-       FileOpener fo = new FileOpener(fi_clone);
+        checkMassIndex(index);
 
-       // Get image from file.
-       ImagePlus imp = fo.open(false);
-       if (imp == null) {          
-          throw new IOException();
-       }
+        // Set up a temporary header to read the pixels from the file.
+        MimsFileInfo fi_clone = (MimsFileInfo) fi.clone();
 
-       Object pixels;
-       if (fi_clone.fileType == FileInfo.GRAY16_UNSIGNED)
-          pixels = (short[])imp.getProcessor().getPixels();
-       else if (fi_clone.fileType == FileInfo.GRAY32_UNSIGNED)
-          pixels = (float[])imp.getProcessor().getPixels();
-       else
-          pixels = null;
+        int pixelsPerImage = fi_clone.width * fi_clone.height;
+        int bytesPerMass = pixelsPerImage * bytes_per_pixel;
 
-       return pixels;
+        // Calculate offset
+        long offset = (long) dhdr.header_size + (long) currentIndex * (long) fi_clone.nMasses * (long) bytesPerMass;
+        if (index > 0) {
+            offset += index * bytesPerMass;
+        }
+
+        fi_clone.longOffset = offset;
+        fi_clone.nImages = 1; // only going to read 1 image.
+        FileOpener fo = new FileOpener(fi_clone);
+
+        // Get image from file.
+        ImagePlus imp = fo.open(false);
+        if (imp == null) {
+            throw new IOException();
+        }
+
+        Object pixels;
+        if (fi_clone.fileType == FileInfo.GRAY16_UNSIGNED) {
+            pixels = (short[]) imp.getProcessor().getPixels();
+        } else if (fi_clone.fileType == FileInfo.GRAY32_UNSIGNED) {
+            pixels = (float[]) imp.getProcessor().getPixels();
+        } else {
+            pixels = null;
+        }
+
+        return pixels;
     }
 
     private void guessEndianOrder()
-            throws FileNotFoundException, IOException
-    {
+            throws FileNotFoundException, IOException {
         File tmp_file = getImageFile();
 
-        if ( tmp_file == null )
-        {
+        if (tmp_file == null) {
             return;
         }
 
-        RandomAccessFile tmp_in = new RandomAccessFile( tmp_file, "r");
+        RandomAccessFile tmp_in = new RandomAccessFile(tmp_file, "r");
 
-        int tmp_int = tmp_in.readInt(); /* Skipping the first 4 bytes */
+        int tmp_int = tmp_in.readInt();
+        /* Skipping the first 4 bytes */
 
         tmp_int = tmp_in.readInt();
 
-        if ( tmp_int == MIMS_IMAGE ||
-             tmp_int == MIMS_LINE_SCAN_IMAGE ||
-             tmp_int == MIMS_SAMPLE_STAGE_IMAGE ) {
+        if (tmp_int == MIMS_IMAGE
+                || tmp_int == MIMS_LINE_SCAN_IMAGE
+                || tmp_int == MIMS_SAMPLE_STAGE_IMAGE) {
             fi.intelByteOrder = false;
             big_endian_flag = true;
-        } else if ( DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_IMAGE ||
-                    DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_LINE_SCAN_IMAGE ||
-                    DataUtilities.intReverseByteOrder( tmp_int ) == MIMS_SAMPLE_STAGE_IMAGE ) {
+        } else if (DataUtilities.intReverseByteOrder(tmp_int) == MIMS_IMAGE
+                || DataUtilities.intReverseByteOrder(tmp_int) == MIMS_LINE_SCAN_IMAGE
+                || DataUtilities.intReverseByteOrder(tmp_int) == MIMS_SAMPLE_STAGE_IMAGE) {
             fi.intelByteOrder = true;
             big_endian_flag = false;
         }
@@ -215,6 +223,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * Reads the DefAnalysis structure from the SIMS file header.
+     *
      * @throws NullPointerException if the given DefAnalysis is null.
      * @throws IOException if there's an error reading in the DefAnalysis.
      */
@@ -270,9 +279,9 @@ public class Mims_Reader implements Opener {
      */
     private void readTabelts(Tabelts te) throws IOException {
 
-       // It appears that this structure does not follow
-       // the endian-ness of the other structures in the file.
-       // Keeping code as is because values not important for now.
+        // It appears that this structure does not follow
+        // the endian-ness of the other structures in the file.
+        // Keeping code as is because values not important for now.
         te.num_elt = in.readIntEndian();
         te.num_isotop = in.readIntEndian();
         te.quantity = in.readIntEndian();
@@ -347,7 +356,6 @@ public class Mims_Reader implements Opener {
         readSigRef(mask.sig_ref);
         nMasses = mask.nb_mass = in.readIntEndian();
 
-
         int tab_mass_ptr;
         int n_tabmasses = 20;
         for (int i = 0; i < n_tabmasses; i++) {
@@ -381,8 +389,8 @@ public class Mims_Reader implements Opener {
 
         if (this.verbose > 2) {
             System.out.println("mask.filename:" + mask.filename);
-            System.out.println("mask.analysis_duration:" +
-                    mask.analysis_duration);
+            System.out.println("mask.analysis_duration:"
+                    + mask.analysis_duration);
             System.out.println("mask.cycle_number:" + mask.cycle_number);
             System.out.println("mask.scantype:" + mask.scantype);
             System.out.println("mask.magnification:" + mask.magnification);
@@ -405,7 +413,7 @@ public class Mims_Reader implements Opener {
         // changed from tab_mass[10] to tab_mass[60] in v7 of .im file spec
         // seems like this coresponds to release=4108
         int n_tabmasses = 10;
-        if(this.dhdr.release >=4108) {
+        if (this.dhdr.release >= 4108) {
             n_tabmasses = 60;
         }
         for (int i = 0; i < n_tabmasses; i++) {
@@ -418,6 +426,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * Reads and returns a HvcControl structure from the SIMS file header.
+     *
      * @throws NullPointerException if the given TabMass is null.
      * @throws IOException if the TabMass cannot be read in.
      */
@@ -449,6 +458,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * Reads and returns a TabMass structure from the SIMS file header.
+     *
      * @throws NullPointerException if the given TabMass is null.
      * @throws IOException if the TabMass cannot be read in.
      */
@@ -459,38 +469,48 @@ public class Mims_Reader implements Opener {
 
         // One of these unused ints is NOT IN SPEC.
         // The other should be type_mass.
-        int unused = in.readIntEndian();
-        int unuseds2 = in.readIntEndian();
-        tab.mass_amu = in.readDoubleEndian();
-        tab.matrix_or_trace = in.readIntEndian();
-        tab.detector = in.readIntEndian();
-        tab.waiting_time = in.readDoubleEndian();
-        tab.counting_time = in.readDoubleEndian();
-        tab.offset = in.readIntEndian();
-        tab.mag_field = in.readIntEndian();
+        try {
+            int unused = in.readIntEndian();
+            int unuseds2 = in.readIntEndian();
+            tab.mass_amu = in.readDoubleEndian();
+            tab.matrix_or_trace = in.readIntEndian();
+            tab.detector = in.readIntEndian();
+            tab.waiting_time = in.readDoubleEndian();
+            tab.counting_time = in.readDoubleEndian();
+            tab.offset = in.readIntEndian();
+            tab.mag_field = in.readIntEndian();
 
-        // Set some local variables.
-        counting_time = tab.counting_time;
+            // Set some local variables.
+            counting_time = tab.counting_time;
 
-        // Debug output.
-        if (this.verbose > 2) {
-            System.out.println("TabMass.mass_amu:" + tab.mass_amu);
-            System.out.println("TabMass.matrix_or_trace:" + tab.matrix_or_trace);
-            System.out.println("TabMass.detector:" + tab.detector);
-            System.out.println("TabMass.waiting_time:" + tab.waiting_time);
-            System.out.println("TabMass.counting_time:" + tab.counting_time);
-            System.out.println("TabMass.offset:" + tab.offset);
-            System.out.println("TabMass.mag_field:" + tab.mag_field);
+            // Debug output.
+            if (this.verbose > 2) {
+                System.out.println("TabMass.mass_amu:" + tab.mass_amu);
+                System.out.println("TabMass.matrix_or_trace:" + tab.matrix_or_trace);
+                System.out.println("TabMass.detector:" + tab.detector);
+                System.out.println("TabMass.waiting_time:" + tab.waiting_time);
+                System.out.println("TabMass.counting_time:" + tab.counting_time);
+                System.out.println("TabMass.offset:" + tab.offset);
+                System.out.println("TabMass.mag_field:" + tab.mag_field);
+            }
+            tab.polyatomic = new PolyAtomic();
+            readPolyAtomic(tab.polyatomic);
+        } catch (EOFException eof) {
+            // A really screwed up header can generate this execption.
+            throw new IOException();
+        } catch (IOException io_e) {
+            throw new IOException();
         }
-        tab.polyatomic = new PolyAtomic();
-        readPolyAtomic(tab.polyatomic);
+        //finally {
+        //    throw new IOException();
+        //}
     }
 
     /**
      * Formats a double precision to a string
      */
     private String DecimalToStr(double v, int fraction) {
-     
+
         /*
          * Caused exceptions when the return
          * value is passed to a Double() const.
@@ -501,7 +521,7 @@ public class Mims_Reader implements Opener {
         java.text.DecimalFormatSymbols symbols = new java.text.DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
         symbols.setGroupingSeparator(',');
-        
+
         DecimalFormat df = new DecimalFormat("0.00", symbols);
 
         if (fraction != 2) {
@@ -520,6 +540,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * Reads and returns the HeaderImage structure from a SIMS image file
+     *
      * @throws NullPointerException if the given HeaderImage is null.
      * @throws IOException if there's an error reading in the HeaderImage.
      */
@@ -530,9 +551,9 @@ public class Mims_Reader implements Opener {
         ihdr.size_self = in.readIntEndian();
         ihdr.type = in.readShortEndian();
         ihdr.w = in.readShortEndian();
-        ihdr.h = in.readShortEndian();        
+        ihdr.h = in.readShortEndian();
         bytes_per_pixel = ihdr.d = in.readShortEndian();
-        
+
         // Number of masses.
         ihdr.n = in.readShortEndian();
         if (ihdr.n < 1) {
@@ -555,157 +576,155 @@ public class Mims_Reader implements Opener {
     }
 
     /**
-     * Reads and returns the header data from a SIMS image file
-     * Creates the DefAnalysis and HeaderImage subclass's for this class.
+     * Reads and returns the header data from a SIMS image file Creates the DefAnalysis and HeaderImage subclass's for
+     * this class.
+     *
      * @throws NullPointerExeption rethrown from sub-readers.
      * @throws IOException if there is an error reading in the header.
      */
     private MimsFileInfo getHeaderInfo() throws NullPointerException, IOException {
 
-       // Setup file header.
-       fi = new MimsFileInfo();
-	    fi.directory=file.getParent(); fi.fileName=file.getName();
-       fi.fileFormat = FileInfo.RAW;
-       guessEndianOrder();
+        // Setup file header.
+        fi = new MimsFileInfo();
+        fi.directory = file.getParent();
+        fi.fileName = file.getName();
+        fi.fileFormat = FileInfo.RAW;
+        guessEndianOrder();
 
-       // Set the connection to the image file.
-       in = new RandomAccessEndianFile(file, "r");
-       in.setBigEndianFlag(big_endian_flag);
+        // Set the connection to the image file.
+        in = new RandomAccessEndianFile(file, "r");
+        in.setBigEndianFlag(big_endian_flag);
 
-       // Read the Def_Analysis structure.
-       this.dhdr = new DefAnalysis();
-       readDefAnalysis(dhdr);
+        // Read the Def_Analysis structure.
+        this.dhdr = new DefAnalysis();
+        readDefAnalysis(dhdr);
 
-       // Read the Mask_* data structure.
-       if (dhdr.analysis_type == MIMS_IMAGE || dhdr.analysis_type == MIMS_LINE_SCAN_IMAGE) {
-          maskIm = new MaskImage();
-          readMaskIm(this.maskIm);
-       } else if (dhdr.analysis_type == MIMS_SAMPLE_STAGE_IMAGE ) {
-          maskSampleStageIm = new MaskSampleStageImage();
-          readMaskIss(this.maskSampleStageIm);
-       }
-       if (nMasses <= 0) {
-          throw new IOException("Error reading MIMS file.  Zero image masses read in.");
-       }
+        // Read the Mask_* data structure.
+        if (dhdr.analysis_type == MIMS_IMAGE || dhdr.analysis_type == MIMS_LINE_SCAN_IMAGE) {
+            maskIm = new MaskImage();
+            readMaskIm(this.maskIm);
+        } else if (dhdr.analysis_type == MIMS_SAMPLE_STAGE_IMAGE) {
+            maskSampleStageIm = new MaskSampleStageImage();
+            readMaskIss(this.maskSampleStageIm);
+        }
+        if (nMasses <= 0) {
+            throw new IOException("Error reading MIMS file.  Zero image masses read in.");
+        }
 
-       // Read the Tab_Mass structure and set mass names.
-       massNames = new String[nMasses];
-       massSymbols = new String[nMasses];
-       for (int i = 0; i < nMasses; i++) {
-          TabMass tm = new TabMass();
-          readTabMass(tm);
-          massNames[i] = DecimalToStr(tm.mass_amu, 2);
-          massSymbols[i] = tm.polyatomic.massLabel.replaceAll(" ", "");
-          if (massSymbols[i] == null || massSymbols[i].equals("")) {
-             massSymbols[i] = "-";
-          }
-       }
+        // Read the Tab_Mass structure and set mass names.
+        massNames = new String[nMasses];
+        massSymbols = new String[nMasses];
+        for (int i = 0; i < nMasses; i++) {
+            TabMass tm = new TabMass();
+            readTabMass(tm);
+            massNames[i] = DecimalToStr(tm.mass_amu, 2);
+            massSymbols[i] = tm.polyatomic.massLabel.replaceAll(" ", "");
+            if (massSymbols[i] == null || massSymbols[i].equals("")) {
+                massSymbols[i] = "-";
+            }
+        }
 
-       // Read meta data.
-       if(this.dhdr.release >=4108) {
-          read_metaData_v7();
-       }
+        // Read meta data.
+        if (this.dhdr.release >= 4108) {
+            read_metaData_v7();
+        }
 
-       // Read the Header_Image structure
-       long offset = dhdr.header_size - IHDR_SIZE;
-       in.seek(offset);
-       this.ihdr = new HeaderImage();
-       readHeaderImage(ihdr);
-       fi.width = ihdr.w;
-       fi.height = ihdr.h;
-       fi.nImages = ihdr.z;
-       fi.nMasses = ihdr.n;
-       if (ihdr.d == 2) {
-          fi.fileType = FileInfo.GRAY16_UNSIGNED;
-       } else if (ihdr.d == 4) {
-          fi.fileType = FileInfo.GRAY32_UNSIGNED;
-       }
+        // Read the Header_Image structure
+        long offset = dhdr.header_size - IHDR_SIZE;
+        in.seek(offset);
+        this.ihdr = new HeaderImage();
+        readHeaderImage(ihdr);
+        fi.width = ihdr.w;
+        fi.height = ihdr.h;
+        fi.nImages = ihdr.z;
+        fi.nMasses = ihdr.n;
+        if (ihdr.d == 2) {
+            fi.fileType = FileInfo.GRAY16_UNSIGNED;
+        } else if (ihdr.d == 4) {
+            fi.fileType = FileInfo.GRAY32_UNSIGNED;
+        }
 
-       return fi;
-   }
+        return fi;
+    }
 
     /*
      * Reads various fields from the header of the Cameca File Spec v7.
      */
     public void read_metaData_v7() throws NullPointerException, IOException {
 
-       int nb_poly, nNbBField;
+        int nb_poly, nNbBField;
 
-       // nb_poly
-       long position_of_PolyList = 652 + (288*nMasses);
-       long position_of_nb_poly = position_of_PolyList + (16);
-       in.seek(position_of_nb_poly);
-       nb_poly = in.readIntEndian();
-       
-       // nNbBField
-       long position_of_MaskNano = 676 + (288*nMasses) + (144*nb_poly);
-       long position_of_nNbBField = position_of_MaskNano + (4*24);
-       in.seek(position_of_nNbBField);
-       nNbBField = in.readIntEndian();
-       
-       // nBField
-       long position_of_Tab_BField_Nano = 2228 + (288*nMasses) + (144*nb_poly);
-       long position_of_nBField = position_of_Tab_BField_Nano + (4);
-       in.seek(position_of_nBField);       
-       int nBField = in.readIntEndian();
-       BField = Integer.toString(nBField);
+        // nb_poly
+        long position_of_PolyList = 652 + (288 * nMasses);
+        long position_of_nb_poly = position_of_PolyList + (16);
+        in.seek(position_of_nb_poly);
+        nb_poly = in.readIntEndian();
 
-       // dRadius
-       long position_of_Tab_Trolley_Nano = position_of_Tab_BField_Nano + (10*4) + (2*8);
-       double[] dRadius = new double[12];
-       for (int i = 0; i < dRadius.length; i++) {
-          long position_of_dRadius = position_of_Tab_Trolley_Nano + (i*(208)) + (64+8);
-          in.seek(position_of_dRadius);
-          dRadius[i] = in.readDoubleEndian();
-       }
-       Radius = Arrays.toString(dRadius);
+        // nNbBField
+        long position_of_MaskNano = 676 + (288 * nMasses) + (144 * nb_poly);
+        long position_of_nNbBField = position_of_MaskNano + (4 * 24);
+        in.seek(position_of_nNbBField);
+        nNbBField = in.readIntEndian();
 
-       // pszComment
-       long position_of_Anal_param_nano = 2228 + (288*nMasses) + (144*nb_poly) + (2840*nNbBField);
-       long position_of_pszComment = position_of_Anal_param_nano + (16+4+4+4+4);
-       in.seek(position_of_pszComment);
-       pszComment = getChar(256);
-       
-       
-       
-       // nPrimCurrentT0, nPrimCurrentTEnd
-       long position_of_Anal_primary_nano = position_of_Anal_param_nano + (16+4+4+4+4+256);
-       long position_of_nPrimCurrentT0 = position_of_Anal_primary_nano + (8);
-       in.seek(position_of_nPrimCurrentT0);
-       int nPrimCurrentT0 = in.readIntEndian();
-       int nPrimCurrentTEnd = in.readIntEndian();
-       PrimCurrentT0 = Integer.toString(nPrimCurrentT0);
-       PrimCurrentTEnd = Integer.toString(nPrimCurrentTEnd);
-       
-       // DJ: 10/13/2014
-       // nPrimL1
-       long position_of_nPrimL1 = position_of_Anal_primary_nano + (8+4+4+4);
-       in.seek(position_of_nPrimL1);
-       int nprimL1 = in.readIntEndian();
-       primL1 = Integer.toString(nprimL1);
+        // nBField
+        long position_of_Tab_BField_Nano = 2228 + (288 * nMasses) + (144 * nb_poly);
+        long position_of_nBField = position_of_Tab_BField_Nano + (4);
+        in.seek(position_of_nBField);
+        int nBField = in.readIntEndian();
+        BField = Integer.toString(nBField);
 
-       // nD1Pos
-       //long position_of_nD1Pos = position_of_nPrimCurrentT0 + (8+4+4+4+4+4+4+4+4); // original -- not accurate
-       long position_of_nD1Pos = position_of_Anal_primary_nano + (8+4+4+4+4+4+(4*10)+4+(4*10)); // DJ: works
-       in.seek(position_of_nD1Pos);
-       int nD1Pos = in.readIntEndian();
-       D1Pos = Integer.toString(nD1Pos);
-       
-       
-       // DJ: 10/13/2014
-       // nPrimL0, csHV
-       //long position_of_nPrimL0 = position_of_Anal_primary_nano + (8+4+4+4+4+4+(4*10)+4+(4*10)+4+(4*10)+8+8+8+8+32);  
-       long size_Ap_primary_nano_1 = 552;
-       long position_Ap_secondary_nano_1 = position_of_Anal_primary_nano + (size_Ap_primary_nano_1);
-       long position_of_nPrimL0 = position_Ap_secondary_nano_1 - ((67*4)+(4*10)+4+4+4+4);
-       in.seek(position_of_nPrimL0);
-       int nprimL0 = in.readIntEndian();
-       int nCsHv   = in.readIntEndian();
-       primL0 = Integer.toString(nprimL0);
-       csHv   = Integer.toString(nCsHv);
-       
-  
-       /*
+        // dRadius
+        long position_of_Tab_Trolley_Nano = position_of_Tab_BField_Nano + (10 * 4) + (2 * 8);
+        double[] dRadius = new double[12];
+        for (int i = 0; i < dRadius.length; i++) {
+            long position_of_dRadius = position_of_Tab_Trolley_Nano + (i * (208)) + (64 + 8);
+            in.seek(position_of_dRadius);
+            dRadius[i] = in.readDoubleEndian();
+        }
+        Radius = Arrays.toString(dRadius);
+
+        // pszComment
+        long position_of_Anal_param_nano = 2228 + (288 * nMasses) + (144 * nb_poly) + (2840 * nNbBField);
+        long position_of_pszComment = position_of_Anal_param_nano + (16 + 4 + 4 + 4 + 4);
+        in.seek(position_of_pszComment);
+        pszComment = getChar(256);
+
+        // nPrimCurrentT0, nPrimCurrentTEnd
+        long position_of_Anal_primary_nano = position_of_Anal_param_nano + (16 + 4 + 4 + 4 + 4 + 256);
+        long position_of_nPrimCurrentT0 = position_of_Anal_primary_nano + (8);
+        in.seek(position_of_nPrimCurrentT0);
+        int nPrimCurrentT0 = in.readIntEndian();
+        int nPrimCurrentTEnd = in.readIntEndian();
+        PrimCurrentT0 = Integer.toString(nPrimCurrentT0);
+        PrimCurrentTEnd = Integer.toString(nPrimCurrentTEnd);
+
+        // DJ: 10/13/2014
+        // nPrimL1
+        long position_of_nPrimL1 = position_of_Anal_primary_nano + (8 + 4 + 4 + 4);
+        in.seek(position_of_nPrimL1);
+        int nprimL1 = in.readIntEndian();
+        primL1 = Integer.toString(nprimL1);
+
+        // nD1Pos
+        //long position_of_nD1Pos = position_of_nPrimCurrentT0 + (8+4+4+4+4+4+4+4+4); // original -- not accurate
+        long position_of_nD1Pos = position_of_Anal_primary_nano + (8 + 4 + 4 + 4 + 4 + 4 + (4 * 10) + 4 + (4 * 10)); // DJ: works
+        in.seek(position_of_nD1Pos);
+        int nD1Pos = in.readIntEndian();
+        D1Pos = Integer.toString(nD1Pos);
+
+        // DJ: 10/13/2014
+        // nPrimL0, csHV
+        //long position_of_nPrimL0 = position_of_Anal_primary_nano + (8+4+4+4+4+4+(4*10)+4+(4*10)+4+(4*10)+8+8+8+8+32);  
+        long size_Ap_primary_nano_1 = 552;
+        long position_Ap_secondary_nano_1 = position_of_Anal_primary_nano + (size_Ap_primary_nano_1);
+        long position_of_nPrimL0 = position_Ap_secondary_nano_1 - ((67 * 4) + (4 * 10) + 4 + 4 + 4 + 4);
+        in.seek(position_of_nPrimL0);
+        int nprimL0 = in.readIntEndian();
+        int nCsHv = in.readIntEndian();
+        primL0 = Integer.toString(nprimL0);
+        csHv = Integer.toString(nCsHv);
+
+        /*
        // DJ: just testing
        long position_of_ion = position_of_Anal_primary_nano ;
        in.seek(position_of_ion);
@@ -740,24 +759,22 @@ public class Mims_Reader implements Opener {
            }
        }
        System.out.println("=======");
-       */
+         */
+        // nESPos
+        long size_Ap_primary_nano = 552;
+        long position_Ap_secondary_nano = position_of_Anal_primary_nano + (size_Ap_primary_nano);
+        long position_nESPos = position_Ap_secondary_nano + (8);
+        in.seek(position_nESPos);
+        int nESPos = in.readIntEndian();
+        ESPos = Integer.toString(nESPos);
 
-       
-       // nESPos
-       long size_Ap_primary_nano = 552;
-       long position_Ap_secondary_nano = position_of_Anal_primary_nano + (size_Ap_primary_nano);
-       long position_nESPos = position_Ap_secondary_nano + (8);
-       in.seek(position_nESPos);
-       int nESPos = in.readIntEndian();
-       ESPos = Integer.toString(nESPos);
+        // nASPos
+        long position_nASPos = position_nESPos + (4 + 40 + 40);
+        in.seek(position_nASPos);
+        int nASPos = in.readIntEndian();
+        ASPos = Integer.toString(nASPos);
 
-       // nASPos
-       long position_nASPos = position_nESPos + (4+40+40);
-       in.seek(position_nASPos);
-       int nASPos = in.readIntEndian();
-       ASPos = Integer.toString(nASPos);
-
-       /*
+        /*
        System.out.println("nb_poly = " + nb_poly);
        System.out.println("nNbBField = " + nNbBField);
        System.out.println("nBField = " + nBField);
@@ -771,7 +788,7 @@ public class Mims_Reader implements Opener {
           System.out.print(formatter.format(dRadius[i]) + ", ");
        }
        System.out.print("\n");
-       */
+         */
     }
 
     /**
@@ -789,6 +806,14 @@ public class Mims_Reader implements Opener {
     public int getNImages() {
         return fi.nImages;
     }
+    
+        /**
+     * @return the number of planes in this SIMS image file prior to correction of image number.
+     */
+    public int getPreviousNImages() {
+        return uncorrectedNumImages;
+    }
+    
 
     /**
      * @return the total number of image masses.
@@ -815,37 +840,38 @@ public class Mims_Reader implements Opener {
      * @return the file's data type;
      */
     public int getFileType() {
-       if (bytes_per_pixel == 2)
-          return FileInfo.GRAY16_UNSIGNED;
-       else if(bytes_per_pixel == 4)
-          return FileInfo.GRAY32_UNSIGNED;
-       else
-          return FileInfo.GRAY16_UNSIGNED;
+        if (bytes_per_pixel == 2) {
+            return FileInfo.GRAY16_UNSIGNED;
+        } else if (bytes_per_pixel == 4) {
+            return FileInfo.GRAY32_UNSIGNED;
+        } else {
+            return FileInfo.GRAY16_UNSIGNED;
+        }
     }
 
     /**
      * @return the IM file's header size;
      */
     public long getHeaderSize() {
-       return dhdr.header_size;
+        return dhdr.header_size;
     }
 
     /**
      * @return the file's data type;
      */
     public short getBitsPerPixel() {
-       return ihdr.d;
+        return ihdr.d;
     }
 
     /**
      * @param index image mass index.
      * @return a String of the mass in AMU for image at the given index.
      */
-    public String getMassName(int index) {        
+    public String getMassName(int index) {
         return massNames[index];
     }
 
-    public String[] getMassNames() {        
+    public String[] getMassNames() {
         return massNames;
     }
 
@@ -874,6 +900,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * sets the current image index.
+     *
      * @param index image mass index.
      * @throws IndexOutOfBoundsException if the given index is invalid.
      */
@@ -970,9 +997,7 @@ public class Mims_Reader implements Opener {
         return String.valueOf(this.ihdr.raster);
     }
 
-    
     // @return the dwelltime per pixel in milliseconds
-     
     public String getDwellTime() {
         if (this.maskIm == null || this.ihdr == null) {
             return new String(" ");
@@ -982,15 +1007,15 @@ public class Mims_Reader implements Opener {
         if (size == 0) {
             return new String(" ");
         }
-        double dwelltime = 1000 * ctime/(size);
+        double dwelltime = 1000 * ctime / (size);
         String dtime = DecimalToStr(dwelltime, 3);
         return dtime;
     }
-    
-    public double getCountTime() {       
+
+    public double getCountTime() {
         return counting_time;
     }
-     
+
     /**
      * @return the nickname from the SIMS header
      */
@@ -1052,299 +1077,375 @@ public class Mims_Reader implements Opener {
     }
 
     public void close() {
-      try {
-         if (in != null)
-            in.close();
-      } catch (IOException ex) {
-         ex.printStackTrace();
-      }
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
-   /**
-    * .IM files by default not corrected for deadtime.
-    *
-    * @return false
-    */
-   public boolean isDTCorrected() {
-      return this.isDTCorrected;
-   }
+    /**
+     * .IM files by default not corrected for deadtime.
+     *
+     * @return false
+     */
+    public boolean isDTCorrected() {
+        return this.isDTCorrected;
+    }
 
-   /**
-    * Set to true if dead time correction applied.
-    *
-    * @param isDTCorrected
-    */
-   public void setIsDTCorrected(boolean isDTCorrected) {
-      this.isDTCorrected = isDTCorrected;
-   }
+    /**
+     * Set to true if dead time correction applied.
+     *
+     * @param isDTCorrected
+     */
+    public void setIsDTCorrected(boolean isDTCorrected) {
+        this.isDTCorrected = isDTCorrected;
+    }
 
-   /**
-    * NOT SUPPORTED. NEEDS TO BE CORRECTLY IMPLEMENTED.
-    *
-    * (Returns true if data is from prototype.)
-    *
-    * @return false
-    */
-   public boolean isPrototype() {
-      return this.isPrototype;
-   }
+    /**
+     * NOT SUPPORTED. NEEDS TO BE CORRECTLY IMPLEMENTED.
+     *
+     * (Returns true if data is from prototype.)
+     *
+     * @return false
+     */
+    public boolean isPrototype() {
+        return this.isPrototype;
+    }
 
-   /**
-    * .IM files by default not QSA corrected .
-    *
-    * @return false
-    */
-   public boolean isQSACorrected() {
-      return this.isQSACorrected;
-   }
+    /**
+     * .IM files by default not QSA corrected .
+     *
+     * @return false
+     */
+    public boolean isQSACorrected() {
+        return this.isQSACorrected;
+    }
 
-   /**
-    * Performs a check to see if the actual file size is in agreement
-    * with what the file size should be indicated by the header.
-    *
-    * @return <code>true</code> if in agreement, otherwise <code>false</code>.
-    */
-   public boolean performFileSanityCheck() {
-      long header_size = getHeaderSize();
-      int pixels_per_plane = getWidth() * getHeight();
-      int num_planes = getNImages();
-      int num_masses = getNMasses();
-      int bytes = ihdr.d;
+    /**
+     * Performs a check to see if the actual file size is in agreement with what the file size should be indicated by
+     * the header.
+     *
+     * @return <code>true</code> if in agreement, otherwise <code>false</code>.
+     */
+    public boolean performFileSanityCheck() {
+        try {
+            long header_size = getHeaderSize();
+            int pixels_per_plane = getWidth() * getHeight();
+            int num_planes = getNImages();
+            int num_masses = getNMasses();
+            int bytes = ihdr.d;
 
-      long theoretical_file_size = (((long)pixels_per_plane)*((long)num_planes)*((long)num_masses)*((long)bytes)) + header_size;
-      long file_size = file.length();
+            long theoretical_file_size = (((long) pixels_per_plane) * ((long) num_planes) * ((long) num_masses) * ((long) bytes)) + header_size;
+            long file_size = file.length();
 
-      if (theoretical_file_size == file_size)
-         return true;
-      else
-         return false;
-   }
+            if (theoretical_file_size == file_size) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+     /**
+     * Returns true if the file header is bad.
+     *
+     * @return <code>true</code> if in agreement, otherwise <code>false</code>.
+     */
+    public boolean getIsHeaderBad() {
+        return isHeaderBad;
+    }
+    
+       /**
+     * Set the state of the header to true if the header is incorrect, or to false if header is OK. 
+     *
+     */
+    public void setIsHeaderBad(boolean headerState) {
+        isHeaderBad = headerState;
+    }
+    
+     /**
+     * Returns true is the file's bad header was fixed during the reading of the file.  The fix applies
+     * only to the file in memory, since the file itself is not changed.
+     *
+     * @return <code>true</code> if in agreement, otherwise <code>false</code>.
+     */
+    public boolean getWasHeaderFixed() {
+        return wasHeaderFixed;
+    }
+    
+     /**
+     * Set the state of the header to true if the header is incorrect, but was fixed upon reading the file. 
+     *
+     */
+    public void setWasHeaderFixed(boolean headerFixedState) {
+        wasHeaderFixed = headerFixedState;
+    }
+    
 
-   /**
-    * Set to true if QSA correction applied.
-    *
-    * @param isQSACorrected
-    */
-   public void setIsQSACorrected(boolean isQSACorrected) {
-      this.isQSACorrected = isQSACorrected;
-   }
+    
+ 
 
-   /**
-    * Set beta values for QSA correction.
-    *
-    * @param betas
-    */
-   public void setBetas(float[] betas) {
-      this.betas = betas;
-   }
+    /**
+     * Attempt to fix the header or a file for which performFileSanityCheck() indicated a problem.
+     *
+     * @return <code>true</code> if in agreement, otherwise <code>false</code>.
+     */
+    public boolean fixBadHeader() {
+        try {
+            long header_size = getHeaderSize();
+            int pixels_per_plane = getWidth() * getHeight();
+            int num_planes = getNImages();
+            int num_masses = getNMasses();
+            int bytes = ihdr.d;
 
-   /**
-    * Set FC Objective value for QSA correction.
-    *
-    * @param betas
-    */
-   public void setFCObjective(float fc_objective) {
-      this.fc_objective = fc_objective;
-   }
+            long theoretical_file_size = (((long) pixels_per_plane) * ((long) num_planes + 1) * 
+                    ((long) num_masses) * ((long) bytes)) + header_size;
+            long file_size = file.length();
 
-   /**
-    * Get beta values for QSA correction.
-    *
-    * @return betas
-    */
+            if (theoretical_file_size == file_size) {
+                uncorrectedNumImages = num_planes;
+                num_planes++;  
+                setNImages(num_planes);
+
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Set to true if QSA correction applied.
+     *
+     * @param isQSACorrected
+     */
+    public void setIsQSACorrected(boolean isQSACorrected) {
+        this.isQSACorrected = isQSACorrected;
+    }
+
+    /**
+     * Set beta values for QSA correction.
+     *
+     * @param betas
+     */
+    public void setBetas(float[] betas) {
+        this.betas = betas;
+    }
+
+    /**
+     * Set FC Objective value for QSA correction.
+     *
+     * @param betas
+     */
+    public void setFCObjective(float fc_objective) {
+        this.fc_objective = fc_objective;
+    }
+
+    /**
+     * Get beta values for QSA correction.
+     *
+     * @return betas
+     */
     public float[] getBetas() {
-       return this.betas;
+        return this.betas;
     }
 
-   /**
-    * Get FC Objective values for QSA correction.
-    *
-    * @return fc_objective
-    */
+    /**
+     * Get FC Objective values for QSA correction.
+     *
+     * @return fc_objective
+     */
     public float getFCObjective() {
-       return this.fc_objective;
+        return this.fc_objective;
     }
 
-   /**
-    * Get tile name and positions.
-    *
-    * @return tilePositions
-    */
+    /**
+     * Get tile name and positions.
+     *
+     * @return tilePositions
+     */
     public String[] getTilePositions() {
-       return this.tilePositions;
+        return this.tilePositions;
     }
 
-   /**
-    * .IM are strictly formatted and written by the mass spec.
-    * They will never have user entered data in them.
-    *
-    * @return null
-    */
-   public HashMap getMetaDataKeyValuePairs() {
-      return this.metaData;
-   }
+    /**
+     * .IM are strictly formatted and written by the mass spec. They will never have user entered data in them.
+     *
+     * @return null
+     */
+    public HashMap getMetaDataKeyValuePairs() {
+        return this.metaData;
+    }
 
-   /**
-    * Set the userData HashMap.
-    *
-    * @param the HashMap
-    */
-   public void setMetaDataKeyValuePairs(HashMap metadata) {
-      this.metaData = metadata;
-   }
+    /**
+     * Set the userData HashMap.
+     *
+     * @param the HashMap
+     */
+    public void setMetaDataKeyValuePairs(HashMap metadata) {
+        this.metaData = metadata;
+    }
 
-   /**
-    * Sets the width (in pixels).
-    *
-    * @param width
-    */
-   public void setWidth(int width) {
-      fi.width = width;
-   }
+    /**
+     * Sets the width (in pixels).
+     *
+     * @param width
+     */
+    public void setWidth(int width) {
+        fi.width = width;
+    }
 
-   /**
-    * Sets the height (in pixels).
-    *
-    * @param height
-    */
-   public void setHeight(int height) {
-      fi.height = height;
-   }
+    /**
+     * Sets the height (in pixels).
+     *
+     * @param height
+     */
+    public void setHeight(int height) {
+        fi.height = height;
+    }
 
-   /**
-    * Sets the number of masses.
-    *
-    * @param nmasses
-    */
-   public void setNMasses(int nmasses) {
-      fi.nMasses = nmasses;
-   }
+    /**
+     * Sets the number of masses.
+     *
+     * @param nmasses
+     */
+    public void setNMasses(int nmasses) {
+        fi.nMasses = nmasses;
+    }
 
-   /**
-    * Sets the number of images.
-    *
-    * @param nimages
-    */
-   public void setNImages(int nimages) {
-      fi.nImages = nimages;
-   }
-   public String[] getStackPositions(){
-       return stackPositions;
-   }
-   public void setStackPositions(String[] names){
-       this.stackPositions = names;
-   }
+    /**
+     * Sets the number of images.
+     *
+     * @param nimages
+     */
+    public void setNImages(int nimages) {
+        fi.nImages = nimages;
+    }
 
-   /**
-    * Sets the bits per pixels.
-    *
-    * @param bitsperpixel
-    */
-   public void setBitsPerPixel(short bitperpixel) {
-      ihdr.d = bitperpixel;
-   }
+    public String[] getStackPositions() {
+        return stackPositions;
+    }
 
-   /**
-    * Get nBField.
-    *
-    * @return nBField
-    */
+    public void setStackPositions(String[] names) {
+        this.stackPositions = names;
+    }
+
+    /**
+     * Sets the bits per pixels.
+     *
+     * @param bitsperpixel
+     */
+    public void setBitsPerPixel(short bitperpixel) {
+        ihdr.d = bitperpixel;
+    }
+
+    /**
+     * Get nBField.
+     *
+     * @return nBField
+     */
     public String getBField() {
-       return BField;
+        return BField;
     }
 
-   /**
-    * Get nPrimCurrentT0.
-    *
-    * @return nPrimCurrentT0
-    */
+    /**
+     * Get nPrimCurrentT0.
+     *
+     * @return nPrimCurrentT0
+     */
     public String getPrimCurrentT0() {
-       return PrimCurrentT0;
+        return PrimCurrentT0;
     }
 
-   /**
-    * Get nPrimCurrentTEnd.
-    *
-    * @return nPrimCurrentTEnd
-    */
+    /**
+     * Get nPrimCurrentTEnd.
+     *
+     * @return nPrimCurrentTEnd
+     */
     public String getPrimCurrentTEnd() {
-       return PrimCurrentTEnd;
+        return PrimCurrentTEnd;
     }
 
-   /**
-    * Get nD1Pos
-    *
-    * @return nD1Pos
-    */
+    /**
+     * Get nD1Pos
+     *
+     * @return nD1Pos
+     */
     public String getD1Pos() {
-       return D1Pos;
+        return D1Pos;
     }
 
-   /**
-    * Get pszComment.
-    *
-    * @return pszComment
-    */
+    /**
+     * Get pszComment.
+     *
+     * @return pszComment
+     */
     public String getpszComment() {
-       return pszComment;
+        return pszComment;
     }
 
-   /**
-    * Get dRadius.
-    *
-    * @return dRadius
-    */
+    /**
+     * Get dRadius.
+     *
+     * @return dRadius
+     */
     public String getRadius() {
-       return Radius;
+        return Radius;
     }
 
-   /**
-    * Get nESPos.
-    *
-    * @return nESPos
-    */
+    /**
+     * Get nESPos.
+     *
+     * @return nESPos
+     */
     public String getESPos() {
-       return ESPos;
+        return ESPos;
     }
 
-   /**
-    * Get nASPos.
-    *
-    * @return nASPos
-    */
+    /**
+     * Get nASPos.
+     *
+     * @return nASPos
+     */
     public String getASPos() {
-       return ASPos;
+        return ASPos;
     }
-    
-    
+
     //DJ: 10/13/2014
-   /**
-    * Get nPrimL1.
-    *
-    * @return nPrimL1
-    */
+    /**
+     * Get nPrimL1.
+     *
+     * @return nPrimL1
+     */
     public String getNPrimL1() {
-       return primL1;
+        return primL1;
     }
-    
+
     //DJ: 10/13/2014
-   /**
-    * Get nPrimL0.
-    *
-    * @return nPrimL0
-    */
+    /**
+     * Get nPrimL0.
+     *
+     * @return nPrimL0
+     */
     public String getNPrimL0() {
-       return primL0;
+        return primL0;
     }
-    
+
     //DJ: 10/13/2014
-   /**
-    * Get nCsHv.
-    *
-    * @return nCsHv
-    */
+    /**
+     * Get nCsHv.
+     *
+     * @return nCsHv
+     */
     public String getNCsHv() {
-       return csHv;
+        return csHv;
     }
 
     /*
@@ -1384,9 +1485,10 @@ public class Mims_Reader implements Opener {
             return info;
         }
     }
-    */
+     */
 }
 
 class MimsFileInfo extends FileInfo {
-   public int nMasses;
+
+    public int nMasses;
 }
