@@ -185,6 +185,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         });
 
         massTextField.setText("mass");
+        massTextField.setToolTipText("Check the Auto track checkbox to enable entry of a value here.");
         massTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 massTextFieldActionPerformed(evt);
@@ -192,6 +193,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         });
 
         okButton.setText("OK");
+        okButton.setSelected(true);
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
@@ -456,6 +458,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         co.setFiles(fileNames, onlyReadHeader);
         co.addPropertyChangeListener(this);   // having this here screws up file reading somehow
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        okButton.setEnabled(false);
         co.execute();
         
 
@@ -897,7 +900,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             progressBar.setValue(progress);
         } else if (evt.getPropertyName().matches("state") && evt.getNewValue().toString().matches("DONE")) {
             setCursor(null);
-    
+            boolean enableOKButton = false;
             if (onlyReadHeader) {                     
                 // Get file status for all files, and don't call close, which will get rid of the dialog.
                 fileStatusList = co.getFileOpenStatusList();
@@ -925,9 +928,22 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 renderer.setStrings(files);
                 renderer.setColors(colors);
                 fileListComboBox.setRenderer(renderer);
+                // Added a code block here to check if any good files have been selected.  If none, diable 
+                // the OK button.
+                ListIterator<FileHeaderCheckStatus> iter = fileStatusList.listIterator();                 
+                while (iter.hasNext()) {
+                    FileHeaderCheckStatus status = iter.next();
+                    if (status.openFailed || ((status.wasHeaderBad) && (!status.wasHeaderFixed))) {
+                    } else {
+                        enableOKButton = true;
+                    }
+                }
+                
             } else {
+                okButton.setEnabled(true);
                 close();
             }
+            okButton.setEnabled(enableOKButton);
         }
         
     }
