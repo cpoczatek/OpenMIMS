@@ -1,6 +1,5 @@
 package com.nrims;
 
-import com.nrims.managers.BatchFileOpenHeaderStatus;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
