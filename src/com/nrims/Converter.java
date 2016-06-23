@@ -1,5 +1,6 @@
 package com.nrims;
 
+import com.nrims.data.ImageDataUtilities;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.FileSaver;
@@ -762,7 +763,7 @@ public class Converter extends SwingWorker<Void, Void> {
             opened = ui.openFile(file, onlyReadHeader);
             if (!opened) {
                  System.out.println("Converter:openFile:  call to ui.openFile failed. " + fileString);
-            }  
+            }
         } else {
             System.out.println("Can not find, or can not read " + fileString);
             opened = false;
@@ -854,7 +855,7 @@ public class Converter extends SwingWorker<Void, Void> {
 
     @Override
     public Void doInBackground() {
-
+        
         int percentComplete = 0;
         setProgress(percentComplete);
         boolean opened = false;
@@ -1166,9 +1167,12 @@ public class Converter extends SwingWorker<Void, Void> {
                      */
 
                     tableString += "<TD ALIGN=\"CENTER\">" + "\n";
-                    tableString += " <img src=\"data:image/png;base64," + "\n" + pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k)) + "\n" + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
+                    tableString += " <img src=\"data:image/png;base64," + "\n" + 
+                            pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k)) + 
+                            "\n" + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
                     tableString += "<BR>";
-                    tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m") + 1, pngFileNames_sorted.get(k).length() - 4);
+                    tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m") + 1, 
+                            pngFileNames_sorted.get(k).length() - 4);
                     tableString += "<BR>"; // "<BR>&nbsp";
                     tableString += "</TD>";
                 }
@@ -1180,9 +1184,31 @@ public class Converter extends SwingWorker<Void, Void> {
 
                 // this.htmlTables += tableString;
             } //============================================================
+            String names[] = ui.getOpener().getMassNames();
+            String symbols[] = ui.getOpener().getMassSymbols();
+            
+            // This is ugly, for lots of reasons, but for now, create an ArrayList to hold the file open status stuff.
+            int arraySize = names.length;
+            ArrayList<String> namesList = new ArrayList<String>();
+            ArrayList<String> symbolsList = new ArrayList<String>();
+            ArrayList<String> seriesList = new ArrayList<String>();
 
-            // This is ugly, but for now, create an ArrayList to hold the file open status stuff.
-            FileHeaderCheckStatus status = new FileHeaderCheckStatus(ui.getIsHeaderBad(), ui.getImageHeaderWasFixed());
+            for (int i = 0; i< arraySize; i++) {
+                if (names[i] == null) {
+                    break;
+                } else {
+                    int series = ImageDataUtilities.determineSeries(i, ui.getOpener());
+                    series++;  // make 1 based
+                    seriesList.add(Integer.toString(series));
+                    String name = names[i];
+                    namesList.add(name);
+                    String symbol = symbols[i];
+                    symbolsList.add(symbol);
+                }
+            }  
+            
+            FileHeaderCheckStatus status = new FileHeaderCheckStatus(ui.getIsHeaderBad(), 
+                    ui.getImageHeaderWasFixed(), namesList, symbolsList, seriesList);
             if (!opened) {
                 status.setOpenFailed(true);
             }
@@ -1301,10 +1327,17 @@ public class Converter extends SwingWorker<Void, Void> {
         public boolean wasHeaderBad;
         public boolean wasHeaderFixed;
         public boolean openFailed = false;
+        ArrayList<String>  imageNames = null;
+        ArrayList<String>  imageSymbols = null;
+        ArrayList<String> series = null;
 
-        public FileHeaderCheckStatus(boolean bad, boolean fixed) {
+        public FileHeaderCheckStatus(boolean bad, boolean fixed, ArrayList<String> names, 
+                ArrayList<String> symbols, ArrayList<String> series) {
             this.wasHeaderBad = bad;
             this.wasHeaderFixed = fixed;
+            this.imageNames = names;
+            this.imageSymbols = symbols;
+            this.series = series;
         }
 
         public boolean getWasHeaderBad() {
@@ -1321,6 +1354,18 @@ public class Converter extends SwingWorker<Void, Void> {
         
         public void setOpenFailed(boolean fail) {
             openFailed = true;
+        }
+        
+        public ArrayList<String> getImageNames() {
+            return imageNames;
+        }
+        
+        public ArrayList<String> getImageSymbols() {
+            return imageSymbols;
+        }
+        
+        public ArrayList<String> getImageSeries() {
+            return this.series;
         }
     }
     
