@@ -6303,7 +6303,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
                         }
                     }
                 }
-
+                
                 if (onlyReadHeader) {
                     return true;
                 }
@@ -6443,7 +6443,9 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
         public void doneLoadingFile() throws Exception {
             if (!sessionOpened) {
-                Toolkit.getDefaultToolkit().beep();
+                if (!onlyReadHeader) {
+                    Toolkit.getDefaultToolkit().beep();
+                }
 
                 jProgressBar1.setValue(0);
 
