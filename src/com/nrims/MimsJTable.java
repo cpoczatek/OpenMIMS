@@ -322,7 +322,7 @@ public class MimsJTable {
       displayTable(data, columnNames);
    }
    
-      // DJ: 12/08/2014  added tags to teh table.
+      // DJ: 12/08/2014  added tags to the table.
       void createPixelTableNumDen(String file, ArrayList<String> names, ArrayList<String> groups, ArrayList<String> tags, ArrayList<Double> values, ArrayList<Double> numValues, ArrayList<Double> denValues) {
       if(tags == null){
            System.out.println("in creatPixelTableNUMDEN: tags arraylist passed is NULL ");
