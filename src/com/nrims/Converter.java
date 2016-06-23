@@ -103,7 +103,6 @@ public class Converter extends SwingWorker<Void, Void> {
     String pngDir = PNG_DIRECTORY_DEFAULT;
     ArrayList<String> files = new ArrayList<String>();
     ArrayList<FileHeaderCheckStatus> fileHeaderCheckStatusList;
-    //FilesWrapper files = new FilesWrapper();
     boolean proceed = true;
     boolean onlyReadHeader = false;
 
@@ -1368,64 +1367,6 @@ public class Converter extends SwingWorker<Void, Void> {
             return this.series;
         }
     }
-    
-    /**
-     * A little wrapper class to allow keeping some metadata about the files the user selected.
-     * Initially, this will be used to set a flag indicating whether the file had a bad header, 
-     * and whether the header was fixed upon being read.
-     *
-     * @param xx not yet known
-     * @param x     not yet known.
-     *
-     * @return true if no error
-     */
-//    private class FilesWrapper {
-//        private ArrayList<String> files;
-//        private boolean headerIsBad = false;
-//        private boolean headerWasFixed = false;
-//
-//        public FilesWrapper() {
-//            files = new ArrayList<String>();
-//        }
-//
-//        private FilesWrapper(ArrayList<String> filesArrayList) {
-//            files = filesArrayList;
-//            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//        }
-//
-//        public String get(int index){
-//             return files.get(index);
-//        }
-//        
-//        public int size(){
-//            return files.size();
-//        }
-//              
-//        public boolean isEmpty(){
-//             return files.isEmpty();
-//        }
-//        
-//        public boolean wasHeaderFixed() {
-//            return headerWasFixed;
-//        }
-//        
-//        public void setWasHeaderFixed(boolean fixed) {
-//            headerIsBad = fixed;
-//        }
-//        
-//        public boolean isHeaderBad() {
-//            return headerIsBad;
-//        }
-//        
-//        public void setIsHeaderBad(boolean isBad) {
-//            headerIsBad = isBad;
-//        }
-//
-//        public Iterator<String> getIter() {
-//            return files.iterator();
-//        }
-//    }
-    
     
     
 
