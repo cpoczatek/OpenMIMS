@@ -10,6 +10,7 @@ import com.nrims.Converter.FileHeaderCheckStatus;
 import com.nrims.MimsJFileChooser;
 import com.nrims.MimsPlus;
 import com.nrims.UI;
+import com.nrims.data.ImageDataUtilities;
 import ij.IJ;
 import java.awt.Color;
 import java.awt.Component;
@@ -45,10 +46,11 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     File[] files;
     ArrayList<String> fileNames = new ArrayList<String>();
-    Converter co;
+    Converter converter;
     File configFile;
 
     String html_string = "Yo";
+    String mass = "";
     static JFrame instance;
     private boolean onlyReadHeader = false;
     ArrayList<FileHeaderCheckStatus> fileStatusList;
@@ -66,11 +68,11 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     public convertManager(UI ui, boolean isHTML) {
 
         initComponents();
-        massTextField.setForeground(Color.BLUE);
         fileListComboBox.setForeground(Color.BLUE);
         renderer = new ComboBoxRenderer(fileListComboBox);
         jLabelFilesHadBadHeaders.setVisible(false);
         jLabelFilesHadBadHeaders.setText("<html>Some files had bad headers.<br>Click on the list above</html>");
+        massComboBox.setVisible(false);
         
         config_file_label.setForeground(Color.BLUE);
 
@@ -124,13 +126,12 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         fileStatusList = new ArrayList<com.nrims.Converter.FileHeaderCheckStatus>();
 
         setLocation(ui.getLocation().x + 50, ui.getLocation().y + 50);
-        massTextField.setEditable(false);
 
         // DJ
         // so ehen the "X" closing logo button is hit, just this manager
         // gets closed and not the OpenMIMS plugin as a whole.
         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
+        
         instance = this;
     }
 
@@ -157,16 +158,13 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
         buttonGroup1 = new javax.swing.ButtonGroup();
         trackCheckBox = new javax.swing.JCheckBox();
-        massTextField = new javax.swing.JTextField();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
         fileListComboBox = new javax.swing.JComboBox();
         selectFilesButton = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
         progressBar = new javax.swing.JProgressBar();
         selectFilesButton1 = new javax.swing.JButton();
         configFile_radioButton = new javax.swing.JRadioButton();
@@ -174,6 +172,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         choose_config_Button = new javax.swing.JButton();
         allOpenedImages_radioButton = new javax.swing.JRadioButton();
         jLabelFilesHadBadHeaders = new javax.swing.JLabel();
+        massComboBox = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -181,14 +180,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         trackCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 trackCheckBoxActionPerformed(evt);
-            }
-        });
-
-        massTextField.setText("mass");
-        massTextField.setToolTipText("Check the Auto track checkbox to enable entry of a value here.");
-        massTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                massTextFieldActionPerformed(evt);
             }
         });
 
@@ -208,6 +199,11 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         });
 
         fileListComboBox.setToolTipText("<html>Blue:  files with good headers.  <br>Green:  files with bad headers that were fixed upon reading them.   <br>Red:  Files with bad headers that could not be fixed.</html>");
+        fileListComboBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                fileListComboBoxItemStateChanged(evt);
+            }
+        });
 
         selectFilesButton.setText("Select files...");
         selectFilesButton.addActionListener(new java.awt.event.ActionListener() {
@@ -215,11 +211,6 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 selectFilesButtonActionPerformed(evt);
             }
         });
-
-        jLabel1.setText("(e.g. 26)");
-
-        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, trackCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel1, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
-        bindingGroup.addBinding(binding);
 
         progressBar.setStringPainted(true);
 
@@ -253,6 +244,15 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         jLabelFilesHadBadHeaders.setForeground(new java.awt.Color(255, 0, 0));
         jLabelFilesHadBadHeaders.setText("Some files had bad headers.  Check the list.");
 
+        massComboBox.setToolTipText("");
+        massComboBox.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        massComboBox.setRequestFocusEnabled(false);
+        massComboBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                massComboBoxItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -261,42 +261,37 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(fileListComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(trackCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(massTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
-                        .addComponent(jLabelFilesHadBadHeaders)
-                        .addContainerGap(75, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
                         .addComponent(selectFilesButton, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(selectFilesButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
+                        .addComponent(selectFilesButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(cancelButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(progressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(cancelButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(progressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(configFile_radioButton)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(choose_config_Button, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(21, 21, 21)
-                                        .addComponent(config_file_label))
-                                    .addComponent(allOpenedImages_radioButton))
-                                .addGap(71, 71, 71)))
-                        .addContainerGap())))
+                                .addComponent(trackCheckBox)
+                                .addGap(18, 18, 18)
+                                .addComponent(massComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabelFilesHadBadHeaders))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(21, 21, 21)
+                                .addComponent(config_file_label))
+                            .addComponent(allOpenedImages_radioButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(configFile_radioButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(choose_config_Button, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(fileListComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -310,9 +305,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(trackCheckBox)
-                    .addComponent(massTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabelFilesHadBadHeaders))
+                    .addComponent(jLabelFilesHadBadHeaders)
+                    .addComponent(massComboBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(allOpenedImages_radioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -327,10 +321,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                     .addComponent(okButton))
                 .addGap(18, 18, 18)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
-        bindingGroup.bind();
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -394,9 +386,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-                    
-                    
-                    
+                            
             // User has ownership of the directory, now see if it is read-only       
             if (mjfc.isCurrentDirReadOnly()) {
                 
@@ -438,28 +428,28 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         return;
                     }
                 }
-
             }
             files = mjfc.getSelectedFiles();
         } else {
             return;
         }
 
+        converter = new Converter(false, false, trackCheckBox.isSelected(), mass, null, "", "");
         for (File file : files) {
             if (file.isFile() && fileNames.contains(file.getAbsolutePath()) == false) {
                 fileListComboBox.addItem(file.getName());
                 fileNames.add(file.getAbsolutePath());
             }
         }
+        fileListComboBox.setSelectedIndex(0);  // Fires event so the mass combobox appears initially.
         
         // Check file headers.
-        co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
         onlyReadHeader = true;
-        co.setFiles(fileNames, onlyReadHeader);
-        co.addPropertyChangeListener(this);   // having this here screws up file reading somehow
+        converter.setFiles(fileNames, onlyReadHeader);
+        converter.addPropertyChangeListener(this);   // having this here screws up file reading somehow
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         okButton.setEnabled(false);
-        co.execute();
+        converter.execute();
         
 
 
@@ -467,8 +457,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
 
-        if (co != null) {
-            co.proceed(false);
+        if (converter != null) {
+            converter.proceed(false);
         }
         setCursor(null);
         close();
@@ -488,9 +478,10 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         // Make sure user enters valid mass.
         if (trackCheckBox.isSelected()) {
             try {
-                double massString = new Double(massTextField.getText());
+                //String mass = massTextField.getText();
+                //double massString = new Double(massTextField.getText());
             } catch (Exception e) {
-                ij.IJ.error("\"" + massTextField.getText() + "\"" + " is not a valid mass value.");
+                //ij.IJ.error("\"" + massTextField.getText() + "\"" + " is not a valid mass value.");
                 setCursor(null);
                 okButton.setEnabled(true);
                 return;
@@ -644,19 +635,19 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         return;
                     }
                     // Initialize and run Converter object.
-                    co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-                    co.setFiles(fileNames);
+                    converter = new Converter(false, false, trackCheckBox.isSelected(), mass, null, "", "");
+                    converter.setFiles(fileNames);
                     // We prepare/setup the props that the converter need in order
                     // to generate the html file.
-                    co.specsForHTMLThruSelectedImages(
+                    converter.specsForHTMLThruSelectedImages(
                             selectedFile.getAbsolutePath(),
                             temp_folder_path,
                             HSIsArray,
                             numThreshArray, denThreshArray,
                             ratioScaleFactorArray,
                             maxRGBArray, minRGBArray);
-                    co.addPropertyChangeListener(this);
-                    co.execute();
+                    converter.addPropertyChangeListener(this);
+                    converter.execute();
 
                 }
                
@@ -767,39 +758,41 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         return;
                     }
                     // Initialize and run Converter object.
-                    co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
-                    co.setFiles(fileNames, false);
+                    converter = new Converter(false, false, trackCheckBox.isSelected(), mass, null, "", "");
+                    converter.setFiles(fileNames, false);
                     // We prepare/setup the props that the converter need in order
                     // to generate the html file.
 
-                    co.setForHtml(selectedFile.getAbsolutePath(), temp_folder_path);
-                    co.sumImageSpecsForHTML(sumArray);
-                    co.ratioImageSpecsForHTML(
+                    converter.setForHtml(selectedFile.getAbsolutePath(), temp_folder_path);
+                    converter.sumImageSpecsForHTML(sumArray);
+                    converter.ratioImageSpecsForHTML(
                             RatiosArray,
                             ratioNumThreshArray,
                             ratioDenThreshArray,
                             r_ratioScaleFactorArray);
-                    co.hsiImageSpecsForHTML(
+                    converter.hsiImageSpecsForHTML(
                             HSIsArray,
                             numThreshArray, denThreshArray,
                             ratioScaleFactorArray,
                             maxRGBArray, minRGBArray);
 
-                    co.addPropertyChangeListener(this);
-                    co.execute();
+                    converter.addPropertyChangeListener(this);
+                    converter.execute();
 
                 } // USING SPECS IN THE CONFIG FILE
                 else // IF THE CONFIG FILE IS VALID
                 if (configFile.getName().endsWith(".cfg") || configFile.getName().endsWith(".CFG")) {
                     // Initialize and run Converter object.
-                    co = new Converter(true, false, trackCheckBox.isSelected(), massTextField.getText(), configFile.getAbsolutePath(), "", "");
-                    co.setFiles(fileNames, false);
+//                            configFile.getAbsolutePath(), "", "");
+                    converter = new Converter(true, false, trackCheckBox.isSelected(), mass, 
+                            configFile.getAbsolutePath(), "", "");
+                    converter.setFiles(fileNames, false);
 
                     // We indicate the html file thst the user have chosen to generate.
-                    co.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
+                    converter.specsForHtmlThruConfigFile(selectedFile.getAbsolutePath());
 
-                    co.addPropertyChangeListener(this);
-                    co.execute();
+                    converter.addPropertyChangeListener(this);
+                    converter.execute();
 
                 } // IN CASE THE CONFIG FILE IS NOT VALID
                 else {
@@ -829,20 +822,21 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 iter.remove();
             }
         }
-     
-        co = new Converter(false, false, trackCheckBox.isSelected(), massTextField.getText(), null, "", "");
+          
+        converter = new Converter(false, false, trackCheckBox.isSelected(), mass, null, "", "");
         onlyReadHeader = false;
-        co.setFiles(fileNames, onlyReadHeader);
-        co.addPropertyChangeListener(this);
-        co.execute();
+        converter.setFiles(fileNames, onlyReadHeader);
+        converter.addPropertyChangeListener(this);
+        converter.execute();
         
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void trackCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_trackCheckBoxActionPerformed
         if (trackCheckBox.isSelected()) {
-            massTextField.setEditable(true);
+            populateMassListComboBox();
         } else {
-            massTextField.setEditable(false);
+            //massTextField.setEditable(false);
+            massComboBox.setVisible(false);
         }
     }//GEN-LAST:event_trackCheckBoxActionPerformed
 
@@ -887,9 +881,65 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
     }//GEN-LAST:event_choose_config_ButtonActionPerformed
 
-    private void massTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_massTextFieldActionPerformed
+    
+    private void populateMassListComboBox() {
+        massComboBox.setMaximumRowCount(20);   // We don't need no stinking scrollbars.
+        FileHeaderCheckStatus status = null;
+        int selectedIndex = fileListComboBox.getSelectedIndex();
+        //massTextField.setEditable(true);
+        if (fileListComboBox.getItemCount() > 0) {
+            if ((converter != null) && (trackCheckBox.isSelected())) {
+                fileStatusList = converter.getFileOpenStatusList();
+                if (fileStatusList.size() != 0)  {
+                    status = fileStatusList.get(selectedIndex);
+                    ArrayList<String> names = status.getImageNames();
+                    ArrayList<String> symbols = status.getImageSymbols();
+                    ArrayList<String> series = status.getImageSeries();
+
+                    ListIterator<String> namesIter = names.listIterator();
+                    ListIterator<String> symbolsIter = symbols.listIterator();
+                    ListIterator<String> seriesIter = series.listIterator();
+                    ArrayList<String> masses = new ArrayList<String>(names.size());
+                    massComboBox.removeAllItems();
+                    while (namesIter.hasNext()) {
+                        String seriesStr = seriesIter.next();
+                        String nameStr = namesIter.next();
+                        String symbolStr = symbolsIter.next();
+                        String mass = "(" + seriesStr + ")  " + nameStr + " " + symbolStr;
+                        massComboBox.addItem(mass);
+                        masses.add(mass);
+                    }
+                }
+                
+                if (trackCheckBox.isSelected()) {
+                    massComboBox.setVisible(true);
+                }
+            }
+        }      
+    }
+    
+    private void fileListComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_fileListComboBoxItemStateChanged
+        // This gets fired twice.  Once for deselecting old item, and once for the newly selected item.
+        
+        if (evt.getStateChange() == evt.SELECTED) {
+            populateMassListComboBox();  
+        } else if (evt.getStateChange() == evt.DESELECTED) {
+            int i=1;   
+        }
+
+    }//GEN-LAST:event_fileListComboBoxItemStateChanged
+
+    private void massComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_massComboBoxItemStateChanged
         // TODO add your handling code here:
-    }//GEN-LAST:event_massTextFieldActionPerformed
+        if (evt.getStateChange() == evt.SELECTED) {
+            String massStr = (String)evt.getItem();
+            int start = massStr.indexOf("  ") + 2;  // +2 to skip over the two spaces
+            int end = massStr.indexOf(" ", start);
+            mass = massStr.substring(start, end);
+        } else if (evt.getStateChange() == evt.DESELECTED) {
+            // Don't need to do anything on deselect  
+        }
+    }//GEN-LAST:event_massComboBoxItemStateChanged
 
     /**
      * Invoked when task's progress property changes.
@@ -903,10 +953,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             boolean enableOKButton = false;
             if (onlyReadHeader) {                     
                 // Get file status for all files, and don't call close, which will get rid of the dialog.
-                fileStatusList = co.getFileOpenStatusList();
+                fileStatusList = converter.getFileOpenStatusList();
                 //System.out.println("fileStatusList size is " + fileStatusList.size());
                 int numItems = fileStatusList.size();
-                String[] files = new String[numItems];
                 Color[] colors = new Color[numItems];
                 boolean badHeaders = false;
                 for (int i=0; i<numItems; i++) {
@@ -925,19 +974,29 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 if (badHeaders) {
                     jLabelFilesHadBadHeaders.setVisible(true);
                 }
-                renderer.setStrings(files);
+                              
+                String[] filesStr = new String[numItems];
+                ListIterator<String> iterator = fileNames.listIterator();
+                int i=0;
+                while (iterator.hasNext()) {
+                    String theFile = iterator.next();
+                    filesStr[i] = theFile;
+                    i++;
+                }
+                         
+                renderer.setStrings(filesStr);
                 renderer.setColors(colors);
                 fileListComboBox.setRenderer(renderer);
                 // Added a code block here to check if any good files have been selected.  If none, diable 
                 // the OK button.
-                ListIterator<FileHeaderCheckStatus> iter = fileStatusList.listIterator();                 
+                ListIterator<FileHeaderCheckStatus> iter = fileStatusList.listIterator(); 
                 while (iter.hasNext()) {
                     FileHeaderCheckStatus status = iter.next();
                     if (status.openFailed || ((status.wasHeaderBad) && (!status.wasHeaderFixed))) {
                     } else {
                         enableOKButton = true;
                     }
-                }
+                }  
                 
             } else {
                 okButton.setEnabled(true);
@@ -956,15 +1015,13 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     private javax.swing.JRadioButton configFile_radioButton;
     private javax.swing.JLabel config_file_label;
     private javax.swing.JComboBox fileListComboBox;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabelFilesHadBadHeaders;
-    private javax.swing.JTextField massTextField;
+    private javax.swing.JComboBox massComboBox;
     private javax.swing.JButton okButton;
     private javax.swing.JProgressBar progressBar;
     private javax.swing.JButton selectFilesButton;
     private javax.swing.JButton selectFilesButton1;
     private javax.swing.JCheckBox trackCheckBox;
-    private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 
     private void close() {
