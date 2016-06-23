@@ -526,7 +526,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
      * Get the format string used to determine format of image titles
      * @return 
      */
-    String getFormatString(){
+    public String getFormatString(){
         return formatString;
     }
     //Dj: 10/24/2014
