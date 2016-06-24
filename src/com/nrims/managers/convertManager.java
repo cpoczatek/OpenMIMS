@@ -328,6 +328,11 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     }// </editor-fold>//GEN-END:initComponents
 
     private void selectFilesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectFilesButtonActionPerformed
+        trackCheckBox.setSelected(false);  // This prevents tracking upon user selection of a new list of files.
+        // If this is checked and the user selects new files, the code attempts not only to check their headers,
+        // but also tries to track them, which causes errors for some files, thus preventing the update of the files
+        // list.
+        massComboBox.setVisible(false);
         selectFiles();
     }//GEN-LAST:event_selectFilesButtonActionPerformed
 
@@ -436,7 +441,9 @@ public class convertManager extends JFrame implements PropertyChangeListener {
 
         converter = new Converter(false, false, trackCheckBox.isSelected(), mass, null, "", "");
         for (File file : files) {
-            if (file.isFile() && fileNames.contains(file.getAbsolutePath()) == false) {
+            boolean isFile = file.isFile();
+            boolean contains = fileNames.contains(file.getAbsolutePath());
+            if (isFile && (contains == false)) {
                 fileListComboBox.addItem(file.getName());
                 fileNames.add(file.getAbsolutePath());
             }
@@ -909,6 +916,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                         massComboBox.addItem(mass);
                         masses.add(mass);
                     }
+                } else {
+                    System.out.println("dammit.  fileStatusList is empty.");
                 }
                 
                 if (trackCheckBox.isSelected()) {
@@ -920,9 +929,15 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     
     private void fileListComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_fileListComboBoxItemStateChanged
         // This gets fired twice.  Once for deselecting old item, and once for the newly selected item.
-        
+        if (evt.getStateChange() == evt.DESELECTED) {
+//            if (trackCheckBox.isSelected()) {
+//                populateMassListComboBox();  
+//            }
+        }
         if (evt.getStateChange() == evt.SELECTED) {
-            populateMassListComboBox();  
+            if (trackCheckBox.isSelected()) {
+                populateMassListComboBox();  
+            }
         } else if (evt.getStateChange() == evt.DESELECTED) {
             int i=1;   
         }
@@ -951,7 +966,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
         } else if (evt.getPropertyName().matches("state") && evt.getNewValue().toString().matches("DONE")) {
             setCursor(null);
             boolean enableOKButton = false;
-            if (onlyReadHeader) {                     
+            if (onlyReadHeader) {   
                 // Get file status for all files, and don't call close, which will get rid of the dialog.
                 fileStatusList = converter.getFileOpenStatusList();
                 //System.out.println("fileStatusList size is " + fileStatusList.size());
