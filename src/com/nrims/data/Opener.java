@@ -10,7 +10,7 @@ import java.util.HashMap;
 public interface Opener {
 
     // Mims specific fields.
-    public static final String Nrrd_seperator = ":=";
+    public static final String Nrrd_separator = ":=";
     public static final String Mims_mass_numbers = "Mims_mass_numbers";
     public static final String Mims_mass_symbols = "Mims_mass_symbols";
     public static final String Mims_position = "Mims_position";
