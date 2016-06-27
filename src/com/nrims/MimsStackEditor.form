@@ -278,12 +278,16 @@
         <Component class="javax.swing.JButton" name="compressButton">
           <Properties>
             <Property name="text" type="java.lang.String" value="Compress"/>
+            <Property name="toolTipText" type="java.lang.String" value="Compresses the images into blocks containing the number of planes indicated by the text field to the right of this button."/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="compressButtonActionPerformed"/>
           </Events>
         </Component>
         <Component class="javax.swing.JTextField" name="compressTextField">
+          <Properties>
+            <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;Enter a positive integer here to specifiy the number of planes that are compressed into blocks by the Compress button.&lt;br&gt;If you leave this field blank and press the Compress button, all images will be compressed into a single plane.&lt;/html&gt;"/>
+          </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="sumTextField">
         </Component>
