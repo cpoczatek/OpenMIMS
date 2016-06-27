@@ -1973,7 +1973,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         });
         utilitiesMenu.add(captureImageMenuItem);
 
-        imageNotesMenuItem.setText("Image Notes");
+        imageNotesMenuItem.setText("Image Notes...");
         imageNotesMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 imageNotesMenuItemActionPerformed(evt);
@@ -2528,7 +2528,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             }
 
             // Save the file.
-            if (saveImageOnly || ui.getmimsAction().isImageModified()) {
+            if (saveImageOnly || ui.getmimsAction().isImageModified() || imgNotes.isModified()) {
                 ImagePlus[] imp = getOpenMassImages();
                 if (imp == null) {
                     return false;
@@ -2555,7 +2555,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 }
                 baseFileName = getFilePrefix(dataFile.getAbsolutePath());
                 onlyFileName = getFilePrefix(dataFile.getName());
-            } else {
+            } else {  
                 baseFileName = this.getLastFolder() + "/" + this.getImageFilePrefix();
                 onlyFileName = this.getImageFilePrefix();
             }
@@ -3513,7 +3513,7 @@ private void captureImageMenuItemActionPerformed(java.awt.event.ActionEvent evt)
 
     /**
      * Action method for the Utilities>Import .im List menu item. Loads a list
-     * of images caontained in a text file and concatenates them.
+     * of images contained in a text file and concatenates them.
      */
 private void importIMListMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importIMListMenuItemActionPerformed
     com.nrims.data.LoadImageList testLoad = new com.nrims.data.LoadImageList(this);
@@ -3567,7 +3567,7 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
         try {
             // User sets file prefix name
             boolean saveImageOnly = true;
-            boolean sucess = false;
+            boolean success = false;
             //Save only image, enter save from gui because evt != null
             if ((evt != null && evt.getActionCommand().equals(SAVE_IMAGE)) || evt == null) {
                 saveImageOnly = true;
@@ -3583,7 +3583,7 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
                     fileName = fc.getSelectedFile().getAbsolutePath();
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-                    sucess = saveSession(fileName, saveImageOnly);
+                    success = saveSession(fileName, saveImageOnly);
                     // DJ: 08/28/2014
                     ui.setTitle("OpenMIMS: " + image.getImageFile().getName().toString());
                    
@@ -3593,7 +3593,7 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
             } else if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)) {
                 saveImageOnly = false;
                 System.out.println("Save session.");
-                if (this.getmimsAction().isImageModified()) {
+                if (this.getmimsAction().isImageModified() || imgNotes.isModified()) {
                     MimsJFileChooser fc = new MimsJFileChooser(this);
                     if (this.getImageFilePrefix() != null) {
                         fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
@@ -3604,11 +3604,13 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
                         fileName = fc.getSelectedFile().getAbsolutePath();
                         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-                        sucess = saveSession(fileName, saveImageOnly);
+                        success = saveSession(fileName, saveImageOnly);
+                        int i=1;
                     }
                 } else {
                     fileName = new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION).getAbsolutePath();
-                    sucess = saveSession(fileName, saveImageOnly);
+                    success = saveSession(fileName, saveImageOnly);
+                    int i=2;
                 }
                 // DJ: 08/28/2014
                 ui.setTitle("OpenMIMS: " + image.getImageFile().getName().toString());
@@ -3617,7 +3619,7 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
                 //only called from checkCurrentFileStatusBeforeOpening()
             }
 
-            return sucess;
+            return success;
         } catch (Exception e) {
             if (!silentMode) {
                 ij.IJ.error("Save Error", "Error saving file:" + e.getMessage());
@@ -5980,6 +5982,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             // Update notes gui
             if (image != null) {
                 imgNotes.setOutputFormatedText(image.getNotes());
+                imgNotes.setIsModified(false);
             }
 
             // Update hashmap
