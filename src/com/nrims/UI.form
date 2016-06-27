@@ -291,7 +291,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="imageNotesMenuItem">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Image Notes"/>
+                <Property name="text" type="java.lang.String" value="Image Notes..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="imageNotesMenuItemActionPerformed"/>
