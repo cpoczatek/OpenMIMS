@@ -197,14 +197,14 @@ public class Nrrd_Writer {
        String line;
 
        // Mass numbers
-       line = Opener.Mims_mass_numbers+Opener.Nrrd_seperator;
+       line = Opener.Mims_mass_numbers+Opener.Nrrd_separator;
        for (int i=0; i< op.getNMasses(); i++)
           line += op.getMassNames()[i]+" ";
        out.write(line+"\n");
 
         // Mass symbols
         if (op.getMassSymbols() != null) {
-            line = Opener.Mims_mass_symbols + Opener.Nrrd_seperator;
+            line = Opener.Mims_mass_symbols + Opener.Nrrd_separator;
             for (int i = 0; i < op.getNMasses(); i++) {
                 line += op.getMassSymbols()[i] + " ";
             }
@@ -212,84 +212,84 @@ public class Nrrd_Writer {
         }
        
        // Position
-       out.write(Opener.Mims_position+Opener.Nrrd_seperator+op.getPosition()+"\n");
+       out.write(Opener.Mims_position+Opener.Nrrd_separator+op.getPosition()+"\n");
 
        // Date
-       out.write(Opener.Mims_date+Opener.Nrrd_seperator+op.getSampleDate()+"\n");
+       out.write(Opener.Mims_date+Opener.Nrrd_separator+op.getSampleDate()+"\n");
 
        // Hour
-       out.write(Opener.Mims_hour+Opener.Nrrd_seperator+op.getSampleHour()+"\n");
+       out.write(Opener.Mims_hour+Opener.Nrrd_separator+op.getSampleHour()+"\n");
 
        // Username
-       out.write(Opener.Mims_user_name+Opener.Nrrd_seperator+op.getUserName()+"\n");
+       out.write(Opener.Mims_user_name+Opener.Nrrd_separator+op.getUserName()+"\n");
 
        // Sample name
-       out.write(Opener.Mims_sample_name+Opener.Nrrd_seperator+op.getSampleName()+"\n");
+       out.write(Opener.Mims_sample_name+Opener.Nrrd_separator+op.getSampleName()+"\n");
 
        // Z position
-       out.write(Opener.Mims_z_position+Opener.Nrrd_seperator+op.getZPosition()+"\n");
+       out.write(Opener.Mims_z_position+Opener.Nrrd_separator+op.getZPosition()+"\n");
 
        // Dwell time
-       out.write(Opener.Mims_dwell_time+Opener.Nrrd_seperator+op.getDwellTime()+"\n");
+       out.write(Opener.Mims_dwell_time+Opener.Nrrd_separator+op.getDwellTime()+"\n");
 
        // Count time
-       out.write(Opener.Mims_count_time+Opener.Nrrd_seperator+op.getCountTime()+"\n");
+       out.write(Opener.Mims_count_time+Opener.Nrrd_separator+op.getCountTime()+"\n");
 
        // Duration
-       out.write(Opener.Mims_duration+Opener.Nrrd_seperator+op.getDuration()+"\n");
+       out.write(Opener.Mims_duration+Opener.Nrrd_separator+op.getDuration()+"\n");
 
        // Raster
-       out.write(Opener.Mims_raster+Opener.Nrrd_seperator+op.getRaster()+"\n");
+       out.write(Opener.Mims_raster+Opener.Nrrd_separator+op.getRaster()+"\n");
 
        // Pixel width
-       out.write(Opener.Mims_pixel_width+Opener.Nrrd_seperator+op.getPixelWidth()+"\n");
+       out.write(Opener.Mims_pixel_width+Opener.Nrrd_separator+op.getPixelWidth()+"\n");
 
        // Pixel height
-       out.write(Opener.Mims_pixel_height+Opener.Nrrd_seperator+op.getPixelHeight()+"\n");
+       out.write(Opener.Mims_pixel_height+Opener.Nrrd_separator+op.getPixelHeight()+"\n");
 
        // Deadtime correction
-       out.write(Opener.Mims_dt_correction_applied+Opener.Nrrd_seperator+op.isDTCorrected()+"\n");
+       out.write(Opener.Mims_dt_correction_applied+Opener.Nrrd_separator+op.isDTCorrected()+"\n");
 
        // QSA correction
-       out.write(Opener.Mims_QSA_correction_applied+Opener.Nrrd_seperator+op.isQSACorrected()+"\n");
+       out.write(Opener.Mims_QSA_correction_applied+Opener.Nrrd_separator+op.isQSACorrected()+"\n");
 
        // BField
        if (op.getBField() != null)
-          out.write(Opener.Mims_BField+Opener.Nrrd_seperator+op.getBField()+"\n");
+          out.write(Opener.Mims_BField+Opener.Nrrd_separator+op.getBField()+"\n");
 
        // PrimCurrentT0
        if (op.getPrimCurrentT0() != null)
-          out.write(Opener.Mims_PrimCurrentT0+Opener.Nrrd_seperator+op.getPrimCurrentT0()+"\n");
+          out.write(Opener.Mims_PrimCurrentT0+Opener.Nrrd_separator+op.getPrimCurrentT0()+"\n");
 
        // PrimCurrentTEnd
        if (op.getPrimCurrentTEnd() != null)
-          out.write(Opener.Mims_PrimCurrentTEnd+Opener.Nrrd_seperator+op.getPrimCurrentTEnd()+"\n");
+          out.write(Opener.Mims_PrimCurrentTEnd+Opener.Nrrd_separator+op.getPrimCurrentTEnd()+"\n");
 
        // D1Pos
        if (op.getD1Pos() != null)
-          out.write(Opener.Mims_D1Pos+Opener.Nrrd_seperator+op.getD1Pos()+"\n");
+          out.write(Opener.Mims_D1Pos+Opener.Nrrd_separator+op.getD1Pos()+"\n");
 
        // pszComment
        if (op.getpszComment() != null)
-          out.write(Opener.Mims_pszComment+Opener.Nrrd_seperator+op.getpszComment()+"\n");
+          out.write(Opener.Mims_pszComment+Opener.Nrrd_separator+op.getpszComment()+"\n");
 
        // Radius
        if (op.getRadius() != null)
-          out.write(Opener.Mims_Radius+Opener.Nrrd_seperator+op.getRadius()+"\n");
+          out.write(Opener.Mims_Radius+Opener.Nrrd_separator+op.getRadius()+"\n");
 
        // ESPos
        if (op.getESPos() != null)
-          out.write(Opener.Mims_ESPos+Opener.Nrrd_seperator+op.getESPos()+"\n");
+          out.write(Opener.Mims_ESPos+Opener.Nrrd_separator+op.getESPos()+"\n");
 
        // ASPos
        if (op.getASPos() != null)
-          out.write(Opener.Mims_ASPos+Opener.Nrrd_seperator+op.getASPos()+"\n");
+          out.write(Opener.Mims_ASPos+Opener.Nrrd_separator+op.getASPos()+"\n");
 
        // QSA correction parameters
        if (op.isQSACorrected()) {
       
           // Beta correction
-          out.write(Opener.Mims_QSA_betas+Opener.Nrrd_seperator);
+          out.write(Opener.Mims_QSA_betas+Opener.Nrrd_separator);
               for (int i = 0; i < op.getBetas().length; i++) {
                  out.write(Float.toString(op.getBetas()[i]));
                  if (i < op.getBetas().length -1)
@@ -298,7 +298,7 @@ public class Nrrd_Writer {
               out.write("\n");
 
            // FC Objective parameter.
-           out.write(Opener.Mims_QSA_FC_Obj+Opener.Nrrd_seperator+op.getFCObjective() + "\n");
+           out.write(Opener.Mims_QSA_FC_Obj+Opener.Nrrd_separator+op.getFCObjective() + "\n");
 
        }
        //write slice labels
@@ -308,7 +308,7 @@ public class Nrrd_Writer {
            for (int i = 0; i < names.length; i++) {
                output += names[i] + ";";
            }
-           out.write(Opener.Mims_stack_positions+Opener.Nrrd_seperator+output+"\n");
+           out.write(Opener.Mims_stack_positions+Opener.Nrrd_separator+output+"\n");
        }
 
        // Image Notes
@@ -316,7 +316,7 @@ public class Nrrd_Writer {
        //this is redundant but
        //double checking that file is written with no \n's
        notes = outputFormatNotes(notes);
-       out.write(Opener.Mims_notes+Opener.Nrrd_seperator+notes+"\n");
+       out.write(Opener.Mims_notes+Opener.Nrrd_separator+notes+"\n");
 
 	   return out.toString();
     }
@@ -329,7 +329,7 @@ public class Nrrd_Writer {
 
        Map<String,String> sortedMap = new TreeMap<String,String>(op.getMetaDataKeyValuePairs());
        for(String key : sortedMap.keySet()) {
-          out.write(key + Opener.Nrrd_seperator + sortedMap.get(key) + "\n");
+          out.write(key + Opener.Nrrd_separator + sortedMap.get(key) + "\n");
        }
 
        return out.toString();
