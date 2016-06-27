@@ -200,8 +200,8 @@ public class Nrrd_Reader implements Opener {
             lineskip = Integer.valueOf(noteValue).intValue();
 
          // All the following are Mims specific headers.
-         int i = noteType.indexOf(Opener.Nrrd_seperator);
-         int j = Opener.Nrrd_seperator.length();
+         int i = noteType.indexOf(Opener.Nrrd_separator);
+         int j = Opener.Nrrd_separator.length();
          int k = i+j;
          String key = null;
          if (i >= 0)
@@ -211,10 +211,10 @@ public class Nrrd_Reader implements Opener {
          if (value == null) value = "";
 
          if (thisLine.startsWith(Opener.Mims_mass_numbers))
-                fi.massNames=noteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
+                fi.massNames=noteType.substring(i+Opener.Nrrd_separator.length()).split(" ");
 
          else if(thisLine.startsWith(Opener.Mims_mass_symbols))
-                fi.massSymbols=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(" ");
+                fi.massSymbols=originalNoteType.substring(i+Opener.Nrrd_separator.length()).split(" ");
 
          else if(thisLine.startsWith(Opener.Mims_date))
                 fi.sampleDate=value;
@@ -241,10 +241,10 @@ public class Nrrd_Reader implements Opener {
                 fi.userName=value;
 
          else if(thisLine.startsWith(Opener.Mims_tile_positions))
-                fi.tilePositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
+                fi.tilePositions=originalNoteType.substring(i+Opener.Nrrd_separator.length()).split(";");
          
          else if(thisLine.startsWith(Opener.Mims_stack_positions))
-                fi.stackPositions=originalNoteType.substring(i+Opener.Nrrd_seperator.length()).split(";");
+                fi.stackPositions=originalNoteType.substring(i+Opener.Nrrd_separator.length()).split(";");
 
          else if(thisLine.startsWith(Opener.Mims_raster))
                 fi.raster=value;
