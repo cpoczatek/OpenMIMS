@@ -11,7 +11,7 @@ import javax.swing.event.DocumentListener;
  */
 public class imageNotes extends com.nrims.PlugInJFrame implements DocumentListener  {
 
-    java.awt.Frame instance;
+    //java.awt.Frame instance;
     private javax.swing.JTextArea textArea;
     private javax.swing.JScrollPane scrollPane;
     private boolean isModified = false;
@@ -28,11 +28,9 @@ public class imageNotes extends com.nrims.PlugInJFrame implements DocumentListen
         textArea.setColumns(50);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
-        
         textArea.getDocument().addDocumentListener(this);
 
         scrollPane.setViewportView(textArea);
-
     }
     
     public void changedUpdate(DocumentEvent evt) {
@@ -44,6 +42,7 @@ public class imageNotes extends com.nrims.PlugInJFrame implements DocumentListen
     }
     
     public void insertUpdate(DocumentEvent evt) {
+        // Gets called when imageNotes in instantiated, also when user types into the textArea.
 //        DocumentEvent.EventType type = evt.getType();
 //        String typeString = null;
 //        if (type.equals(DocumentEvent.EventType.CHANGE)) {
@@ -53,7 +52,7 @@ public class imageNotes extends com.nrims.PlugInJFrame implements DocumentListen
 //        }  else if (type.equals(DocumentEvent.EventType.REMOVE)) {
 //          typeString = "Remove";
 //        }
-        isModified = true;    // gets called when imageNotes in instantiated, also when user types into the textArea.
+        isModified = true;    
     }
 
 
