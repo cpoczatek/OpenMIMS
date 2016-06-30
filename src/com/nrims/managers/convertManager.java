@@ -1016,6 +1016,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
             } else {
                 okButton.setEnabled(true);
                 close();
+                //converter.cancel(true);
             }
             okButton.setEnabled(enableOKButton);
         }
