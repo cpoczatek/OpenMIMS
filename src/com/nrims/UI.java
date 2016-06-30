@@ -79,6 +79,7 @@ import org.jfree.ui.ExtensionFileFilter;
 
 //DJ: 10/20/2014
 import java.util.Properties; // to be used to read the config files where html links are located 
+import javax.swing.SwingWorker.StateValue;
                             //  for OpenMIMS Documentation as well as the Sample Data link + other possible links.
 
 /**
@@ -5645,6 +5646,10 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         if ("progress" == evt.getPropertyName()) {
             int progress = (Integer) evt.getNewValue();
             jProgressBar1.setValue(progress);
+        } else if (evt.getNewValue() == StateValue.DONE) {
+            //  Some java documentation recommends calling cancel on a completed Swingworker,
+            // but this does not seem to change anything.
+            //task.cancel(true);
         }
     }
 
