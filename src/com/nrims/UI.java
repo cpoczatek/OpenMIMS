@@ -5660,7 +5660,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      * @return <code>true</code> if a save action is required, otherwise false.
      */
     private boolean checkCurrentFileStatusBeforeOpening() {
-        if (mimsAction != null && mimsAction.isImageModified()) {
+        if (mimsAction != null && (mimsAction.isImageModified() || imgNotes.isModified())) {
             int n = JOptionPane.showConfirmDialog(
                     this,
                     "The current file has been modified.\n\t\tDo you want to save the changes?\n",
