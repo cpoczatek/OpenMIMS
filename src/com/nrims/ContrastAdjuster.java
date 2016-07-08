@@ -220,7 +220,8 @@ public class ContrastAdjuster extends JPanel implements Runnable,
 		
  		addKeyListener(ij);  // ImageJ handles keyboard shortcuts
 		//pack();
-		show();
+		//show();  // deprecated, replace with setVisible
+        setVisible(true);
 
 		thread = new Thread(this, "ContrastAdjuster");
 		//thread.setPriority(thread.getPriority()-1);
