@@ -68,8 +68,7 @@ public class MimsUno {
     private XMultiComponentFactory xMCF;
 
     /**
-     * Method called to get current LibreOffice document. Gets currently opened
-     * document, in the form of a XComponent
+     * Method called to get current LibreOffice document. Gets currently opened document, in the form of a XComponent
      *
      * @return XComponent of currently opened document, null if none is open
      */
@@ -113,6 +112,7 @@ public class MimsUno {
             return false;
         }
     }
+
     /**
      * Insert a new OLE object into the writer document to place images into
      */
@@ -142,11 +142,11 @@ public class MimsUno {
     }
 
     /**
-     * Method to handle dropping images in LibreOffice. If the user drops
-     * outside a text frame, nothing happens. If the user drops inside a text
-     * frame, and over no images, a new image is inserted into the text frame If
-     * the user drops inside a text frame and over an image, the existing image
-     * is replaced with the new one, albeit with same size and position
+     * Method to handle dropping images in LibreOffice. If the user drops outside a text frame, nothing happens. If the
+     * user drops inside a text frame, and over no images, a new image is inserted into the text frame If the user drops
+     * inside a text frame and over an image, the existing image is replaced with the new one, albeit with same size and
+     * position
+     *
      * @param i java.awt.image to be inserted
      * @param text caption for the image
      * @param title title for the image, under "Description..."
@@ -183,9 +183,10 @@ public class MimsUno {
         }
         return true;
     }
+
     /**
-     * Find where to insert into the writer document.
-     * Also find if we need to copy an image's dimensions.
+     * Find where to insert into the writer document. Also find if we need to copy an image's dimensions.
+     *
      * @param image image to insert
      * @param xComponent component of main window
      * @return true if succeeded, false if not
@@ -252,11 +253,12 @@ public class MimsUno {
         }
         return true;
     }
+
     /**
-     * Find where to insert into the draw document.
-     * Also find if we need to copy an image's dimensions.
+     * Find where to insert into the draw document. Also find if we need to copy an image's dimensions.
+     *
      * @param xComponent component of draw window
-     * @param image image to insert 
+     * @param image image to insert
      * @return true if succeeded, false if not
      */
     private boolean insertIntoDraw(XComponent xComponent, ImageInfo image) {
@@ -301,8 +303,10 @@ public class MimsUno {
         return true;
 
     }
+
     /**
      * Convert and insert image and relevant info into Writer doc
+     *
      * @param image image and info to insert
      * @param xTextFrame textframe to insert into, null if none
      * @param xComponent component of writer window
@@ -367,8 +371,10 @@ public class MimsUno {
         return insertImageIntoTextFrame(image, xTextFrame, xTextDocument);
 
     }
+
     /**
      * Inserts content and info into a draw page.
+     *
      * @param image image and info to insert
      * @param xComponent component of draw page
      * @param xAccessibleContext accessiblecontext of draw page
@@ -452,9 +458,9 @@ public class MimsUno {
             return false;
         }
         try {
-            XMultiServiceFactory xDrawFactory =
-                    (XMultiServiceFactory) UnoRuntime.queryInterface(
-                    XMultiServiceFactory.class, xComponent);
+            XMultiServiceFactory xDrawFactory
+                    = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                            XMultiServiceFactory.class, xComponent);
             Object drawShape = xDrawFactory.createInstance("com.sun.star.drawing.TextShape");
             XShape xDrawShape = (XShape) UnoRuntime.queryInterface(XShape.class, drawShape);
             xDrawShape.setSize(new Size(size.Width, 1000));
@@ -512,11 +518,11 @@ public class MimsUno {
 
     /**
      * Method to insert a textframe and image together into a text document's textframe.
-     * 
+     *
      * @param image image and info to insert
      * @param destination textframe to insert into
      * @param xTextDocument document to insert into
-     * @return 
+     * @return
      */
     private boolean insertImageIntoTextFrame(ImageInfo image, XTextFrame destination, XTextDocument xTextDocument) {
         XTextFrame xTextFrame;
@@ -547,7 +553,7 @@ public class MimsUno {
             int[] blank = new int[]{0, 0, 0, 0};
             com.sun.star.beans.XPropertySet xTFPS = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
                     com.sun.star.beans.XPropertySet.class, xTextFrame);
-            
+
             xTFPS.setPropertyValue("FrameIsAutomaticHeight", true);
             xTFPS.setPropertyValue("LeftBorder", blank);
             xTFPS.setPropertyValue("RightBorder", blank);
@@ -555,7 +561,7 @@ public class MimsUno {
             xTFPS.setPropertyValue("BottomBorder", blank);
             if (destination != null) {
                 xTFPS.setPropertyValue("AnchorType",
-                    com.sun.star.text.TextContentAnchorType.AT_FRAME);
+                        com.sun.star.text.TextContentAnchorType.AT_FRAME);
                 //insert the textframe
                 xText = destination.getText();
                 xTextCursor = xText.createTextCursor();
@@ -565,7 +571,7 @@ public class MimsUno {
                 int x = image.p.X - (image.size.Width / 2);
                 int y = image.p.Y - (image.size.Height / 2);
                 xTFPS.setPropertyValue("AnchorType",
-                    com.sun.star.text.TextContentAnchorType.AT_PAGE);
+                        com.sun.star.text.TextContentAnchorType.AT_PAGE);
                 xTFPS.setPropertyValue("VertOrient", com.sun.star.text.VertOrientation.NONE);
                 xTFPS.setPropertyValue("HoriOrient", com.sun.star.text.HoriOrientation.NONE);
                 xTFPS.setPropertyValue("HoriOrientRelation", com.sun.star.text.RelOrientation.PAGE_FRAME);
@@ -604,9 +610,9 @@ public class MimsUno {
         XTextFrame xTextFrame = null;
         try {
             //get the text frame supplier from the document
-            XTextFramesSupplier xTextFrameSupplier =
-                    (XTextFramesSupplier) UnoRuntime.queryInterface(
-                    XTextFramesSupplier.class, xTextDocument);
+            XTextFramesSupplier xTextFrameSupplier
+                    = (XTextFramesSupplier) UnoRuntime.queryInterface(
+                            XTextFramesSupplier.class, xTextDocument);
 
             //get text frame objects
             XNameAccess xNameAccess = xTextFrameSupplier.getTextFrames();
@@ -624,19 +630,21 @@ public class MimsUno {
         return xTextFrame;
 
     }
+
     /**
      * Get an OLE object based on it's name within a text document
+     *
      * @param name
      * @param xTextDocument
-     * @return 
+     * @return
      */
     private XComponent getOLE(String name, XTextDocument xTextDocument) {
         XComponent xComponent = null;
         try {
             //get the text frame supplier from the document
-            XTextEmbeddedObjectsSupplier xTextEmbeddedObjectsSupplier =
-                    (XTextEmbeddedObjectsSupplier) UnoRuntime.queryInterface(
-                    XTextEmbeddedObjectsSupplier.class, xTextDocument);
+            XTextEmbeddedObjectsSupplier xTextEmbeddedObjectsSupplier
+                    = (XTextEmbeddedObjectsSupplier) UnoRuntime.queryInterface(
+                            XTextEmbeddedObjectsSupplier.class, xTextDocument);
 
             //get text frame objects
             XNameAccess xNameAccess = xTextEmbeddedObjectsSupplier.getEmbeddedObjects();
@@ -700,9 +708,9 @@ public class MimsUno {
         try {
             //create unique name based on timestamp
             long unixTime = System.currentTimeMillis() / 1000L;
-            XMultiServiceFactory docServiceFactory =
-                    (XMultiServiceFactory) UnoRuntime.queryInterface(
-                    XMultiServiceFactory.class, xTextDocument);
+            XMultiServiceFactory docServiceFactory
+                    = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                            XMultiServiceFactory.class, xTextDocument);
             graphic = docServiceFactory.createInstance("com.sun.star.text.TextGraphicObject");
             XNamed name = (XNamed) UnoRuntime.queryInterface(XNamed.class, graphic);
             name.setName("" + unixTime);
@@ -724,9 +732,9 @@ public class MimsUno {
         try {
             //create unique name based on timestamp
             long unixTime = System.currentTimeMillis() / 1000L;
-            XMultiServiceFactory docServiceFactory =
-                    (XMultiServiceFactory) UnoRuntime.queryInterface(
-                    XMultiServiceFactory.class, xDrawPage);
+            XMultiServiceFactory docServiceFactory
+                    = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                            XMultiServiceFactory.class, xDrawPage);
             graphic = docServiceFactory.createInstance("com.sun.star.drawing.GraphicObjectShape");
             XNamed name = (XNamed) UnoRuntime.queryInterface(XNamed.class, graphic);
             name.setName("" + unixTime);
@@ -863,7 +871,7 @@ public class MimsUno {
             XAccessible xAccessible = xAccessibleContext.getAccessibleChild(i);
             return xAccessible.getAccessibleContext();
         } catch (Exception e) {
-             System.out.println("Error trying to retrieve draw page" + e);
+            System.out.println("Error trying to retrieve draw page" + e);
             return null;
         }
     }
@@ -895,9 +903,9 @@ public class MimsUno {
         XUnitConversion xUnitConversion = null;
         try {
             XModel xModel = (XModel) UnoRuntime.queryInterface(XModel.class, xComponent);
-            XMultiServiceFactory xMultiServiceFactory =
-                    (XMultiServiceFactory) UnoRuntime.queryInterface(
-                    XMultiServiceFactory.class, xComponent);
+            XMultiServiceFactory xMultiServiceFactory
+                    = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                            XMultiServiceFactory.class, xComponent);
             XWindow xWindow = getCurrentWindow(xMultiServiceFactory, xModel);
             XWindowPeer xWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, xWindow);
             xUnitConversion = UnoRuntime.queryInterface(XUnitConversion.class, xWindowPeer);
