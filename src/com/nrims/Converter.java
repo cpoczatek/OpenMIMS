@@ -221,7 +221,7 @@ public class Converter extends SwingWorker<Void, Void> {
 
     public void setFiles(ArrayList<String> filesArrayList, boolean onlyReadHeader) {
         files = filesArrayList;
-        this.onlyReadHeader = onlyReadHeader;    
+        this.onlyReadHeader = onlyReadHeader;
     }
 
     public void proceed(boolean proceed) {
@@ -290,6 +290,7 @@ public class Converter extends SwingWorker<Void, Void> {
         this.rgbMaxes = maxRGBs;
         this.rgbMins = minRGBs;
     }
+
     //DJ
     // To be called when we're using a config file to retrieve the
     // specs from.
@@ -298,6 +299,7 @@ public class Converter extends SwingWorker<Void, Void> {
         this.isForHTMLManager = true;
         configSpecs = true;
     }
+
     // DJ
     // to be mainly called from a script
     public String getPngsDirectoryPath() {
@@ -405,8 +407,8 @@ public class Converter extends SwingWorker<Void, Void> {
             // No single common path element. This most
             // likely indicates differing drive letters, like C: and D:.
             // These paths cannot be relativized.
-            throw new PathResolutionException("No common path element found for '" + normalizedTargetPath + "' and '" + normalizedBasePath
-                    + "'");
+            throw new PathResolutionException("No common path element found for '" + normalizedTargetPath
+                    + "' and '" + normalizedBasePath + "'");
         }
 
         // The number of directories we have to backtrack depends on whether the base is a file or a dir
@@ -563,7 +565,8 @@ public class Converter extends SwingWorker<Void, Void> {
                     upperThresh = (new Integer(r_threshUppers[counter])).intValue();
                     ratioProps.setNumThreshold(upperThresh);
                 } catch (NumberFormatException nfe) {
-                    System.out.println("WARNING: Bad format for upper threshold: " + r_threshUppers[counter] + ". Auto thresholding");
+                    System.out.println("WARNING: Bad format for upper threshold: "
+                            + r_threshUppers[counter] + ". Auto thresholding");
                 }
             }
 
@@ -572,7 +575,8 @@ public class Converter extends SwingWorker<Void, Void> {
                     lowerThresh = (new Integer(r_threshLowers[counter])).intValue();
                     ratioProps.setDenThreshold(lowerThresh);
                 } catch (NumberFormatException nfe) {
-                    System.out.println("WARNING: Bad format for lower threshold: " + r_threshLowers[counter] + ". Auto thresholding");
+                    System.out.println("WARNING: Bad format for lower threshold: "
+                            + r_threshLowers[counter] + ". Auto thresholding");
                 }
             }
 
@@ -582,7 +586,8 @@ public class Converter extends SwingWorker<Void, Void> {
                     ratioProps.setRatioScaleFactor(rfactor);
                 } catch (NumberFormatException nfe) {
                     ratioProps.setRatioScaleFactor(SCALE_FACTOR_DEFAULT);
-                    System.out.println("WARNING: Bad format for scale factor: " + r_scaleFactors[counter] + ". Auto setting");
+                    System.out.println("WARNING: Bad format for scale factor: "
+                            + r_scaleFactors[counter] + ". Auto setting");
                 }
             }
 
@@ -645,7 +650,8 @@ public class Converter extends SwingWorker<Void, Void> {
                     upperThresh = (new Double(threshUppers[counter])).doubleValue();
                     hsiprops.setMaxRatio(upperThresh);
                 } catch (NumberFormatException nfe) {
-                    System.out.println("WARNING: Bad format for upper threshold: " + threshUppers[counter] + ". Auto thresholding");
+                    System.out.println("WARNING: Bad format for upper threshold: "
+                            + threshUppers[counter] + ". Auto thresholding");
                 }
             }
 
@@ -654,7 +660,8 @@ public class Converter extends SwingWorker<Void, Void> {
                     lowerThresh = (new Double(threshLowers[counter])).doubleValue();
                     hsiprops.setMinRatio(lowerThresh);
                 } catch (NumberFormatException nfe) {
-                    System.out.println("WARNING: Bad format for lower threshold: " + threshLowers[counter] + ". Auto thresholding");
+                    System.out.println("WARNING: Bad format for lower threshold: "
+                            + threshLowers[counter] + ". Auto thresholding");
                 }
             }
 
@@ -761,7 +768,7 @@ public class Converter extends SwingWorker<Void, Void> {
             System.out.println("Opening... " + fileString);
             opened = ui.openFile(file, onlyReadHeader);
             if (!opened) {
-                 System.out.println("Converter:openFile:  call to ui.openFile failed. " + fileString);
+                System.out.println("Converter:openFile:  call to ui.openFile failed. " + fileString);
             }
         } else {
             System.out.println("Can not find, or can not read " + fileString);
@@ -854,7 +861,7 @@ public class Converter extends SwingWorker<Void, Void> {
 
     @Override
     public Void doInBackground() {
-        
+
         int percentComplete = 0;
         setProgress(percentComplete);
         boolean opened = false;
@@ -872,8 +879,6 @@ public class Converter extends SwingWorker<Void, Void> {
         //for (String fileString : files) {
 
         // System.out.println("Number of files to print is: " + files.size());
-        
-        
         for (int index = 0; index < files.size(); index++) {
             if (!proceed) {
                 break;
@@ -881,7 +886,7 @@ public class Converter extends SwingWorker<Void, Void> {
 
             // Open File.
             //boolean opened = openFile(files.get(index));
-            opened = openFile(files.get(index));                      
+            opened = openFile(files.get(index));
             if (!opened) {
                 System.out.println("Failed to open " + files.get(index));
                 continue;
@@ -940,7 +945,8 @@ public class Converter extends SwingWorker<Void, Void> {
                 String base = this.htmlFile; //.substring(0, this.htmlFile.lastIndexOf("/")+1);
 
                 if (files.get(index).endsWith(".im")) {
-                    nrrdFileWholePathAndName = nrrdFileWholePathAndName.substring(0, nrrdFileWholePathAndName.length() - 3) + ".nrrd";
+                    nrrdFileWholePathAndName = nrrdFileWholePathAndName.substring(0,
+                            nrrdFileWholePathAndName.length() - 3) + ".nrrd";
                     // now, we make the nrrd file path relative to the html file path
                     // in order to solve the issue of making selecting multiple im files from multiple locations.
                     //nrrdFileWholePathAndName = new File(base).toURI().relativize(new File(nrrdFileWholePathAndName).toURI()).getPath();
@@ -1045,7 +1051,8 @@ public class Converter extends SwingWorker<Void, Void> {
                         extension_length = 5;
                     }
 
-                    String imOrNrrdFileName_No_Extention = imOrNrrdFileName.substring(0, imOrNrrdFileName.length() - extension_length);
+                    String imOrNrrdFileName_No_Extention = imOrNrrdFileName.substring(0,
+                            imOrNrrdFileName.length() - extension_length);
 
                     if (pngfilename.contains(imOrNrrdFileName_No_Extention)) {
 
@@ -1131,15 +1138,13 @@ public class Converter extends SwingWorker<Void, Void> {
                 for (int m = 0; m < pngFileNamesArray.length; m++) {
                     if (pngFileNamesArray[m].contains("hsi") == true) {
                         pngFileNames_sorted.add(pngFileNamesArray[m]);
+                    } else if (pngFileNamesArray[m].contains("_m0_") == false) {
+                        png_masses.add(pngFileNamesArray[m]);
                     } else {
-                        if (pngFileNamesArray[m].contains("_m0_") == false) {
-                            png_masses.add(pngFileNamesArray[m]);
-                        } else {
-                            the_zero_mass_image = pngFileNamesArray[m];
-                        }
+                        the_zero_mass_image = pngFileNamesArray[m];
                     }
-
                 }
+                
                 // now, we add the png_hsis to the end.
                 pngFileNames_sorted.addAll(png_masses);
                 // now, we add the zero mass if it exists
@@ -1166,11 +1171,11 @@ public class Converter extends SwingWorker<Void, Void> {
                      */
 
                     tableString += "<TD ALIGN=\"CENTER\">" + "\n";
-                    tableString += " <img src=\"data:image/png;base64," + "\n" + 
-                            pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k)) + 
-                            "\n" + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
+                    tableString += " <img src=\"data:image/png;base64," + "\n"
+                            + pngFileName_to_encoding_MAP.get(pngFileNames_sorted.get(k))
+                            + "\n" + "\" alt=\"" + pngFileNames_sorted.get(k) + "\">";
                     tableString += "<BR>";
-                    tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m") + 1, 
+                    tableString += pngFileNames_sorted.get(k).substring(pngFileNames_sorted.get(k).indexOf("_m") + 1,
                             pngFileNames_sorted.get(k).length() - 4);
                     tableString += "<BR>"; // "<BR>&nbsp";
                     tableString += "</TD>";
@@ -1185,14 +1190,14 @@ public class Converter extends SwingWorker<Void, Void> {
             } //============================================================
             String names[] = ui.getOpener().getMassNames();
             String symbols[] = ui.getOpener().getMassSymbols();
-            
+
             // This is ugly, for lots of reasons, but for now, create an ArrayList to hold the file open status stuff.
             int arraySize = names.length;
             ArrayList<String> namesList = new ArrayList<String>();
             ArrayList<String> symbolsList = new ArrayList<String>();
             ArrayList<String> seriesList = new ArrayList<String>();
 
-            for (int i = 0; i< arraySize; i++) {
+            for (int i = 0; i < arraySize; i++) {
                 if (names[i] == null) {
                     break;
                 } else {
@@ -1204,9 +1209,9 @@ public class Converter extends SwingWorker<Void, Void> {
                     String symbol = symbols[i];
                     symbolsList.add(symbol);
                 }
-            }  
-            
-            FileHeaderCheckStatus status = new FileHeaderCheckStatus(ui.getIsHeaderBad(), 
+            }
+
+            FileHeaderCheckStatus status = new FileHeaderCheckStatus(ui.getIsHeaderBad(),
                     ui.getImageHeaderWasFixed(), namesList, symbolsList, seriesList);
             if (!opened) {
                 status.setOpenFailed(true);
@@ -1215,7 +1220,7 @@ public class Converter extends SwingWorker<Void, Void> {
             ui.closeCurrentImage();
             counter++;
         }
-        
+
         if (onlyReadHeader) {
             return null;  // causes the GUI to go away.
         }
@@ -1311,26 +1316,26 @@ public class Converter extends SwingWorker<Void, Void> {
         return null;
     }
 
-     /**
-     * Called when the Converter's SwingWorker finishes its work.  I.e., when all files have been read.
+    /**
+     * Called when the Converter's SwingWorker finishes its work. I.e., when all files have been read.
      */
     public void done() {
-        setProgress(0);                      
+        setProgress(0);
     }
-    
+
     public ArrayList<FileHeaderCheckStatus> getFileOpenStatusList() {
         return fileHeaderCheckStatusList;
     }
-    
+
     public class FileHeaderCheckStatus {
         public boolean wasHeaderBad;
         public boolean wasHeaderFixed;
         public boolean openFailed = false;
-        ArrayList<String>  imageNames = null;
-        ArrayList<String>  imageSymbols = null;
+        ArrayList<String> imageNames = null;
+        ArrayList<String> imageSymbols = null;
         ArrayList<String> series = null;
 
-        public FileHeaderCheckStatus(boolean bad, boolean fixed, ArrayList<String> names, 
+        public FileHeaderCheckStatus(boolean bad, boolean fixed, ArrayList<String> names,
                 ArrayList<String> symbols, ArrayList<String> series) {
             this.wasHeaderBad = bad;
             this.wasHeaderFixed = fixed;
@@ -1342,33 +1347,31 @@ public class Converter extends SwingWorker<Void, Void> {
         public boolean getWasHeaderBad() {
             return wasHeaderBad;
         }
-        
+
         public boolean wasHeaderFixed() {
             return wasHeaderFixed;
         }
-        
+
         public boolean didOpenFail() {
             return openFailed;
         }
-        
+
         public void setOpenFailed(boolean fail) {
             openFailed = true;
         }
-        
+
         public ArrayList<String> getImageNames() {
             return imageNames;
         }
-        
+
         public ArrayList<String> getImageSymbols() {
             return imageSymbols;
         }
-        
+
         public ArrayList<String> getImageSeries() {
             return this.series;
         }
     }
-    
-    
 
     static class PathResolutionException extends RuntimeException {
 
