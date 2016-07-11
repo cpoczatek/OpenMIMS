@@ -386,7 +386,6 @@ public class MimsJTable {
             }
             if (commaSeparatedTags.trim().length() == 0) {
                 commaSeparatedTags = "null";   // DJ: 12/08/2014
-            {
             }
             if (name.trim().length() == 0) {
                 name = "null";
