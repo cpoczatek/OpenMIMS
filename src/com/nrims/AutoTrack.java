@@ -27,31 +27,31 @@ import java.util.ArrayList;
  * Station 17<br>
  * CH-1015 Lausanne VD<br>
  * Switzerland<br>
- *<br>
+ * <br>
  * phone (CET): +41(21)693.51.61<br>
  * fax: +41(21)693.37.01<br>
  * RFC-822: philippe.thevenaz@epfl.ch<br>
  * X-400: /C=ch/A=400net/P=switch/O=epfl/S=thevenaz/G=philippe/<br>
  * URL: http://bigwww.epfl.ch/<br>
- *<br>
+ * <br>
  * This work is based on the following paper:<br>
- *<br>
+ * <br>
  * P. Thevenaz, U.E. Ruttimann, M. Unser<br>
  * A Pyramid Approach to Subpixel Registration Based on Intensity<br>
  * IEEE Transactions on Image Processing<br>
  * vol. 7, no. 1, pp. 27-41, January 1998.<br>
- *<br>
+ * <br>
  * This paper is available on-line at<br>
  * http://bigwww.epfl.ch/publications/thevenaz9801.html<br>
- *<br>
+ * <br>
  * Other relevant on-line publications are available at<br>
  * http://bigwww.epfl.ch/publications/<br>
- *<br>
- *<br>
- *<br>
+ * <br>
+ * <br>
+ * <br>
  * Additional help available at http://bigwww.epfl.ch/thevenaz/stackreg/<br>
  * Ancillary TurboReg_ plugin available at: http://bigwww.epfl.ch/thevenaz/turboreg/<br>
- *<br>
+ * <br>
  * You'll be free to use this software for research purposes, but you<br>
  * should not redistribute it without our consent. In addition, we expect<br>
  * you to include a citation or acknowledgment whenever you present or<br>
@@ -67,6 +67,7 @@ public class AutoTrack implements Runnable {
 
     /**
      * Constructor
+     *
      * @param uiarg user interface object to use
      * @param imp image object to use
      */
@@ -77,6 +78,7 @@ public class AutoTrack implements Runnable {
 
     /**
      * Constructor
+     *
      * @param imp image object to use
      */
     public AutoTrack(ImagePlus imp) {
@@ -85,15 +87,13 @@ public class AutoTrack implements Runnable {
     }
 
     /**
-     * Sets the array of plane numbers from which the
-     * image to be tracked is derived. It is NOT NECESSARY
-     * to set this member variable, it is only used for
-     * display purposes only.
+     * Sets the array of plane numbers from which the image to be tracked is derived. It is NOT NECESSARY to set this
+     * member variable, it is only used for display purposes only.
      *
      * @param list the list of plane numbers.
      */
     public void setIncludeList(ArrayList<Integer> list) {
-       this.includeList = list;
+        this.includeList = list;
     }
 
     /**
@@ -101,8 +101,9 @@ public class AutoTrack implements Runnable {
      */
     public void run() {
         double[][] trans = track(this.imp);
-        if (ui != null)
-           ui.getmimsStackEditing().notifyComplete(trans);
+        if (ui != null) {
+            ui.getmimsStackEditing().notifyComplete(trans);
+        }
     }
 
     public double[][] track(ImagePlus imp) {
@@ -126,7 +127,6 @@ public class AutoTrack implements Runnable {
             {0.0, 1.0, 0.0},
             {0.0, 0.0, 1.0}
         };
-
 
         double[][] anchorPoints = null;
         switch (transformation) {
@@ -156,21 +156,21 @@ public class AutoTrack implements Runnable {
             case ImagePlus.GRAY8: {
                 target = new ImagePlus(targetname,
                         new ByteProcessor(width, height, new byte[width * height],
-                        imp.getProcessor().getColorModel()));
+                                imp.getProcessor().getColorModel()));
                 target.getProcessor().copyBits(imp.getProcessor(), 0, 0, Blitter.COPY);
                 break;
             }
             case ImagePlus.GRAY16: {
                 target = new ImagePlus(targetname,
                         new ShortProcessor(width, height, new short[width * height],
-                        imp.getProcessor().getColorModel()));
+                                imp.getProcessor().getColorModel()));
                 target.getProcessor().copyBits(imp.getProcessor(), 0, 0, Blitter.COPY);
                 break;
             }
             case ImagePlus.GRAY32: {
                 target = new ImagePlus(targetname,
                         new FloatProcessor(width, height, new float[width * height],
-                        imp.getProcessor().getColorModel()));
+                                imp.getProcessor().getColorModel()));
                 target.getProcessor().copyBits(imp.getProcessor(), 0, 0, Blitter.COPY);
                 break;
             }
@@ -183,7 +183,6 @@ public class AutoTrack implements Runnable {
         int planesTotal = imp.getNSlices();
         int planesDone = 0;
         float percent;
-
 
         for (int s = targetSlice - 1; (0 < s); s--) {
             source = registerSlice(source, target, imp, width, height,
@@ -198,8 +197,9 @@ public class AutoTrack implements Runnable {
 
             //System.out.println(percent);
             System.out.println(planesDone);
-            if (ui != null)
-               ui.updateStatus(planesDone + " planes of " + planesTotal + " total...");
+            if (ui != null) {
+                ui.updateStatus(planesDone + " planes of " + planesTotal + " total...");
+            }
         }
         if ((1 < targetSlice) && (targetSlice < imp.getStackSize())) {
             globalTransform[0][0] = 1.0;
@@ -237,7 +237,6 @@ public class AutoTrack implements Runnable {
                 return null;
             }
 
-
             source = registerSlice(source, target, imp, width, height,
                     transformation, globalTransform, anchorPoints, colorWeights, s);
             if (source == null) {
@@ -251,7 +250,6 @@ public class AutoTrack implements Runnable {
             //System.out.println(""+globalTransform[1][0]+" "+globalTransform[1][1]+" "+globalTransform[1][2]);
             //System.out.println(""+globalTransform[2][0]+" "+globalTransform[2][1]+" "+globalTransform[2][2]);
             //--------------------
-
             trans[s - 1][0] = globalTransform[0][2];
             trans[s - 1][1] = globalTransform[1][2];
             //imp.updateAndDraw();
@@ -261,8 +259,8 @@ public class AutoTrack implements Runnable {
             // Display purposes only.
             if (ui == null || ui.getMassImage(0) == null) {
                 //do nothing
-            } else if (includeList.size() >= s && includeList.get(s-1) != null) {
-                ui.getMassImage(0).setSlice(includeList.get(s-1));
+            } else if (includeList.size() >= s && includeList.get(s - 1) != null) {
+                ui.getMassImage(0).setSlice(includeList.get(s - 1));
             } else {
                 ui.getMassImage(0).setSlice(s);
             }
@@ -273,18 +271,17 @@ public class AutoTrack implements Runnable {
         return trans;
 
     } /* end track */
-
-
-    /*....................................................................
+    
+ /*....................................................................
     Private global variables
     ....................................................................*/
 
-    /*------------------------------------------------------------------*/
-    /*....................................................................
+ /*------------------------------------------------------------------*/
+ /*....................................................................
     Private methods
     ....................................................................*/
 
-    /*------------------------------------------------------------------*/
+ /*------------------------------------------------------------------*/
     private void computeStatistics(
             final ImagePlus imp,
             final double[] average,
@@ -368,10 +365,9 @@ public class AutoTrack implements Runnable {
         scatterMatrix[2][1] = scatterMatrix[1][2];
         scatterMatrix[2][0] = scatterMatrix[0][2];
         scatterMatrix[1][0] = scatterMatrix[0][1];
-    } /* computeStatistics */
+    } /* end computeStatistics */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double[] getColorWeightsFromPrincipalComponents(
             final ImagePlus imp) {
         final double[] average = {0.0, 0.0, 0.0};
@@ -390,10 +386,9 @@ public class AutoTrack implements Runnable {
             eigenvector[2] /= weight;
         }
         return (eigenvector);
-    } /* getColorWeightsFromPrincipalComponents */
+    } /* end getColorWeightsFromPrincipalComponents */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double[] getEigenvalues(
             final double[][] scatterMatrix) {
         final double[] a = {
@@ -471,10 +466,9 @@ public class AutoTrack implements Runnable {
             }
         }
         return (RealRoot);
-    } /* end getEigenvalues */
+    }  /* end getEigenvalues */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double[] getEigenvector(
             final double[][] scatterMatrix,
             final double eigenvalue) {
@@ -618,10 +612,9 @@ public class AutoTrack implements Runnable {
             eigenvector[i] /= norm;
         }
         return (eigenvector);
-    } /* getEigenvector */
+    } /* end getEigenvector */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private ImagePlus getGray32(
             final String title,
             final ImagePlus imp,
@@ -661,10 +654,9 @@ public class AutoTrack implements Runnable {
             }
         }
         return (gray32);
-    } /* getGray32 */
+    } /* end getGray32 */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double getLargestAbsoluteEigenvalue(
             final double[] eigenvalue) {
         double best = eigenvalue[0];
@@ -679,17 +671,15 @@ public class AutoTrack implements Runnable {
             }
         }
         return (best);
-    } /* getLargestAbsoluteEigenvalue */
+    } /* end getLargestAbsoluteEigenvalue */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double[] getLuminanceFromCCIR601() {
         double[] weights = {0.299, 0.587, 0.114};
         return (weights);
-    } /* getLuminanceFromCCIR601 */
+    } /* end getLuminanceFromCCIR601 */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double[][] getTransformationMatrix(
             final double[][] fromCoord,
             final double[][] toCoord,
@@ -708,7 +698,7 @@ public class AutoTrack implements Runnable {
             case 1: {
                 final double angle = Math.atan2(fromCoord[2][0] - fromCoord[1][0],
                         fromCoord[2][1] - fromCoord[1][1]) - Math.atan2(toCoord[2][0] - toCoord[1][0],
-                        toCoord[2][1] - toCoord[1][1]);
+                                toCoord[2][1] - toCoord[1][1]);
                 final double c = Math.cos(angle);
                 final double s = Math.sin(angle);
                 matrix[0][0] = c;
@@ -795,8 +785,7 @@ public class AutoTrack implements Runnable {
         return (matrix);
     } /* end getTransformationMatrix */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private void invertGauss(
             final double[][] matrix) {
         final int n = matrix.length;
@@ -870,8 +859,7 @@ public class AutoTrack implements Runnable {
         }
     } /* end invertGauss */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private double[] linearLeastSquares(
             final double[][] A,
             final double[] b) {
@@ -906,10 +894,9 @@ public class AutoTrack implements Runnable {
             }
         }
         return (x);
-    } /* end linearLeastSquares */
+    }  /* end linearLeastSquares */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private void QRdecomposition(
             final double[][] Q,
             final double[][] R) {
@@ -956,8 +943,7 @@ public class AutoTrack implements Runnable {
         }
     } /* end QRdecomposition */
 
-    /*------------------------------------------------------------------*/
-
+ /*------------------------------------------------------------------*/
     private ImagePlus registerSlice(
             ImagePlus source,
             final ImagePlus target,
@@ -1040,10 +1026,10 @@ public class AutoTrack implements Runnable {
                 throw (new ClassNotFoundException());
             }
             target.setProcessor(null, source.getProcessor());
-            method = turboReg.getClass().getMethod("getSourcePoints", (Class[])null);
-            sourcePoints = ((double[][]) method.invoke(turboReg, (Object[])null));
-            method = turboReg.getClass().getMethod("getTargetPoints", (Class[])null);
-            targetPoints = ((double[][]) method.invoke(turboReg, (Object[])null));
+            method = turboReg.getClass().getMethod("getSourcePoints", (Class[]) null);
+            sourcePoints = ((double[][]) method.invoke(turboReg, (Object[]) null));
+            method = turboReg.getClass().getMethod("getTargetPoints", (Class[]) null);
+            targetPoints = ((double[][]) method.invoke(turboReg, (Object[]) null));
             localTransform = getTransformationMatrix(targetPoints, sourcePoints,
                     transformation);
             double[][] rescued = {
@@ -1174,12 +1160,12 @@ public class AutoTrack implements Runnable {
                             return (null);
                         }
                     }
-                    method = turboRegR.getClass().getMethod("getTransformedImage", (Class[])null);
-                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, (Object[])null);
-                    method = turboRegG.getClass().getMethod("getTransformedImage", (Class[])null);
-                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, (Object[])null);
-                    method = turboRegB.getClass().getMethod("getTransformedImage", (Class[])null);
-                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, (Object[])null);
+                    method = turboRegR.getClass().getMethod("getTransformedImage", (Class[]) null);
+                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, (Object[]) null);
+                    method = turboRegG.getClass().getMethod("getTransformedImage", (Class[]) null);
+                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, (Object[]) null);
+                    method = turboRegB.getClass().getMethod("getTransformedImage", (Class[]) null);
+                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, (Object[]) null);
                     transformedSourceR.getStack().deleteLastSlice();
                     transformedSourceG.getStack().deleteLastSlice();
                     transformedSourceB.getStack().deleteLastSlice();
@@ -1316,12 +1302,12 @@ public class AutoTrack implements Runnable {
                             return (null);
                         }
                     }
-                    method = turboRegR.getClass().getMethod("getTransformedImage", (Class<?>[])null);
-                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, (Object[])null);
-                    method = turboRegG.getClass().getMethod("getTransformedImage", (Class<?>[])null);
-                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, (Object[])null);
-                    method = turboRegB.getClass().getMethod("getTransformedImage", (Class<?>[])null);
-                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, (Object[])null);
+                    method = turboRegR.getClass().getMethod("getTransformedImage", (Class<?>[]) null);
+                    transformedSourceR = (ImagePlus) method.invoke(turboRegR, (Object[]) null);
+                    method = turboRegG.getClass().getMethod("getTransformedImage", (Class<?>[]) null);
+                    transformedSourceG = (ImagePlus) method.invoke(turboRegG, (Object[]) null);
+                    method = turboRegB.getClass().getMethod("getTransformedImage", (Class<?>[]) null);
+                    transformedSourceB = (ImagePlus) method.invoke(turboRegB, (Object[]) null);
                     transformedSourceR.getStack().deleteLastSlice();
                     transformedSourceG.getStack().deleteLastSlice();
                     transformedSourceB.getStack().deleteLastSlice();
@@ -1406,8 +1392,8 @@ public class AutoTrack implements Runnable {
                     if (turboReg == null) {
                         throw (new ClassNotFoundException());
                     }
-                    method = turboReg.getClass().getMethod("getTransformedImage", (Class[])null);
-                    ImagePlus transformedSource = (ImagePlus) method.invoke(turboReg, (Object[])null);
+                    method = turboReg.getClass().getMethod("getTransformedImage", (Class[]) null);
+                    ImagePlus transformedSource = (ImagePlus) method.invoke(turboReg, (Object[]) null);
                     transformedSource.getStack().deleteLastSlice();
                     switch (imp.getType()) {
                         case ImagePlus.GRAY8: {
@@ -1453,80 +1439,69 @@ public class AutoTrack implements Runnable {
         }
         return (source);
     } /* end registerSlice */
-
+    
     /**
-     * This method takes an array of doubles[][] (presumably the array generated
-     * by the track() method, but it can work with any array of doubles) and
-     * converts it into a vector of distances, which represent the offset from
-     * the center. For example:
+     * This method takes an array of doubles[][] (presumably the array generated by the track() method, but it can work
+     * with any array of doubles) and converts it into a vector of distances, which represent the offset from the
+     * center. For example:
      *
-     * translations =      offset=
-     * [0.1235 0.2493]     [0.2782]
-     * [2.9173 1.2709]     [3.1821]
-     * [5.8213 3.4180]     [6.7505]
-     * .                   .
-     * .                   .
+     * translations = offset= [0.1235 0.2493] [0.2782] [2.9173 1.2709] [3.1821] [5.8213 3.4180] [6.7505] . . . .
      *
      * @param translations a 2 column array of arbitrary length.
      * @return a vector representing the offsets.
      */
     public static double[] calcOffset(double[][] translations) {
 
-       if (translations == null)
-          return null;
+        if (translations == null) {
+            return null;
+        }
 
-       if (translations.length == 0)
-          return new double[0];
+        if (translations.length == 0) {
+            return new double[0];
+        }
 
-       double[] offsets = new double[translations.length];
-       for (int i=0; i < offsets.length; i++) {
-          offsets[i] = Math.sqrt(Math.pow(translations[i][0],2.0) + Math.pow(translations[i][1],2.0));
-       }
+        double[] offsets = new double[translations.length];
+        for (int i = 0; i < offsets.length; i++) {
+            offsets[i] = Math.sqrt(Math.pow(translations[i][0], 2.0) + Math.pow(translations[i][1], 2.0));
+        }
 
-       return offsets;
+        return offsets;
     }
 
     /**
-     * This method takes a vector of doubles[] and returns the maximum.
-     * For example:
+     * This method takes a vector of doubles[] and returns the maximum. For example:
      *
-     * offset=      maxOffset=
-     * [0.2782]     6.7505
-     * [3.1821]
-     * [6.7505]
-     * .            .
-     * .            .
+     * offset= maxOffset= [0.2782] 6.7505 [3.1821] [6.7505] . . . .
      *
      * @param offsets a vector of doubles of arbitrary length.
      * @return a maximum offset.
      */
     public static double calcMaxOffset(double[] offsets) {
 
-       // Calculate offset array.
-       double max_offset = -1.0;
-       if (offsets == null || offsets.length == 0)
-          return max_offset;
+        // Calculate offset array.
+        double max_offset = -1.0;
+        if (offsets == null || offsets.length == 0) {
+            return max_offset;
+        }
 
-       // Determine the maximum offset.
-       double offset = offsets[0];
-       if (offsets.length > 0) {
-          for (int i = 1; i < offsets.length; i++) {
-             offset = offsets[i];
-             if (offset > max_offset) {
-                max_offset = offset;
-             }
-          }
-       }
+        // Determine the maximum offset.
+        double offset = offsets[0];
+        if (offsets.length > 0) {
+            for (int i = 1; i < offsets.length; i++) {
+                offset = offsets[i];
+                if (offset > max_offset) {
+                    max_offset = offset;
+                }
+            }
+        }
 
-       return max_offset;
+        return max_offset;
     }
 
     /**
-     * This method takes a vector of doubles[] and returns the maximum delta.
-     * For example:
+     * This method takes a vector of doubles[] and returns the maximum delta. For example:
      *
-     * offset=
-     * [1 3 9 13 6 7]
+     * offset= [1 3 9 13 6 7]
      *
      * maxDelta of [1 2 6 4 7 1] = 7
      *
@@ -1535,27 +1510,26 @@ public class AutoTrack implements Runnable {
      */
     public static double calcMaxDelta(double[] offsets) {
 
-       // Calculate offset array.
-       double max_delta = -1.0;
-       if (offsets == null || offsets.length == 0)
-          return max_delta;
+        // Calculate offset array.
+        double max_delta = -1.0;
+        if (offsets == null || offsets.length == 0) {
+            return max_delta;
+        }
 
-       // Determine the maximum offset.
-       double delta = -1.0;
-       if (offsets.length > 0) {
-          for (int i = 1; i < offsets.length; i++) {
-             delta = Math.abs(offsets[i]-offsets[i-1]);
-             if (delta > max_delta) {
-                max_delta = delta;
-             }
-          }
-       }
+        // Determine the maximum offset.
+        double delta = -1.0;
+        if (offsets.length > 0) {
+            for (int i = 1; i < offsets.length; i++) {
+                delta = Math.abs(offsets[i] - offsets[i - 1]);
+                if (delta > max_delta) {
+                    max_delta = delta;
+                }
+            }
+        }
 
-       return max_delta;
+        return max_delta;
     }
 
     private long randnumber;
 // end of class...
 }
-
-
