@@ -8,9 +8,9 @@ import java.util.Hashtable;
  */
 public class SegmentationProperties implements java.io.Serializable {
 
-static final long serialVersionUID = -2057325729625438428L;
+    static final long serialVersionUID = -2057325729625438428L;
 
-    public enum PropertyType{
+    public enum PropertyType {
         BOOLEAN, DOUBLE, INTEGER, STRING
     }
 
@@ -20,7 +20,7 @@ static final long serialVersionUID = -2057325729625438428L;
 //    private Hashtable<String, Object[]> options;
 //    private Hashtable<String, Object[]> model;
 
-    public SegmentationProperties(){
+    public SegmentationProperties() {
         properties = new Hashtable<String, Object>();
 //        types      = new Hashtable<String, PropertyType>();
 //        defaults   = new Hashtable<String, Object>();
@@ -30,15 +30,15 @@ static final long serialVersionUID = -2057325729625438428L;
 //        initDefaults();
     }
 
-    public void setValueOf(String key, Object value){
+    public void setValueOf(String key, Object value) {
         properties.put(key, value);
     }
 
-    public Object getValueOf(String key){
+    public Object getValueOf(String key) {
         return properties.get(key);
     }
 
-/*
+    /*
     private void initDefaults(){
         // TO DO read this from a configuration file
         defaults.put(SegmentationEngine.ENGINE, "lib-SVM");
