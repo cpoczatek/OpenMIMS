@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.nrims.data;
 
 import com.nrims.HSIProcessor;
@@ -12,20 +11,15 @@ import java.io.FileNotFoundException;
 import java.io.File;
 import java.util.Calendar;
 
-
 /**
  *
  * @author cpoczatek
  */
-
-
-
-
 public class exportQVis {
 
     /**
      * Write a QVis RGBA version of an HSI image
-     * 
+     *
      * @param ui
      * @param img HSI image to be converted
      * @param minA min of alpha range in counts
@@ -33,7 +27,7 @@ public class exportQVis {
      * @param output file for .dat header
      */
     public static boolean exportHSI_RGBA(com.nrims.UI ui, com.nrims.MimsPlus img, int minA, int maxA, File outFile) {
-        
+
         if (img.getMimsType() != MimsPlus.HSI_IMAGE) {
             return false;
         }
@@ -45,7 +39,7 @@ public class exportQVis {
         double rScale = 65535.0 / (props.getMaxRatio() - props.getMinRatio());
 
         float[] pix = (float[]) img.internalRatio_filtered.getProcessor().getPixels();
-        
+
         float[] denpix = (float[]) img.internalDenominator.getProcessor().getPixels();
 
         byte[][] plane_rgba = new byte[pix.length][4];
@@ -62,15 +56,13 @@ public class exportQVis {
         java.io.FileOutputStream outg = null;
         java.io.FileOutputStream outb = null;
         java.io.FileOutputStream outa = null;
-        */
+         */
         String dir = outFile.getParent();
-        
 
         String fileprefix = outFile.getName();
         fileprefix = fileprefix.substring(0, fileprefix.lastIndexOf("."));
 
         //File rawFile = new File(outFile.getParentFile(), fileprefix + ".raw");
-
         //stupid rgb max min crap
         //needs to change to not be unitless
         int rgbMax = props.getMaxRGB();
@@ -78,7 +70,7 @@ public class exportQVis {
         if (rgbMax == rgbMin) {
             rgbMax++;
         }
-        
+
         try {
             //write rgba data
             out = new java.io.FileOutputStream(dir + File.separator + fileprefix + ".raw");
@@ -89,7 +81,7 @@ public class exportQVis {
             outg = new java.io.FileOutputStream(dir + java.io.File.separator + "g.raw");
             outb = new java.io.FileOutputStream(dir + java.io.File.separator + "b.raw");
             outa = new java.io.FileOutputStream(dir + java.io.File.separator + "a.raw");
-            */
+             */
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -108,9 +100,9 @@ public class exportQVis {
                 float ratioval = pix[i];
                 //kludge
                 if (ratioval < props.getMinRatio()) {
-                    ratioval = (float)props.getMinRatio();
+                    ratioval = (float) props.getMinRatio();
                 }
-                
+
                 int iratio = 0;
                 if (ratioval > props.getMinRatio()) {
                     if (ratioval < props.getMaxRatio()) {
@@ -134,33 +126,32 @@ public class exportQVis {
                 plane_rgba[i][0] = (byte) (hsitables[0][iratio] * 255);
                 plane_rgba[i][1] = (byte) (hsitables[1][iratio] * 255);
                 plane_rgba[i][2] = (byte) (hsitables[2][iratio] * 255);
-                if((plane_rgba[i][0]>255) || (plane_rgba[i][1]>255) ||(plane_rgba[i][2]>255)) {
-                    System.out.println("Error: "+r+","+g+","+b);
+                if ((plane_rgba[i][0] > 255) || (plane_rgba[i][1] > 255) || (plane_rgba[i][2] > 255)) {
+                    System.out.println("Error: " + r + "," + g + "," + b);
                 }
 
-                
                 int min = minA;
                 int max = maxA;
 
                 double alpha = java.lang.Math.max(denpix[i], min);
                 alpha = java.lang.Math.min(alpha, max);
-                alpha = (alpha-min) / (max - min);
+                alpha = (alpha - min) / (max - min);
 
                 //kludge to do ratio value alpha-ing
                 //the kludge it burns
                 alpha = java.lang.Math.max(ratioval, min);
                 alpha = java.lang.Math.min(alpha, max);
-                alpha = (alpha-min) / (max - min);
+                alpha = (alpha - min) / (max - min);
 
 //WTF is this?
 /*                if(denpix[i] < 5000.0) {
                     alpha = (double)0.0;
                 }
-*/
-                if(j==50) {
+                 */
+                if (j == 50) {
                     System.out.println("pix: " + i + " alpha: " + alpha);
                 }
-                
+
                 plane_rgba[i][3] = (byte) (255 * alpha);
 
             }
@@ -175,7 +166,7 @@ public class exportQVis {
                     outg.write(plane_rgba[i][1]);
                     outb.write(plane_rgba[i][2]);
                     outa.write(plane_rgba[i][3]);
-                    */
+                     */
                 }
                 out.flush();
 
@@ -185,8 +176,7 @@ public class exportQVis {
                 outg.flush();
                 outb.flush();
                 outa.flush();
-                */
-
+                 */
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -202,7 +192,7 @@ public class exportQVis {
             outg.close();
             outb.close();
             outa.close();
-            */
+             */
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -252,7 +242,7 @@ public class exportQVis {
             bw.write("# med_radius: " + ui.getHSIView().getMedianRadius() + "\n");
             bw.write("# window: " + ui.getIsWindow() + "\n");
             bw.write("# window_radius: " + ui.getWindowRange() + "\n");
-            
+
             bw.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -261,6 +251,5 @@ public class exportQVis {
 
         return true;
     }
-
 
 }
