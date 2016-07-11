@@ -35,81 +35,79 @@ import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 
 /**
- * A Mims customized extension of the {@link XYPlot} class.
- * Only a small difference in the draw method, relating to
- * drawing and placement of annotations and crosshairs,
- * separates this class from its parent {@link XYPlot}.
+ * A Mims customized extension of the {@link XYPlot} class. Only a small difference in the draw method, relating to
+ * drawing and placement of annotations and crosshairs, separates this class from its parent {@link XYPlot}.
  */
 public class MimsXYPlot extends XYPlot {
+
     int pixelX;
     int pixelY;
     boolean pixelsSet = false;
     MimsLineProfile lineProfile = null;
     MimsJFreeChart parent;
     Roi[] rois;
-   
-    /** A flag that controls whether or not a label displaying XHair location is displayed. */
+
+    /**
+     * A flag that controls whether or not a label displaying XHair location is displayed.
+     */
     private boolean crosshairLabelVisible;
     XYTextAnnotation xyannot = new XYTextAnnotation("", 0, 0);
     XYTextAnnotation pixelCoords = new XYTextAnnotation("", 0, 0);
-    
-   public MimsXYPlot(XYDataset dataset, ValueAxis domainAxis,
-                     ValueAxis rangeAxis, XYItemRenderer renderer){
-      super(dataset, domainAxis,
-              rangeAxis, renderer);
 
-      this.crosshairLabelVisible = true;
-            this.addAnnotation(pixelCoords);
-      this.addAnnotation(xyannot);
+    public MimsXYPlot(XYDataset dataset, ValueAxis domainAxis,
+            ValueAxis rangeAxis, XYItemRenderer renderer) {
+        super(dataset, domainAxis,
+                rangeAxis, renderer);
 
-   }
+        this.crosshairLabelVisible = true;
+        this.addAnnotation(pixelCoords);
+        this.addAnnotation(xyannot);
 
-   public MimsXYPlot(XYPlot xyplot){
-      super(xyplot.getDataset(), xyplot.getDomainAxis(),
-              xyplot.getRangeAxis(), xyplot.getRenderer());
+    }
 
-      this.crosshairLabelVisible = true;
-      this.addAnnotation(pixelCoords);
-      this.addAnnotation(xyannot);
-      
-   }
-   public void setRois(Roi[] r){
-       rois = r;
-   }
-   public String identifySeries(double x, double y){
-       XYDataset dataset = getDataset();
-       for (int i = 0; i < dataset.getSeriesCount(); i++){
-           for (int j = 0; j < dataset.getItemCount(i); j++){
-               if(dataset.getXValue(i, j) == x && dataset.getYValue(i, j) == y){
-                   return dataset.getSeriesKey(i).toString();
-               }
-           }
-       }
-       return null;
-   }
+    public MimsXYPlot(XYPlot xyplot) {
+        super(xyplot.getDataset(), xyplot.getDomainAxis(),
+                xyplot.getRangeAxis(), xyplot.getRenderer());
 
+        this.crosshairLabelVisible = true;
+        this.addAnnotation(pixelCoords);
+        this.addAnnotation(xyannot);
+
+    }
+
+    public void setRois(Roi[] r) {
+        rois = r;
+    }
+
+    public String identifySeries(double x, double y) {
+        XYDataset dataset = getDataset();
+        for (int i = 0; i < dataset.getSeriesCount(); i++) {
+            for (int j = 0; j < dataset.getItemCount(i); j++) {
+                if (dataset.getXValue(i, j) == x && dataset.getYValue(i, j) == y) {
+                    return dataset.getSeriesKey(i).toString();
+                }
+            }
+        }
+        return null;
+    }
 
     /**
      * Draws the plot within the specified area on a graphics device.
-     * 
-     * This is a copied and modified version of the parent class method.
-     * Could not find another way to change.
-     * See end of method for modifications.
      *
-     * @param g2  the graphics device.
-     * @param area  the plot area (in Java2D space).
-     * @param anchor  an anchor point in Java2D space (<code>null</code>
-     *                permitted).
-     * @param parentState  the state from the parent plot, if there is one
-     *                     (<code>null</code> permitted).
-     * @param info  collects chart drawing information (<code>null</code>
-     *              permitted).
+     * This is a copied and modified version of the parent class method. Could not find another way to change. See end
+     * of method for modifications.
+     *
+     * @param g2 the graphics device.
+     * @param area the plot area (in Java2D space).
+     * @param anchor an anchor point in Java2D space (<code>null</code> permitted).
+     * @param parentState the state from the parent plot, if there is one (<code>null</code> permitted).
+     * @param info collects chart drawing information (<code>null</code> permitted).
      */
-   @Override
+    @Override
     public void draw(Graphics2D g2, Rectangle2D area, Point2D anchor,
             PlotState parentState, PlotRenderingInfo info) {
-       
-       // if the plot area is too small, just return...
+
+        // if the plot area is too small, just return...
         boolean b1 = (area.getWidth() <= MINIMUM_WIDTH_TO_DRAW);
         boolean b2 = (area.getHeight() <= MINIMUM_HEIGHT_TO_DRAW);
         if (b1 || b2) {
@@ -127,15 +125,14 @@ public class MimsXYPlot extends XYPlot {
 
         AxisSpace space = calculateAxisSpace(g2, area);
         Rectangle2D dataArea = space.shrink(area, null);
-         getAxisOffset().trim(dataArea);
+        getAxisOffset().trim(dataArea);
 
-       //Edit:
-       //integerize() is private so we don't have access
-       //dataArea = integerise(dataArea);
-       //if (dataArea.isEmpty()) {
-       //    return;
-       //}
-         
+        //Edit:
+        //integerize() is private so we don't have access
+        //dataArea = integerise(dataArea);
+        //if (dataArea.isEmpty()) {
+        //    return;
+        //}
         createAndAddEntity((Rectangle2D) dataArea.clone(), info, null, null);
         if (info != null) {
             info.setDataArea(dataArea);
@@ -165,8 +162,7 @@ public class MimsXYPlot extends XYPlot {
                 if (orient == PlotOrientation.VERTICAL) {
                     x = domainAxis.java2DToValue(anchor.getX(), dataArea,
                             getDomainAxisEdge());
-                }
-                else {
+                } else {
                     x = domainAxis.java2DToValue(anchor.getY(), dataArea,
                             getDomainAxisEdge());
                 }
@@ -178,8 +174,7 @@ public class MimsXYPlot extends XYPlot {
                 if (orient == PlotOrientation.VERTICAL) {
                     y = rangeAxis.java2DToValue(anchor.getY(), dataArea,
                             getRangeAxisEdge());
-                }
-                else {
+                } else {
                     y = rangeAxis.java2DToValue(anchor.getX(), dataArea,
                             getRangeAxisEdge());
                 }
@@ -226,12 +221,11 @@ public class MimsXYPlot extends XYPlot {
             drawZeroRangeBaseline(g2, dataArea);
         }
 
-        
         Graphics2D savedG2 = g2;
         BufferedImage dataImage = null;
-       if (getShadowGenerator() != null) {
+        if (getShadowGenerator() != null) {
             dataImage = new BufferedImage((int) dataArea.getWidth(),
-                    (int)dataArea.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    (int) dataArea.getHeight(), BufferedImage.TYPE_INT_ARGB);
             g2 = dataImage.createGraphics();
             g2.translate(-dataArea.getX(), -dataArea.getY());
             g2.setRenderingHints(savedG2.getRenderingHints());
@@ -244,7 +238,7 @@ public class MimsXYPlot extends XYPlot {
         for (int i = 0; i < getRendererCount(); i++) {
             drawRangeMarkers(g2, dataArea, i, Layer.BACKGROUND);
         }
-        
+
         // now draw annotations and render data items...
         boolean foundData = false;
         DatasetRenderingOrder order = getDatasetRenderingOrder();
@@ -265,7 +259,7 @@ public class MimsXYPlot extends XYPlot {
             // render data items...
             for (int i = 0; i < getDatasetCount(); i++) {
                 foundData = render(g2, dataArea, i, info, crosshairState)
-                    || foundData;
+                        || foundData;
             }
 
             // draw foreground annotations
@@ -279,8 +273,7 @@ public class MimsXYPlot extends XYPlot {
                 }
             }
 
-        }
-        else if (order == DatasetRenderingOrder.REVERSE) {
+        } else if (order == DatasetRenderingOrder.REVERSE) {
 
             // draw background annotations
             int rendererCount = getRendererCount();
@@ -299,7 +292,7 @@ public class MimsXYPlot extends XYPlot {
 
             for (int i = getDatasetCount() - 1; i >= 0; i--) {
                 foundData = render(g2, dataArea, i, info, crosshairState)
-                    || foundData;
+                        || foundData;
             }
 
             // draw foreground annotations
@@ -319,15 +312,20 @@ public class MimsXYPlot extends XYPlot {
         }
 
         // draw domain crosshair if required...
+        int index = crosshairState.getDatasetIndex();
+
         int xAxisIndex = crosshairState.getDomainAxisIndex();
+        // JfreeChairt JavaDocs say "deprecated As of version 1.0.11, the domain axis should be determined
+        //   using the dataset index.  ""  Okay, let's try:
+
+        System.out.println("index = " + index + "   xAxisIndex= " + xAxisIndex);
         ValueAxis xAxis = getDomainAxis(xAxisIndex);
         RectangleEdge xAxisEdge = getRangeAxisEdge(xAxisIndex);
         if (!isDomainCrosshairLockedOnData() && anchor != null) {
             double xx;
             if (orient == PlotOrientation.VERTICAL) {
                 xx = xAxis.java2DToValue(anchor.getX(), dataArea, xAxisEdge);
-            }
-            else {
+            } else {
                 xx = xAxis.java2DToValue(anchor.getY(), dataArea, xAxisEdge);
             }
             crosshairState.setCrosshairX(xx);
@@ -371,110 +369,113 @@ public class MimsXYPlot extends XYPlot {
         for (int i = 0; i < getRendererCount(); i++) {
             drawRangeMarkers(g2, dataArea, i, Layer.FOREGROUND);
         }
-        
+
         if (getShadowGenerator() != null) {
             BufferedImage shadowImage
                     = getShadowGenerator().createDropShadow(dataImage);
             g2 = savedG2;
-            g2.drawImage(shadowImage, (int) dataArea.getX() 
+            g2.drawImage(shadowImage, (int) dataArea.getX()
                     + getShadowGenerator().calculateOffsetX(),
-                    (int) dataArea.getY() 
+                    (int) dataArea.getY()
                     + getShadowGenerator().calculateOffsetY(), null);
             g2.drawImage(dataImage, (int) dataArea.getX(),
                     (int) dataArea.getY(), null);
         }
-        
+
         //Added code:
         //get the correct crosshair position, and change label
         //without firing an event that lead to another call to draw()
         //which is bad/recursive
         double aX = getDomainCrosshairValue();
         double aY = getRangeCrosshairValue();
- //       System.out.println("after x: " + aX + "  y: " + aY);
-        
+        //       System.out.println("after x: " + aX + "  y: " + aY);
+
         removeAnnotation(xyannot, false);
         removeAnnotation(pixelCoords, false);
-        setCrosshairLabel(aX,aY);
+        setCrosshairLabel(aX, aY);
         addAnnotation(xyannot, false);
         addAnnotation(pixelCoords, false);
         drawAnnotations(g2, dataArea, info);
         //end added code
-        
+
         g2.setClip(originalClip);
         g2.setComposite(originalComposite);
 
         drawOutline(g2, dataArea);
 
     }
-   /**
-    * Set the line profile this XYPlot corresponds to.
-    * Needed for drawing the point on a MimsPlus which corresponds to the current crosshair
-    * @param profile 
-    */
-   public void setLineProfile(MimsLineProfile profile){
-       lineProfile = profile;
-   }
-   /**
-    * Set the JFreeChart this XYPlot corresponds to.
-    * Needed for drawing the point on a MimsPlus which corresponds to the current crosshair
-    * @param chart 
-    */
-   public void setParent(MimsJFreeChart chart){
-       parent = chart;
-   }
-           
-   //Set label
-   public void setCrosshairLabel(double x, double y) {
- //      System.out.println("MimsXYPlot.setCrosshairLabel() called");
-      if (isDomainCrosshairVisible() && isRangeCrosshairVisible() && this.crosshairLabelVisible) {
-         double xmax = getDomainAxis().getUpperBound();
-         double ymax = getRangeAxis().getUpperBound();
-        	DecimalFormat twoDForm = new DecimalFormat("#.##");
-         String xhairlabel = "x = " + Double.valueOf(twoDForm.format(x)) + ", y = " + Double.valueOf(twoDForm.format(y));
-         xyannot.setText(xhairlabel);
-         xyannot.setX(xmax);
-         xyannot.setY(ymax);
-         xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);
-         //draw the point on a MimsPlus which corresponds to the crosshair
-         int[] coords;
-          if (lineProfile != null) {
-              coords = lineProfile.addToOverlay();
 
-          } else {
-              coords = parent.addToOverlay(identifySeries(x, y), x, y);
-          }
-          if (coords != null) {
-              pixelX = coords[0];
-              pixelY = coords[1];
-              pixelsSet = true;
-              xhairlabel += "   pX = " + pixelX + ", pY = " + pixelY;
-              xyannot.setText(xhairlabel);
-          }
-      } else {
-         xyannot.setText("");
-      }
-      
-   }
-   //Set label
-   public void setPixelCoords(int x, int y) {
-                double xmax = getDomainAxis().getUpperBound();
-         double ymax = getRangeAxis().getUpperBound();
+    /**
+     * Set the line profile this XYPlot corresponds to. Needed for drawing the point on a MimsPlus which corresponds to
+     * the current crosshair
+     *
+     * @param profile
+     */
+    public void setLineProfile(MimsLineProfile profile) {
+        lineProfile = profile;
+    }
 
+    /**
+     * Set the JFreeChart this XYPlot corresponds to. Needed for drawing the point on a MimsPlus which corresponds to
+     * the current crosshair
+     *
+     * @param chart
+     */
+    public void setParent(MimsJFreeChart chart) {
+        parent = chart;
+    }
 
-         
-   }
+    //Set label
+    public void setCrosshairLabel(double x, double y) {
+        //      System.out.println("MimsXYPlot.setCrosshairLabel() called");
+        if (isDomainCrosshairVisible() && isRangeCrosshairVisible() && this.crosshairLabelVisible) {
+            double xmax = getDomainAxis().getUpperBound();
+            double ymax = getRangeAxis().getUpperBound();
+            DecimalFormat twoDForm = new DecimalFormat("#.##");
+            String xhairlabel = "x = " + Double.valueOf(twoDForm.format(x)) + ", y = " + Double.valueOf(twoDForm.format(y));
+            xyannot.setText(xhairlabel);
+            xyannot.setX(xmax);
+            xyannot.setY(ymax);
+            xyannot.setTextAnchor(TextAnchor.TOP_RIGHT);
+            //draw the point on a MimsPlus which corresponds to the crosshair
+            int[] coords;
+            if (lineProfile != null) {
+                coords = lineProfile.addToOverlay();
 
-   public void showXHairLabel(boolean visible) {
-      this.crosshairLabelVisible = visible;
-      //setCrosshairLabel();
-   }
+            } else {
+                coords = parent.addToOverlay(identifySeries(x, y), x, y);
+            }
+            if (coords != null) {
+                pixelX = coords[0];
+                pixelY = coords[1];
+                pixelsSet = true;
+                xhairlabel += "   pX = " + pixelX + ", pY = " + pixelY;
+                xyannot.setText(xhairlabel);
+            }
+        } else {
+            xyannot.setText("");
+        }
 
-   public boolean isCrosshairLabelVisible() {
-       return crosshairLabelVisible;
-   }
-   
-   public XYTextAnnotation getCrossHairAnnotation() {
-       return xyannot;
-   }
+    }
+    //Set label
+
+    public void setPixelCoords(int x, int y) {
+        double xmax = getDomainAxis().getUpperBound();
+        double ymax = getRangeAxis().getUpperBound();
+
+    }
+
+    public void showXHairLabel(boolean visible) {
+        this.crosshairLabelVisible = visible;
+        //setCrosshairLabel();
+    }
+
+    public boolean isCrosshairLabelVisible() {
+        return crosshairLabelVisible;
+    }
+
+    public XYTextAnnotation getCrossHairAnnotation() {
+        return xyannot;
+    }
 
 }
