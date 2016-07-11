@@ -16,13 +16,9 @@ public class warp {
          * sort of working yeast shifting
          * hard coded nonsense, don't expect this to work
          */
-
-
         ImagePlus seg = WindowManager.getImage("m26_med3_75-1200.tif");
         System.out.println("shift image: " + seg.getTitle());
         ij.process.ByteProcessor segproc = (ij.process.ByteProcessor) seg.getProcessor();
-
-
 
         int width = ui.getMassImage(0).getProcessor().getWidth();
         int height = ui.getMassImage(0).getProcessor().getHeight();
@@ -62,21 +58,17 @@ public class warp {
         shift.show();
 
         //if(true) return;
-
         //create new stack for shifted images
         //only 1 image this.getOpenMassImages().length
         ImageStack[] stack = new ImageStack[1];
 
         //for(int i = 0; i<stack.length; i++){ stack[i] = new ImageStack(width, height); }
-
         //fill stacks with empty planes to the correct length
         //for (int mindex = 0; mindex < stack.length; mindex++) {
         //  for (int sindex = 1; sindex <= depth; sindex++) {
         //    stack[mindex].addSlice("", new ShortProcessor(width, height));
         //}
         //}
-
-
         ShortProcessor proc;
         for (int mindex = 0; mindex < ui.getOpenMassImages().length; mindex++) {
 
@@ -129,8 +121,6 @@ public class warp {
 
             //ImagePlus tempimg =  new ImagePlus("m-"+mindex, stack[mindex]);
             //ij
-
-
             //create images and show
             ImagePlus img = new ImagePlus("m-" + mindex, stack[0]);
 
@@ -142,11 +132,9 @@ public class warp {
             img = null;
             stack[0] = null;
 
-
         }//mass
 
         //end of yeast shift
-
     }
 
     //
@@ -174,42 +162,45 @@ public class warp {
          * when using about data volumes!
          */
 
-        /*
+ /*
          * Generate shift values from m12 mask...
-         */ 
+         */
         float[][] movepixels = new float[256][256];
         for (int p = 0; p < maskImage.getStackSize(); p++) {
-            maskImage.setSlice(p+1);
+            maskImage.setSlice(p + 1);
             maskproc = (ByteProcessor) maskImage.getProcessor();
-            
+
             for (int x = 0; x < width; x++) {
                 int count = 0;
                 boolean tripped = false;
                 for (int y = 0; y < height; y++) {
                     count++;
                     float pix = maskproc.getPixelValue(x, y);
-                    if(pix>0) {
+                    if (pix > 0) {
                         tripped = true;
                     }
-                    if(pix==0 && tripped) {
+                    if (pix == 0 && tripped) {
                         break;
                     }
                 }
-                if(!tripped) {count = 0;}
+                if (!tripped) {
+                    count = 0;
+                }
                 movepixels[x][p] = count;
             }
         }
-        
+
         ImagePlus mask = new ImagePlus("mask", new FloatProcessor(movepixels));
         mask.show();
-        if(true) {return;}
-        
-        
+        if (true) {
+            return;
+        }
+
         int mwidth = ui.getMassImage(0).getProcessor().getWidth();
         int mheight = ui.getMassImage(0).getProcessor().getHeight();
         int mdepth = ui.getMassImage(0).getStackSize();
         float[][] pixels = new float[mwidth][mheight];
-        float scalefactor = 10/10; //mheight / 130;
+        float scalefactor = 10 / 10; //mheight / 130;
         int zmax = 130; //mheight;
         float afmshift = (float) 115.0;
 
@@ -242,7 +233,7 @@ public class warp {
                     //get z shift and scale
                     int shift;
 
-                    shift = zmax - (int)movepixels[x][y - 1];
+                    shift = zmax - (int) movepixels[x][y - 1];
 
                     if (shift < minshift) {
                         minshift = shift;
@@ -268,7 +259,6 @@ public class warp {
                         }
 
                     } //z loop
-
 
                 } //x loop
 
