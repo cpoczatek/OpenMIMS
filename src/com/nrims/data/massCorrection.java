@@ -21,10 +21,11 @@ public class massCorrection {
 
     private com.nrims.UI ui;
     static final float dt = 44 * (float) Math.pow(10, -9);
-    static final float csc = (float)((1/1.6)*Math.pow(10, 7));
+    static final float csc = (float) ((1 / 1.6) * Math.pow(10, 7));
 
     /**
      * Generic constructor
+     *
      * @param ui
      */
     public massCorrection(com.nrims.UI ui) {
@@ -32,9 +33,9 @@ public class massCorrection {
     }
 
     /**
-     * Performs deadtime correction on all mass images passed using dwelltime
-     * read from file header.
-     * WARNING: THIS CHANGES DATA.
+     * Performs deadtime correction on all mass images passed using dwelltime read from file header. WARNING: THIS
+     * CHANGES DATA.
+     *
      * @param massimgs
      * @param dwelltime
      */
@@ -64,11 +65,11 @@ public class massCorrection {
             }
         }
 
-
     }
 
     /**
      * Equation for dt corrected counts of a given pixel.
+     *
      * @param counts
      * @param dwelltime
      * @return
@@ -81,8 +82,8 @@ public class massCorrection {
     }
 
     /**
-     * Perform QSA correction.  Forces float image conversion and dt correction
-     * first.
+     * Perform QSA correction. Forces float image conversion and dt correction first.
+     *
      * @param massimgs
      * @param beta
      * @param dwelltime
@@ -94,8 +95,9 @@ public class massCorrection {
         }
 
         //Do dt correction
-        if (!ui.getOpener().isDTCorrected())
-           this.performDeadTimeCorr(massimgs, dwelltime);
+        if (!ui.getOpener().isDTCorrected()) {
+            this.performDeadTimeCorr(massimgs, dwelltime);
+        }
 
         int nplanes = massimgs[0].getNSlices();
         int nmasses = massimgs.length;
@@ -120,6 +122,7 @@ public class massCorrection {
 
     /**
      * QSA correct individual dt corrected pixel
+     *
      * @param dtcounts
      * @param beta
      * @param dwelltime
@@ -133,18 +136,20 @@ public class massCorrection {
 
     /**
      * Correct the ion yield based on primary beam current
+     *
      * @param dtcounts
      * @param dwelltime
      * @param FCObj
      * @return
      */
     public static float yieldCorr(float dtcounts, float dwelltime, float FCObj) {
-        float yieldcorr = yieldExperimental(dtcounts, dwelltime, FCObj) / (1 - (float)(0.5 * yieldExperimental(dtcounts, dwelltime, FCObj)));
+        float yieldcorr = yieldExperimental(dtcounts, dwelltime, FCObj) / (1 - (float) (0.5 * yieldExperimental(dtcounts, dwelltime, FCObj)));
         return yieldcorr;
     }
 
     /**
      * Return experimental ion yield
+     *
      * @param dtcounts
      * @param dwelltime
      * @param FCObj
@@ -157,17 +162,19 @@ public class massCorrection {
 
     /**
      * Return scaled Cs number based on primary beam current
+     *
      * @param dwelltime
      * @param FCobj
      * @return
      */
     public static float CsNumber(float dwelltime, float FCobj) {
-        float csn =  (dwelltime * FCobj * csc);
+        float csn = (dwelltime * FCobj * csc);
         return csn;
     }
 
     /**
      * Checks if -all- mass images are float images.
+     *
      * @param massimgs
      * @return
      */
@@ -182,8 +189,8 @@ public class massCorrection {
     }
 
     /**
-     * Forces the conversion of passed mass images to 32bit.
-     * Needed to avoid loss of precision before doing corrections.
+     * Forces the conversion of passed mass images to 32bit. Needed to avoid loss of precision before doing corrections.
+     *
      * @param massimgs
      */
     public void forceFloatImages(com.nrims.MimsPlus[] massimgs) {
@@ -194,7 +201,6 @@ public class massCorrection {
         int height = massimgs[0].getHeight();
 
         // Set up the stacks.
-
         ImageStack[] is = new ImageStack[nmasses];
         for (int mindex = 0; mindex < nmasses; mindex++) {
             ImageStack iss = new ImageStack(width, height);
