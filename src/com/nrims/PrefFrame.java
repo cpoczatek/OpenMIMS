@@ -4,19 +4,14 @@ import ij.IJ;
 import ij.Prefs;
 
 /**
- * This class creates a user preferences interface. It
- * opens as a frame and allows user to enter parameters
- * and settings that control the applications behavior.
- * It is built upon the ImageJ Preferences class.
- * These settings are stored in the ImageJ preferences
- * file unually located in ~HOME_DIR/.imagej/IJ_Prefs.txt.
- * All Open_Mims settings are preceded with the "openmims."
- * string.
+ * This class creates a user preferences interface. It opens as a frame and allows user to enter parameters and settings
+ * that control the applications behavior. It is built upon the ImageJ Preferences class. These settings are stored in
+ * the ImageJ preferences file unually located in ~HOME_DIR/.imagej/IJ_Prefs.txt. All Open_Mims settings are preceded
+ * with the "openmims." string.
  *
- * @author  cpoczatek
+ * @author cpoczatek
  */
 public class PrefFrame extends PlugInJFrame {
-
 
     boolean includeHSI = true;
     boolean includeSum = true;
@@ -35,13 +30,15 @@ public class PrefFrame extends PlugInJFrame {
     int tileY = 0;
     int autoSaveInterval = 120;
     String formatString = "M[S]:F";
-    
+
     //DJ: 10/24/2014
     String myNotesPath = "";
 
     final String PREFS_KEY = "openmims.";
 
-    /** Instantiates the class and creates the frame.*/
+    /**
+     * Instantiates the class and creates the frame.
+     */
     public PrefFrame(UI ui) {
         super("Preferences");
         this.ui = ui;
@@ -259,12 +256,16 @@ public class PrefFrame extends PlugInJFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-/** Action method for the "save" button.*/
+    /**
+     * Action method for the "save" button.
+     */
 private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
     savePreferences();
 }//GEN-LAST:event_jButton2ActionPerformed
 
-/** Action method for the "cancel" button.*/
+    /**
+     * Action method for the "cancel" button.
+     */
 private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
     close();
 }//GEN-LAST:event_jButton1ActionPerformed
@@ -285,12 +286,14 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         this.tileYTextField.setText(new Integer(tileY).toString());
         this.AutoSaveIntervalTextField.setText(new Integer(autoSaveInterval).toString());
         this.formatStringTextField.setText(formatString);
-        
+
         //DJ: 10/24/2014
         this.myNotes_jTextField1.setText(myNotesPath);
     }
 
-    /** Reads the preferences and sets member variables accordingly.*/
+    /**
+     * Reads the preferences and sets member variables accordingly.
+     */
     private void readPreferences() {
         includeHSI = (boolean) Prefs.get(PREFS_KEY + "includeHSI", includeHSI);
         includeSum = (boolean) Prefs.get(PREFS_KEY + "includeSum", includeSum);
@@ -303,16 +306,18 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         background = (float) Prefs.get(PREFS_KEY + "background", background);
         numerators = Prefs.get(PREFS_KEY + "numerators", numerators);
         denominators = Prefs.get(PREFS_KEY + "denominators", denominators);
-        numDecimalPlaces = (int)Prefs.get(PREFS_KEY + "numDecimalPlaces", numDecimalPlaces);
-        tileY = (int)Prefs.get(PREFS_KEY + "tileY", tileY);
-        autoSaveInterval = (int)Prefs.get(PREFS_KEY + "autoSaveInterval", autoSaveInterval);
+        numDecimalPlaces = (int) Prefs.get(PREFS_KEY + "numDecimalPlaces", numDecimalPlaces);
+        tileY = (int) Prefs.get(PREFS_KEY + "tileY", tileY);
+        autoSaveInterval = (int) Prefs.get(PREFS_KEY + "autoSaveInterval", autoSaveInterval);
         formatString = Prefs.get(PREFS_KEY + "formatString", formatString);
-        
+
         //DJ: 10/24/2014
         myNotesPath = Prefs.get(PREFS_KEY + "myNotesPath", myNotesPath);
     }
 
-    /** Saves the preferences file.*/
+    /**
+     * Saves the preferences file.
+     */
     public void savePreferences() {
         includeHSI = HSIcheckbox.isSelected();
         includeSum = sumCheckbox.isSelected();
@@ -323,65 +328,66 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         try {
             scaleFactor = new Double(scaleFactorTextbox.getText());
         } catch (Exception e) {
-           IJ.error("Malformed \"scale factor\" value.");
-           return;
+            IJ.error("Malformed \"scale factor\" value.");
+            return;
         }
 
-        if (ui.getHSIView() != null)
-           ui.getHSIView().setRatioScaleFactor(scaleFactor);
-
-        try {
-           ratioSpan = new Double(ratioSpanTextbox.getText());
-        } catch (Exception e) {
-           IJ.error("Malformed \"ratio span\" value.");
-           return;
+        if (ui.getHSIView() != null) {
+            ui.getHSIView().setRatioScaleFactor(scaleFactor);
         }
 
         try {
-           background = new Float(backgroundTextField.getText());
+            ratioSpan = new Double(ratioSpanTextbox.getText());
         } catch (Exception e) {
-           IJ.error("Malformed \"background\" value.");
-           return;
+            IJ.error("Malformed \"ratio span\" value.");
+            return;
         }
 
         try {
-           reference = new Float(referenceTextField.getText());
+            background = new Float(backgroundTextField.getText());
         } catch (Exception e) {
-           IJ.error("Malformed \"reference\" value.");
-           return;
+            IJ.error("Malformed \"background\" value.");
+            return;
         }
 
         try {
-           numDecimalPlaces = (Integer)numDecimalPlacesSpinner.getValue();
+            reference = new Float(referenceTextField.getText());
         } catch (Exception e) {
-           IJ.error("Malformed \"numDecimalPlaces\" value.");
-           return;
+            IJ.error("Malformed \"reference\" value.");
+            return;
         }
-        
+
         try {
-           tileY = new Integer(tileYTextField.getText());
+            numDecimalPlaces = (Integer) numDecimalPlacesSpinner.getValue();
         } catch (Exception e) {
-           IJ.error("Malformed \"Tile Y Offset\" value.");
-           return;
+            IJ.error("Malformed \"numDecimalPlaces\" value.");
+            return;
+        }
+
+        try {
+            tileY = new Integer(tileYTextField.getText());
+        } catch (Exception e) {
+            IJ.error("Malformed \"Tile Y Offset\" value.");
+            return;
         }
         try {
-           autoSaveInterval = new Integer(AutoSaveIntervalTextField.getText());
+            autoSaveInterval = new Integer(AutoSaveIntervalTextField.getText());
         } catch (Exception e) {
-           IJ.error("Malformed \"Autosave Interval\" value.");
-           return;
+            IJ.error("Malformed \"Autosave Interval\" value.");
+            return;
         }
         try {
-           formatString = formatStringTextField.getText();
+            formatString = formatStringTextField.getText();
         } catch (Exception e) {
-           IJ.error("Malformed \"formatString\" value.");
-           return;
+            IJ.error("Malformed \"formatString\" value.");
+            return;
         }
         //DJ: 10/24/2014
         try {
-           myNotesPath = myNotes_jTextField1.getText();
+            myNotesPath = myNotes_jTextField1.getText();
         } catch (Exception e) {
-           IJ.error("Malformed \"myNotesPath\" value.");
-           return;
+            IJ.error("Malformed \"myNotesPath\" value.");
+            return;
         }
         Prefs.set(PREFS_KEY + "includeHSI", includeHSI);
         Prefs.set(PREFS_KEY + "includeSum", includeSum);
@@ -404,7 +410,9 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         close();
     }
 
-    /** Shows the frame.*/
+    /**
+     * Shows the frame.
+     */
     public void showFrame() {
         initComponentsCustom();
         setVisible(true);
@@ -419,6 +427,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Include HSI images when exporting images?
+     *
      * @return boolean.
      */
     boolean getincludeHSI() {
@@ -427,6 +436,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Include Sum images when exporting images?
+     *
      * @return boolean.
      */
     boolean getincludeSum() {
@@ -435,6 +445,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Include Mass images when exporting images?
+     *
      * @return boolean.
      */
     boolean getincludeMass() {
@@ -443,6 +454,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Include Ratio images when exporting images?
+     *
      * @return boolean.
      */
     boolean getincludeRatio() {
@@ -451,6 +463,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Gets the scale factor.
+     *
      * @return the scale factor.
      */
     double getscaleFactor() {
@@ -458,8 +471,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     }
 
     /**
-     * Gets the difference allowed between atomic numbers
-     * in order to show ratio images in the list.
+     * Gets the difference allowed between atomic numbers in order to show ratio images in the list.
+     *
      * @return double
      */
     double getRatioSpan() {
@@ -467,8 +480,8 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     }
 
     /**
-     * Gets the difference in mass allowed between atomic numbers
-     * for ratio images saved by the user.
+     * Gets the difference in mass allowed between atomic numbers for ratio images saved by the user.
+     *
      * @return double
      */
     double getMassDiff() {
@@ -477,6 +490,7 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Include reciprocals in the ratio image list (13/12 and 12/13).
+     *
      * @return boolean
      */
     boolean getRatioReciprocals() {
@@ -485,150 +499,159 @@ private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 
     /**
      * Get the background ratio reference.
+     *
      * @return the background ratio
      */
-    float getBackgroundRatio(){
-       return background;
+    float getBackgroundRatio() {
+        return background;
     }
 
     /**
      * Get the source ratio reference.
+     *
      * @return the background ratio
      */
-    float getReferenceRatio(){
-       return reference;
+    float getReferenceRatio() {
+        return reference;
     }
 
     /**
      * Get the number of decimal places to use in tables.
+     *
      * @return the number of decimal places.
      */
-    int getNumDecimalPlaces(){
-       return numDecimalPlaces;
-    }
-    
-    /**
-     * Get the y position of where tiling starts
-     * @return the number of decimal places.
-     */
-    int getTileY(){
-       return tileY;
+    int getNumDecimalPlaces() {
+        return numDecimalPlaces;
     }
 
     /**
      * Get the y position of where tiling starts
+     *
      * @return the number of decimal places.
      */
-    int getAutoSaveInterval(){
-       return autoSaveInterval;
+    int getTileY() {
+        return tileY;
     }
+
+    /**
+     * Get the y position of where tiling starts
+     *
+     * @return the number of decimal places.
+     */
+    int getAutoSaveInterval() {
+        return autoSaveInterval;
+    }
+
     /**
      * Get the format string used to determine format of image titles
-     * @return 
+     *
+     * @return
      */
-    public String getFormatString(){
+    public String getFormatString() {
         return formatString;
     }
+
     //Dj: 10/24/2014
     /**
      * Get the Notes path string used to determine the user's notes file
-     * @return 
+     *
+     * @return
      */
-    String getMyNotesPath(){
+    String getMyNotesPath() {
         return myNotesPath;
     }
+
     /**
      * Get the list of ratio images preferred by the user.
      */
     String[] getNumerators() {
-       String[] numStrArray = new String[0];
-       if (numerators != null)
-          numStrArray = numerators.split(",");
-       return numStrArray;
+        String[] numStrArray = new String[0];
+        if (numerators != null) {
+            numStrArray = numerators.split(",");
+        }
+        return numStrArray;
     }
 
     /**
      * Get the list of ratio images preferred by the user.
      */
     String[] getDenominators() {
-       String[] denStrArray = new String[0];
-       if (denominators != null)
-          denStrArray = denominators.split(",");
-       return denStrArray;
-    }
-    
-    /**
-     * Add a ratio image with numerator num and
-     * denominator den to the list of default ratio images.     
-     */
-    void addRatioImage(double num, double den) {
-       if (numerators == null || numerators.length() == 0 || numerators.length() != denominators.length()) {
-          numerators = "";
-          denominators = "";
-       } else {
-          numerators += ",";
-          denominators += ",";
-       }
-       numerators += Double.toString(num);
-       denominators += Double.toString(den);
+        String[] denStrArray = new String[0];
+        if (denominators != null) {
+            denStrArray = denominators.split(",");
+        }
+        return denStrArray;
     }
 
     /**
-     * Add a ratio image with numerator num and
-     * denominator den to the list of default ratio images.
+     * Add a ratio image with numerator num and denominator den to the list of default ratio images.
+     */
+    void addRatioImage(double num, double den) {
+        if (numerators == null || numerators.length() == 0 || numerators.length() != denominators.length()) {
+            numerators = "";
+            denominators = "";
+        } else {
+            numerators += ",";
+            denominators += ",";
+        }
+        numerators += Double.toString(num);
+        denominators += Double.toString(den);
+    }
+
+    /**
+     * Add a ratio image with numerator num and denominator den to the list of default ratio images.
      */
     void addRatioImage(String num, String den) {
 
-       Double numValue, denValue;
-       try {
-          numValue = Double.parseDouble(num);
-          denValue = Double.parseDouble(den);
-       } catch (NumberFormatException nfe) {
-          return;
-       }
-       addRatioImage(numValue, denValue);
+        Double numValue, denValue;
+        try {
+            numValue = Double.parseDouble(num);
+            denValue = Double.parseDouble(den);
+        } catch (NumberFormatException nfe) {
+            return;
+        }
+        addRatioImage(numValue, denValue);
     }
 
     /**
-     * Remove a ratio image with numerator num, and
-     * denominator den, to the list of default ratio images.
+     * Remove a ratio image with numerator num, and denominator den, to the list of default ratio images.
      */
     void removeRatioImage(double num, double den) {
-       if (numerators == null || numerators.length() == 0) {
-          return;
-       }
-       String[] numStrArray = numerators.split(",");
-       String[] denStrArray = denominators.split(",");
-       if (numStrArray.length != denStrArray.length) {
-          return;
-       }
+        if (numerators == null || numerators.length() == 0) {
+            return;
+        }
+        String[] numStrArray = numerators.split(",");
+        String[] denStrArray = denominators.split(",");
+        if (numStrArray.length != denStrArray.length) {
+            return;
+        }
 
-       // Clear the numerator and denominator list and 
-       // add back those ratio images that are NOT to be removed.
-       numerators = "";
-       denominators = "";
-       Double numValue, denValue, numDiff, denDiff;
-       for (int i = 0; i < numStrArray.length; i++) {
+        // Clear the numerator and denominator list and 
+        // add back those ratio images that are NOT to be removed.
+        numerators = "";
+        denominators = "";
+        Double numValue, denValue, numDiff, denDiff;
+        for (int i = 0; i < numStrArray.length; i++) {
 
-          try {
-             numValue = Double.parseDouble(numStrArray[i]);
-             denValue = Double.parseDouble(denStrArray[i]);
-          } catch (NumberFormatException nfe) {
-             continue;
-          }
+            try {
+                numValue = Double.parseDouble(numStrArray[i]);
+                denValue = Double.parseDouble(denStrArray[i]);
+            } catch (NumberFormatException nfe) {
+                continue;
+            }
 
-          numDiff = Math.abs(num - numValue);
-          denDiff = Math.abs(den - denValue);
-          System.out.println();
-          System.out.println("numValue = " + numValue);
-          System.out.println("numDiff = " + numDiff + ", denDiff = " + denDiff);
-          System.out.println(numDiff < massDiff && denDiff < massDiff);
-          if (numDiff > massDiff && denDiff > massDiff) {
-             addRatioImage(numValue, denValue);
-          }
-       }
-       System.out.println();
-       System.out.println("numerators = " + numerators);
+            numDiff = Math.abs(num - numValue);
+            denDiff = Math.abs(den - denValue);
+            System.out.println();
+            System.out.println("numValue = " + numValue);
+            System.out.println("numDiff = " + numDiff + ", denDiff = " + denDiff);
+            System.out.println(numDiff < massDiff && denDiff < massDiff);
+            if (numDiff > massDiff && denDiff > massDiff) {
+                addRatioImage(numValue, denValue);
+            }
+        }
+        System.out.println();
+        System.out.println("numerators = " + numerators);
 
     }
 
