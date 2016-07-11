@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.nrims.experimental;
 
 import java.io.BufferedReader;
@@ -13,10 +12,10 @@ import java.util.ArrayList;
 /**
  *
  * @author cpoczatek
- * 
- * This is totally uneeded if running in fiji w/ an update site.
- * Should delete...
- * 
+ *
+ * This is totally unneeded if running in fiji w/ an update site. Should
+ * delete...
+ *
  */
 public class testJarFiles {
 
