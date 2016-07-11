@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.nrims.experimental;
 
 import com.nrims.HSIProcessor;
@@ -47,26 +46,24 @@ public class ndHSI {
         float[] numpixf = (float[]) numimg.getProcessor().getPixels();
 
         double[] denpixd = new double[denpixf.length];
-        for(int i = 0; i < denpixd.length; i ++) {
-            denpixd[i]=(double)denpixf[i];
+        for (int i = 0; i < denpixd.length; i++) {
+            denpixd[i] = (double) denpixf[i];
         }
         double[] numpixd = new double[numpixf.length];
-        for(int i = 0; i < numpixd.length; i ++) {
-            numpixd[i]=(double)numpixf[i];
+        for (int i = 0; i < numpixd.length; i++) {
+            numpixd[i] = (double) numpixf[i];
         }
 
         FloatProcessor densmooth = new FloatProcessor(denimg.getWidth(), denimg.getHeight(), denpixd);
         densmooth.smooth();
-        denpixf = (float[])densmooth.getPixels();
+        denpixf = (float[]) densmooth.getPixels();
         FloatProcessor numsmooth = new FloatProcessor(numimg.getWidth(), numimg.getHeight(), numpixd);
         numsmooth.smooth();
-        numpixf = (float[])numsmooth.getPixels();
-
-
+        numpixf = (float[]) numsmooth.getPixels();
 
         double[] ndpix = new double[denpixd.length];
-        for(int i = 0; i < ndpix.length; i ++) {
-            ndpix[i] = props.getRatioScaleFactor()*((double)numpixf[i])/((double)denpixf[i]);
+        for (int i = 0; i < ndpix.length; i++) {
+            ndpix[i] = props.getRatioScaleFactor() * ((double) numpixf[i]) / ((double) denpixf[i]);
         }
 
         FloatProcessor ndproc = new FloatProcessor(denimg.getWidth(), denimg.getHeight(), ndpix);
@@ -82,7 +79,6 @@ public class ndHSI {
         //newHSI.
 
     }
-
 
     //incomplete and useless....
     public int[] getNeighborhoodPixels(MimsPlus img, int x, int y, double radius) {
