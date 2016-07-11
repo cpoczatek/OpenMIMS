@@ -45,10 +45,10 @@ public class Mims_Reader implements Opener {
     private String[] tilePositions = null;
     private String[] stackPositions = null;
     private HashMap metaData = new HashMap();
-    
+
     private boolean isHeaderBad = false;
     private boolean wasHeaderFixed = false;
-    
+
     // These field were specifically selected by analysts as having importance.
     // Rather than create a class for the structure, we just want the field.
     //
@@ -122,8 +122,10 @@ public class Mims_Reader implements Opener {
     }
 
     /**
-     * Ensures that the given index is valid (e.g. if it's >= 0 and <= nMasses).
-     * @param index image mass index.
+     * Ensures that the given index is valid (e.g. if it's >= 0 and <= nMasses). @par
+     *
+     *
+     * am index image mass index.
      * @throws IndexOutOfBoundsException if the given image mass index is invalid.
      */
     private void checkMassIndex(int index) {
@@ -135,8 +137,10 @@ public class Mims_Reader implements Opener {
     }
 
     /**
-     * Ensures that the given index is valid (e.g. if it's >= 0 and <= nImages).
-     * @param index image index.
+     * Ensures that the given index is valid (e.g. if it's >= 0 and <= nImages). @par
+     *
+     *
+     * am index image index.
      * @throws IndexOutOfBoundsException if the given image index is invalid.
      */
     private void checkImageIndex(int index) {
@@ -149,6 +153,7 @@ public class Mims_Reader implements Opener {
 
     /**
      * Reads the pixel data for currentIndex (plane number) from the given mass image index.
+     *
      * @param index image mass index.
      * @throws IndexOutOfBoundsException if the given image mass index is invalid.
      * @throws IOException If there is an error reading in the pixel data.
@@ -806,14 +811,13 @@ public class Mims_Reader implements Opener {
     public int getNImages() {
         return fi.nImages;
     }
-    
-        /**
+
+    /**
      * @return the number of planes in this SIMS image file prior to correction of image number.
      */
     public int getPreviousNImages() {
         return uncorrectedNumImages;
     }
-    
 
     /**
      * @return the total number of image masses.
@@ -1150,8 +1154,8 @@ public class Mims_Reader implements Opener {
             return false;
         }
     }
-    
-     /**
+
+    /**
      * Returns true if the file header is bad.
      *
      * @return <code>true</code> if in agreement, otherwise <code>false</code>.
@@ -1159,36 +1163,32 @@ public class Mims_Reader implements Opener {
     public boolean getIsHeaderBad() {
         return isHeaderBad;
     }
-    
-       /**
-     * Set the state of the header to true if the header is incorrect, or to false if header is OK. 
+
+    /**
+     * Set the state of the header to true if the header is incorrect, or to false if header is OK.
      *
      */
     public void setIsHeaderBad(boolean headerState) {
         isHeaderBad = headerState;
     }
-    
-     /**
-     * Returns true is the file's bad header was fixed during the reading of the file.  The fix applies
-     * only to the file in memory, since the file itself is not changed.
+
+    /**
+     * Returns true is the file's bad header was fixed during the reading of the file. The fix applies only to the file
+     * in memory, since the file itself is not changed.
      *
      * @return <code>true</code> if in agreement, otherwise <code>false</code>.
      */
     public boolean getWasHeaderFixed() {
         return wasHeaderFixed;
     }
-    
-     /**
-     * Set the state of the header to true if the header is incorrect, but was fixed upon reading the file. 
+
+    /**
+     * Set the state of the header to true if the header is incorrect, but was fixed upon reading the file.
      *
      */
     public void setWasHeaderFixed(boolean headerFixedState) {
         wasHeaderFixed = headerFixedState;
     }
-    
-
-    
- 
 
     /**
      * Attempt to fix the header or a file for which performFileSanityCheck() indicated a problem.
@@ -1203,13 +1203,13 @@ public class Mims_Reader implements Opener {
             int num_masses = getNMasses();
             int bytes = ihdr.d;
 
-            long theoretical_file_size = (((long) pixels_per_plane) * ((long) num_planes + 1) * 
-                    ((long) num_masses) * ((long) bytes)) + header_size;
+            long theoretical_file_size = (((long) pixels_per_plane) * ((long) num_planes + 1)
+                    * ((long) num_masses) * ((long) bytes)) + header_size;
             long file_size = file.length();
 
             if (theoretical_file_size == file_size) {
                 uncorrectedNumImages = num_planes;
-                num_planes++;  
+                num_planes++;
                 setNImages(num_planes);
 
                 return true;
