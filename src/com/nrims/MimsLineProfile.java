@@ -40,9 +40,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
 
 /**
- * The MimsLineProfile class creates a line plot for line ROIs. The y-axis
- * represents pixel value (of the current image) and x-axis represents length
- * along the line.
+ * The MimsLineProfile class creates a line plot for line ROIs. The y-axis represents pixel value (of the current image)
+ * and x-axis represents length along the line.
  *
  * @author cpoczatek
  */
@@ -115,13 +114,13 @@ public class MimsLineProfile extends JFrame {
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addKeyEventDispatcher(new KeyEventDispatcher() {
-            public boolean dispatchKeyEvent(KeyEvent e) {
-                if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
-                    chartPanel.keyPressed(e);
-                }
-                return false;
-            }
-        });
+                    public boolean dispatchKeyEvent(KeyEvent e) {
+                        if (e.getID() == KeyEvent.KEY_PRESSED && thisHasFocus()) {
+                            chartPanel.keyPressed(e);
+                        }
+                        return false;
+                    }
+                });
 
         this.pack();
         this.setVisible(true);
@@ -272,7 +271,7 @@ public class MimsLineProfile extends JFrame {
                 true, // include legend
                 true, // tooltips
                 false // urls
-                );
+        );
 
         // get a reference to the plot for further customisation...
         MimsXYPlot plot = (MimsXYPlot) chart.getPlot();
@@ -334,7 +333,8 @@ public class MimsLineProfile extends JFrame {
         XYDataset data = plot.getDataset();
 
         ij.measure.ResultsTable table = new ij.measure.ResultsTable();
-        table.setHeading(1, "Position");
+        table.setHeading(1, "Position");   // Deprecated. Replaced by addValue(String,double) and setValue(String,int,double)
+        //table.addValue("1", "Posiiton");
         table.setHeading(2, plot.getLegendItems().get(0).getLabel() + " : width " + linewidth);
         //table.incrementCounter();
 
