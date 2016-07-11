@@ -29,10 +29,9 @@ import javax.swing.DefaultListModel;
 import javax.swing.event.EventListenerList;
 
 /**
- * Extends ImagePlus with methods to synchronize display of multiple stacks and
- * drawing ROIs in each windows
+ * Extends ImagePlus with methods to synchronize display of multiple stacks and drawing ROIs in each windows
  */
-public class MimsPlus extends ImagePlus implements WindowListener, MouseListener, 
+public class MimsPlus extends ImagePlus implements WindowListener, MouseListener,
         MouseMotionListener, MouseWheelListener {
 
     /* Public constants */
@@ -132,8 +131,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             ipp = new ij.process.FloatProcessor(w, h, pixels);
         }
         //String titleString = "m" + ui.getTitleStringSymbol(index) + ": " + ui.getImageFilePrefix();
-        title = ImageDataUtilities.formatTitle(index, true, ui.getPreferences().getFormatString(), 
-                ui.getOpener()); 
+        title = ImageDataUtilities.formatTitle(index, true, ui.getPreferences().getFormatString(),
+                ui.getOpener());
         libreTitle = ImageDataUtilities.formatLibreTitle(index, ui.getOpener(), this);
         setProcessor(title, ipp);
 
@@ -198,14 +197,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 title += "1";
                 libreTitle += "1";
             } else {
-                title += ImageDataUtilities.formatTitle(sumProps.getParentMassIdx(), false, 
+                title += ImageDataUtilities.formatTitle(sumProps.getParentMassIdx(), false,
                         ui.getPreferences().getFormatString(), ui.getOpener());
                 libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getParentMassIdx(), ui.getOpener(), this);
             }
         } else if (sumProps.getSumType() == SumProps.RATIO_IMAGE) {
-            title += ImageDataUtilities.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(), 
+            title += ImageDataUtilities.formatTitle(sumProps.getNumMassIdx(), sumProps.getDenMassIdx(),
                     false, ui.getPreferences().getFormatString(), ui.getOpener());
-            libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getNumMassIdx(), 
+            libreTitle += ImageDataUtilities.formatLibreTitle(sumProps.getNumMassIdx(),
                     sumProps.getDenMassIdx(), ui.getOpener(), this);
         }
         setProcessor(title, ipp);
@@ -261,9 +260,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ImageProcessor ipp = new FloatProcessor(w, h, pixels, null);
         ipp.setMinAndMax(0, 1.0);
         String numName, denName;
-        title += ImageDataUtilities.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(), 
+        title += ImageDataUtilities.formatTitle(ratioProps.getNumMassIdx(), ratioProps.getDenMassIdx(),
                 false, ui.getPreferences().getFormatString(), ui.getOpener());
-        libreTitle += ImageDataUtilities.formatLibreTitle(ratioProps.getNumMassIdx(), 
+        libreTitle += ImageDataUtilities.formatLibreTitle(ratioProps.getNumMassIdx(),
                 ratioProps.getDenMassIdx(), ui.getOpener(), this);
         setProcessor(title, ipp);
         fStateListeners = new EventListenerList();
@@ -386,9 +385,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         String numName;
         String denName;
         ImageProcessor ipp = new ColorProcessor(w, h, rgbPixels);
-        title = "HSI : " + ImageDataUtilities.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), 
+        title = "HSI : " + ImageDataUtilities.formatTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(),
                 false, ui.getPreferences().getFormatString(), ui.getOpener());
-        libreTitle = ImageDataUtilities.formatLibreTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(), 
+        libreTitle = ImageDataUtilities.formatLibreTitle(hsiProps.getNumMassIdx(), hsiProps.getDenMassIdx(),
                 ui.getOpener(), this);
         setProcessor(title, ipp);
         getProcessor().setMinAndMax(0, 255);
@@ -512,7 +511,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         if (ui.getIsPercentTurnover()) {
             float reference = ui.getPreferences().getReferenceRatio();
             float background = ui.getPreferences().getBackgroundRatio();
-            rPixels = HSIProcessor.turnoverTransform(rPixels, reference, background, 
+            rPixels = HSIProcessor.turnoverTransform(rPixels, reference, background,
                     (float) (ratioProps.getRatioScaleFactor()));
         }
 
@@ -613,7 +612,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             float[] denPixels = (float[]) denImage.getProcessor().getPixels();
             sumPixels = new double[numImage.getProcessor().getPixelCount()];
 
-
             float rSF = ui.getHSIView().getRatioScaleFactor();
             if (this.sumProps.getRatioScaleFactor() > 0) {
                 rSF = ((Double) this.sumProps.getRatioScaleFactor()).floatValue();
@@ -637,7 +635,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     public void showWindow() {
-       showWindow(true);
+        showWindow(true);
     }
 
     /**
@@ -656,9 +654,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ui.addToImagesList(this);
 
         // Autocontrast image by default.
-        if ((this.getMimsType() == MimsPlus.MASS_IMAGE) || (this.getMimsType() == MimsPlus.RATIO_IMAGE) || 
-                (this.getMimsType() == MimsPlus.SUM_IMAGE))
-        {
+        if ((this.getMimsType() == MimsPlus.MASS_IMAGE) || (this.getMimsType() == MimsPlus.RATIO_IMAGE)
+                || (this.getMimsType() == MimsPlus.SUM_IMAGE)) {
             if (forceAutoContrast) {
                 ui.autoContrastImage(this);
 
@@ -722,8 +719,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * Appends image to stack. Not hit from MimsStackEditing.concatImages().
-     * Only used when opening a multiplane image file.
+     * Appends image to stack. Not hit from MimsStackEditing.concatImages(). Only used when opening a multiplane image
+     * file.
      *
      * @param nImage
      * @throws Exception
@@ -746,13 +743,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * This method is required for those instances where the header was
-     * incorrect or the file did not contain all of the data. For example, lets
-     * say the file should contain 40 planes (for 4 masses) but the last plane
-     * of the last two masses is missing. The plugin rquires that all masses
-     * contain the same number of planes, so in this case we want to append two
-     * blank images to the end of the last two masses, thereby ensuring all
-     * masses have the same number of planes.
+     * This method is required for those instances where the header was incorrect or the file did not contain all of the
+     * data. For example, lets say the file should contain 40 planes (for 4 masses) but the last plane of the last two
+     * masses is missing. The plugin rquires that all masses contain the same number of planes, so in this case we want
+     * to append two blank images to the end of the last two masses, thereby ensuring all masses have the same number of
+     * planes.
      */
     public void appendBlankImage(int nImage) {
 
@@ -796,8 +791,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded
-     * mass and excludes the "m".
+     * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded mass and excludes the "m".
      *
      * @return Text string containing the rounded mass value. For example:
      * <ul>
@@ -813,8 +807,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded
-     * mass and excludes the "m".
+     * Similar to {@link #getShortTitle() getShortTitle} but uses the rounded mass and excludes the "m".
      *
      * @return Text string containing the rounded mass value. For example:
      * <ul>
@@ -878,16 +871,15 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         return roundedTitle;
     }
-    
+
     //DJ: 11/14/2014
-    public String getTitleForTables(){
-        return this.title.substring(this.title.indexOf('[')+1, this.title.indexOf(']'));
+    public String getTitleForTables() {
+        return this.title.substring(this.title.indexOf('[') + 1, this.title.indexOf(']'));
     }
 
     /**
-     * Returns extended title information with properties Mass: contrast range
-     * "(min - max)" + "slice number" HSI: Ratio range "(min - max)" Ratio:
-     * "(min - max)"
+     * Returns extended title information with properties Mass: contrast range "(min - max)" + "slice number" HSI: Ratio
+     * range "(min - max)" Ratio: "(min - max)"
      *
      * @return
      */
@@ -982,7 +974,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         this.yloc = p.y;
     }
 
-    
     /**
      * Shows the window and add various mouse mouse listeners.
      */
@@ -998,11 +989,11 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 sw.getCanvas().addMouseMotionListener(this);
                 sw.getCanvas().addMouseWheelListener(this);
                 sw.setVisible(true);
-                
+
             } else {
                 // DJ: 08/06/2014
                 ImageWindow iw = new ImageWindow(this, new MimsCanvas(this, ui));
-                
+
                 iw.addWindowListener(this);
                 iw.getCanvas().addMouseListener(this);
                 iw.getCanvas().addMouseMotionListener(this);
@@ -1079,21 +1070,19 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             // get a valid window but totally blank and we try to close it
             java.awt.Point p = this.getWindow().getLocation();
             this.setXYLoc(p);
-            
+
             // to be used when updating the ui.viewMassChanged
             // to keep it updated on the window location before it closes.
             if (this.nType == MASS_IMAGE) {
                 MassProps windowMP = new MassProps(this.getMassIndex(), this.getMassValue());
-                windowMP.setXWindowLocation(p.x+9);
-                windowMP.setYWindowLocation(p.y+8);
+                windowMP.setXWindowLocation(p.x + 9);
+                windowMP.setYWindowLocation(p.y + 8);
                 ui.addToClosedWindowsList(windowMP);
             }
-                    
+
         }
         //this.xloc = p.x;
         //this.yloc = p.y;
-
-
 
     }
 
@@ -1157,7 +1146,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
     @Override
     public void windowOpened(WindowEvent e) {
-
 
         if (getWindow() != null) {    // DJ 08/06/2014
 
@@ -1263,7 +1251,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             return;
         }
 
-
         float[] pix;
         if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
             internalRatio.setRoi(getRoi());
@@ -1273,16 +1260,14 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             pix = (float[]) getProcessor().getPixels();
         } else if ((this.nType == SEG_IMAGE) || (this.nType == COMPOSITE_IMAGE)) {
             return;
-        } else {
-            if (getProcessor() instanceof ShortProcessor) {
-                short[] spix = (short[]) getProcessor().getPixels();
-                pix = new float[spix.length];
-                for (int i = 0; i < spix.length; i++) {
-                    pix[i] = (new Short(spix[i])).floatValue();
-                }
-            } else {
-                pix = (float[]) getProcessor().getPixels();
+        } else if (getProcessor() instanceof ShortProcessor) {
+            short[] spix = (short[]) getProcessor().getPixels();
+            pix = new float[spix.length];
+            for (int i = 0; i < spix.length; i++) {
+                pix[i] = (new Short(spix[i])).floatValue();
             }
+        } else {
+            pix = (float[]) getProcessor().getPixels();
         }
         if (pix != null) {
             double[] dpix = new double[pix.length];
@@ -1331,7 +1316,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
         if (getWindow() != null) {  // DJ: 08/06/2014
 
-
             if (!IJ.getToolName().equals("Drag To Writer tool")) {
                 if (bStateChanging) {
                     return;
@@ -1358,7 +1342,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                     bMoving = false;
                     return;
                 }
-
 
                 if (IJ.getToolName().equals("OpenMIMS tool") && (this.nType == MimsPlus.MASS_IMAGE) && e.isShiftDown()) {
                     int endX = getWindow().getCanvas().offScreenX((int) e.getPoint().getX());
@@ -1391,79 +1374,77 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 }
             } else {
                 System.out.println("release captured");
-                
+
                 //DJ:10/17/2014
                 //DO NOT CHANGE NEITHER THE STRINGS NOR THEIR ORDER - THEY GET PARSED AT THE UNOPLUGIN.JAVA
-                
-                
                 String[] allDescriptions = new String[6];
-                
-                String imageType   = "";
-                String displayMin  = "";
-                String displayMax  = "";
+
+                String imageType = "";
+                String displayMin = "";
+                String displayMax = "";
                 String planeNumber = "";
                 String fileDescription = ui.getDescription();
 
-                
-                switch(this.getMimsType()){
-                    case MimsPlus.MASS_IMAGE:      
-                        imageType   += "MASS_IMAGE";  
-                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
-                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+                switch (this.getMimsType()) {
+                    case MimsPlus.MASS_IMAGE:
+                        imageType += "MASS_IMAGE";
+                        displayMin += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax += (new Double(this.getDisplayRangeMax())).intValue();
                         planeNumber += this.getSlice();
                         break;
-                        
-                    case MimsPlus.SUM_IMAGE:       
-                        imageType   += "SUM_IMAGE";
-                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
-                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+
+                    case MimsPlus.SUM_IMAGE:
+                        imageType += "SUM_IMAGE";
+                        displayMin += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax += (new Double(this.getDisplayRangeMax())).intValue();
                         planeNumber += "N/A";
                         break;
-                        
-                    case MimsPlus.RATIO_IMAGE:     
-                        imageType   += "RATIO_IMAGE";
-                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
-                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
-                        if(ui.getIsSum())
+
+                    case MimsPlus.RATIO_IMAGE:
+                        imageType += "RATIO_IMAGE";
+                        displayMin += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax += (new Double(this.getDisplayRangeMax())).intValue();
+                        if (ui.getIsSum()) {
                             planeNumber += "N/A";
-                        else
+                        } else {
                             planeNumber += this.getNumeratorImage().getSlice();
+                        }
 
                         break;
-                        
-                    case MimsPlus.HSI_IMAGE:       
-                        imageType   += "HSI_IMAGE"; 
-                        displayMin  += "N/A";
-                        displayMax  += "N/A";
-                        if(ui.getIsSum())
+
+                    case MimsPlus.HSI_IMAGE:
+                        imageType += "HSI_IMAGE";
+                        displayMin += "N/A";
+                        displayMax += "N/A";
+                        if (ui.getIsSum()) {
                             planeNumber += "N/A";
-                        else
+                        } else {
                             planeNumber += this.getNumeratorImage().getSlice();
-                        
+                        }
+
                         break;
-                        
-                    case MimsPlus.COMPOSITE_IMAGE: 
-                        imageType   += "COMPOSITE_IMAGE";
-                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
-                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+
+                    case MimsPlus.COMPOSITE_IMAGE:
+                        imageType += "COMPOSITE_IMAGE";
+                        displayMin += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax += (new Double(this.getDisplayRangeMax())).intValue();
                         planeNumber += "N/A";
                         break;
-                        
-                    default: 
-                        imageType   += "NON_MIMSIMAGE";
-                        displayMin  += (new Double(this.getDisplayRangeMin())).intValue();
-                        displayMax  += (new Double(this.getDisplayRangeMax())).intValue();
+
+                    default:
+                        imageType += "NON_MIMSIMAGE";
+                        displayMin += (new Double(this.getDisplayRangeMin())).intValue();
+                        displayMax += (new Double(this.getDisplayRangeMax())).intValue();
                         planeNumber += "N/A";
                 }
-                
-                
+
                 allDescriptions[0] = imageType;
                 allDescriptions[1] = ui.getOpener().getImageFile().getName();
                 allDescriptions[2] = displayMin;
                 allDescriptions[3] = displayMax;
                 allDescriptions[4] = planeNumber;
-                allDescriptions[5] = fileDescription;  
-                
+                allDescriptions[5] = fileDescription;
+
                 //mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, ui.getDescription());
                 mimsUno.dropImage(ui.getScreenCaptureCurrentImage(), libreTitle, title, allDescriptions);
             }
@@ -1472,10 +1453,9 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * Handles a mouse move event. A fairly in depth method that displays data
-     * in the status bar of the application. The data that is displayed is
-     * dependant on the type of image (Mass, HSI, Sum, etc.) This method also
-     * controls various aspects of ROI behavior regarding mouse events.
+     * Handles a mouse move event. A fairly in depth method that displays data in the status bar of the application. The
+     * data that is displayed is dependant on the type of image (Mass, HSI, Sum, etc.) This method also controls various
+     * aspects of ROI behavior regarding mouse events.
      *
      * @param e mouse move event
      */
@@ -1509,7 +1489,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                         //covered by the window, need to check edges too
                         int r = ui.getWindowRange();
                         int min = java.lang.Math.max(1, this.getNumeratorImage().getSlice() - r);
-                        int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r, 
+                        int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r,
                                 this.getNumeratorImage().getStackSize());
                         cstring = "[" + min + "-" + max + "]";
                     } else {
@@ -1523,12 +1503,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 msg += " = ";
             }
 
-
             //TODO, do something sensible for composite images....
-
             // Get pixel data for the mouse location.
-            if ((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && (this.internalDenominator != null && 
-                    this.internalNumerator != null)) {
+            if ((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && (this.internalDenominator != null
+                    && this.internalNumerator != null)) {
                 float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
                 float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
                 double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
@@ -1589,8 +1567,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
                 boolean linecheck = false;
                 int c = -1;
-                if ((loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE) || 
-                        (loopRoi.getType() == Roi.FREELINE)) {
+                if ((loopRoi.getType() == Roi.LINE) || (loopRoi.getType() == Roi.POLYLINE)
+                        || (loopRoi.getType() == Roi.FREELINE)) {
                     // I have no idea why, but the isHandle() method for Line Rois
                     // only works with true x, y not image x, y. This apparently
                     // is only true for Line Rois.
@@ -1610,8 +1588,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                         loopRoi.setStrokeWidth(this.getProcessor().getLineWidth());
                     }
 
-                    if ((this.getMimsType() == RATIO_IMAGE || this.getMimsType() == HSI_IMAGE) && 
-                            internalRatio != null) {
+                    if ((this.getMimsType() == RATIO_IMAGE || this.getMimsType() == HSI_IMAGE)
+                            && internalRatio != null) {
                         internalRatio.setRoi(loopRoi);
                         stats = internalRatio.getStatistics();
                         internalRatio.killRoi();
@@ -1629,14 +1607,12 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                         if (linecheck) {
                             smallestRoiArea = 0;
                         }
-                    } else {
-                        if (stats.area < smallestRoiArea || linecheck) {
-                            smallestRoi = loopRoi;
-                            smallestRoiArea = stats.area;
-                            smallestRoiStats = stats;
-                            if (linecheck) {
-                                smallestRoiArea = 0;
-                            }
+                    } else if (stats.area < smallestRoiArea || linecheck) {
+                        smallestRoi = loopRoi;
+                        smallestRoiArea = stats.area;
+                        smallestRoiStats = stats;
+                        if (linecheck) {
+                            smallestRoiArea = 0;
                         }
                     }
                 }
@@ -1665,14 +1641,15 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 }
 
                 //set image roi for vizualization
-                smallestRoi.setInstanceColor(java.awt.Color.YELLOW);
+                //smallestRoi.setInstanceColor(java.awt.Color.YELLOW);  // deprecated
+                smallestRoi.setStrokeColor(java.awt.Color.YELLOW);
                 if (roi.getType() == Roi.LINE || roi.getType() == Roi.FREELINE || roi.getType() == Roi.POLYLINE) {
                     msg += "\t ROI " + roi.getName() + ": L = " + IJ.d2s(roi.getLength(), 0);
                 } else {
-                    msg += "\t ROI " + roi.getName() +
-                            ": A = " + IJ.d2s(smallestRoiStats.area, 0) +
-                            ", M=" + IJ.d2s(smallestRoiStats.mean, displayDigits) + 
-                            ", Sd=" + IJ.d2s(smallestRoiStats.stdDev, displayDigits);
+                    msg += "\t ROI " + roi.getName()
+                            + ": A = " + IJ.d2s(smallestRoiStats.area, 0)
+                            + ", M=" + IJ.d2s(smallestRoiStats.mean, displayDigits)
+                            + ", Sd=" + IJ.d2s(smallestRoiStats.stdDev, displayDigits);
                 }
                 updateHistogram(true);
                 updateLineProfile();
@@ -1745,7 +1722,6 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                     int mX = getWindow().getCanvas().offScreenX(x);
                     int mY = getWindow().getCanvas().offScreenY(y);
 
-
                     //Calculate deltas
                     int xDelta = mX - startX;
                     int yDelta = mY - startY;
@@ -1789,7 +1765,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                             //covered by the window, need to check edges too
                             int r = ui.getWindowRange();
                             int min = java.lang.Math.max(1, this.getNumeratorImage().getSlice() - r);
-                            int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r, 
+                            int max = java.lang.Math.min(this.getNumeratorImage().getSlice() + r,
                                     this.getNumeratorImage().getStackSize());
                             cstring = "[" + min + "-" + max + "]";
                         } else {
@@ -1803,8 +1779,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                     msg += " = ";
                 }
 
-                if ((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE) && 
-                        (this.internalDenominator != null && this.internalNumerator != null)) {
+                if ((this.nType == RATIO_IMAGE || this.nType == HSI_IMAGE)
+                        && (this.internalDenominator != null && this.internalNumerator != null)) {
                     float ngl = internalNumerator.getProcessor().getPixelValue(mX, mY);
                     float dgl = internalDenominator.getProcessor().getPixelValue(mX, mY);
                     double ratio = internalRatio.getProcessor().getPixelValue(mX, mY);
@@ -1859,16 +1835,16 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                     if (this.getMimsType() == MimsPlus.HSI_IMAGE || this.getMimsType() == MimsPlus.RATIO_IMAGE) {
                         this.internalRatio.setRoi(lroi);
                         stats = this.internalRatio.getStatistics();
-                        msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + 
-                                ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
+                        msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0)
+                                + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
                     } else {
-                        msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0) + 
-                                ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
+                        msg += "\t ROI " + lroi.getName() + ": A=" + IJ.d2s(stats.area, 0)
+                                + ", M=" + IJ.d2s(stats.mean, displayDigits) + ", Sd=" + IJ.d2s(stats.stdDev, displayDigits);
                     }
 
                     //get numerator denominator stats
-                    if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE) && 
-                            internalNumerator != null && internalDenominator != null) {
+                    if ((this.getMimsType() == HSI_IMAGE || this.getMimsType() == RATIO_IMAGE)
+                            && internalNumerator != null && internalDenominator != null) {
                         internalNumerator.setRoi(lroi);
                         numeratorStats = internalNumerator.getStatistics();
                         internalNumerator.killRoi();
@@ -1962,8 +1938,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * Update image line profile. Line profiles for ratio images and HSI images
-     * should be identical.
+     * Update image line profile. Line profiles for ratio images and HSI images should be identical.
      */
     private void updateLineProfile() {
         if (roi == null) {
@@ -1983,8 +1958,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         } else {
             profileP = new ij.gui.ProfilePlot(this);
         }
-        ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : " + 
-                roi.getName(), this.getProcessor().getLineWidth(), this);
+        ui.updateLineProfile(profileP.getProfile(), this.getShortTitle() + " : "
+                + roi.getName(), this.getProcessor().getLineWidth(), this);
 
     }
 
@@ -1998,7 +1973,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             return null;
         }
 
-        Rectangle rect = roi.getBoundingRect();
+        // Rectangle rect = roi.getBoundingRect();   // deprecated.  Replace with getBounds
+        Rectangle rect = roi.getBounds();
         ij.process.ImageProcessor imp = this.getProcessor();
         ij.process.ImageStatistics stats = this.getStatistics();
 
@@ -2073,8 +2049,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     }
 
     /**
-     * extends setSlice to notify listeners when the frame updates enabling
-     * synchronization with other windows
+     * extends setSlice to notify listeners when the frame updates enabling synchronization with other windows
      *
      * @param slice
      * @param attr
@@ -2198,7 +2173,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         }
         try {
             if (allowClose) {
-                
+
                 ui.imageClosed(this);   // calls ui.imageClosed()
                 ui.getCBControl().removeWindowfromList(this);
                 ui.getmimsTomography().resetImageNamesList();
@@ -2374,7 +2349,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             compProps.setYWindowLocation(getWindow().getY());
             compProps.setMag(getCanvas().getMagnification());
         }
-        
+
         return compProps;
     }
 
@@ -2394,7 +2369,5 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     public Overlay getGraphOverlay() {
         return graphOverlay;
     }
-    
 
- 
 }
