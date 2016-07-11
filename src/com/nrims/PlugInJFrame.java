@@ -7,10 +7,8 @@ import ij.*;
 import ij.plugin.*;
 
 /**
- * A parent class for implementing classes that require a frame.
- * Not strictly required but prevents redundant frame-handling
- * code from appearing in classes like, MimsRatioManage, AutoTrackManager,
- * PrefFrame, etc.
+ * A parent class for implementing classes that require a frame. Not strictly required but prevents redundant
+ * frame-handling code from appearing in classes like, MimsRatioManage, AutoTrackManager, PrefFrame, etc.
  *
  *
  * @author Douglas Benson
@@ -18,7 +16,9 @@ import ij.plugin.*;
 public class PlugInJFrame extends JFrame implements PlugIn, WindowListener, FocusListener {
 
     public static final long serialVersionUID = 1;
-    /** Creates a new instance of PlugInJFrame */
+    /**
+     * Creates a new instance of PlugInJFrame
+     */
     String title;
 
     public PlugInJFrame(String title) {
@@ -51,8 +51,10 @@ public class PlugInJFrame extends JFrame implements PlugIn, WindowListener, Focu
         }
     }
 
-    /** Closes this window. */
-    public void close() {      
+    /**
+     * Closes this window.
+     */
+    public void close() {
         setVisible(false);
         dispose();
         WindowManager.removeWindow(this);
