@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 //then it will create a new instance of UI and set it visible
 //it then checks if there are any arguments passed from ImageJ
 //then passes those to UI.run(), which only checks for the testing flag.
+
 public class NRIMS_Plugin implements PlugIn {
 
     private final static Logger OMLOGGER = OMLogger.getOMLogger(NRIMS_Plugin.class.getName());
@@ -58,9 +59,9 @@ public class NRIMS_Plugin implements PlugIn {
     @Override
     public void run(String arg) {
         String options = ij.Macro.getOptions();
-        
+
         if (options != null || arg != null) {//if there are args, we are being called from main
-            if (arg != null && options == null){
+            if (arg != null && options == null) {
                 options = arg;
             }
             OMLOGGER.info("args: " + options);
@@ -188,11 +189,11 @@ public class NRIMS_Plugin implements PlugIn {
             //Start Auto save thread for ROI
             Thread t = new Thread(new FileUtilities.AutoSaveROI(ui));
             t.start();
-            
+
             OMLOGGER.info("NRIMS.run");
-             OMLOGGER.info(Thread.currentThread().getName());
-             //NOTE: I've commented out the below because upon further inspection, ui.run doesn't do anything useful
-             /*
+            OMLOGGER.info(Thread.currentThread().getName());
+            //NOTE: I've commented out the below because upon further inspection, ui.run doesn't do anything useful
+            /*
              options = ij.Macro.getOptions();
              OMLOGGER.info("options: " + options);
              if (options != null) {
@@ -207,12 +208,13 @@ public class NRIMS_Plugin implements PlugIn {
             }
         }
     }
+
     //Change missing from svn->git migration
     //TODO, was this added for scripting access to UI?
     public static UI getUI() {
         return ui;
     }
     //end
-    
+
     private static com.nrims.UI ui = null;
 }
