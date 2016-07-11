@@ -1,6 +1,6 @@
 package com.nrims;
 
-import ij.* ;
+import ij.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -9,20 +9,21 @@ import java.util.logging.Logger;
  *
  * @author cpoczatek
  */
-public class CompositeProcessor  implements Runnable{
+public class CompositeProcessor implements Runnable {
 
     /**
      * Creates a new instance of HSIProcessor.
+     *
      * @param compImage the MimsPlus image for which the composite image is based.
      */
     public CompositeProcessor(MimsPlus compImage, UI ui) {
-        this.compImage = compImage ;
+        this.compImage = compImage;
         this.ui = ui;
     }
 
     public void finalize() {
-        compImage = null ;
-        compProps = null ;
+        compImage = null;
+        compProps = null;
     }
 
     private MimsPlus compImage = null;
@@ -32,72 +33,83 @@ public class CompositeProcessor  implements Runnable{
 
     /**
      * Sets the <code>CompositeProps</code> object for this composite image.
+     *
      * @param props the <code>CompositeProps</code> object for this composite image.
      */
     public void setProps(CompositeProps props) {
-        if(compImage == null) return ;
+        if (compImage == null) {
+            return;
+        }
 
         compProps = props;
         start();
-        
-        
+
     }
 
     /**
      * Get the <code>CompositeProps</code> object for this composite image.
+     *
      * @return the <code>CompositeProps</code> object for this composite image.
      */
-    public CompositeProps getProps() { 
-       return compProps ;
+    public CompositeProps getProps() {
+        return compProps;
     }
 
-    /** Kicks off the thread. */
+    /**
+     * Kicks off the thread.
+     */
     private synchronized void start() {
-        if(fThread != null) {
+        if (fThread != null) {
             stop();
         }
         try {
             fThread = new Thread(this);
             fThread.setPriority(Thread.NORM_PRIORITY); // DJ : thread to Thread for static 
             fThread.setContextClassLoader(
-                Thread.currentThread().getContextClassLoader());
+                    Thread.currentThread().getContextClassLoader());
             try {
                 fThread.start();
+            } catch (IllegalThreadStateException x) {
+                IJ.log(x.toString());
             }
-            catch( IllegalThreadStateException x){ 
-                IJ.log(x.toString()); 
-            }
-        } catch (NullPointerException xn) {}
+        } catch (NullPointerException xn) {
+        }
     }
 
-    /** Stops the thread. */
+    /**
+     * Stops the thread.
+     */
     private void stop() {
-        if(fThread != null) {
+        if (fThread != null) {
             fThread.interrupt();
-            fThread = null ;
+            fThread = null;
         }
     }
 
     /**
      * Returns <code>true</code> if the thread is still running.
+     *
      * @return <code>true</code> if the thread is still running, otherwise <code>false</code>.
      */
     public boolean isRunning() {
-        if(fThread == null) return false ;
-        return fThread.isAlive() ;
+        if (fThread == null) {
+            return false;
+        }
+        return fThread.isAlive();
     }
 
-    /** Generates the actual image.*/
-    public void run( ) {
-        
-        
-        try {
-            int [] compPixels;
+    /**
+     * Generates the actual image.
+     */
+    public void run() {
 
-            try{
-                compPixels = (int []) compImage.getProcessor().getPixels() ;
-            } catch(Exception e) { 
-               return;
+        try {
+            int[] compPixels;
+
+            try {
+                compPixels = (int[]) compImage.getProcessor().getPixels();
+            } catch (Exception e) {
+                return;
             }
 
             MimsPlus[] images = this.getProps().getImages(ui);
@@ -106,20 +118,23 @@ public class CompositeProcessor  implements Runnable{
 
             int offset = 0;
             for (int y = 0; y < height && fThread != null; y++) {
-                for (int x = 0; x < width && fThread != null; x++) {                                    
-                    int r=0, g=0, b=0;
+                for (int x = 0; x < width && fThread != null; x++) {
+                    int r = 0, g = 0, b = 0;
 
                     //8 bit grayscale value
-                    if(images[0]!=null)
-                        r = getPixelLUT(images[0],x,y);
-                    if(images[1]!=null)
-                        g = getPixelLUT(images[1],x,y);
-                    if(images[2]!=null)
-                        b = getPixelLUT(images[2],x,y);
-                    if(images[3]!=null) {
-                        r = java.lang.Math.min(255, r + getPixelLUT(images[3],x,y));
-                        g = java.lang.Math.min(255, g + getPixelLUT(images[3],x,y));
-                        b = java.lang.Math.min(255, b + getPixelLUT(images[3],x,y));
+                    if (images[0] != null) {
+                        r = getPixelLUT(images[0], x, y);
+                    }
+                    if (images[1] != null) {
+                        g = getPixelLUT(images[1], x, y);
+                    }
+                    if (images[2] != null) {
+                        b = getPixelLUT(images[2], x, y);
+                    }
+                    if (images[3] != null) {
+                        r = java.lang.Math.min(255, r + getPixelLUT(images[3], x, y));
+                        g = java.lang.Math.min(255, g + getPixelLUT(images[3], x, y));
+                        b = java.lang.Math.min(255, b + getPixelLUT(images[3], x, y));
                     }
                     //bit shifts
                     r = r << 16;
@@ -137,11 +152,10 @@ public class CompositeProcessor  implements Runnable{
             }
             compImage.unlock();
             compImage.updateAndRepaintWindow();
-            fThread = null ;
-        }
-        catch(Exception x) {
+            fThread = null;
+        } catch (Exception x) {
             compImage.unlock();
-            fThread = null ;
+            fThread = null;
             IJ.log(x.toString());
             x.printStackTrace();
         }
@@ -154,27 +168,30 @@ public class CompositeProcessor  implements Runnable{
      * @return
      */
     public int getPixelLUT(MimsPlus img, int x, int y) {
-        if(img==null) return 0;
+        if (img == null) {
+            return 0;
+        }
         int val = 0;
 
         double min = img.getDisplayRangeMin();
         double max = img.getDisplayRangeMax();
-        double range = max-min;
+        double range = max - min;
         float pix = img.getProcessor().getPixelValue(x, y);
 
-        if(pix<=min)
+        if (pix <= min) {
             return 0;
-        else if(pix>=max)
+        } else if (pix >= max) {
             return 255;
+        }
 
-        val = java.lang.Math.round((float)((pix-min)/range)*255);
+        val = java.lang.Math.round((float) ((pix - min) / range) * 255);
 
         return val;
     }
-    
+
     // DJ: 08/06/2014
     // Just for testig purposes.
-    public void waitForThreadToFinish(){
+    public void waitForThreadToFinish() {
         try {
             this.fThread.join();
         } catch (InterruptedException ex) {
