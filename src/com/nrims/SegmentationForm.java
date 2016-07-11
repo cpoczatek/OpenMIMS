@@ -10,12 +10,12 @@ import javax.swing.JOptionPane;
 
 /**
  *
- * @author  sreckow
+ * @author sreckow
  */
 public class SegmentationForm extends javax.swing.JPanel implements java.beans.PropertyChangeListener {
 
-    private static final int NO_TASK = -1,  TRAIN_TASK = 0,  PRED_TASK = 1,  TRAINFEAT_TASK = 2,  PREDFEAT_TASK = 3,  ROI_TASK = 4,  EXPORT_TASK = 5;
-    public  static final String[] FEATURE_NAMES = {"Neighboorhood", "Gradient", "Radius"};
+    private static final int NO_TASK = -1, TRAIN_TASK = 0, PRED_TASK = 1, TRAINFEAT_TASK = 2, PREDFEAT_TASK = 3, ROI_TASK = 4, EXPORT_TASK = 5;
+    public static final String[] FEATURE_NAMES = {"Neighboorhood", "Gradient", "Radius"};
     // TODO
     // ### HARD CODED ###
     private final int[][] RATIOS = {{1, 0}, {3, 2}}; // ratio images 13/12 and 27/26
@@ -62,7 +62,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         // #########
 
         resetForm();
-        
+
         //to remove....
         this.classesCombo.setEnabled(false);
     }
@@ -80,8 +80,8 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         properties.setValueOf(SegmentationEngine.ENGINE, "lib-SVM");
         int nMasses = mimsUi.getOpener().getNMasses();
         massImageFeatures = new boolean[nMasses];
-        for (int i = 0; i < nMasses; i++){
-           massImageFeatures[i] = true;
+        for (int i = 0; i < nMasses; i++) {
+            massImageFeatures[i] = true;
         }
         ratioImageFeatures = new boolean[]{false, false, false};
         localFeatures = new int[]{1, 1, 1};
@@ -117,10 +117,10 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                 if (index == -1) {
                     // create ratio image
                     RatioProps props = new RatioProps(num, den);
-                    
+
                     //why are we doing this...
                     props.setRatioScaleFactor(mimsUi.getHSIView().getRatioScaleFactor());
-                    
+
                     MimsPlus mp = new MimsPlus(mimsUi, props);
                     mp.showWindow();
                     //mimsUi.computeRatio(props, true);
@@ -134,25 +134,25 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
             }
         }
 
-        if (ratioImageFeatures[ratioImageFeatures.length-1] == true) {
-           MimsPlus[] mp = mimsUi.getOpenRatioImages();
-           for (int i=0; i < mp.length; i++) {
-              boolean contains = false;
-              for(int j=0; j < images.size(); j++) {
-                 if (mp[i].equals(images.get(j))) {
-                    contains = true;
-                    break;
-                 }
-              }
-              if (!contains)
-                 images.add(mp[i]);
-           }
+        if (ratioImageFeatures[ratioImageFeatures.length - 1] == true) {
+            MimsPlus[] mp = mimsUi.getOpenRatioImages();
+            for (int i = 0; i < mp.length; i++) {
+                boolean contains = false;
+                for (int j = 0; j < images.size(); j++) {
+                    if (mp[i].equals(images.get(j))) {
+                        contains = true;
+                        break;
+                    }
+                }
+                if (!contains) {
+                    images.add(mp[i]);
+                }
+            }
         }
-
 
         return images.toArray(new MimsPlus[images.size()]);
     }
-    
+
     public int getColorImageIndex() {
         return colorImageIndex;
     }
@@ -160,23 +160,23 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
     public int[] getLocalFeatures() {
         return localFeatures;
     }
-    
+
     public SegmentationEngine getActiveEngine() {
         return activeEngine;
     }
-    
+
     public byte[] getClassification() {
         return classification;
     }
-    
+
     public int[] getClassColors() {
         return classColors;
     }
-    
+
     public String[] getClassNames() {
         return classNames;
     }
-    
+
     private void startTraining(ArrayList<ArrayList<ArrayList<Double>>> trainData) {
         // a new engine instance is needed for each execution as SwingWorker objects are non-reusable
         try {
@@ -244,7 +244,9 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         //This is bad because it deletes rois
         //Need to make segmentation "play better" with roi groups
         System.out.println("BAD METHOD HIT");
-        if(true) return;
+        if (true) {
+            return;
+        }
         //DJ: 12/05/2014
         //if (roiManager.roijlist.getModel().getSize() > 0) {
         if (roiManager.getRoiList().getModel().getSize() > 0) { // added by DJ: 12/05/2014
@@ -288,11 +290,12 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
             if (ratioImageFeatures[i] && i == ratioImageFeatures.length - 1) {
                 MimsPlus[] mp = mimsUi.getOpenRatioImages();
                 for (int j = 0; j < mp.length; j++) {
-                   if ((mp[j].getRatioProps().getNumMassIdx() != RATIOS[0][0]  ||
-                        mp[j].getRatioProps().getDenMassIdx() != RATIOS[0][1]) &&
-                       (mp[j].getRatioProps().getNumMassIdx() != RATIOS[1][0]  ||
-                        mp[j].getRatioProps().getDenMassIdx() != RATIOS[1][1]))
-                      desc += mimsUi.getOpener().getMassNames()[mp[j].getRatioProps().getNumMassIdx()] + "/" + mimsUi.getOpener().getMassNames()[mp[j].getRatioProps().getDenMassIdx()] + "\n";
+                    if ((mp[j].getRatioProps().getNumMassIdx() != RATIOS[0][0]
+                            || mp[j].getRatioProps().getDenMassIdx() != RATIOS[0][1])
+                            && (mp[j].getRatioProps().getNumMassIdx() != RATIOS[1][0]
+                            || mp[j].getRatioProps().getDenMassIdx() != RATIOS[1][1])) {
+                        desc += mimsUi.getOpener().getMassNames()[mp[j].getRatioProps().getNumMassIdx()] + "/" + mimsUi.getOpener().getMassNames()[mp[j].getRatioProps().getDenMassIdx()] + "\n";
+                    }
                 }
             }
         }
@@ -358,10 +361,9 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         this.ratioImageFeatures = ratioImageFeatures;
     }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The
+     * content of this method is always regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -651,8 +653,6 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
 
     private void modifyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modifyButtonActionPerformed
 
-
-
         SegmentationSetupForm setup = new SegmentationSetupForm(mimsUi, this, roiManager, trainClasses, massImageFeatures,
                 ratioImageFeatures, localFeatures, colorImageIndex, properties);
         //mimsUi.setState(java.awt.Frame.ICONIFIED);
@@ -679,22 +679,23 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
             }
             ArrayList ratioImages = new ArrayList<String>();
             if (ratioImageFeatures[0] == true) {
-               String tmp = new String(new Integer(RATIOS[0][0]).toString() + " " + new Integer(RATIOS[0][1]).toString());
-               ratioImages.add(tmp);
+                String tmp = new String(new Integer(RATIOS[0][0]).toString() + " " + new Integer(RATIOS[0][1]).toString());
+                ratioImages.add(tmp);
             }
             if (ratioImageFeatures[1] == true) {
-               String tmp = new String(new Integer(RATIOS[1][0]).toString() + " " + new Integer(RATIOS[1][1]).toString());
-               ratioImages.add(tmp);
+                String tmp = new String(new Integer(RATIOS[1][0]).toString() + " " + new Integer(RATIOS[1][1]).toString());
+                ratioImages.add(tmp);
             }
             if (ratioImageFeatures[2] == true) {
-               MimsPlus[] mp = mimsUi.getOpenRatioImages();
-               for (int i = 0; i < mp.length; i++) {
-                  int n = mp[i].getRatioProps().getNumMassIdx();
-                  int d = mp[i].getRatioProps().getDenMassIdx();
-                  String tmp = new String(new Integer(n).toString() + " " + new Integer(d).toString());
-                  if (!ratioImages.contains(tmp))
-                     ratioImages.add(tmp);
-               }
+                MimsPlus[] mp = mimsUi.getOpenRatioImages();
+                for (int i = 0; i < mp.length; i++) {
+                    int n = mp[i].getRatioProps().getNumMassIdx();
+                    int d = mp[i].getRatioProps().getDenMassIdx();
+                    String tmp = new String(new Integer(n).toString() + " " + new Integer(d).toString());
+                    if (!ratioImages.contains(tmp)) {
+                        ratioImages.add(tmp);
+                    }
+                }
             }
             SegFileUtils.save(filePath, properties, trainClasses, classColors, colorImageIndex, massImageFeatures, ratioImages,
                     localFeatures, classification, predClasses);
@@ -806,10 +807,9 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         segUtil = SegUtils.initPrepSeg(images, colorImageIndex, localFeatures, trainClasses);
         segUtil.addPropertyChangeListener(this);
         segUtil.execute();
-        */
+         */
 
         //prep trainding data
-
         MimsPlus[] images = getImages();
         SegUtils sUtil = SegUtils.initPrepSeg(images, colorImageIndex, localFeatures, trainClasses);
         sUtil.prepareSegmentation();
@@ -823,13 +823,13 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
         try{
             tempTrainData = scale.run(trainingdata, properties, true);
         }catch(Exception e) { e.printStackTrace(); }
-        */
+         */
         tempengine = null;
 
         java.io.BufferedWriter bw = null;
         String dir = mimsUi.getImageDir();
         dir += mimsUi.getImageFilePrefix();
-        try{
+        try {
             //write training data
             bw = new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(dir + "_training.txt")));
             for (int i = 0; i < trainingdata.size(); i++) {
@@ -841,7 +841,6 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
             //Dont's do this???
             //generate scaling params outside plugin
             //is there a way to get scaling params???
-            
             //write scaled training data
             SVM.svm_scale sc = new SVM.svm_scale();
             ArrayList<String> scaledTrainData = sc.run(trainingdata, this.getProperties(), true);
@@ -851,14 +850,14 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                 bw.newLine();
             }
             bw.close();
-            
 
-        } catch(Exception e) { e.printStackTrace(); }
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // tempengine incorrect?
         // use active engine?
-        SVM.SvmEngine engine = (SVM.SvmEngine)activeEngine;
+        SVM.SvmEngine engine = (SVM.SvmEngine) activeEngine;
         if (engine != null) {
             //write SVM model
             SVM.libsvm.svm_model model = (SVM.libsvm.svm_model) engine.getProperties().getValueOf("model");
@@ -869,15 +868,13 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
             }
         }
 
-
         //prepare full image data, also unscaled
         sUtil = SegUtils.initPrepSeg(images, colorImageIndex, localFeatures);
         //do not call a 2nd time, memory overhead too high
         //explicitly computed below and writen to disk line by line
         //sUtil.prepareSegmentation();
 
-
-        try{
+        try {
             //write data for entire image
             bw = new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(dir + "_test.txt")));
 
@@ -898,8 +895,7 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                     bw.newLine();
                 }
             }
-            */
-
+             */
             bw.close();
 
             /*
@@ -923,8 +919,10 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                 }
             }
             bw.close();
-            */
-        } catch(Exception e) { e.printStackTrace(); }
+             */
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
 }//GEN-LAST:event_exportButtonActionPerformed
@@ -1038,14 +1036,14 @@ public class SegmentationForm extends javax.swing.JPanel implements java.beans.P
                             predClasses = cm;
 
                             int nclasses = predClasses.getClasses().length;
-                            for(int c = 0; c < nclasses; c++) {
+                            for (int c = 0; c < nclasses; c++) {
                                 String classname = predClasses.getClasses()[c];
                                 Roi[] segrois = new Roi[predClasses.getRois(classname).length];
-                                for(int r = 0; r < segrois.length; r++) {
+                                for (int r = 0; r < segrois.length; r++) {
                                     segrois[r] = predClasses.getRois(classname)[r].getRoi();
                                 }
-                                String grpname = "seg,a"+segUtil.getMinSize()+","+classname;
-                                
+                                String grpname = "seg,a" + segUtil.getMinSize() + "," + classname;
+
                                 roiManager.addToGroup(segrois, grpname);
                             }
                             roiManager.showFrame();
