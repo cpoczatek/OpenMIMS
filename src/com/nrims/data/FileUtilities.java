@@ -59,113 +59,140 @@ import org.jfree.data.xy.XYDataset;
  * @author wang2
  */
 public class FileUtilities {
+
     /**
      * getNext: modified version of getNext function from NextImageOpener plugin in ImageJ, modified for OpenMIMS
+     *
      * @param path
      * @param imageName
      * @param forward
      * @return fullpath to next item e.g. home/user/nextfile.nrrd
      */
-    public static String getNext(String path, String imageName, boolean forward){
+    public static String getNext(String path, String imageName, boolean forward) {
         File dir = new File(path);
-        if (!dir.isDirectory()) return null;
+        if (!dir.isDirectory()) {
+            return null;
+        }
         String[] names = dir.list();
         ij.util.StringSorter.sort(names);
         int thisfile = -1;
-        for (int i=0; i<names.length; i++) {
+        for (int i = 0; i < names.length; i++) {
             if (names[i].equals(imageName)) {
                 thisfile = i;
                 break;
             }
         }
-         //System.out.println("OpenNext.thisfile:" + thisfile);
-        if(thisfile == -1) return null;// can't find current image
-        
+        //System.out.println("OpenNext.thisfile:" + thisfile);
+        if (thisfile == -1) {
+            return null;// can't find current image
+        }
         // make candidate the index of the next file
         int candidate = thisfile + 1;
-        if (!forward) candidate = thisfile - 1;
-        if (candidate<0) candidate = names.length - 1;
-        if (candidate==names.length) candidate = 0;
+        if (!forward) {
+            candidate = thisfile - 1;
+        }
+        if (candidate < 0) {
+            candidate = names.length - 1;
+        }
+        if (candidate == names.length) {
+            candidate = 0;
+        }
         // keep on going until an image file is found or we get back to beginning
-        while (candidate!=thisfile) {
+        while (candidate != thisfile) {
             String nextPath = path + "/" + names[candidate];
-             //System.out.println("OpenNext: "+ candidate + "  " + names[candidate]);
+            //System.out.println("OpenNext: "+ candidate + "  " + names[candidate]);
             File nextFile = new File(nextPath);
             boolean canOpen = true;
-            if (names[candidate].startsWith(".") || nextFile.isDirectory())
+            if (names[candidate].startsWith(".") || nextFile.isDirectory()) {
                 canOpen = false;
+            }
             if (canOpen) {
-                 String fileName = nextFile.getName();
-                    if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)) {
-                    }else{
-                        canOpen = false;
-                    }
+                String fileName = nextFile.getName();
+                if (fileName.endsWith(NRRD_EXTENSION) || fileName.endsWith(MIMS_EXTENSION)) {
+                } else {
+                    canOpen = false;
+                }
             }
-            if (canOpen)
-                    return nextPath;
-            else {// increment again
-                if (forward)
+            if (canOpen) {
+                return nextPath;
+            } else {// increment again
+                if (forward) {
                     candidate = candidate + 1;
-                else
+                } else {
                     candidate = candidate - 1;
-                if (candidate<0) candidate = names.length - 1;
-                if (candidate == names.length) candidate = 0;
+                }
+                if (candidate < 0) {
+                    candidate = names.length - 1;
+                }
+                if (candidate == names.length) {
+                    candidate = 0;
+                }
             }
-            
+
         }
         return null;
     }
 
-     /**
+    /**
      * Helper function for reading .sum/.ratio/.hsi files from xml.
+     *
      * @param file the file to read
      * @return the object read from the file
      */
-    public static Object readObjectFromXML(File file){
+    public static Object readObjectFromXML(File file) {
         Object obj = null;
         try {
             XMLDecoder xmlDecoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
             obj = xmlDecoder.readObject();
             xmlDecoder.close();
         } catch (Exception e) {
-            try{
-            FileInputStream f_in = new FileInputStream(file);
-            ObjectInputStream obj_in = new ObjectInputStream(f_in);
-            obj = obj_in.readObject();
-            }catch(Exception ex){
+            try {
+                FileInputStream f_in = new FileInputStream(file);
+                ObjectInputStream obj_in = new ObjectInputStream(f_in);
+                obj = obj_in.readObject();
+            } catch (Exception ex) {
                 obj = null;
             }
-        }finally {
+        } finally {
             return obj;
         }
     }
+
     /**
-    * Takes a props object and adds it to a zip.
-    * Used in Save Session.
-    * depends on no globals, can probably move to new helper class
-    * @param zos the ZipOutputStream for the final zip
-    * @param toWrite the props object to be written
-    * @param cls the class of the props object
-    * @param params the parameters for the constructor of the props object
-    * @param filenames the filenames of similar props objects
-    * @param extension the extension for the props object
-    * @param numName mass string for the numerator (or if a sum of a mass image, the parent)
-    * @param denName mass string for the numerator (or if a sum of a mass image, -1)
-    * @param filename the name of the .nrrd file
-    * @param i index of the object in filenames
-    * @return true if save succeeded, or false if an error was thrown
-    */
-    
-    public static boolean saveToXML(ZipOutputStream zos, Object toWrite, String[] filenames, String extension, String numName, String denName, String filename, int i){
+     * Takes a props object and adds it to a zip. Used in Save Session. depends on no globals, can probably move to new
+     * helper class
+     *
+     * @param zos the ZipOutputStream for the final zip
+     * @param toWrite the props object to be written
+     * @param cls the class of the props object
+     * @param params the parameters for the constructor of the props object
+     * @param filenames the filenames of similar props objects
+     * @param extension the extension for the props object
+     * @param numName mass string for the numerator (or if a sum of a mass image, the parent)
+     * @param denName mass string for the numerator (or if a sum of a mass image, -1)
+     * @param filename the name of the .nrrd file
+     * @param i index of the object in filenames
+     * @return true if save succeeded, or false if an error was thrown
+     */
+    public static boolean saveToXML(ZipOutputStream zos, Object toWrite, String[] filenames, String extension, String numName, String denName, String filename, int i) {
         try {
             int numMass = Math.round(new Float(numName));
             int denMass = Math.round(new Float(denName));
-            if (denMass != -1) filenames[i] = filename + "_m" + numMass + "_m" + denMass;
-            else filenames[i] = filename + "_m" + numMass;
+            if (denMass != -1) {
+                filenames[i] = filename + "_m" + numMass + "_m" + denMass;
+            } else {
+                filenames[i] = filename + "_m" + numMass;
+            }
             int numBefore = 0;
-            for (int j = 0; j < i; j++) if (filenames[i].equals(filenames[j])) numBefore++;
+            for (int j = 0; j < i; j++) {
+                if (filenames[i].equals(filenames[j])) {
+                    numBefore++;
+                }
+            }
             String post = "";
-            if (numBefore > 0) post = "(" + numBefore + ")";
+            if (numBefore > 0) {
+                post = "(" + numBefore + ")";
+            }
             zos.putNextEntry(new ZipEntry(filenames[i] + post + extension));
             XMLEncoder e = new XMLEncoder(zos);
             //need to modify persistance delegate to deal with constructor in SumProps which takes parameters
@@ -186,10 +213,11 @@ public class FileUtilities {
             return false;
         }
     }
-        /**
-     * Given a zip file, extracts XML files from within and converts to Objects.
-     * Used in opening .session.zip files
+
+    /**
+     * Given a zip file, extracts XML files from within and converts to Objects. Used in opening .session.zip files
      * Depends on no globals, can probably move to new helper class
+     *
      * @param file absolute file path
      * @return array list containing Objects.
      */
@@ -214,39 +242,45 @@ public class FileUtilities {
             return entries;
         }
     }
+
     /**
-    * AutoSaveROI is the thread which is responsible for autosaving the ROI's
-    */
+     * AutoSaveROI is the thread which is responsible for autosaving the ROI's
+     */
     public static class AutoSaveROI implements Runnable {
+
         UI ui;
-        public AutoSaveROI(UI ui){
+
+        public AutoSaveROI(UI ui) {
             this.ui = ui;
         }
-        public void run(){
-            for (;;){
+
+        public void run() {
+            for (;;) {
                 try {
                     // Save the ROI files to zip.
-                    String roisFileName = System.getProperty("java.io.tmpdir")+"/"+ui.getImageFilePrefix();
+                    String roisFileName = System.getProperty("java.io.tmpdir") + "/" + ui.getImageFilePrefix();
                     Roi[] rois = ui.getRoiManager().getAllROIs();
-                    if (rois.length > 0  && ui.getRoiManager().needsToBeSaved()){
-                       checkSave(roisFileName + ROIS_EXTENSION, roisFileName, 1);
-                       ui.getRoiManager().saveMultiple(rois, roisFileName + ROIS_EXTENSION, false);
-                       ui.getRoiManager().setNeedsToBeSaved(false);
-                       //threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
-                    }else{
+                    if (rois.length > 0 && ui.getRoiManager().needsToBeSaved()) {
+                        checkSave(roisFileName + ROIS_EXTENSION, roisFileName, 1);
+                        ui.getRoiManager().saveMultiple(rois, roisFileName + ROIS_EXTENSION, false);
+                        ui.getRoiManager().setNeedsToBeSaved(false);
+                        //threadMessage("Autosaved at "+ roisFileName + ROIS_EXTENSION);
+                    } else {
                         //threadMessage("Nothing to autosave");
                     }
-                    Thread.sleep(ui.getInterval());    
-                } catch (InterruptedException e){
+                    Thread.sleep(ui.getInterval());
+                } catch (InterruptedException e) {
                     //ui.threadMessage("Autosave thread interrupted");
                     break;
                 }
             }
         }
-    }/**
-     * Recursively check for files with the same name as specified and save those other files as other names.
-     * Used in autosave ROI to keep a backlog of autosaves
-     * Ex. my_rois.rois, my_rois(1).rois, my_rois(2).rois
+    }
+
+    /**
+     * Recursively check for files with the same name as specified and save those other files as other names. Used in
+     * autosave ROI to keep a backlog of autosaves Ex. my_rois.rois, my_rois(1).rois, my_rois(2).rois
+     *
      * @param toSave full path and filename of filename you want to use
      * @param filename only the filename you want to use
      * @param n how many duplicates you have encountered so far
@@ -269,26 +303,29 @@ public class FileUtilities {
         }
         return true;
     }
+
     public static String getMachineName() throws UnknownHostException {
         return InetAddress.getLocalHost().getHostName();
     }
-       /**
-    * Returns the prefix of any file name.
-    * For example: /tmp/test_file.im = /tmp/test_file
-    *
-    * @return prefix file name.
-    */
-   public static String getFilePrefix(String fileName) {
-      String prefix = fileName.substring(0, fileName.lastIndexOf("."));
-      return prefix;
-   }
-   /**
-    * Method to save all additional data such as sum images, ratios images, rois, etc.
-    * @param baseFileName the filename and path of the .nrrd or .im file e.g. /home/user/myfile.nrrd
-    * @param onlyFileName the filename of the .nrrd or .im file without the extension or folders e.g. "myfile"
-    * @param ui
-    * @return true if succeeded, false if not
-    */
+
+    /**
+     * Returns the prefix of any file name. For example: /tmp/test_file.im = /tmp/test_file
+     *
+     * @return prefix file name.
+     */
+    public static String getFilePrefix(String fileName) {
+        String prefix = fileName.substring(0, fileName.lastIndexOf("."));
+        return prefix;
+    }
+
+    /**
+     * Method to save all additional data such as sum images, ratios images, rois, etc.
+     *
+     * @param baseFileName the filename and path of the .nrrd or .im file e.g. /home/user/myfile.nrrd
+     * @param onlyFileName the filename of the .nrrd or .im file without the extension or folders e.g. "myfile"
+     * @param ui
+     * @return true if succeeded, false if not
+     */
     public static boolean saveAdditionalData(String baseFileName, String onlyFileName, UI ui) {
         String dataFileName = onlyFileName + NRRD_EXTENSION;
         File sessionFile = null;
@@ -355,7 +392,7 @@ public class FileUtilities {
                         CompositeProps compprops = comp[i].getCompositeProps();
                         compprops.setDataFileName(dataFileName);
                         if (!FileUtilities.saveToXML(zos, compprops, filenames,
-                                COMPOSITE_EXTENSION, i+"", "-1", onlyFileName, i)) {
+                                COMPOSITE_EXTENSION, i + "", "-1", onlyFileName, i)) {
                             return false;
                         }
                     }
@@ -391,19 +428,20 @@ public class FileUtilities {
         }
         return true;
     }
-   /**
-     * checks within folder of filename if filename exists.
-     * Depends on no globals, can probably move to new helper class
+
+    /**
+     * checks within folder of filename if filename exists. Depends on no globals, can probably move to new helper class
+     *
      * @param extension which extension we want to save ass
      * @param filename the filename we want to save as (Ex. "/tmp/test_file"
      * @param description description of the type of file (Ex. "Mims session file")
      * @return a File representing the new file (which has not been created yet)
      */
-    private static File checkForExistingFiles(String extension, String filename, String description, UI ui){
+    private static File checkForExistingFiles(String extension, String filename, String description, UI ui) {
         String baseFileName = filename;
         File f = new File(baseFileName + extension);
         int counter = 0;
-        if (f.exists()){
+        if (f.exists()) {
             while (f.exists()) {
                 counter++;
                 f = new File(baseFileName + "(" + counter + ")" + extension);
@@ -421,7 +459,7 @@ public class FileUtilities {
                     baseFileName = getFilePrefix(getFilePrefix(fc.getSelectedFile().getAbsolutePath()));
                 } else {
                     baseFileName = getFilePrefix(fc.getSelectedFile().getAbsolutePath());
-                } 
+                }
             } else {
                 return null;
             }
@@ -429,20 +467,25 @@ public class FileUtilities {
         }
         return f;
     }
-     public static String joinArray(String[] args){
+
+    public static String joinArray(String[] args) {
         String output = "";
-        for (int i = 0; i < args.length; i++){
-            if (i != 0) output += " ";
+        for (int i = 0; i < args.length; i++) {
+            if (i != 0) {
+                output += " ";
+            }
             output += args[i];
         }
         return output;
     }
+
     /**
      * Method to parse arguments passed in startup of OpenMIMS
+     *
      * @param args
-     * @return 
+     * @return
      */
-    public static String[] splitArgs(String args){
+    public static String[] splitArgs(String args) {
         String SINGLE_INSTANCE_OPTION = "-single_instance";
         String FIJI_RUN_COMMAND = "run(\"Open MIMS Image\"";
         String IMAGEJ_RUN_COMMAND = "-run";
@@ -464,8 +507,8 @@ public class FileUtilities {
                 optArgs.add(checkArg);
                 i++;
                 leftover = "";
-            } else {
-                //if the flag is not valid, there could be the possibility that it is a filename, so we save it
+            } else //if the flag is not valid, there could be the possibility that it is a filename, so we save it
+            {
                 if (leftover.equals("")) {
                     leftover = splitArgs[i] + " ";
                 } else {
@@ -475,32 +518,36 @@ public class FileUtilities {
         }
         return (String[]) optArgs.toArray(new String[0]);
     }
+
     /**
-     * Helper method to eliminate extra null values in MimsPlus arrays.
-     * Useful for the arrays returned by getMassImages(), etc.
+     * Helper method to eliminate extra null values in MimsPlus arrays. Useful for the arrays returned by
+     * getMassImages(), etc.
+     *
      * @param massImages
      * @return array containing only the MimsPlus
      */
-    public static MimsPlus[] slimImageArray(MimsPlus[] massImages){
+    public static MimsPlus[] slimImageArray(MimsPlus[] massImages) {
         ArrayList<MimsPlus> images = new ArrayList<MimsPlus>();
-        for (int i = 0; i < massImages.length; i++){
-            if (massImages[i] != null){
+        for (int i = 0; i < massImages.length; i++) {
+            if (massImages[i] != null) {
                 images.add(massImages[i]);
             }
         }
         return (MimsPlus[]) images.toArray(new MimsPlus[0]);
     }
+
     /**
-     * Helper method to check the permissions of a given directory/directory file is contained in.
-     * Useful for when you are trying to save something.
-     * If the folder is not writable, then the function prompts the user to select a new directory
+     * Helper method to check the permissions of a given directory/directory file is contained in. Useful for when you
+     * are trying to save something. If the folder is not writable, then the function prompts the user to select a new
+     * directory
+     *
      * @param folder the directory whose write permission are in question, or file to check it's parent directory
      * @param ui main UI window, needed to display error messages
      * @param msg customized message for the user to describe what you're using the folder for.
      * @return the parent folder if one can be written to, or null if the users opts out of choosing one.
      */
-    public static File checkWritePermissions(File folder, UI ui, String msg){
-        if (!folder.isDirectory()){
+    public static File checkWritePermissions(File folder, UI ui, String msg) {
+        if (!folder.isDirectory()) {
             folder = folder.getParentFile();
         }
         while (!folder.canWrite()) {
@@ -529,9 +576,11 @@ public class FileUtilities {
         }
         return folder;
     }
+
     /**
-     * Used to sum a list of images, then concatenate the sums.
-     * Useful for series of images. Images will be stacked in order of array
+     * Used to sum a list of images, then concatenate the sums. Useful for series of images. Images will be stacked in
+     * order of array
+     *
      * @param files the files you want to stack
      * @param ui
      * @return the saved file in which the stack of images is located
@@ -542,7 +591,7 @@ public class FileUtilities {
         File tempDirectory;
         String originalName = "";
         ArrayList<File> tempFiles = new ArrayList<File>();
-                    String[] names = new String[files.length];
+        String[] names = new String[files.length];
         if (files.length > 0) {
             originalName = getFilePrefix(files[0].getName());
             targetDirectory = checkWritePermissions(files[0].getParentFile(), originalUI,
@@ -588,7 +637,7 @@ public class FileUtilities {
                     UI tempUi = new UI();
                     tempUi.openFile(tempFile, false);
                     Opener tempImage = tempUi.getOpener();
-                    
+
                     MimsStackEditor mimStack = ui.getmimsStackEditing();
                     if (ui.getOpener().getNMasses() == tempImage.getNMasses()) {
                         if (mimStack.sameResolution(image, tempImage)) {
@@ -654,25 +703,27 @@ public class FileUtilities {
         }
         return null;
     }
+
     /**
-     * Get the mosaic file in which the argument file is contained within.
-     * Note: searches the direct parent directories and all .nrrd files directly within those directories.
-     * It will not recursively search the sibling/uncle directories.
-     * @param file 
+     * Get the mosaic file in which the argument file is contained within. Note: searches the direct parent directories
+     * and all .nrrd files directly within those directories. It will not recursively search the sibling/uncle
+     * directories.
+     *
+     * @param file
      * @return the mosaic file if found, or null if not found.
      */
-    public static File getMosaic(File file){
+    public static File getMosaic(File file) {
         File parent = file.getParentFile();
-        while (parent != null){
+        while (parent != null) {
             File[] siblings = parent.listFiles();
-            for (File sibling: siblings){
-                if (sibling.getPath().endsWith(NRRD_EXTENSION)){
-                    try{
+            for (File sibling : siblings) {
+                if (sibling.getPath().endsWith(NRRD_EXTENSION)) {
+                    try {
                         HashMap<String, String> headerInfo = FileUtilities.getHeaderInfo(sibling);
-                        if(headerInfo.containsKey("mims_tile_positions") && headerInfo.get("mims_tile_positions").contains(file.getName())){
+                        if (headerInfo.containsKey("mims_tile_positions") && headerInfo.get("mims_tile_positions").contains(file.getName())) {
                             return sibling;
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         return null;
                     }
                 }
@@ -681,30 +732,33 @@ public class FileUtilities {
         }
         return null;
     }
+
     /**
      * Open a file in a new UI window
+     *
      * @param file
-     * @param ui 
+     * @param ui
      */
     public static void openInNewUI(File file, UI ui) {
         UI ui_new = new UI();
         ui_new.setLocation(ui.getLocation().x + 35, ui.getLocation().y + 35);
         ui_new.setVisible(true);
         ui_new.openFile(file);
-        
+
         // DJ: 07/24/2014 - "ui.getOpenMassProps()" added due to the new mass_props arg we added to restoreState
         // DJ: 08/01/2014 - "ui.getOpenCompositeProps()" added due to the new composite_props arg we added to restoreState
         ui_new.restoreState(ui.getOpenMassProps(), ui.getOpenRatioProps(), ui.getOpenHSIProps(), ui.getOpenSumProps(), ui.getOpenCompositeProps(), false, false);
-        
-        
+
         ui_new.getHSIView().useSum(ui.getIsSum());
         ui_new.getHSIView().medianize(ui.getMedianFilterRatios(), ui.getMedianFilterRadius());
     }
+
     /**
      * Pull the header info from a .nrrd file into a HashMap.
+     *
      * @param file
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     public static HashMap<String, String> getHeaderInfo(File file) throws IOException {
         HashMap<String, String> headerInfo = new HashMap<String, String>();
@@ -724,10 +778,10 @@ public class FileUtilities {
             }
             if (thisLine.indexOf("#") == 0) {
                 commentString += thisLine.substring(1) + "\n";
-            }else if (thisLine.contains(":")) {
+            } else if (thisLine.contains(":")) {
                 String[] keyValuePair = thisLine.split("/:(.+)?/");
                 String key = thisLine.substring(0, thisLine.indexOf(":")).trim().toLowerCase();
-                String value =thisLine.substring(thisLine.indexOf(":")+1).trim();
+                String value = thisLine.substring(thisLine.indexOf(":") + 1).trim();
                 if (value.indexOf("=") == 0) {
                     value = value.substring(1).trim();
                 }
@@ -737,6 +791,7 @@ public class FileUtilities {
         headerInfo.put("comments", commentString);
         return headerInfo;
     }
+
     /*public static ArrayList<Object> openExperiment(File file){
         ArrayList entries = new ArrayList();
         Object obj;
@@ -830,8 +885,10 @@ public class FileUtilities {
             }
         }
     }
+
     /**
      * Get the file from which the current slice of a generated stack originates from.
+     *
      * @param massimage the image whose current slice is desired file we wish to find
      * @param ui
      * @return the file which the slice originates from.
@@ -844,29 +901,31 @@ public class FileUtilities {
         addFilesRecursively(new File(ui.getImageDir()), sliceName, all);
         if (all.isEmpty()) {
             return null;
-        }else{
-            return ((File)all.toArray()[0]);
+        } else {
+            return ((File) all.toArray()[0]);
         }
     }
-        /**
-     * Get the mosaic file in which the argument file is contained within.
-     * Note: searches the direct parent directories and all .nrrd files directly within those directories.
-     * It will not recursively search the sibling/uncle directories.
-     * @param file 
+
+    /**
+     * Get the mosaic file in which the argument file is contained within. Note: searches the direct parent directories
+     * and all .nrrd files directly within those directories. It will not recursively search the sibling/uncle
+     * directories.
+     *
+     * @param file
      * @return the mosaic file if found, or null if not found.
      */
-    public static File getStack(File file){
+    public static File getStack(File file) {
         File parent = file.getParentFile();
-        while (parent != null){
+        while (parent != null) {
             File[] siblings = parent.listFiles();
-            for (File sibling: siblings){
-                if (sibling.getPath().endsWith(NRRD_EXTENSION)){
-                    try{
+            for (File sibling : siblings) {
+                if (sibling.getPath().endsWith(NRRD_EXTENSION)) {
+                    try {
                         HashMap<String, String> headerInfo = FileUtilities.getHeaderInfo(sibling);
-                        if(headerInfo.containsKey("mims_stack_positions") && headerInfo.get("mims_stack_positions").contains(file.getName())){
+                        if (headerInfo.containsKey("mims_stack_positions") && headerInfo.get("mims_stack_positions").contains(file.getName())) {
                             return sibling;
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         return null;
                     }
                 }
@@ -875,35 +934,37 @@ public class FileUtilities {
         }
         return null;
     }
+
     /**
      * Take an XYDataset and convert it to a two dimensional array.
+     *
      * @param data
      * @return two dimensional Object array
      */
-    public static Object[][] convertXYDatasetToArray(XYDataset data){
+    public static Object[][] convertXYDatasetToArray(XYDataset data) {
         int numSeries = data.getSeriesCount();
-       int maxCount = 0;
+        int maxCount = 0;
         for (int i = 0; i < numSeries; i++) {
-            if (data.getItemCount(i) > maxCount){
+            if (data.getItemCount(i) > maxCount) {
                 maxCount = data.getItemCount(i);
             }
         }
-       Object[][] exportedData = new Object[maxCount][numSeries+1];
-       for (int i = 0; i < maxCount; i++){
-           Object[] row = new Object[numSeries+1];
-           row[0] = i+1;
-           for (int j = 1; j < numSeries+1; j++){
-               if (i >= data.getItemCount(j-1)){
-                   row[j] = 0;
-               }else{
-                   row[j] = data.getYValue(j-1, i);
-               }
-           }
-           exportedData[i] = row;
-       }
-       return exportedData;
+        Object[][] exportedData = new Object[maxCount][numSeries + 1];
+        for (int i = 0; i < maxCount; i++) {
+            Object[] row = new Object[numSeries + 1];
+            row[0] = i + 1;
+            for (int j = 1; j < numSeries + 1; j++) {
+                if (i >= data.getItemCount(j - 1)) {
+                    row[j] = 0;
+                } else {
+                    row[j] = data.getYValue(j - 1, i);
+                }
+            }
+            exportedData[i] = row;
+        }
+        return exportedData;
     }
-    
+
     //Change missing from svn->git migration
     public static String[] validStackPositions(MimsPlus image) {
         ArrayList<String> output = new ArrayList();
@@ -913,16 +974,15 @@ public class FileUtilities {
         }
         return output.toArray(new String[output.size()]);
     }
-    
+
     /**
      * UNUSED, This may be the wrong place to put this....
      */
-    
     /**
-     * Return a string of "stack positions" that includes only the names of
-     * files that are currently in the stack, ie deleted planes are not included.
-     * String is formatted to be placed directly in a nrrd header as the value
-     * of key 'mims_stack_positions'.
+     * Return a string of "stack positions" that includes only the names of files that are currently in the stack, ie
+     * deleted planes are not included. String is formatted to be placed directly in a nrrd header as the value of key
+     * 'mims_stack_positions'.
+     *
      * @param ui
      * @param op
      * @return string of stack positions with those of deleted planes removed.
@@ -931,7 +991,7 @@ public class FileUtilities {
         //ArrayList filenames = new ArrayList(String);
         String[] filenames = op.getStackPositions();
         MimsAction action = ui.getmimsAction();
-       // int size = action.get().size();
+        // int size = action.get().size();
         String raw = "";
         String trimmed = "";
         try {
