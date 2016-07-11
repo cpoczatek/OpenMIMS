@@ -28,8 +28,7 @@ public class MimsJFileChooser extends JFileChooser implements PropertyChangeList
     /**
      * MimsJFileChooser.java
      *
-     * Custom JFileChooser that contains a filter accessory and keeps the
-     * 'lastFolder' field up to date.
+     * Custom JFileChooser that contains a filter accessory and keeps the 'lastFolder' field up to date.
      *
      * @author zkaufman
      */
