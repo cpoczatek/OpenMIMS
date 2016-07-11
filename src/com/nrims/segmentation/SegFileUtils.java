@@ -26,21 +26,21 @@ public class SegFileUtils {
 
     // constants used for writing the .zip file
     private static final String FEATURE_FILE_HEADER = "#V2";
-    private static final String RATIOS       = "ratios = ";
-    private static final String MASSES      = "masses = ";
-    private static final String COLOR_INDEX   = "color_index = ";
+    private static final String RATIOS = "ratios = ";
+    private static final String MASSES = "masses = ";
+    private static final String COLOR_INDEX = "color_index = ";
     private static final String TRAINPREFIX = "train";
-    private static final String PREDPREFIX  = "pred";
-    private static final String CLASSFILE   = "class";
-    private static final String DESCFILE    = "desc";
-    private static final String FEATFILE    = "feat";
-    private static final String PROPFILE    = "prop";
-    private static final String SEPARATOR   = "/";      // there's no portable way of writing .zip files, so we
-                                                        // consistently use forward slash as file separator
+    private static final String PREDPREFIX = "pred";
+    private static final String CLASSFILE = "class";
+    private static final String DESCFILE = "desc";
+    private static final String FEATFILE = "feat";
+    private static final String PROPFILE = "prop";
+    private static final String SEPARATOR = "/";      // there's no portable way of writing .zip files, so we
+    // consistently use forward slash as file separator
 
     public static void save(String filename, SegmentationProperties props, ClassManager train, int[] classColors, int colorImageIndex,
-        boolean[] massImageFeatures, ArrayList<String> ratioImages, int[] localFeatures, byte[] classification, ClassManager pred){
-        try{
+            boolean[] massImageFeatures, ArrayList<String> ratioImages, int[] localFeatures, byte[] classification, ClassManager pred) {
+        try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(filename));
             DataOutputStream out = new DataOutputStream(zos);
             BufferedWriter bwr = new BufferedWriter(new OutputStreamWriter(out));
@@ -54,9 +54,11 @@ public class SegFileUtils {
             writeClassManager(train, zos, TRAINPREFIX);
             zos.putNextEntry(new ZipEntry(DESCFILE));
             String[] names = train.getClasses();
-            for(int i=0; i<names.length; i++){
+            for (int i = 0; i < names.length; i++) {
                 String line = names[i] + "\t";
-                if (classColors!= null && i <classColors.length) line += classColors[i];
+                if (classColors != null && i < classColors.length) {
+                    line += classColors[i];
+                }
                 line += "\n";
                 bwr.write(line);
                 bwr.flush();
@@ -68,25 +70,25 @@ public class SegFileUtils {
             //writeFeatures(zos, colorImageIndex, massImageFeatures, ratioImageFeature, localFeatures);
 
             // write classification (if available)
-            if(classification != null && classification.length > 0){
+            if (classification != null && classification.length > 0) {
                 zos.putNextEntry(new ZipEntry(CLASSFILE));
                 zos.write(classification);
             }
 
             //write predicted classes (if available)
-            if(pred != null && pred.getClasses().length > 0){
+            if (pred != null && pred.getClasses().length > 0) {
                 writeClassManager(pred, zos, PREDPREFIX);
             }
 
             out.close();
             zos.close();
-        }catch(java.io.IOException e){
+        } catch (java.io.IOException e) {
             System.out.println("Error saving segmentation result!\n" + e.toString());
             return;
         }
     }
 
-    public static void load(String filename, SegmentationForm form){
+    public static void load(String filename, SegmentationForm form) {
         ArrayList<String> classNames = new ArrayList<String>();
         ArrayList<Integer> classColors_tmp = new ArrayList<Integer>();
         int colorImageIndex = -1;
@@ -102,65 +104,70 @@ public class SegFileUtils {
             ZipInputStream in = new ZipInputStream(new FileInputStream(filename));
             ZipEntry entry = in.getNextEntry();
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            while (entry!=null) {
+            while (entry != null) {
                 String name[] = entry.getName().split(SEPARATOR);
-                if (name[0].equals(TRAINPREFIX)){
+                if (name[0].equals(TRAINPREFIX)) {
                     // load train classes
                     loadRoi(in, name[1], name[2], trainClasses);
-                }else if(name[0].equals(DESCFILE)){
+                } else if (name[0].equals(DESCFILE)) {
                     // load description and class colors (if available)
                     String line;
-                    while((line = br.readLine())!=null){
+                    while ((line = br.readLine()) != null) {
                         String[] data = line.split("\t");
                         classNames.add(data[0]);
-                        if(data.length>1) classColors_tmp.add(Integer.parseInt(data[1]));
+                        if (data.length > 1) {
+                            classColors_tmp.add(Integer.parseInt(data[1]));
+                        }
                     }
-                }else if(name[0].equals(FEATFILE)){
+                } else if (name[0].equals(FEATFILE)) {
                     // load features (see comments in the "writeFeatures" method for details)
                     String line = br.readLine();
                     byte[] bytes = line.getBytes();
                     if (line.matches(FEATURE_FILE_HEADER)) {
 
-                       // Get color index.
-                       line = br.readLine(); String colorImageIndexString = line.substring(line.lastIndexOf(" ")+1);
-                       colorImageIndex = new Integer(colorImageIndexString).intValue();
+                        // Get color index.
+                        line = br.readLine();
+                        String colorImageIndexString = line.substring(line.lastIndexOf(" ") + 1);
+                        colorImageIndex = new Integer(colorImageIndexString).intValue();
 
-                       // Get mass
-                       String[] tfs = br.readLine().substring(MASSES.length()).trim().split(" ");
-                       String[] rts = br.readLine().substring(RATIOS.length()).trim().split(",");
-                       while((line = br.readLine())!=null) {
-                          if (line.matches(SegmentationForm.FEATURE_NAMES[0]))
-                             localFeatures[0] = 1;
-                          else if (line.matches(SegmentationForm.FEATURE_NAMES[1]))
-                             localFeatures[1] = 1;
-                          else if (line.startsWith(SegmentationForm.FEATURE_NAMES[2]))
-                             localFeatures[2] = new Integer(line.substring(line.lastIndexOf(" ")+1)).intValue();
-                       }
+                        // Get mass
+                        String[] tfs = br.readLine().substring(MASSES.length()).trim().split(" ");
+                        String[] rts = br.readLine().substring(RATIOS.length()).trim().split(",");
+                        while ((line = br.readLine()) != null) {
+                            if (line.matches(SegmentationForm.FEATURE_NAMES[0])) {
+                                localFeatures[0] = 1;
+                            } else if (line.matches(SegmentationForm.FEATURE_NAMES[1])) {
+                                localFeatures[1] = 1;
+                            } else if (line.startsWith(SegmentationForm.FEATURE_NAMES[2])) {
+                                localFeatures[2] = new Integer(line.substring(line.lastIndexOf(" ") + 1)).intValue();
+                            }
+                        }
 
-                       // mass image features.
-                       massImageFeatures = new boolean[tfs.length];
-                       for (int i = 0; i < tfs.length; i++) {
-                          massImageFeatures[i] = new Boolean(tfs[i]);
-                       }
+                        // mass image features.
+                        massImageFeatures = new boolean[tfs.length];
+                        for (int i = 0; i < tfs.length; i++) {
+                            massImageFeatures[i] = new Boolean(tfs[i]);
+                        }
 
-                       // ratio image feature.
-                       ratioImageFeatures = new boolean[]{false, false, false};
-                       for (int i = 0; i < rts.length; i++) {
-                          if (rts[i].matches("1 0"))
-                             ratioImageFeatures[0] = true;
-                          else if (rts[i].matches("3 2"))
-                             ratioImageFeatures[1] = true;
-                          else if (rts[i].length() > 1)
-                             ratioImageFeatures[2] = true;
-                       }
+                        // ratio image feature.
+                        ratioImageFeatures = new boolean[]{false, false, false};
+                        for (int i = 0; i < rts.length; i++) {
+                            if (rts[i].matches("1 0")) {
+                                ratioImageFeatures[0] = true;
+                            } else if (rts[i].matches("3 2")) {
+                                ratioImageFeatures[1] = true;
+                            } else if (rts[i].length() > 1) {
+                                ratioImageFeatures[2] = true;
+                            }
+                        }
                     } else {
                         //version 1 case
-                       /*original
+                        /*original
                        colorImageIndex = in.read();
                        for(int i=0; i<massImageFeatures.length; i++)  massImageFeatures[i]  = (in.read()==1);
                        for(int i=0; i<2; i++) ratioImageFeatures[i] = (in.read()==1);
                        for(int i=0; i<localFeatures.length; i++)      localFeatures[i]      = in.read();
-                        */
+                         */
                         int offset = 0;
                         colorImageIndex = bytes[offset];
                         offset++;
@@ -176,23 +183,23 @@ public class SegFileUtils {
                             localFeatures[i] = bytes[offset];
                             offset++;
                         }
-                        
+
                     }
-                }else if(name[0].equals(PROPFILE)){
+                } else if (name[0].equals(PROPFILE)) {
                     // load properties
                     java.io.ObjectInputStream ois = new java.io.ObjectInputStream(in);
                     properties = (SegmentationProperties) ois.readObject();
-                }else if (name[0].equals(CLASSFILE)){
+                } else if (name[0].equals(CLASSFILE)) {
                     // load classification
                     byte[] buf = new byte[1024];
                     int len;
-                    while ((len = in.read(buf)) > 0){
+                    while ((len = in.read(buf)) > 0) {
                         byte[] tmp = new byte[classification.length + len];
-                        System.arraycopy(classification, 0, tmp ,0, classification.length);
+                        System.arraycopy(classification, 0, tmp, 0, classification.length);
                         System.arraycopy(buf, 0, tmp, classification.length, len);
                         classification = tmp;
                     }
-                }else if (name[0].equals(PREDPREFIX)){
+                } else if (name[0].equals(PREDPREFIX)) {
                     // load predicted classes
                     loadRoi(in, name[1], name[2], predClasses);
                 }
@@ -201,7 +208,9 @@ public class SegFileUtils {
             }
 
             int[] classColors = new int[classColors_tmp.size()];
-            for(int i=0; i<classColors.length; i++) classColors[i] = classColors_tmp.get(i);
+            for (int i = 0; i < classColors.length; i++) {
+                classColors[i] = classColors_tmp.get(i);
+            }
 
             form.setClassColors(classColors);
             form.setClassNames(classNames.toArray(new String[classNames.size()]));
@@ -301,11 +310,10 @@ public class SegFileUtils {
 //            return;
 //        }
 //    }
-
-    private static void writeClassManager(ClassManager classes, ZipOutputStream zos, String prefix) throws IOException{
+    private static void writeClassManager(ClassManager classes, ZipOutputStream zos, String prefix) throws IOException {
         RoiEncoder re = new RoiEncoder(zos);
-        for(String className : classes.getClasses()){
-            for(SegRoi segRoi: classes.getRois(className)){
+        for (String className : classes.getClasses()) {
+            for (SegRoi segRoi : classes.getRois(className)) {
                 String label = prefix + SEPARATOR + className + SEPARATOR + segRoi.getID();
                 zos.putNextEntry(new ZipEntry(label));
                 re.write(segRoi.getRoi());
@@ -313,79 +321,84 @@ public class SegFileUtils {
         }
     }
 
-    private static void writeFeatures(ZipOutputStream zos, int colorImageIndex, boolean[] massImageFeatures, ArrayList<String> ratioImages, int[] localFeatures) throws IOException{
+    private static void writeFeatures(ZipOutputStream zos, int colorImageIndex, boolean[] massImageFeatures, ArrayList<String> ratioImages, int[] localFeatures) throws IOException {
 
-      String[] featureNames = SegmentationForm.FEATURE_NAMES;
-      byte[] ms = MASSES.getBytes();
-      byte[] rs = RATIOS.getBytes();
-      byte[] nl = new String("\n").getBytes();
-      byte[] sp = new String(" ").getBytes();
-      byte[] cm = new String(",").getBytes();
-      byte[] tr = new String("true").getBytes();
-      byte[] fl = new String("false").getBytes();
+        String[] featureNames = SegmentationForm.FEATURE_NAMES;
+        byte[] ms = MASSES.getBytes();
+        byte[] rs = RATIOS.getBytes();
+        byte[] nl = new String("\n").getBytes();
+        byte[] sp = new String(" ").getBytes();
+        byte[] cm = new String(",").getBytes();
+        byte[] tr = new String("true").getBytes();
+        byte[] fl = new String("false").getBytes();
 
-      // Begin to write file.
-      zos.putNextEntry(new ZipEntry(FEATFILE));
+        // Begin to write file.
+        zos.putNextEntry(new ZipEntry(FEATFILE));
 
-      // Write the header.
-      zos.write(FEATURE_FILE_HEADER.getBytes());
-      zos.write(nl);
+        // Write the header.
+        zos.write(FEATURE_FILE_HEADER.getBytes());
+        zos.write(nl);
 
-      // Write color index.
-      zos.write(COLOR_INDEX.getBytes());
-      zos.write(new Integer(colorImageIndex).toString().getBytes());
-      zos.write(nl);
+        // Write color index.
+        zos.write(COLOR_INDEX.getBytes());
+        zos.write(new Integer(colorImageIndex).toString().getBytes());
+        zos.write(nl);
 
-      // Write the masses being used.
-      // E.g. true false true false false true true
-      //        0    1    2     3    4     5    6
-      zos.write(ms);
-      for (boolean b : massImageFeatures){
-         if(b) zos.write(tr);
-         else  zos.write(fl);
-         zos.write(sp);
-      }
-      zos.write(nl);
+        // Write the masses being used.
+        // E.g. true false true false false true true
+        //        0    1    2     3    4     5    6
+        zos.write(ms);
+        for (boolean b : massImageFeatures) {
+            if (b) {
+                zos.write(tr);
+            } else {
+                zos.write(fl);
+            }
+            zos.write(sp);
+        }
+        zos.write(nl);
 
-      // Write the numerator-denominator pair of ratio images being used.
-      // E.g.
-      //    1 0, 3 2, 6 5
-      zos.write(rs);
-      int i = 0;
-      for (String b : ratioImages){
-         if (i!=0) zos.write(cm);
-         zos.write(b.getBytes());
-         i++;
-      }
-      zos.write(nl);
+        // Write the numerator-denominator pair of ratio images being used.
+        // E.g.
+        //    1 0, 3 2, 6 5
+        zos.write(rs);
+        int i = 0;
+        for (String b : ratioImages) {
+            if (i != 0) {
+                zos.write(cm);
+            }
+            zos.write(b.getBytes());
+            i++;
+        }
+        zos.write(nl);
 
-      // Write the features and parameters being used.
-      // E.g.
-      //    Neighborhood
-      //    Gradient
-      //    Radius 5
-      int j = 0;
-      for (int b : localFeatures){
-         if (b > 0) {
-         switch (j) {
-            case 0:
-               zos.write(featureNames[j].getBytes());
-               break;
-            case 1:
-               zos.write(featureNames[j].getBytes());
-               break;
-            case 2:
-               zos.write(featureNames[j].getBytes());
-               zos.write(sp);
-               zos.write((new Integer(b)).toString().getBytes());
-               break;
-         }
-         zos.write(nl);
-         }
-         j++;
-      }
-      zos.write(nl);
-      zos.closeEntry();
+        // Write the features and parameters being used.
+        // E.g.
+        //    Neighborhood
+        //    Gradient
+        //    Radius 5
+        int j = 0;
+        for (int b : localFeatures) {
+            if (b > 0) {
+                switch (j) {
+                    case 0:
+                        zos.write(featureNames[j].getBytes());
+                        break;
+                    case 1:
+                        zos.write(featureNames[j].getBytes());
+                        break;
+                    case 2:
+                        zos.write(featureNames[j].getBytes());
+                        zos.write(sp);
+                        zos.write((new Integer(b)).toString().getBytes());
+                        break;
+                }
+                zos.write(nl);
+            }
+            j++;
+        }
+        zos.write(nl);
+        zos.closeEntry();
     }
 
 //    public static void loadModel(String modelFile, SegmentationForm form){
@@ -480,16 +493,19 @@ public class SegFileUtils {
 //            System.out.println("Error loading model!\n" + e.toString());
 //        }
 //    }
-
-    private static void loadRoi(ZipInputStream in, String className, String ID, ClassManager classes) throws IOException{
+    private static void loadRoi(ZipInputStream in, String className, String ID, ClassManager classes) throws IOException {
         classes.addClass(className);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
         int len;
-        while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
+        while ((len = in.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
         byte[] bytes = out.toByteArray();
         RoiDecoder rd = new RoiDecoder(bytes, ID);
         Roi roi = rd.getRoi();
-        if (roi!=null) classes.addRoi(className, roi);
+        if (roi != null) {
+            classes.addRoi(className, roi);
+        }
     }
 }
