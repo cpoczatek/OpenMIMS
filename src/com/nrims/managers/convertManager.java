@@ -596,11 +596,11 @@ public class convertManager extends JFrame implements PropertyChangeListener {
                 // TO UNCOMMENT THIS AND HAVE IT WORKING THE RADIO BUTTONS SHOULD BE RESTORED AS WELL
                 /*
                 // we get the selected HSIs at the mimsTomography level ( the 5th tab of OpenMIMS )
-                if (ui.getmimsTomography() != null && ui.getmimsTomography().getSelectedHSIImages() != null) {
+                if (ui.getMimsTomography() != null && ui.getMimsTomography().getSelectedHSIImages() != null) {
 
                     String[] massNames = ui.getOpener().getMassNames();
-                    String[] selectedHSIs = new String[ui.getmimsTomography().getSelectedHSIImages().size()];
-                    ui.getmimsTomography().getSelectedHSIImages().toArray(selectedHSIs);
+                    String[] selectedHSIs = new String[ui.getMimsTomography().getSelectedHSIImages().size()];
+                    ui.getMimsTomography().getSelectedHSIImages().toArray(selectedHSIs);
 
                     HSIsArray = new String[selectedHSIs.length];
                     numThreshArray = new String[selectedHSIs.length];
