@@ -751,7 +751,7 @@ public class Converter extends SwingWorker<Void, Void> {
             AutoTrack autoTrack = new AutoTrack(ui, mp);
             autoTrack.setIncludeList(includeList);
             double[][] trans = autoTrack.track(mp);
-            ui.getmimsStackEditing().applyTranslations(trans, includeList);
+            ui.getMimsStackEditing().applyTranslations(trans, includeList);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
