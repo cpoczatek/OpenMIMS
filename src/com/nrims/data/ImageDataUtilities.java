@@ -452,7 +452,7 @@ public class ImageDataUtilities {
             int deltax = (int) (xcenter - slicexcenter);
             int deltay = (int) (ycenter - sliceycenter);
             MimsPlus[] translateimages = ui.getOpenMassImages();
-            ui.getmimsStackEditing().translateStack(deltax, deltay, i, i);
+            ui.getMimsStackEditing().translateStack(deltax, deltay, i, i);
         }
     }
 }
