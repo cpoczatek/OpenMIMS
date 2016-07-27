@@ -37,7 +37,7 @@ public class StartupScript extends Thread {
         table.setRois(ui.getRoiManager().getAllROIs());
 
         // Set planes.
-        ArrayList planes = ui.getmimsTomography().getPlanes();
+        ArrayList planes = ui.getMimsTomography().getPlanes();
         table.setPlanes(planes);
 
         // Set stats.
