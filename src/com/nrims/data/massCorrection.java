@@ -252,7 +252,7 @@ private void dtMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     }
     masscor.performDeadTimeCorr(this.getOpenMassImages(), dwell);
     //log what was done
-    this.getmimsLog().Log("DT correction dwelltime (s) = "+dwell);
+    this.getMimsLog().Log("DT correction dwelltime (s) = "+dwell);
 }
 
 private void qsaMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
@@ -298,7 +298,7 @@ private void qsaMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
     masscor.performQSACorr(this.getOpenMassImages(), betas, dwell, FCObj);
 
     //log what was done
-    this.getmimsLog().Log("QSA correction \ndwelltime (s) = " + dwell +"\nbetas = " + betastring + "\nFCObj (pA) = " + FCObj + "\n");
+    this.getMimsLog().Log("QSA correction \ndwelltime (s) = " + dwell +"\nbetas = " + betastring + "\nFCObj (pA) = " + FCObj + "\n");
 }
  *
  *
