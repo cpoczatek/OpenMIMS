@@ -102,7 +102,7 @@ public class AutoTrack implements Runnable {
     public void run() {
         double[][] trans = track(this.imp);
         if (ui != null) {
-            ui.getmimsStackEditing().notifyComplete(trans);
+            ui.getMimsStackEditing().notifyComplete(trans);
         }
     }
 
@@ -233,7 +233,7 @@ public class AutoTrack implements Runnable {
         trans[0][1] = 0;
         for (int s = targetSlice + 1; (s <= size); s++) {
 
-            if (ui != null && ui.getmimsStackEditing().STATE == MimsStackEditor.CANCEL) {
+            if (ui != null && ui.getMimsStackEditing().STATE == MimsStackEditor.CANCEL) {
                 return null;
             }
 
