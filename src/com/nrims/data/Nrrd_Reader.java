@@ -34,7 +34,7 @@ public class Nrrd_Reader implements Opener {
 
     private File file = null;
     private int currentIndex = 0;
-    private NrrdFileInfo fi = null;
+    private NrrdFileInfo fileInfo = null;
     private boolean header = false;
     private short bitSize = 0;
 
@@ -48,19 +48,19 @@ public class Nrrd_Reader implements Opener {
 
         // Read the header.
         try {
-            fi = getHeaderInfo();
+            fileInfo = getHeaderInfo();
         } catch (IOException io) {
             System.out.println("Error reading file " + file.getAbsolutePath());
         }
 
-        if (fi.massNames == null) {
-            fi.massNames = new String[fi.nMasses];
-            for (int i = 0; i < fi.nMasses; i++) {
-                fi.massNames[i] = Integer.toString(i);
+        if (fileInfo.massNames == null) {
+            fileInfo.massNames = new String[fileInfo.nMasses];
+            for (int i = 0; i < fileInfo.nMasses; i++) {
+                fileInfo.massNames[i] = Integer.toString(i);
             }
-        } else if (fi.nMasses != fi.massNames.length) {
-            System.out.print("Error! Number of masses (" + fi.nMasses + ") does not equal "
-                    + "number of mass names referenced: " + fi.massNames);
+        } else if (fileInfo.nMasses != fileInfo.massNames.length) {
+            System.out.print("Error! Number of masses (" + fileInfo.nMasses + ") does not equal "
+                    + "number of mass names referenced: " + fileInfo.massNames);
             System.out.println();
             return;
         }
@@ -75,23 +75,23 @@ public class Nrrd_Reader implements Opener {
         }
 
         // Setup file header.
-        fi = new NrrdFileInfo();
-        fi.directory = file.getParent();
-        fi.fileName = file.getName();
+        fileInfo = new NrrdFileInfo();
+        fileInfo.directory = file.getParent();
+        fileInfo.fileName = file.getName();
 
         // Need RAF in order to ensure that we know file offset.
         RandomAccessFile in = new RandomAccessFile(file.getAbsolutePath(), "r");
 
         // Initialize some strings.
         String thisLine, noteType, noteValue, noteValuelc;
-        fi.fileFormat = FileInfo.RAW;
+        fileInfo.fileFormat = FileInfo.RAW;
         int lineskip = 0;
 
         // Parse the header file, until reach an empty line.
         while (true) {
             thisLine = in.readLine();
             if (thisLine == null || thisLine.equals("")) {
-                fi.longOffset = in.getFilePointer();
+                fileInfo.longOffset = in.getFilePointer();
                 break;
             }
 
@@ -110,33 +110,33 @@ public class Nrrd_Reader implements Opener {
             }
 
             if (noteType.equals("dimension")) {
-                fi.dimension = Integer.valueOf(noteValue).intValue();
+                fileInfo.dimension = Integer.valueOf(noteValue).intValue();
                 //???????? add back dimension check?
-                //if(fi.dimension>3) throw new IOException("Nrrd_Reader: Dimension>3 not yet implemented!");
+                //if(fileInfo.dimension>3) throw new IOException("Nrrd_Reader: Dimension>3 not yet implemented!");
             }
 
             if (noteType.equals("sizes")) {
-                fi.sizes = new int[fi.dimension];
-                for (int i = 0; i < fi.dimension; i++) {
-                    fi.sizes[i] = Integer.valueOf(getSubField(thisLine, i)).intValue();
+                fileInfo.sizes = new int[fileInfo.dimension];
+                for (int i = 0; i < fileInfo.dimension; i++) {
+                    fileInfo.sizes[i] = Integer.valueOf(getSubField(thisLine, i)).intValue();
                     if (i == 0) {
-                        fi.width = fi.sizes[0];
+                        fileInfo.width = fileInfo.sizes[0];
                     }
                     if (i == 1) {
-                        fi.height = fi.sizes[1];
+                        fileInfo.height = fileInfo.sizes[1];
                     }
                     if (i == 2) {
-                        fi.nImages = fi.sizes[2];
+                        fileInfo.nImages = fileInfo.sizes[2];
                     }
                     if (i == 3) {
-                        fi.nMasses = fi.sizes[3];
+                        fileInfo.nMasses = fileInfo.sizes[3];
                     }
                 }
             }
 
             if (noteType.equals("spacings")) {
-                double[] spacings = new double[fi.dimension];
-                for (int i = 0; i < fi.dimension; i++) {
+                double[] spacings = new double[fileInfo.dimension];
+                for (int i = 0; i < fileInfo.dimension; i++) {
                     // TOFIX - this order of allocations is not a given!
                     //spacings[i]=Double.valueOf(getSubField(thisLine,i)).doubleValue();
                     //if(i==0) spatialCal.pixelWidth=spacings[0];
@@ -146,16 +146,16 @@ public class Nrrd_Reader implements Opener {
             }
 
             if (noteType.equals("centers") || noteType.equals("centerings")) {
-                fi.centers = new String[fi.dimension];
-                for (int i = 0; i < fi.dimension; i++) {
+                fileInfo.centers = new String[fileInfo.dimension];
+                for (int i = 0; i < fileInfo.dimension; i++) {
                     // TOFIX - this order of allocations is not a given!
-                    fi.centers[i] = getSubField(thisLine, i);
+                    fileInfo.centers[i] = getSubField(thisLine, i);
                 }
             }
 
             if (noteType.equals("axis mins") || noteType.equals("axismins")) {
-                double[] axismins = new double[fi.dimension];
-                for (int i = 0; i < fi.dimension; i++) {
+                double[] axismins = new double[fileInfo.dimension];
+                for (int i = 0; i < fileInfo.dimension; i++) {
                     // TOFIX - this order of allocations is not a given!
                     // NB xOrigin are in pixels, whereas axismins are of course
                     // in units; these are converted later
@@ -168,36 +168,36 @@ public class Nrrd_Reader implements Opener {
 
             if (noteType.equals("type")) {
                 if (uint8Types.indexOf(noteValuelc) >= 0) {
-                    fi.fileType = FileInfo.GRAY8;
+                    fileInfo.fileType = FileInfo.GRAY8;
                 } //16 bit signed/unsigned checks were flipped?
                 else if (uint16Types.indexOf(noteValuelc) >= 0) {
-                    fi.fileType = FileInfo.GRAY16_UNSIGNED;
+                    fileInfo.fileType = FileInfo.GRAY16_UNSIGNED;
                     bitSize = 2;
                 } else if (int16Types.indexOf(noteValuelc) >= 0) {
-                    fi.fileType = FileInfo.GRAY16_SIGNED;
+                    fileInfo.fileType = FileInfo.GRAY16_SIGNED;
                 } else if (uint32Types.indexOf(noteValuelc) >= 0) {
-                    fi.fileType = FileInfo.GRAY32_UNSIGNED;
+                    fileInfo.fileType = FileInfo.GRAY32_UNSIGNED;
                 } else if (int32Types.indexOf(noteValuelc) >= 0) {
-                    fi.fileType = FileInfo.GRAY32_INT;
+                    fileInfo.fileType = FileInfo.GRAY32_INT;
                 } else if (noteValuelc.equals("float")) {
-                    fi.fileType = FileInfo.GRAY32_FLOAT;
+                    fileInfo.fileType = FileInfo.GRAY32_FLOAT;
                     bitSize = 4;
                 } else if (noteValuelc.equals("double")) {
-                    fi.fileType = FileInfo.GRAY64_FLOAT;
+                    fileInfo.fileType = FileInfo.GRAY64_FLOAT;
                 } else {
                     throw new IOException("Unimplemented data type =" + noteValue);
                 }
             }
 
             if (noteType.equals("byte skip") || noteType.equals("byteskip")) {
-                fi.longOffset = Long.valueOf(noteValue).longValue();
+                fileInfo.longOffset = Long.valueOf(noteValue).longValue();
             }
 
             if (noteType.equals("endian")) {
                 if (noteValuelc.equals("little")) {
-                    fi.intelByteOrder = true;
+                    fileInfo.intelByteOrder = true;
                 } else {
-                    fi.intelByteOrder = false;
+                    fileInfo.intelByteOrder = false;
                 }
             }
 
@@ -205,12 +205,12 @@ public class Nrrd_Reader implements Opener {
                 if (noteValuelc.equals("gz")) {
                     noteValuelc = "gzip";
                 }
-                fi.encoding = noteValuelc;
+                fileInfo.encoding = noteValuelc;
             }
 
             if (noteType.equals("data file")) {
                 header = true;
-                fi = setDataFile(fi, noteValue);
+                fileInfo = setDataFile(fileInfo, noteValue);
             }
 
             if (noteType.equals("line skip")) {
@@ -232,119 +232,119 @@ public class Nrrd_Reader implements Opener {
             }
 
             if (thisLine.startsWith(Opener.Mims_mass_numbers)) {
-                fi.massNames = noteType.substring(i + Opener.Nrrd_separator.length()).split(" ");
+                fileInfo.massNames = noteType.substring(i + Opener.Nrrd_separator.length()).split(" ");
             } else if (thisLine.startsWith(Opener.Mims_mass_symbols)) {
-                fi.massSymbols = originalNoteType.substring(i + Opener.Nrrd_separator.length()).split(" ");
+                fileInfo.massSymbols = originalNoteType.substring(i + Opener.Nrrd_separator.length()).split(" ");
             } else if (thisLine.startsWith(Opener.Mims_date)) {
-                fi.sampleDate = value;
+                fileInfo.sampleDate = value;
             } else if (thisLine.startsWith(Opener.Mims_duration)) {
-                fi.duration = value;
+                fileInfo.duration = value;
             } else if (thisLine.startsWith(Opener.Mims_dwell_time)) {
-                fi.dwellTime = value;
+                fileInfo.dwellTime = value;
             } else if (thisLine.startsWith(Opener.Mims_hour)) {
-                fi.sampleHour = value;
+                fileInfo.sampleHour = value;
             } else if (thisLine.startsWith(Opener.Mims_position)) {
-                fi.position = value;
+                fileInfo.position = value;
             } else if (thisLine.startsWith(Opener.Mims_z_position)) {
-                fi.zposition = value;
+                fileInfo.zposition = value;
             } else if (thisLine.startsWith(Opener.Mims_sample_name)) {
-                fi.sampleName = value;
+                fileInfo.sampleName = value;
             } else if (thisLine.startsWith(Opener.Mims_user_name)) {
-                fi.userName = value;
+                fileInfo.userName = value;
             } else if (thisLine.startsWith(Opener.Mims_tile_positions)) {
-                fi.tilePositions = originalNoteType.substring(i + Opener.Nrrd_separator.length()).split(";");
+                fileInfo.tilePositions = originalNoteType.substring(i + Opener.Nrrd_separator.length()).split(";");
             } else if (thisLine.startsWith(Opener.Mims_stack_positions)) {
-                fi.stackPositions = originalNoteType.substring(i + Opener.Nrrd_separator.length()).split(";");
+                fileInfo.stackPositions = originalNoteType.substring(i + Opener.Nrrd_separator.length()).split(";");
             } else if (thisLine.startsWith(Opener.Mims_raster)) {
-                fi.raster = value;
+                fileInfo.raster = value;
             } else if (thisLine.startsWith(Opener.Mims_BField)) {
-                fi.BField = value;
+                fileInfo.BField = value;
             } else if (thisLine.startsWith(Opener.Mims_pszComment)) {
-                fi.pszComment = value;
+                fileInfo.pszComment = value;
             } else if (thisLine.startsWith(Opener.Mims_PrimCurrentT0)) {
-                fi.PrimCurrentT0 = value;
+                fileInfo.PrimCurrentT0 = value;
             } else if (thisLine.startsWith(Opener.Mims_PrimCurrentTEnd)) {
-                fi.PrimCurrentTEnd = value;
+                fileInfo.PrimCurrentTEnd = value;
             } else if (thisLine.startsWith(Opener.Mims_ESPos)) {
-                fi.ESPos = value;
+                fileInfo.ESPos = value;
             } else if (thisLine.startsWith(Opener.Mims_ASPos)) {
-                fi.ASPos = value;
+                fileInfo.ASPos = value;
             } else if (thisLine.startsWith(Opener.Mims_D1Pos)) {
-                fi.D1Pos = value;
+                fileInfo.D1Pos = value;
             } else if (thisLine.startsWith(Opener.Mims_Radius)) {
-                fi.Radius = value;
+                fileInfo.Radius = value;
             } else if (thisLine.startsWith(Opener.Mims_count_time)) {
                 try {
                     Double ct = new Double(value);
-                    fi.countTime = ct.doubleValue();
+                    fileInfo.countTime = ct.doubleValue();
                 } catch (Exception e) {
-                    fi.countTime = (new Double(-1.0)).doubleValue();
+                    fileInfo.countTime = (new Double(-1.0)).doubleValue();
                 }
             } else if (thisLine.startsWith(Opener.Mims_pixel_height)) {
                 try {
                     Float fl = new Float(value);
-                    fi.pixel_height = fl.floatValue();
+                    fileInfo.pixel_height = fl.floatValue();
                 } catch (Exception e) {
-                    fi.pixelHeight = (new Float(-1.0)).floatValue();
+                    fileInfo.pixelHeight = (new Float(-1.0)).floatValue();
                 }
             } else if (thisLine.startsWith(Opener.Mims_pixel_width)) {
                 try {
                     Float fl = new Float(value);
-                    fi.pixel_width = fl.floatValue();
+                    fileInfo.pixel_width = fl.floatValue();
                 } catch (Exception e) {
-                    fi.pixelWidth = (new Float(-1.0)).floatValue();
+                    fileInfo.pixelWidth = (new Float(-1.0)).floatValue();
                 }
             } else if (thisLine.startsWith(Opener.Mims_dt_correction_applied)) {
                 try {
-                    fi.dt_correction_applied = Boolean.parseBoolean(value);
+                    fileInfo.dt_correction_applied = Boolean.parseBoolean(value);
                 } catch (Exception e) {
-                    fi.dt_correction_applied = false;
+                    fileInfo.dt_correction_applied = false;
                 }
             } else if (thisLine.startsWith(Opener.Mims_prototype)) {
                 try {
-                    fi.isPrototype = Boolean.parseBoolean(value);
+                    fileInfo.isPrototype = Boolean.parseBoolean(value);
                 } catch (Exception e) {
-                    fi.isPrototype = false;
+                    fileInfo.isPrototype = false;
                 }
             } else if (thisLine.startsWith(Opener.Mims_QSA_correction_applied)) {
                 try {
-                    fi.QSA_correction_applied = Boolean.parseBoolean(value);
+                    fileInfo.QSA_correction_applied = Boolean.parseBoolean(value);
                 } catch (Exception e) {
-                    fi.QSA_correction_applied = false;
+                    fileInfo.QSA_correction_applied = false;
                 }
-            } else if (fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_FC_Obj)) {
+            } else if (fileInfo.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_FC_Obj)) {
                 try {
                     Float fl = new Float(value);
-                    fi.fc_objective = fl.floatValue();
+                    fileInfo.fc_objective = fl.floatValue();
                 } catch (Exception e) {
                 }
-            } else if (fi.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_betas)) {
+            } else if (fileInfo.QSA_correction_applied && thisLine.startsWith(Opener.Mims_QSA_betas)) {
                 try {
                     String[] qsa_string_vals = value.split(",");
                     float[] qsa_vals = new float[qsa_string_vals.length];
                     for (int ii = 0; ii < qsa_string_vals.length; ii++) {
                         qsa_vals[ii] = new Float(qsa_string_vals[ii]);
                     }
-                    fi.betas = qsa_vals;
+                    fileInfo.betas = qsa_vals;
                 } catch (Exception e) {
                 }
             } else if (thisLine.startsWith(Opener.Mims_notes)) {
-                fi.notes = originalvalue;
+                fileInfo.notes = originalvalue;
             } else if (key != null) {
-                fi.metadata.put(key, originalvalue);
+                fileInfo.metadata.put(key, originalvalue);
             }
 
         }
 
         if (header) {
-            RandomAccessFile datain = new RandomAccessFile(new File(fi.directory, fi.fileName), "r");
+            RandomAccessFile datain = new RandomAccessFile(new File(fileInfo.directory, fileInfo.fileName), "r");
             for (int i = 0; i < lineskip; i++) {
                 thisLine = datain.readLine();
             }
-            fi.longOffset = datain.getFilePointer();
+            fileInfo.longOffset = datain.getFilePointer();
         }
 
-        return (fi);
+        return (fileInfo);
     }
 
     // Gets the field name from the header.
@@ -409,7 +409,7 @@ public class Nrrd_Reader implements Opener {
     public Object getPixels(int index) throws IndexOutOfBoundsException, IOException {
 
         // Set up a temporary header to read the pixels from the file.
-        NrrdFileInfo fi_clone = (NrrdFileInfo) fi.clone();
+        NrrdFileInfo fi_clone = (NrrdFileInfo) fileInfo.clone();
 
         // Calculate offset
         //cast to long needed to avoid int overflow
@@ -429,9 +429,9 @@ public class Nrrd_Reader implements Opener {
         }
 
         Object pixels;
-        if (fi.fileType == FileInfo.GRAY16_UNSIGNED) {
+        if (fileInfo.fileType == FileInfo.GRAY16_UNSIGNED) {
             pixels = (short[]) imp.getProcessor().getPixels();
-        } else if (fi.fileType == FileInfo.GRAY32_FLOAT) {
+        } else if (fileInfo.fileType == FileInfo.GRAY32_FLOAT) {
             pixels = (float[]) imp.getProcessor().getPixels();
         } else {
             pixels = null;
@@ -452,147 +452,151 @@ public class Nrrd_Reader implements Opener {
     }
 
     public int getNMasses() {
-        return fi.nMasses;
+        return fileInfo.nMasses;
     }
 
     public int getNImages() {
-        return fi.nImages;
+        return fileInfo.nImages;
     }
 
     public int getPreviousNImages() {
-        return fi.nImages;
+        return fileInfo.nImages;
     }
 
     public int getWidth() {
-        return fi.width;
+        return fileInfo.width;
     }
 
     public int getHeight() {
-        return fi.height;
+        return fileInfo.height;
     }
 
     public String[] getMassNames() {
-        return fi.massNames;
+        return fileInfo.massNames;
+    }
+    
+    public void setMassNames(String[] names) {
+        fileInfo.massNames = names;
     }
 
     public String[] getMassSymbols() {
-        return fi.massSymbols;
+        return fileInfo.massSymbols;
     }
 
     public float getPixelWidth() {
-        return fi.pixel_width;
+        return fileInfo.pixel_width;
     }
 
     public float getPixelHeight() {
-        return fi.pixel_height;
+        return fileInfo.pixel_height;
     }
 
     public String getSampleDate() {
-        return fi.sampleDate;
+        return fileInfo.sampleDate;
     }
 
     public String getSampleHour() {
-        return fi.sampleHour;
+        return fileInfo.sampleHour;
     }
 
     public String getSampleName() {
-        return fi.sampleName;
+        return fileInfo.sampleName;
     }
 
     public String getUserName() {
-        return fi.userName;
+        return fileInfo.userName;
     }
 
     public String getPosition() {
-        return fi.position;
+        return fileInfo.position;
     }
 
     public String getZPosition() {
-        return fi.zposition;
+        return fileInfo.zposition;
     }
 
     public String getRaster() {
-        return fi.raster;
+        return fileInfo.raster;
     }
 
     public String getDwellTime() {
-        return fi.dwellTime;
+        return fileInfo.dwellTime;
     }
 
     public double getCountTime() {
-        return fi.countTime;
+        return fileInfo.countTime;
     }
 
     public String getDuration() {
-        return fi.duration;
+        return fileInfo.duration;
     }
 
     public String getNotes() {
-        return fi.notes;
+        return fileInfo.notes;
     }
 
     public void setNotes(String notes) {
-        fi.notes = notes;
+        fileInfo.notes = notes;
     }
 
     public int getFileType() {
-        return fi.fileType;
+        return fileInfo.fileType;
     }
 
     public boolean isDTCorrected() {
-        return fi.dt_correction_applied;
+        return fileInfo.dt_correction_applied;
     }
 
     public void setIsDTCorrected(boolean isCorrected) {
-        fi.dt_correction_applied = isCorrected;
+        fileInfo.dt_correction_applied = isCorrected;
     }
 
     public boolean isQSACorrected() {
-        return fi.QSA_correction_applied;
+        return fileInfo.QSA_correction_applied;
     }
 
     public void setIsQSACorrected(boolean isCorrected) {
-        fi.QSA_correction_applied = isCorrected;
+        fileInfo.QSA_correction_applied = isCorrected;
     }
 
     public void setBetas(float[] betas) {
-        fi.betas = betas;
+        fileInfo.betas = betas;
     }
 
     public void setFCObjective(float fc_objective) {
-        fi.fc_objective = fc_objective;
+        fileInfo.fc_objective = fc_objective;
     }
 
     public float[] getBetas() {
-        return fi.betas;
+        return fileInfo.betas;
     }
 
     public float getFCObjective() {
-        return fi.fc_objective;
+        return fileInfo.fc_objective;
     }
 
     public String[] getTilePositions() {
-        return fi.tilePositions;
+        return fileInfo.tilePositions;
     }
 
     public String[] getStackPositions() {
-        return fi.stackPositions;
+        return fileInfo.stackPositions;
     }
 
     public void setStackPositions(String[] names) {
-        fi.stackPositions = names;
+        fileInfo.stackPositions = names;
     }
 
     public boolean isPrototype() {
-        return fi.isPrototype;
+        return fileInfo.isPrototype;
     }
 
     public HashMap getMetaDataKeyValuePairs() {
-        return fi.metadata;
+        return fileInfo.metadata;
     }
 
     public void setMetaDataKeyValuePairs(HashMap metaData) {
-        fi.metadata = metaData;
+        fileInfo.metadata = metaData;
     }
 
     /**
@@ -602,7 +606,7 @@ public class Nrrd_Reader implements Opener {
      * @return <code>true</code> if in agreement, otherwise <code>false</code>.
      */
     public boolean performFileSanityCheck() {
-        long header_size = fi.longOffset;
+        long header_size = fileInfo.longOffset;
         int pixels_per_plane = getWidth() * getHeight();
         int num_planes = getNImages();
         int num_masses = getNMasses();
@@ -639,7 +643,7 @@ public class Nrrd_Reader implements Opener {
     }
 
     public long getHeaderSize() {
-        return fi.longOffset;
+        return fileInfo.longOffset;
     }
 
     public short getBitsPerPixel() {
@@ -647,19 +651,19 @@ public class Nrrd_Reader implements Opener {
     }
 
     public void setWidth(int width) {
-        fi.width = width;
+        fileInfo.width = width;
     }
 
     public void setHeight(int height) {
-        fi.height = height;
+        fileInfo.height = height;
     }
 
     public void setNMasses(int nmasses) {
-        fi.nMasses = nmasses;
+        fileInfo.nMasses = nmasses;
     }
 
     public void setNImages(int nimages) {
-        fi.nImages = nimages;
+        fileInfo.nImages = nimages;
     }
 
     public void setBitsPerPixel(short bitsperpixel) {
@@ -667,51 +671,51 @@ public class Nrrd_Reader implements Opener {
     }
 
     public String getBField() {
-        return fi.BField;
+        return fileInfo.BField;
     }
 
     public String getpszComment() {
-        return fi.pszComment;
+        return fileInfo.pszComment;
     }
 
     public String getPrimCurrentT0() {
-        return fi.PrimCurrentT0;
+        return fileInfo.PrimCurrentT0;
     }
 
     public String getPrimCurrentTEnd() {
-        return fi.PrimCurrentTEnd;
+        return fileInfo.PrimCurrentTEnd;
     }
 
     public String getESPos() {
-        return fi.ESPos;
+        return fileInfo.ESPos;
     }
 
     public String getASPos() {
-        return fi.ASPos;
+        return fileInfo.ASPos;
     }
 
     public String getD1Pos() {
-        return fi.D1Pos;
+        return fileInfo.D1Pos;
     }
 
     public String getRadius() {
-        return fi.Radius;
+        return fileInfo.Radius;
     }
 
-    // DJ: 10/13/2014: "fi" to be enhanced to handle:
+    // DJ: 10/13/2014: "fileInfo" to be enhanced to handle:
     // PrimL1, PrimL2, and CsHv
     // DJ: 10/13/2014
     public String getNPrimL1() {
-        return fi.PrimL1;
+        return fileInfo.PrimL1;
     }
     // DJ: 10/13/2014
 
     public String getNPrimL0() {
-        return fi.PrimL0;
+        return fileInfo.PrimL0;
     }
     // DJ: 10/13/2014
 
     public String getNCsHv() {
-        return fi.CsHv;
+        return fileInfo.CsHv;
     }
 }
