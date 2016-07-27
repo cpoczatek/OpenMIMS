@@ -121,7 +121,7 @@ public class LoadImageList {
                 UI tempUi = new UI();
                 boolean opened = tempUi.openFile(imFile);
                 if (opened) {
-                    this.ui.getmimsStackEditing().concatImages(false, tempUi);
+                    this.ui.getMimsStackEditing().concatImages(false, tempUi);
                     for (MimsPlus image : tempUi.getMassImages()) {
                         if (image != null) {
                             image.setAllowClose(true);
