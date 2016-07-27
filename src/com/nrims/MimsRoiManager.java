@@ -632,7 +632,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             ArrayList<Integer[]> xylist = (ArrayList<Integer[]>) locations.get(key);
 
             // Current image size
-            int size_new = ui.getmimsAction().getSize();
+            int size_new = ui.getMimsAction().getSize();
 
             // Difference in sizes
             int size_orig = xylist.size();
@@ -677,7 +677,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             ArrayList<Integer[]> xylist = (ArrayList<Integer[]>) locations.get(key);
 
             // Current image size
-            int size_new = ui.getmimsAction().getSize();
+            int size_new = ui.getMimsAction().getSize();
 
             // Difference in sizes
             int size_orig = xylist.size();
@@ -710,7 +710,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
             // If no entry, create one.
             if (xylist == null) {
-                int stacksize = ui.getmimsAction().getSize();
+                int stacksize = ui.getMimsAction().getSize();
                 xylist = new ArrayList<Integer[]>();
                 Integer[] xy = new Integer[2];
                 for (int i = 0; i < stacksize; i++) {
@@ -721,7 +721,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 // If exist but is not proper length, fix.
             } else {
                 int locations_size = xylist.size();
-                int img_size = ui.getmimsAction().getSize();
+                int img_size = ui.getMimsAction().getSize();
                 int diff = locations_size - img_size;
                 if (diff < 0) {
                     //grow locations arraylist
@@ -810,7 +810,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
 
         // Update the
         int plane = imp.getCurrentSlice();
-        int trueplane = ui.getmimsAction().trueIndex(plane);
+        int trueplane = ui.getMimsAction().trueIndex(plane);
         ArrayList xylist = (ArrayList<Integer[]>) locations.get(label);
         xylist.set(trueplane - 1, new Integer[]{(Integer) xPosSpinner.getValue(), (Integer) yPosSpinner.getValue()});
         locations.put(label, xylist);
@@ -1436,7 +1436,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         } else if (t == MimsPlus.MASS_IMAGE) {
             plane = mp.getCurrentSlice();
         }
-        int trueplane = ui.getmimsAction().trueIndex(plane);
+        int trueplane = ui.getMimsAction().trueIndex(plane);
 
         ArrayList xylist = (ArrayList<Integer[]>) locations.get(label);
         xylist.set(trueplane - 1, new Integer[]{rec.x, rec.y});
@@ -1524,7 +1524,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
             Rectangle rec = roi.getBounds();
             ArrayList xylist = (ArrayList<Integer[]>) locations.get(label);
             if (xylist == null) {
-                int stacksize = ui.getmimsAction().getSize();
+                int stacksize = ui.getMimsAction().getSize();
                 xylist = new ArrayList<Integer[]>();
                 Integer[] xy = new Integer[2];
                 for (int i = 0; i < stacksize; i++) {
@@ -1534,7 +1534,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
                 locations.put(label, xylist);
             }
 
-            int size = ui.getmimsAction().getSize();
+            int size = ui.getMimsAction().getSize();
 
             for (int p = 1; p <= size; p++) {
                 xylist.set(p - 1, new Integer[]{rec.x, rec.y});
@@ -1582,7 +1582,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
 
         // Create positions arraylist.
-        int stacksize = ui.getmimsAction().getSize();
+        int stacksize = ui.getMimsAction().getSize();
         ArrayList xypositions = new ArrayList<Integer[]>();
         Integer[] xy = new Integer[2];
         for (int i = 0; i < stacksize; i++) {
@@ -1638,7 +1638,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
 
         // Create positions arraylist.
-        int stacksize = ui.getmimsAction().getSize();
+        int stacksize = ui.getMimsAction().getSize();
         ArrayList xypositions = new ArrayList<Integer[]>();
         Integer[] xy = new Integer[2];
         for (int i = 0; i < stacksize; i++) {
@@ -1679,7 +1679,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         }
 
         // Create positions arraylist.
-        int stacksize = ui.getmimsAction().getSize();
+        int stacksize = ui.getMimsAction().getSize();
         ArrayList xypositions = new ArrayList<Integer[]>();
         Integer[] xy = new Integer[2];
         for (int i = 0; i < stacksize; i++) {
@@ -1732,7 +1732,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         Rectangle r = roi.getBounds();
 
         // Create positions arraylist.
-        int stacksize = ui.getmimsAction().getSize();
+        int stacksize = ui.getMimsAction().getSize();
         ArrayList xypositions = new ArrayList<Integer[]>();
         Integer[] xy = new Integer[2];
         for (int i = 0; i < stacksize; i++) {
@@ -1773,7 +1773,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         Rectangle r = roi.getBounds();
 
         // Create positions arraylist.
-        int stacksize = ui.getmimsAction().getSize();
+        int stacksize = ui.getMimsAction().getSize();
         ArrayList xypositions = new ArrayList<Integer[]>();
         Integer[] xy = new Integer[2];
         for (int i = 0; i < stacksize; i++) {
@@ -1844,7 +1844,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
      * @return the x-y location of the ROI for the given plane.
      */
     public Integer[] getRoiLocation(String label, int plane) {
-        int index = ui.getmimsAction().trueIndex(plane);
+        int index = ui.getMimsAction().trueIndex(plane);
         ArrayList<Integer[]> xylist = (ArrayList<Integer[]>) locations.get(label);
         if (xylist == null) {
             return null;
@@ -2365,7 +2365,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         table.setPlanes(planes);
 
         // Get selected stats.
-        String[] statnames = ui.getmimsTomography().getStatNames();
+        String[] statnames = ui.getMimsTomography().getStatNames();
         table.setStats(statnames);
 
         // Get rois.
@@ -3513,7 +3513,7 @@ public class MimsRoiManager extends PlugInJFrame implements ActionListener {
         } else {
             double[] roipix = imp.getRoiPixels();
             String label = imp.getShortTitle() + " ROI: " + roi.getName();
-            ui.getmimsTomography().updateHistogram(roipix, label, force);
+            ui.getMimsTomography().updateHistogram(roipix, label, force);
         }
     }
 
