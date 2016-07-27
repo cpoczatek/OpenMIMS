@@ -485,7 +485,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                     }
                     ratioImages[i] = mp;
                     getCBControl().addWindowtoList(mp);
-                    getmimsTomography().resetImageNamesList();
+                    getMimsTomography().resetImageNamesList();
                     return true;
                 } else if (ratioImages[i].getRatioProps().equals(mp.getRatioProps())) {
                     numBefore++;
@@ -499,7 +499,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                         mp.setTitle("(" + numBefore + ") " + mp.getTitle());
                     }
                     hsiImages[i] = mp;
-                    getmimsTomography().resetImageNamesList();
+                    getMimsTomography().resetImageNamesList();
                     return true;
                 } else if (hsiImages[i].getHSIProps().equals(mp.getHSIProps())) {
                     numBefore++;
@@ -1295,7 +1295,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         recomputeAllHSI();
         recomputeAllRatio();
         ArrayList<Integer> sumlist = new ArrayList<Integer>();
-        for (int i = 1; i <= ui.getmimsAction().getSize(); i++) {
+        for (int i = 1; i <= ui.getMimsAction().getSize(); i++) {
             sumlist.add(i);
         }
         recomputeAllSum(sumlist);
@@ -2492,7 +2492,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         String name = file.getName();
         String baseFileName;
         String onlyFileName;
-
+        
         try {
 
             if (imgNotes != null) {
@@ -2527,10 +2527,13 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
             if (!name.endsWith(NRRD_EXTENSION)) {
                 nrrdFileName = name + NRRD_EXTENSION;
             }
-
+            
             // Save the file.
-            if (saveImageOnly || ui.getmimsAction().isImageModified() || imgNotes.isModified()) {
-                ImagePlus[] imp = getOpenMassImages();
+            boolean imgModified = ui.getMimsAction().isImageModified();
+            boolean notesModified = imgNotes.isModified();
+            boolean interleaved = ui.getMimsAction().getIsInterleaved();
+            if (saveImageOnly || imgModified || interleaved || notesModified) {
+                ImagePlus[] imp = getOpenMassImages();   
                 if (imp == null) {
                     return false;
                 }
@@ -2549,8 +2552,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
                 // Update the Data tab
                 mimsData = new MimsData(this, image);
                 jTabbedPane1.setComponentAt(0, mimsData);
-
-                // Update the image titles.
+           
+                // Update the image titles.             
                 for (int i = 0; i < imp.length; i++) {
                     imp[i].setTitle((new MimsPlus(this, i)).getTitle());
                 }
@@ -3594,7 +3597,7 @@ private void saveMIMSjMenuItemActionPerformed(java.awt.event.ActionEvent evt) {/
             } else if (evt != null && evt.getActionCommand().equals(SAVE_SESSION)) {
                 saveImageOnly = false;
                 System.out.println("Save session.");
-                if (this.getmimsAction().isImageModified() || imgNotes.isModified()) {
+                if (this.getMimsAction().isImageModified() || imgNotes.isModified()) {
                     MimsJFileChooser fc = new MimsJFileChooser(this);
                     if (this.getImageFilePrefix() != null) {
                         fc.setSelectedFile(new java.io.File(this.getImageFilePrefix() + NRRD_EXTENSION));
@@ -4360,8 +4363,8 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         selectedImages[0] = 1;
         
         
-        newUI.getmimsTomography().setSelectedStatIndices(selectedStats);
-        newUI.getmimsTomography().setSelectedImagesIndices(selectedImages);
+        newUI.getMimsTomography().setSelectedStatIndices(selectedStats);
+        newUI.getMimsTomography().setSelectedImagesIndices(selectedImages);
         
        // newUI.mimsTomography.
         
@@ -4415,7 +4418,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
             masscor.performDeadTimeCorr(this.getOpenMassImages(), dwell);
             isDTCorrected = true;
             //log what was done
-            this.getmimsLog().Log("DT correction dwelltime (s) = " + dwell);
+            this.getMimsLog().Log("DT correction dwelltime (s) = " + dwell);
         } catch (NumberFormatException e) {
             if (!silentMode) {
                 ij.IJ.error("Error", "Cannot get dwelltime from file header.");
@@ -5106,7 +5109,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      *
      * @return the <code>MimsLog</code> object.
      */
-    public MimsLog getmimsLog() {
+    public MimsLog getMimsLog() {
         return mimsLog;
     }
 
@@ -5137,7 +5140,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      *
      * @return the <code>MimsStackEditor</code> object.
      */
-    public MimsStackEditor getmimsStackEditing() {
+    public MimsStackEditor getMimsStackEditing() {
         return mimsStackEditing;
     }
 
@@ -5147,7 +5150,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      *
      * @return the <code>MimsTomography</code> object.
      */
-    public MimsTomography getmimsTomography() {
+    public MimsTomography getMimsTomography() {
         return mimsTomography;
     }
 
@@ -5158,7 +5161,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      *
      * @return the <code>MimsTomography</code> object.
      */
-    public SegmentationForm getmimsSegmentation() {
+    public SegmentationForm getMimsSegmentation() {
         return segmentation;
     }
 
@@ -5174,7 +5177,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
      *
      * @return the <code>MimsAction</code> object.
      */
-    public MimsAction getmimsAction() {
+    public MimsAction getMimsAction() {
         return mimsAction;
     }
 
@@ -6384,7 +6387,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
                 // Appends additional planes.
                 //
-                // Yes, this code is kind ugly :(
+                // Yes, this code is kinda ugly :(
                 // and Yes, this code works :)
                 for (int i = 1; i < nImages; i++) {
                     boolean stop = false;
