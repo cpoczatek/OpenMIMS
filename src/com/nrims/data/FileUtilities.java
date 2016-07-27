@@ -609,7 +609,7 @@ public class FileUtilities {
                 names[i] = imFile.getName();
                 if (ui.openFile(imFile)) {
                     String name = getFilePrefix(imFile.getName());
-                    MimsStackEditor mimStack = ui.getmimsStackEditing();
+                    MimsStackEditor mimStack = ui.getMimsStackEditing();
                     MimsPlus[] images = slimImageArray(ui.getMassImages());
                     int blockSize = images[0].getNSlices();
                     //compress all mass images in file into sum images
@@ -638,7 +638,7 @@ public class FileUtilities {
                     tempUi.openFile(tempFile, false);
                     Opener tempImage = tempUi.getOpener();
 
-                    MimsStackEditor mimStack = ui.getmimsStackEditing();
+                    MimsStackEditor mimStack = ui.getMimsStackEditing();
                     if (ui.getOpener().getNMasses() == tempImage.getNMasses()) {
                         if (mimStack.sameResolution(image, tempImage)) {
                             if (mimStack.sameSpotSize(image, tempImage)) {
@@ -990,14 +990,14 @@ public class FileUtilities {
     public static String trimStackPositions(UI ui, Opener op) {
         //ArrayList filenames = new ArrayList(String);
         String[] filenames = op.getStackPositions();
-        MimsAction action = ui.getmimsAction();
+        MimsAction action = ui.getMimsAction();
         // int size = action.get().size();
         String raw = "";
         String trimmed = "";
         try {
             for (int i = 0; i < filenames.length; i++) {
                 raw += filenames[i];
-                if (!ui.getmimsAction().isDropped(i)) {
+                if (!ui.getMimsAction().isDropped(i)) {
                     trimmed += filenames[i] + ";";
                 }
             }
