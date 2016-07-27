@@ -66,7 +66,8 @@ public class Nrrd_Writer {
             return null;
         }
 
-        // Get FileInfo for each image although only the one is rfeally needed for the header.
+        // Get FileInfo for each image although only the one is really needed for the header.
+        int numMasses = op.getNMasses();
         FileInfo[] fi = new FileInfo[op.getNMasses()];
         for (int i = 0; i < fi.length; i++) {
             fi[i] = imp[i].getFileInfo();
