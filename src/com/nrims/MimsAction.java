@@ -20,6 +20,7 @@ public class MimsAction implements Cloneable {
     private ArrayList<String> imageList;
     double zeros[] = {0.0, 0.0};
     private boolean isCompressed = false;
+    private boolean isInterleaved = false;
     private boolean isTracked = false;
     private int blockSize = 1;
 
@@ -398,6 +399,24 @@ public class MimsAction implements Cloneable {
      */
     public void setIsCompressed(boolean compressed) {
         isCompressed = compressed;
+    }
+    
+    /**
+     * Set to <code>true</code> if images have been interleaved.
+     *
+     * @param interleaved <code>true</code> if interleaving has occurred, otherwise <code>false</code>.
+     */
+    public void setIsInterleaved(boolean interleaved) {
+        isInterleaved = interleaved;
+    }
+    
+    /**
+     * Returns <code>true</code> if images have been interleaved/code>.
+     *
+     * @return boolean
+     */
+    public boolean getIsInterleaved() {
+        return isInterleaved;
     }
 
     /**
