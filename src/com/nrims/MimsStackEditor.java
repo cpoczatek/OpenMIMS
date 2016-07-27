@@ -1,6 +1,10 @@
 package com.nrims;
 
 import com.nrims.data.Opener;
+import com.nrims.data.ImageDataUtilities;
+import com.nrims.logging.OMLogger;
+import javafx.util.Pair;
+
 import ij.*;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
@@ -14,14 +18,24 @@ import ij.process.StackProcessor;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.util.Pair;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -41,7 +55,7 @@ import javax.swing.JLabel;
  * @author zkaufman
  */
 public class MimsStackEditor extends javax.swing.JPanel {
-
+    private final static Logger OMLOGGER = OMLogger.getOMLogger(NRIMS_Plugin.class.getName());
     public static final long serialVersionUID = 1;
     public static final int OK = 2;
     public static final int CANCEL = 3;
@@ -904,9 +918,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
         }
 
         // Add log entry.
-        ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
+        ui.getMimsLog().Log("New size: " + images[0].getNSlices() + " planes");
 
-        // Clean up ersidual images.
+        // Clean up residual images.
         for (int i = 0; i < tempimage.length; i++) {
             if (tempimage[i] != null) {
                 tempimage[i].setAllowClose(true);
@@ -1042,7 +1056,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
             ui.mimsAction.setShiftY(plane, yval);
         }
         ui.mimsAction.setIsTracked(false);
-        ui.getmimsLog().Log("Untracked.");
+        ui.getMimsLog().Log("Untracked.");
     }
 
     /**
@@ -1050,13 +1064,13 @@ public class MimsStackEditor extends javax.swing.JPanel {
      */
     public void uncompressPlanes() {
 
-        if (!ui.getmimsAction().getIsCompressed()) {
+        if (!ui.getMimsAction().getIsCompressed()) {
             return;
         }
 
-        ui.getmimsAction().setIsCompressed(false);
+        ui.getMimsAction().setIsCompressed(false);
 
-        MimsAction ma = ui.getmimsAction();
+        MimsAction ma = ui.getMimsAction();
         int nPlanes = ma.getSizeMinusNumberDropped();
 
         for (int i = 0; i < numberMasses; i++) {
@@ -1113,7 +1127,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
         // Set up the stacks.
         int size = images[0].getNSlices();
-        ImageStack[] imageStack = new ImageStack[nmasses];
+        ImageStack[] imageStack = new ImageStack[nmasses];   
         for (int mindex = 0; mindex < nmasses; mindex++) {
             ImageStack iss = new ImageStack(width, height);
             imageStack[mindex] = iss;
@@ -1121,8 +1135,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
         // Determine if we are going to exceed the 16bit limit.
         int idx = 0;
-        int size_i = (size + blockSize - 1) / blockSize;
-        MimsPlus[][] cp = new MimsPlus[nmasses][size_i];
+        int size_i = (size + blockSize - 1) / blockSize;  // This is number of blocks, not slices/block
+        MimsPlus[][] mp = new MimsPlus[nmasses][size_i];
         for (int i = 1; i <= size; i = i + blockSize) {
 
             // Create a sum list of individual images to be in the block.
@@ -1136,25 +1150,25 @@ public class MimsStackEditor extends javax.swing.JPanel {
             // Generate the sum image for the block.
             for (int mindex = 0; mindex < nmasses; mindex++) {
                 SumProps sumProps = new SumProps(images[mindex].getMassIndex());
-                cp[mindex][idx] = new MimsPlus(ui, sumProps, sumlist);
-                cp[mindex][idx].setTitle(sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1));
+                mp[mindex][idx] = new MimsPlus(ui, sumProps, sumlist);
+                mp[mindex][idx].setTitle(sumlist.get(0) + " - " + sumlist.get(sumlist.size() - 1));
 
                 // Check for bit size.
-                double m = cp[mindex][idx].getProcessor().getMax();
+                double m = mp[mindex][idx].getProcessor().getMax();
                 if (m > Short.MAX_VALUE - 1) {
                     is16Bit = false;
                 }
             }
             idx++;
         }
-
-        for (int i = 0; i < cp[0].length; i++) {
+        int info = mp[0].length;  // number of compressed frames
+        for (int i = 0; i < mp[0].length; i++) {
             for (int mindex = 0; mindex < nmasses; mindex++) {
 
                 // Build up the stacks.
                 ImageProcessor ip = null;
                 if (is16Bit) {
-                    float[] floatArray = (float[]) cp[mindex][i].getProcessor().getPixels();
+                    float[] floatArray = (float[]) mp[mindex][i].getProcessor().getPixels();
                     int len = floatArray.length;
                     short[] shortArray = new short[len];
                     for (int j = 0; j < len; j++) {
@@ -1164,9 +1178,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
                     ip.setPixels(shortArray);
                 } else {
                     ip = new FloatProcessor(width, height);
-                    ip.setPixels(cp[mindex][i].getProcessor().getPixels());
+                    ip.setPixels(mp[mindex][i].getProcessor().getPixels());
                 }
-                imageStack[mindex].addSlice(cp[mindex][i].getTitle(), ip);
+                imageStack[mindex].addSlice(mp[mindex][i].getTitle(), ip);
             }
         }
 
@@ -1186,7 +1200,219 @@ public class MimsStackEditor extends javax.swing.JPanel {
         }
         return true;
     }
+    
+    /**
+     * Interleaves the masses.  Multiple series get converted to a single series, and for masses present in multiple 
+     * series have their planes added together.   The total number of planes is the same for all image stacks,
+     * but images present in one series but not in another have planes of zeros added to compensate.
+     *
+     * @return number of interleaved masses
+     */
+    public int interleave(int blockSize) {
 
+        ui.setUpdating(true);
+        int numMasses = image.getNMasses();
+        String[] massNames = image.getMassNames();
+ 
+        // Create a set of the masses, with no duplicates, then sort numerically, ascending
+        SortedSet<String> massesSet = new TreeSet<String>(new Comparator<String>() {
+            public int compare(String a, String b) {
+                return Float.valueOf(a).compareTo(Float.valueOf(b));
+            }
+        });
+
+        for (String name : massNames) {           
+            massesSet.add(name);
+        }
+        
+        // down below, need an array of the mass names instead of an ArrayList
+        String[] massNamesArray = new String[massesSet.size()];
+        Iterator mnIter = massesSet.iterator();
+        int index = 0;
+        while (mnIter.hasNext()) {
+            String name = (String)mnIter.next();
+            massNamesArray[index] = name;
+            index++;
+        }
+        
+        // Find number of series
+        int seriesSize = ImageDataUtilities.getSeriesSize(image);
+        int numSeries = numMasses/seriesSize;
+
+        int[] numOccurences = new int[massesSet.size()];   
+        int[][] pos = new int[massesSet.size()][numSeries];
+        
+        // Create an array containing the number of occurrences of each unique mass
+        Iterator iter = massesSet.iterator();
+        index = 0;
+        while (iter.hasNext()) {
+            //for each unique mass, how many times does it occur in the list of masses
+            String mass = (String)iter.next();
+            int count = 0;
+            int massNamesCount = 0;
+            for (String aMass : massNames) { 
+                if (aMass.compareTo(mass) == 0) {
+                    pos[index][count] = massNamesCount;
+                    count++;  
+                }
+                massNamesCount++;
+            }        
+            numOccurences[index] = count;
+            index++;
+        }
+          
+        //String[] massSymbols = image.getMassSymbols();   // e.g. 12C14N     May not need these.
+        
+        // Find unique masses.
+        String[] unique = new HashSet<String>(Arrays.asList(massNames)).toArray(new String[0]);
+        // sort by size ascending
+        Arrays.sort(unique, new FloatComparator());  // already have this in massesSet
+        int numUniqueMasses = unique.length;        
+        
+        boolean is16Bit = true;
+        int width = images[0].getWidth();
+        int height = images[0].getHeight();   
+
+        // Set up the stacks.
+        int size = images[0].getNSlices();  // This is number of blocks, not slices/block
+        // For uncompressed stacks, number of blocks is the same as number of slices.
+        ImageStack[] interleavedStacks = new ImageStack[numUniqueMasses];  // ImageStack is an array of imageJ objects
+        for (int mindex = 0; mindex < numUniqueMasses; mindex++) {
+            ImageStack iss = new ImageStack(width, height);
+            interleavedStacks[mindex] = iss;
+        }
+          
+        int idx = 0;
+        int numSlices = (size + blockSize - 1) / blockSize;   // number of planes or slices
+        int numInterleavedSlices = numSeries * numSlices;
+        int numSlicesToBeAdded = numInterleavedSlices - numSlices;
+        MimsPlus[][] outputMimsPlus = new MimsPlus[numUniqueMasses][numInterleavedSlices];      
+ 
+        // Iterate through the massesAndPositions object.  For each mass, retrieve the mass and the positions
+        // in the images array where stack of that mass occurr. For each stack of that mass, add slices
+        // (or zero padding).  
+        iter = massesSet.iterator();  
+        int massNumber = 0;                       
+        while (iter.hasNext()) {  
+            ImageStack[] sourceStackList = new ImageStack[numSeries];
+            String mass = (String)iter.next();
+            //OMLOGGER.info("mass number " + massNumber + "    " + mass);
+            int[] positions = pos[massNumber];   // Places in images array where a stack of this mass can be found
+            for (int i=0; i< positions.length; i++) {
+                if ((i!=0) && (positions[i] == 0)) {
+                    //sourceStackList[i] = images[positions[0]].getImageStack();  // leave it null
+                    int iii = 1;  // placeholder
+                } else {
+                    sourceStackList[i] = images[positions[i]].getImageStack();
+                }              
+            }
+
+            // interleave stack in sourceStackList and put into interleavedStacks
+            // you can add slices to an imageStack like this:
+            //          imageStack[mindex].addSlice(mp[mindex][i].getTitle(), ip);
+            //  So slices are stored in ImageProcessor objects.
+            int slicePosition = 0;
+            for (int i=0; i<numSlices; i++) {
+                //OMLOGGER.info("     slice number " + i);
+                boolean zeroPad;
+
+                for (int j=0; j<positions.length; j++) {
+                    //OMLOGGER.info("         stack number " + j);
+                    if ((j!=0) && (positions[j] == 0)) { 
+                        zeroPad = true;
+                    } else {
+                        zeroPad = false;
+                    }
+                    if (zeroPad) {
+                        // add zero padding slice
+                        ImageProcessor ip = null;
+                        if (is16Bit) {
+                            int len = 0;
+                            ImageProcessor proc = sourceStackList[0].getProcessor(i+1);
+                            proc.getPixels();
+                            float[] floatArray;
+                            short[] shortArray;
+                            int[] intArray;
+                            if (proc.getPixels() instanceof float[]) {  
+                                floatArray = (float[]) proc.getPixels();
+                                len = floatArray.length;
+                            } else if (proc.getPixels() instanceof short[]) {
+                                shortArray = (short[]) proc.getPixels();
+                                len = shortArray.length;
+                            } else if (proc.getPixels() instanceof int[]) {
+                                intArray = (int[]) proc.getPixels();
+                                len = intArray.length;
+                            }
+                            shortArray = new short[len];
+                            for (int jj = 0; jj < len; jj++) {
+                                shortArray[jj] = 0;
+                            }
+                            ip = new ShortProcessor(width, height);
+                            ip.setPixels(shortArray);
+                        } else {
+                            ip = new FloatProcessor(width, height);
+                            ip.setPixels(sourceStackList[0].getProcessor(1).getPixels());
+                        }
+                        interleavedStacks[massNumber].addSlice(images[positions[0]].getTitle(), ip);
+                    } else {
+                        ImageProcessor processor = sourceStackList[j].getProcessor(i+1);  // 1-based for some reason
+                        // insert it
+                        String sliceLabel = sourceStackList[j].getSliceLabel(i+1);
+                        // addSlice will add to the beginning of the stack if last param is zero!
+                        //OMLOGGER.info("         adding slice at position " + slicePosition);
+                        interleavedStacks[massNumber].addSlice(sliceLabel, processor, slicePosition);                         
+                    }
+                    slicePosition++;
+                    //OMLOGGER.info("         index = " + index);
+                }
+            } 
+            //OMLOGGER.info("         ***** setting stack = " + massNumber);
+            //OMLOGGER.info("         ***** stack has  = " + sourceStackList[0].getSize() + " slices");
+            massNumber++;  
+        }
+        
+        // Create an array of the titles
+        String[] titles = new String[numUniqueMasses];
+        for (massNumber=0; massNumber<numUniqueMasses; massNumber++) {
+            int titlePos = pos[massNumber][0];
+            String title = images[titlePos].getTitle();
+            titles[massNumber] = title;
+            images[massNumber].setLocalTitle(title);  // may not be necessary
+        }              
+        // Copy interleaved stacks to the images
+        for (massNumber=0; massNumber<numUniqueMasses; massNumber++) {      
+            images[massNumber].setStack(null, interleavedStacks[massNumber]);       
+        }     
+        for (massNumber=0; massNumber<numUniqueMasses; massNumber++) {  
+            images[massNumber].setTitle(titles[massNumber]);   // sets title in ImagePlus, but not in MimsPlus
+            images[massNumber].updateImage();           
+        }   
+        int numImages = images.length;
+        for (int i=massNumber; i<numImages; i++) {         
+            if (images[i] == null) {
+                break;
+            } else {
+                //OMLOGGER.info("         ---- closing image = " + i);
+                images[i].setAllowClose(true);
+                images[i].close();
+                if (i >= numUniqueMasses) {
+                    images[i] = null;  // Remove unused images
+                }
+            }
+        }      
+        ui.mimsAction.setIsInterleaved(true);         
+        
+        Opener opener = ui.getOpener();  // Opener is an NrrdReader instance
+        opener.setNImages(numInterleavedSlices);
+        opener.setNMasses(numUniqueMasses);
+        opener.setMassNames(massNamesArray);   // Set proper mass names in opener 
+        
+        ui.setUpdating(false);
+        return numUniqueMasses;
+    }  // end interleave
+
+    
+    
     /**
      * Resets the spinners to reflect the values of the current plane. To be used when performing operations that affect
      * the currently displayed plane (for example, uncompress).
@@ -1207,18 +1433,20 @@ public class MimsStackEditor extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the label displaying the "true index" of of plane currently displayed. To be used when performing operations
+     * Sets the label displaying the "true index" of plane currently displayed. To be used when performing operations
      * that affect the currently displayed plane (for example, uncompress).
      */
     protected void resetTrueIndexLabel() {
 
         if (this.images != null && (!holdupdate) && (images[0] != null)) {
             String label = "True index: ";
-            int p = ui.mimsAction.trueIndex(this.images[0].getCurrentSlice());
-
-            label = label + java.lang.Integer.toString(p);
-            p = this.images[0].getCurrentSlice();
-            label = label + "   Display index: " + java.lang.Integer.toString(p);
+            int currentSlice = this.images[0].getCurrentSlice();
+            //System.out.println("******  current slice is " + currentSlice);
+            int trueIndex = ui.mimsAction.trueIndex(currentSlice);  // array index out of bounds
+            //System.out.println("******  trueIndex is " + trueIndex);
+            label = label + java.lang.Integer.toString(trueIndex);
+           // p = this.images[0].getCurrentSlice();
+            label = label + "   Display index: " + java.lang.Integer.toString(currentSlice);
 
             this.trueIndexLabel.setText(label);
         }
@@ -1254,6 +1482,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
         compressTextField = new javax.swing.JTextField();
         sumTextField = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
+        interleaveButton = new javax.swing.JButton();
 
         concatButton.setText("Concatenate");
         concatButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1448,11 +1677,22 @@ public class MimsStackEditor extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
+        interleaveButton.setText("Interleave");
+        interleaveButton.setToolTipText("<html>Combines planes from image stacks that have the same mass, and creates<br> separate image stacks when mass is changed during electrostatic peak switching.<\\html>");
+        interleaveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                interleaveButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 713, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(163, 163, 163)
+                .addComponent(interleaveButton)
+                .addContainerGap(445, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
@@ -1461,7 +1701,10 @@ public class MimsStackEditor extends javax.swing.JPanel {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 443, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(398, Short.MAX_VALUE)
+                .addComponent(interleaveButton)
+                .addGap(16, 16, 16))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
@@ -1528,7 +1771,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
         if (liststr != null && !liststr.equals("")) {
             checklist = parseList(liststr, 1, images[0].getStackSize());
         } else {
-            MimsTomography tomo = ui.getmimsTomography();
+            MimsTomography tomo = ui.getMimsTomography();
             //need to check whether both MimTomography and MimsJTable are initialized, else create a new table
             if (tomo != null) {
                 MimsJTable tomo_table = tomo.getTable();
@@ -1552,9 +1795,9 @@ public class MimsStackEditor extends javax.swing.JPanel {
         if (checklist != null) {
             if (!checklist.isEmpty()) {
                 liststr = removeSliceList(checklist);
-                ui.getmimsLog().Log("Deleted list: " + liststr);
-                ui.getmimsLog().Log("New size: " + images[0].getNSlices() + " planes");
-                MimsTomography tomo = ui.getmimsTomography();
+                ui.getMimsLog().Log("Deleted list: " + liststr);
+                ui.getMimsLog().Log("New size: " + images[0].getNSlices() + " planes");
+                MimsTomography tomo = ui.getMimsTomography();
                 if (tomo != null) {
                     MimsJTable tomo_table = tomo.getTable();
                     if (tomo_table != null) {
@@ -1750,7 +1993,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
         // Get the block size from the text box.
         String comptext = compressTextField.getText();
         if (comptext.trim().length() == 0) {
-            comptext = Integer.toString(ui.getmimsAction().getSizeMinusNumberDropped());
+            comptext = Integer.toString(ui.getMimsAction().getSizeMinusNumberDropped());
         }
         int blockSize = 1;
         try {
@@ -1768,11 +2011,11 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
         // Do the compression.
         boolean done = compressPlanes(blockSize);
-        ui.getmimsAction().setIsCompressed(done);
+        ui.getMimsAction().setIsCompressed(done);
 
         // Do some autocontrasting stuff.
         if (done) {
-            ui.getmimsAction().setBlockSize(blockSize);
+            ui.getMimsAction().setBlockSize(blockSize);
             deleteListButton.setEnabled(false);
             deleteListTextField.setEnabled(false);
             reinsertButton.setEnabled(false);
@@ -1781,12 +2024,13 @@ public class MimsStackEditor extends javax.swing.JPanel {
             for (int mindex = 0; mindex < nmasses; mindex++) {
                 images[mindex].setSlice(1);
                 images[mindex].updateAndDraw();
+                //images[massNumber].updateAndRepaintWindow();
                 ui.autoContrastImage(images[mindex]);
             }
         }
 
         compressTextField.setText("");
-        ui.getmimsLog().Log("Compressed with blocksize: " + blockSize);
+        ui.getMimsLog().Log("Compressed with blocksize: " + blockSize);
     }//GEN-LAST:event_compressButtonActionPerformed
 
     /**
@@ -1795,6 +2039,118 @@ public class MimsStackEditor extends javax.swing.JPanel {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         uncompressPlanes();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void interleaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_interleaveButtonActionPerformed
+ 
+        // Check to see if this file has already been interleaved
+        Opener opener1 = ui.getOpener();
+        File inputFile = opener1.getImageFile();
+        String filename = inputFile.getName();
+        if (filename.contains("interleaved")) {
+            int n = JOptionPane.showConfirmDialog(
+                this,
+                "Based on the filename, this file may have already been interleaved.\nTry to interleave anyway? \n",
+                "Warning",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+            if (n == JOptionPane.NO_OPTION) {
+                return;
+            } 
+        }
+        
+        // Do the interleaving.
+        MimsAction mimsAction = ui.getMimsAction();
+
+        int blockSize = mimsAction.getBlockSize();
+        int numInterleavedMasses = this.interleave(blockSize);
+        int numInterleavedSlices = images[0].getNSlices();
+
+        // Do some autocontrasting stuff.
+        if (numInterleavedMasses > 0) {
+            mimsAction.setIsInterleaved(true);
+            mimsAction.setBlockSize(blockSize);
+            deleteListButton.setEnabled(false);
+            deleteListTextField.setEnabled(false);
+            reinsertButton.setEnabled(false);
+            reinsertListTextField.setEnabled(false);
+            //int nmasses = image.getNMasses();
+            for (int massIndex = 0; massIndex < numInterleavedMasses; massIndex++) {
+                images[massIndex].setSlice(1);
+                images[massIndex].updateAndDraw();
+                ui.autoContrastImage(images[massIndex]);
+            }
+        }  else {
+            mimsAction.setIsInterleaved(false);
+        }
+           
+        Opener opener = ui.getOpener();
+        File oldFile = opener.getImageFile();     
+        String oldFilePath = oldFile.getAbsolutePath();
+        String newFilePath;
+        if (oldFilePath.contains("interleaved")) {
+            newFilePath = oldFilePath;
+        } else {
+            newFilePath = oldFilePath.replaceFirst(".nrrd", "-interleaved.nrrd");
+        }
+        
+        File fileToSave = new File(newFilePath);
+        
+        int n = JOptionPane.showConfirmDialog(
+                this,
+                "Do you want to save this interleaved data?\nIf so, it will be saved in a file called \n" + fileToSave + "\n",
+                "Warning",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (n == JOptionPane.NO_OPTION) {
+            return;
+        }
+        
+        if (fileToSave.exists()) {
+            n = JOptionPane.showConfirmDialog(
+                this,
+                "This file already exists.  Overwrite the file? \n",
+                "Warning",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+            if (n == JOptionPane.NO_OPTION) {
+                return;
+            }
+            if (n == JOptionPane.YES_OPTION) {
+                if (!newFilePath.contentEquals(oldFilePath)) {
+                    fileToSave.delete();
+                }
+            }
+        }
+       
+        try {
+            if (newFilePath.contentEquals(oldFilePath)) {
+                // copy to a temp file, delete old file, then copy temp to old path
+                String tempFilePath = oldFilePath.replaceFirst(".nrrd", ".tmp");
+                File tempFile = new File(tempFilePath);
+                Files.copy(oldFile.toPath(), tempFile.toPath());
+                oldFile.delete();
+                Files.copy(tempFile.toPath(), fileToSave.toPath());
+                tempFile.delete();
+            }
+            Files.copy(oldFile.toPath(), fileToSave.toPath());
+        } catch (IOException ioe) {
+            JOptionPane.showMessageDialog(this, ioe.getMessage(), "Error while attempting to create interleaved file.", JOptionPane.ERROR_MESSAGE);
+            ioe.printStackTrace();
+        }
+
+        ui.updateAllImages();    
+                  
+        ui.saveSession(fileToSave.getAbsolutePath(), false);  
+        
+        //interleaveButton.setSelected(false);
+        interleaveButton.setFocusable(false);
+           
+        ui.getMimsLog().Log("Interleaving completed, resulting blocksize (number of planes) is " + numInterleavedSlices);
+    }//GEN-LAST:event_interleaveButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton autoTrackButton;
     private javax.swing.JButton compressButton;
@@ -1803,6 +2159,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
     private javax.swing.JButton deleteListButton;
     private javax.swing.JTextField deleteListTextField;
     private javax.swing.JButton displayActionButton;
+    private javax.swing.JButton interleaveButton;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -2193,4 +2550,15 @@ public class MimsStackEditor extends javax.swing.JPanel {
             return null;
         }
     }
+    
+    private class FloatComparator implements Comparator {
+        public int compare(Object o1, Object o2) {
+
+            float v1 = Float.valueOf(o1.toString());
+            float v2 = Float.valueOf(o2.toString());
+            return Float.compare(v1, v2);
+            
+        }
+    }
+
 }
