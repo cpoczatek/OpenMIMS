@@ -878,6 +878,10 @@ public class Mims_Reader implements Opener {
     public String[] getMassNames() {
         return massNames;
     }
+    
+    public void setMassNames(String[] names) {
+        
+    }
 
     /**
      * @param index image mass index.
