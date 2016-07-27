@@ -103,6 +103,8 @@ public interface Opener {
     public String getPosition();
 
     public String[] getMassNames();
+    
+    public void setMassNames(String[] names);
 
     public String[] getMassSymbols();
 
