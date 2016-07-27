@@ -215,7 +215,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         // Setup sumlist.
         if (sumlist == null) {
             sumlist = new ArrayList<Integer>();
-            for (int i = 1; i <= ui.getmimsAction().getSize(); i++) {
+            for (int i = 1; i <= ui.getMimsAction().getSize(); i++) {
                 sumlist.add(i);
             }
         }
@@ -311,6 +311,17 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         setupHSIImage(props);
         setupDragDrop();
     }
+    
+     /**
+     * Sets the title.  This is not the same title as the superclass keeps.
+     *
+     * @param aTitle
+     */
+    public void setLocalTitle(String aTitle) {
+        this.title = aTitle;
+    }
+    
+    
 
     public void setupDragDrop() {
         mimsUno = UnoPlugin.getInstance();
@@ -745,7 +756,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     /**
      * This method is required for those instances where the header was incorrect or the file did not contain all of the
      * data. For example, lets say the file should contain 40 planes (for 4 masses) but the last plane of the last two
-     * masses is missing. The plugin rquires that all masses contain the same number of planes, so in this case we want
+     * masses is missing. The plugin requires that all masses contain the same number of planes, so in this case we want
      * to append two blank images to the end of the last two masses, thereby ensuring all masses have the same number of
      * planes.
      */
@@ -1111,10 +1122,10 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
         ui.setActiveMimsPlus(this);
         ui.getCBControl().setWindowlistCombobox(getTitle());
         ui.getCBControl().setLUT(lut);
-        if (ui.getmimsStackEditing() == null) {
+        if (ui.getMimsStackEditing() == null) {
             return;
         }
-        MimsStackEditor.AutoTrackManager am = ui.getmimsStackEditing().atManager;
+        MimsStackEditor.AutoTrackManager am = ui.getMimsStackEditing().atManager;
         if (am != null) {
             am.updateImage(this);
         }
@@ -1274,7 +1285,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             for (int i = 0; i < pix.length; i++) {
                 dpix[i] = (new Float(pix[i])).doubleValue();
             }
-            ui.getmimsTomography().updateHistogram(dpix, getShortTitle(), true);
+            ui.getMimsTomography().updateHistogram(dpix, getShortTitle(), true);
 
             //TODO: this should be somewhere else
             if (this.nType == HSI_IMAGE || this.nType == RATIO_IMAGE) {
@@ -1352,7 +1363,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                     int current = getCurrentSlice() + 1;
                     int total = getNSlices();
 
-                    ui.getmimsStackEditing().translateStack(deltaX, deltaY, current, total);
+                    ui.getMimsStackEditing().translateStack(deltaX, deltaY, current, total);
                 }
 
                 switch (Toolbar.getToolId()) {
@@ -1713,8 +1724,8 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
             if (!IJ.getToolName().equals("Drag To Writer tool")) {
                 if (IJ.getToolName().equals("OpenMIMS tool") && (this.nType == MimsPlus.MASS_IMAGE)) {
                     //Get spinners
-                    javax.swing.JSpinner xSpin = ui.getmimsStackEditing().getTranslateX();
-                    javax.swing.JSpinner ySpin = ui.getmimsStackEditing().getTranslateY();
+                    javax.swing.JSpinner xSpin = ui.getMimsStackEditing().getTranslateX();
+                    javax.swing.JSpinner ySpin = ui.getMimsStackEditing().getTranslateY();
 
                     //Get mouse position
                     int x = (int) e.getPoint().getX();
@@ -1931,7 +1942,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
                 roiPix = this.getRoiPixels();
             }
             if (roiPix != null) {
-                ui.getmimsTomography().updateHistogram(roiPix, label, force);
+                ui.getMimsTomography().updateHistogram(roiPix, label, force);
             }
         }
 
@@ -2057,6 +2068,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
     private void stateChanged(int slice, int attr) {
         bStateChanging = true;
         MimsPlusEvent event = new MimsPlusEvent(this, slice, attr);
+        //System.out.println("in stateChanged, slice is " + slice);
         Object[] listeners = fStateListeners.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == MimsUpdateListener.class) {
@@ -2176,7 +2188,7 @@ public class MimsPlus extends ImagePlus implements WindowListener, MouseListener
 
                 ui.imageClosed(this);   // calls ui.imageClosed()
                 ui.getCBControl().removeWindowfromList(this);
-                ui.getmimsTomography().resetImageNamesList();
+                ui.getMimsTomography().resetImageNamesList();
                 super.close();
             } else {
                 this.hide();
