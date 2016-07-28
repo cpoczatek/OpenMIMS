@@ -2111,6 +2111,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (n == JOptionPane.NO_OPTION) {
+            interleaveButton.setFocusable(false);
             return;
         }
         
@@ -2123,6 +2124,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
                 JOptionPane.QUESTION_MESSAGE);
 
             if (n == JOptionPane.NO_OPTION) {
+                interleaveButton.setFocusable(false);
                 return;
             }
             if (n == JOptionPane.YES_OPTION) {
