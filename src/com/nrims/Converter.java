@@ -1250,7 +1250,7 @@ public class Converter extends SwingWorker<Void, Void> {
 
         //DJ just for debugging:
         //System.out.println(htmlTables);
-        if (com.nrims.managers.convertManager.getInstance() != null) {
+        if (com.nrims.managers.ConvertManager.getInstance() != null) {
 
             StringBuilder builder = new StringBuilder(this.generateHTML());
 
