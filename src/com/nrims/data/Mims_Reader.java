@@ -23,7 +23,7 @@ public class Mims_Reader implements Opener {
 
     private File file = null;
     private RandomAccessEndianFile in;
-    private MimsFileInfo fi;
+    private MimsFileInfo fileInfo;
     private int verbose = 0;
     private int nMasses = 0;
     private HeaderImage ihdr;
@@ -98,10 +98,28 @@ public class Mims_Reader implements Opener {
 
         // Read the header.
         try {
-            fi = getHeaderInfo();
+            fileInfo = getHeaderInfo();
         } catch (IOException io) {
             io.printStackTrace();
         }
+        
+              
+        if (fileInfo.massNames == null) {
+            fileInfo.massNames = new String[fileInfo.nMasses];
+            for (int i = 0; i < fileInfo.nMasses; i++) {
+                //fileInfo.massNames[i] = Integer.toString(i);
+                fileInfo.massNames[i] = this.massNames[i];
+            }
+        } else if (fileInfo.nMasses != fileInfo.massNames.length) {
+            System.out.print("Error! Number of masses (" + fileInfo.nMasses + ") does not equal "
+                    + "number of mass names referenced: " + fileInfo.massNames);
+            System.out.println();
+            return;
+        }
+                
+                
+                
+                
 
     }
 
@@ -129,10 +147,10 @@ public class Mims_Reader implements Opener {
      * @throws IndexOutOfBoundsException if the given image mass index is invalid.
      */
     private void checkMassIndex(int index) {
-        if (fi.nMasses <= 0) {
+        if (fileInfo.nMasses <= 0) {
             throw new IndexOutOfBoundsException("No images loaded, so mass index <" + index + "> is invalid.");
-        } else if (index < 0 || index >= fi.nMasses) {
-            throw new IndexOutOfBoundsException("Given mass index <" + index + "> is out of range of the total number of masses <" + fi.nMasses + ">.");
+        } else if (index < 0 || index >= fileInfo.nMasses) {
+            throw new IndexOutOfBoundsException("Given mass index <" + index + "> is out of range of the total number of masses <" + fileInfo.nMasses + ">.");
         }
     }
 
@@ -144,10 +162,10 @@ public class Mims_Reader implements Opener {
      * @throws IndexOutOfBoundsException if the given image index is invalid.
      */
     private void checkImageIndex(int index) {
-        if (fi.nImages <= 0) {
+        if (fileInfo.nImages <= 0) {
             throw new IndexOutOfBoundsException("No images loaded, so image index <" + index + "> is invalid.");
-        } else if (index < 0 || index >= fi.nImages) {
-            throw new IndexOutOfBoundsException("Given image index <" + index + "> is out of range of the total number of imags <" + fi.nImages + ">.");
+        } else if (index < 0 || index >= fileInfo.nImages) {
+            throw new IndexOutOfBoundsException("Given image index <" + index + "> is out of range of the total number of imags <" + fileInfo.nImages + ">.");
         }
     }
 
@@ -163,7 +181,7 @@ public class Mims_Reader implements Opener {
         checkMassIndex(index);
 
         // Set up a temporary header to read the pixels from the file.
-        MimsFileInfo fi_clone = (MimsFileInfo) fi.clone();
+        MimsFileInfo fi_clone = (MimsFileInfo) fileInfo.clone();
 
         int pixelsPerImage = fi_clone.width * fi_clone.height;
         int bytesPerMass = pixelsPerImage * bytes_per_pixel;
@@ -214,12 +232,12 @@ public class Mims_Reader implements Opener {
         if (tmp_int == MIMS_IMAGE
                 || tmp_int == MIMS_LINE_SCAN_IMAGE
                 || tmp_int == MIMS_SAMPLE_STAGE_IMAGE) {
-            fi.intelByteOrder = false;
+            fileInfo.intelByteOrder = false;
             big_endian_flag = true;
         } else if (DataUtilities.intReverseByteOrder(tmp_int) == MIMS_IMAGE
                 || DataUtilities.intReverseByteOrder(tmp_int) == MIMS_LINE_SCAN_IMAGE
                 || DataUtilities.intReverseByteOrder(tmp_int) == MIMS_SAMPLE_STAGE_IMAGE) {
-            fi.intelByteOrder = true;
+            fileInfo.intelByteOrder = true;
             big_endian_flag = false;
         }
 
@@ -590,10 +608,10 @@ public class Mims_Reader implements Opener {
     private MimsFileInfo getHeaderInfo() throws NullPointerException, IOException {
 
         // Setup file header.
-        fi = new MimsFileInfo();
-        fi.directory = file.getParent();
-        fi.fileName = file.getName();
-        fi.fileFormat = FileInfo.RAW;
+        fileInfo = new MimsFileInfo();
+        fileInfo.directory = file.getParent();
+        fileInfo.fileName = file.getName();
+        fileInfo.fileFormat = FileInfo.RAW;
         guessEndianOrder();
 
         // Set the connection to the image file.
@@ -639,17 +657,17 @@ public class Mims_Reader implements Opener {
         in.seek(offset);
         this.ihdr = new HeaderImage();
         readHeaderImage(ihdr);
-        fi.width = ihdr.w;
-        fi.height = ihdr.h;
-        fi.nImages = ihdr.z;
-        fi.nMasses = ihdr.n;
+        fileInfo.width = ihdr.w;
+        fileInfo.height = ihdr.h;
+        fileInfo.nImages = ihdr.z;
+        fileInfo.nMasses = ihdr.n;
         if (ihdr.d == 2) {
-            fi.fileType = FileInfo.GRAY16_UNSIGNED;
+            fileInfo.fileType = FileInfo.GRAY16_UNSIGNED;
         } else if (ihdr.d == 4) {
-            fi.fileType = FileInfo.GRAY32_UNSIGNED;
+            fileInfo.fileType = FileInfo.GRAY32_UNSIGNED;
         }
 
-        return fi;
+        return fileInfo;
     }
 
     /*
@@ -809,7 +827,7 @@ public class Mims_Reader implements Opener {
      * @return the number of planes in this SIMS image file.
      */
     public int getNImages() {
-        return fi.nImages;
+        return fileInfo.nImages;
     }
 
     /**
@@ -823,21 +841,21 @@ public class Mims_Reader implements Opener {
      * @return the total number of image masses.
      */
     public int getNMasses() {
-        return fi.nMasses;
+        return fileInfo.nMasses;
     }
 
     /**
      * @return the width of the images in pixels.
      */
     public int getWidth() {
-        return fi.width;
+        return fileInfo.width;
     }
 
     /**
      * @return the height of the images in pixels.
      */
     public int getHeight() {
-        return fi.height;
+        return fileInfo.height;
     }
 
     /**
@@ -876,11 +894,12 @@ public class Mims_Reader implements Opener {
     }
 
     public String[] getMassNames() {
-        return massNames;
+        //return massNames;
+        return fileInfo.massNames;
     }
     
     public void setMassNames(String[] names) {
-        
+         fileInfo.massNames = names;
     }
 
     /**
@@ -1303,7 +1322,7 @@ public class Mims_Reader implements Opener {
      * @param width
      */
     public void setWidth(int width) {
-        fi.width = width;
+        fileInfo.width = width;
     }
 
     /**
@@ -1312,7 +1331,7 @@ public class Mims_Reader implements Opener {
      * @param height
      */
     public void setHeight(int height) {
-        fi.height = height;
+        fileInfo.height = height;
     }
 
     /**
@@ -1321,7 +1340,7 @@ public class Mims_Reader implements Opener {
      * @param nmasses
      */
     public void setNMasses(int nmasses) {
-        fi.nMasses = nmasses;
+        fileInfo.nMasses = nmasses;
     }
 
     /**
@@ -1330,7 +1349,7 @@ public class Mims_Reader implements Opener {
      * @param nimages
      */
     public void setNImages(int nimages) {
-        fi.nImages = nimages;
+        fileInfo.nImages = nimages;
     }
 
     public String[] getStackPositions() {
@@ -1495,4 +1514,5 @@ public class Mims_Reader implements Opener {
 class MimsFileInfo extends FileInfo {
 
     public int nMasses;
+    public String[] massNames;
 }
