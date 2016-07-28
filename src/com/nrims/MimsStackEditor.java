@@ -1701,10 +1701,10 @@ public class MimsStackEditor extends javax.swing.JPanel {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(398, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(398, 398, 398)
                 .addComponent(interleaveButton)
-                .addGap(16, 16, 16))
+                .addContainerGap(16, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
@@ -2088,10 +2088,17 @@ public class MimsStackEditor extends javax.swing.JPanel {
         File oldFile = opener.getImageFile();     
         String oldFilePath = oldFile.getAbsolutePath();
         String newFilePath;
+        ///  Users/taylorwrt/MIMS-data/peak-switching-images/160606-c8-9850-LF127-KO-p2_1.im
+        //  /Users/taylorwrt/MIMS-data/peak-switching-interleaved.nrrdages/160606-c8-9850-LF127-KO-p2_1.im
         if (oldFilePath.contains("interleaved")) {
             newFilePath = oldFilePath;
         } else {
-            newFilePath = oldFilePath.replaceFirst(".nrrd", "-interleaved.nrrd");
+            if (oldFilePath.endsWith(".im")) {
+                // first param of replaceFirst has to be a regular expression
+                newFilePath = oldFilePath.replaceFirst("[.]im", "-interleaved.nrrd");  
+            } else {
+                newFilePath = oldFilePath.replaceFirst(".nrrd", "-interleaved.nrrd");
+            }
         }
         
         File fileToSave = new File(newFilePath);
