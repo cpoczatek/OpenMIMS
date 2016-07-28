@@ -9,7 +9,7 @@ import com.nrims.data.*;
 import com.nrims.logging.OMLogger;
 import com.nrims.managers.OpenerManager;
 import com.nrims.managers.QSAcorrectionManager;
-import com.nrims.managers.convertManager;
+import com.nrims.managers.ConvertManager;
 import com.nrims.managers.CompositeManager; //DJ: 08/07/2014
 import com.nrims.managers.FilesManager;     //DJ: 08/20/2014
 import com.nrims.unoplugin.UnoPlugin;
@@ -149,7 +149,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     public boolean same_size = false;
    
     // 10/09/2014
-    private convertManager htmlGenerator = null;
+    private ConvertManager htmlGenerator = null;
     
     // DJ: 08/20/2014
     private File previousFileOpened = null;
@@ -3921,7 +3921,7 @@ private void generateReportMenuItemActionPerformed(java.awt.event.ActionEvent ev
     }
 
 private void batch2nrrdMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_batch2nrrdMenuItemActionPerformed
-    convertManager cm = new convertManager(this, false);
+    ConvertManager cm = new ConvertManager(this, false);
     cm.setVisible(true);
     cm.selectFiles();
 }//GEN-LAST:event_batch2nrrdMenuItemActionPerformed
@@ -4187,7 +4187,7 @@ private void exportQVisMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
 
     private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
 
-        htmlGenerator = new convertManager(this, true);
+        htmlGenerator = new ConvertManager(this, true);
         htmlGenerator.setVisible(true);
         htmlGenerator.selectFiles();
         
