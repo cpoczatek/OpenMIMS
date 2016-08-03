@@ -505,7 +505,12 @@ public class MimsStackEditor extends javax.swing.JPanel {
         }
         if (options.contains("medianize")) {
             WindowManager.setTempCurrentImage(tempImage);
-            IJ.run("Median...", "radius=2");
+            int originalSliceNum = tempImage.getSlice();
+            for (int i=1; i<=tempImage.getNSlices(); i++) {
+                tempImage.setSlice(i);
+                IJ.run("Median...", "radius=2");
+            }
+            tempImage.setSlice(originalSliceNum);
         }
 
         return tempImage;
@@ -546,7 +551,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
         }
 
         if (atManager.norm.isSelected()) {
-            options += "normailize ";
+            options += "normalize ";
         }
         if (atManager.eq.isSelected()) {
             options += "equalize ";
@@ -1405,7 +1410,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
         Opener opener = ui.getOpener();  // Opener is an NrrdReader instance
         opener.setNImages(numInterleavedSlices);
         opener.setNMasses(numUniqueMasses);
-        opener.setMassNames(massNamesArray);   // Set proper mass names in opener 
+        opener.setMassNames(massNamesArray);   // Set proper mass names in opener.  
+        ui.resetViewMenu();  // Update the View menu to reflect the different mass names.
         
         ui.setUpdating(false);
         return numUniqueMasses;
@@ -2083,6 +2089,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
         }  else {
             mimsAction.setIsInterleaved(false);
         }
+        //numberMasses = numInterleavedMasses;
+        ui.enableRestoreMimsMenuItem(false);
            
         Opener opener = ui.getOpener();
         File oldFile = opener.getImageFile();     
@@ -2152,7 +2160,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
 
         ui.updateAllImages();    
                   
-        ui.saveSession(fileToSave.getAbsolutePath(), false);  
+        ui.saveSession(fileToSave.getAbsolutePath(), false); 
         
         //interleaveButton.setSelected(false);
         interleaveButton.setFocusable(false);
@@ -2350,7 +2358,7 @@ public class MimsStackEditor extends javax.swing.JPanel {
         MimsPlus currentImage;
 
         /**
-         * The AutoTrackManager contructor assembles and displays the GUI.
+         * The AutoTrackManager constructor assembles and displays the GUI.
          */
         public AutoTrackManager(MimsPlus currentImage) {
             super("Auto Track Manager");
@@ -2449,7 +2457,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
                     images[0].setSlice(startSlice);
                 }
             } else if (e.getActionCommand().equals("OK")) {
-                STATE = OK;
+                STATE = OK;              
+                includeList.clear();
 
                 ui.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 atManager.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -2470,13 +2479,15 @@ public class MimsStackEditor extends javax.swing.JPanel {
                         includeList = parseList(atManager.txtField.getText(), 1, ui.mimsAction.getSize());
                     } else {
                         for (int i = 0; i < images[0].getNSlices(); i++) {
-                            includeList.add(i, i + 1);
+                            includeList.add(i, i + 1);   
                         }
                     }
 
                     ImagePlus tempImage = getSubStack(currentImage, includeList);
+                    
+                    tempImage.setSlice(startSlice);
 
-                    // Set options.
+                    // Set options and apply them.
                     tempImage = setOptions(tempImage, options);
 
                     // Call Autotrack algorithm.
