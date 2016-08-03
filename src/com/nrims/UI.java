@@ -60,6 +60,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -914,7 +915,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      * Resets the "view" menu item to reflect the mass images in the current
      * data file.
      */
-    private void resetViewMenu() {
+    public void resetViewMenu() {
 
         if (isSilentMode()) {
             return;
@@ -1041,75 +1042,80 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
      */
     private void viewMassChanged(java.awt.event.ActionEvent evt) {
         
-        int index = 0;
+        ArrayList<Integer> indices = new ArrayList<Integer>();
         for (int i = 0; i < viewMassMenuItems.length; i++) {
             if (evt.getActionCommand().equals(viewMassMenuItems[i].getText())) {
-                index = i;
-                break;
+                indices.add(i);
             }
         }
-        
-        if (massImages[index] == null)
-            return;
+                            
+        Iterator iter = indices.iterator();
+        int index;
+        while (iter.hasNext()) {
+            index = (int)iter.next();
+            
+            if (massImages[index] == null)
+                return;
 
-        MimsPlus mp = massImages[index];
+            MimsPlus mp = massImages[index];
 
-        if (viewMassMenuItems[index].isSelected() && !mp.isVisible()) {
-          
-            if(closedWindowsList != null){
-                for(int j=0 ; j<closedWindowsList.size(); j++){
-                  if(massesEqualityCheck(closedWindowsList.get(j).getMassValue(), mp.getMassValue(), 0.49 )){
-                        int index_diff = Math.abs(closedWindowsList.get(j).getMassIdx() - mp.getMassIndex());
-                        /* DJ: 
-                         * an IF statement to handle the case where we've got two groups or more
-                         * of mass images in the same im/nrrd file.
-                         * IMPORTANT NOTE: It is working for now but it needs better/clean 
-                         * implementation.
-                         * to be re-done using the grouping detection method that was recently
-                         * implemented in UI.
-                         */
-                        if( index_diff < 3 ){ 
-                            mp.show();
-                            mp.getWindow().setLocation(
-                                    new Point(
-                                        closedWindowsList.get(j).getXWindowLocation(),
-                                        closedWindowsList.get(j).getYWindowLocation())
-                                    );
-                            //System.out.println("at opening : (" + closedWindowsList.get(j).getXWindowLocation() +", "+ closedWindowsList.get(j).getYWindowLocation() + ")");            
-                            mp.getWindow().setLocation(mp.getWindow().getX(), mp.getWindow().getY());
-                            mp.setbIgnoreClose(true);
-                            closedWindowsList.remove(j);
-                            return;
+            if (viewMassMenuItems[index].isSelected() && !mp.isVisible()) {
+
+                if(closedWindowsList != null){
+                    for(int j=0 ; j<closedWindowsList.size(); j++){
+                      if(massesEqualityCheck(closedWindowsList.get(j).getMassValue(), mp.getMassValue(), 0.49 )){
+                            int index_diff = Math.abs(closedWindowsList.get(j).getMassIdx() - mp.getMassIndex());
+                            /* DJ: 
+                             * an IF statement to handle the case where we've got two groups or more
+                             * of mass images in the same im/nrrd file.
+                             * IMPORTANT NOTE: It is working for now but it needs better/clean 
+                             * implementation.
+                             * to be re-done using the grouping detection method that was recently
+                             * implemented in UI.
+                             */
+                            if( index_diff < 3 ){ 
+                                mp.show();
+                                mp.getWindow().setLocation(
+                                        new Point(
+                                            closedWindowsList.get(j).getXWindowLocation(),
+                                            closedWindowsList.get(j).getYWindowLocation())
+                                        );
+                                //System.out.println("at opening : (" + closedWindowsList.get(j).getXWindowLocation() +", "+ closedWindowsList.get(j).getYWindowLocation() + ")");            
+                                mp.getWindow().setLocation(mp.getWindow().getX(), mp.getWindow().getY());
+                                mp.setbIgnoreClose(true);
+                                closedWindowsList.remove(j);
+                                return;
+                            }
                         }
                     }
+                    mp.show();
+                    mp.getWindow().setLocation(mp.getXYLoc());
+                    mp.setbIgnoreClose(true);
+                    return;
                 }
                 mp.show();
                 mp.getWindow().setLocation(mp.getXYLoc());
                 mp.setbIgnoreClose(true);
-                return;
+
+            } else if (!viewMassMenuItems[index].isSelected() && mp.isVisible()) {
+                Point point = new Point(mp.getWindow().getLocation());
+
+                MassProps windowMProps = new MassProps(mp.getMassIndex(), mp.getMassValue());
+                //System.out.println("at closing : (" + point.x +", "+ point.y + ")");
+                windowMProps.setXWindowLocation(point.x);
+                windowMProps.setYWindowLocation(point.y);
+
+                if(closedWindowsList == null){
+                    closedWindowsList = new ArrayList<MassProps>();
+                    closedWindowsList.add(windowMProps);
+                }
+                else{
+                   if(!closedWindowsList.contains(windowMProps))
+                       closedWindowsList.add(windowMProps);
+                }
+                mp.setXYLoc(point);
+                mp.hide();
             }
-            mp.show();
-            mp.getWindow().setLocation(mp.getXYLoc());
-            mp.setbIgnoreClose(true);
-            
-        } else if (!viewMassMenuItems[index].isSelected() && mp.isVisible()) {
-            Point point = new Point(mp.getWindow().getLocation());
-            
-            MassProps windowMProps = new MassProps(mp.getMassIndex(), mp.getMassValue());
-            //System.out.println("at closing : (" + point.x +", "+ point.y + ")");
-            windowMProps.setXWindowLocation(point.x);
-            windowMProps.setYWindowLocation(point.y);
-            
-            if(closedWindowsList == null){
-                closedWindowsList = new ArrayList<MassProps>();
-                closedWindowsList.add(windowMProps);
-            }
-            else{
-               if(!closedWindowsList.contains(windowMProps))
-                   closedWindowsList.add(windowMProps);
-            }
-            mp.setXYLoc(point);
-            mp.hide();
         }
     }
 
@@ -1628,6 +1634,10 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
 
     public void initComponentsTesting() {
         this.testingMenu.setVisible(true);
+    }
+    
+    public void enableRestoreMimsMenuItem(boolean enable) {
+        restoreMimsMenuItem.setEnabled(enable);
     }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -2598,6 +2608,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             openFileInBackground(file);
+            enableRestoreMimsMenuItem(true);
         }
     }
 
