@@ -1,5 +1,5 @@
 /*
- * convertManager.java
+ * ConvertManager.java
  *
  * Created on Jul 5, 2011, 3:54:47 PM
  */
@@ -39,7 +39,7 @@ import org.jfree.ui.ExtensionFileFilter;
  *
  * @author zkaufman
  */
-public class convertManager extends JFrame implements PropertyChangeListener {
+public class ConvertManager extends JFrame implements PropertyChangeListener {
 
     UI ui;
     static Color[] colors = {Color.BLUE, Color.GRAY, Color.RED};
@@ -65,7 +65,7 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     /**
      * Creates new form convertManager
      */
-    public convertManager(UI ui, boolean isHTML) {
+    public ConvertManager(UI ui, boolean isHTML) {
 
         initComponents();
         fileListComboBox.setForeground(Color.BLUE);
@@ -136,8 +136,8 @@ public class convertManager extends JFrame implements PropertyChangeListener {
     }
 
     // DJ : 09/19/2014 : 
-    public static convertManager getInstance() {
-        return (convertManager) instance;
+    public static ConvertManager getInstance() {
+        return (ConvertManager) instance;
     }
 
     // DJ : 09/19/2014 : 
