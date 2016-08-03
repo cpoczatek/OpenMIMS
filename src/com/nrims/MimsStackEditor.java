@@ -2111,35 +2111,70 @@ public class MimsStackEditor extends javax.swing.JPanel {
         
         File fileToSave = new File(newFilePath);
         
-        int n = JOptionPane.showConfirmDialog(
-                this,
-                "Do you want to save this interleaved data?\nIf so, it will be saved in a file called \n" + fileToSave + "\n",
-                "Warning",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-
-        if (n == JOptionPane.NO_OPTION) {
-            interleaveButton.setFocusable(false);
-            return;
-        }
+//        int n = JOptionPane.showConfirmDialog(
+//                this,
+//                "Do you want to save this interleaved data?\nIf so, it will be saved in a file called \n" + fileToSave + "\n",
+//                "Warning",
+//                JOptionPane.YES_NO_OPTION,
+//                JOptionPane.QUESTION_MESSAGE);
+//
+//        if (n == JOptionPane.NO_OPTION) {
+//            interleaveButton.setFocusable(false);
+//            return;
+//        }
         
+        String fileToSavePath = null;
         if (fileToSave.exists()) {
-            n = JOptionPane.showConfirmDialog(
+            
+            int n = JOptionPane.showConfirmDialog(
                 this,
-                "This file already exists.  Overwrite the file? \n",
+                "The file " + fileToSave  + "\nalready exists.  Overwrite the file? \n",
                 "Warning",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
             if (n == JOptionPane.NO_OPTION) {
-                interleaveButton.setFocusable(false);
-                return;
+                // add an file number before the .nrrd
+                String prefix = newFilePath.substring(0, newFilePath.lastIndexOf("."));
+                String extension = ".nrrd";
+                String format = prefix + "%02d" + extension;
+               // File f = null;
+                for (int i = 1; i < 100; i++) {
+                    fileToSave = new File(String.format(format, i));
+                    if (!fileToSave.exists()) { 
+                        break;
+                    }
+                }
+                try {
+                    fileToSavePath = fileToSave.getCanonicalPath();
+                    System.out.println(fileToSave.getCanonicalPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                JOptionPane.showMessageDialog(this,
+                    "The file will be written to a new file called \n" + fileToSavePath,
+                    "File Overwrite message",
+                    JOptionPane.PLAIN_MESSAGE);
+                
+                //interleaveButton.setFocusable(false);
+                //return;
             }
             if (n == JOptionPane.YES_OPTION) {
                 if (!newFilePath.contentEquals(oldFilePath)) {
                     fileToSave.delete();
                 }
             }
+        } else {          
+            try {
+                fileToSavePath = fileToSave.getCanonicalPath();
+                System.out.println(fileToSave.getCanonicalPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            JOptionPane.showMessageDialog(this,
+                "The file will be written to a new file called \n" + fileToSavePath,
+                "Information",
+                JOptionPane.PLAIN_MESSAGE);
         }
        
         try {
