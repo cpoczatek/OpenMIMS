@@ -2193,7 +2193,8 @@ public class MimsStackEditor extends javax.swing.JPanel {
             ioe.printStackTrace();
         }
 
-        ui.updateAllImages();    
+        ui.updateAllImages();       
+        numberMasses = numInterleavedMasses;
                   
         ui.saveSession(fileToSave.getAbsolutePath(), false); 
         
