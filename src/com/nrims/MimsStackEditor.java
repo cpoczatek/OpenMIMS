@@ -3,7 +3,6 @@ package com.nrims;
 import com.nrims.data.Opener;
 import com.nrims.data.ImageDataUtilities;
 import com.nrims.logging.OMLogger;
-import javafx.util.Pair;
 
 import ij.*;
 import ij.gui.ImageWindow;
@@ -35,7 +34,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.util.Pair;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;

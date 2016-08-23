@@ -199,8 +199,8 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
     
     //DJ: 10/20/2014 
     // to be used as a backup in case the config file for links doesn't exist or doesn't get read/parsed.
-    String DEFAULT_DOCUMENTATION_LINK = "http://nrims.partners.org/wiki/";
-    String DEFAULT_SAMPLE_DATA_LINK   = "http://nrims.partners.org/sampledata/";
+    String DEFAULT_DOCUMENTATION_LINK = "https://github.com/BWHCNI/OpenMIMS/wiki";
+    String DEFAULT_SAMPLE_DATA_LINK   = "https://github.com/BWHCNI/OpenMIMS/wiki/Sample-Data";
     
     //DJ: 10/20/2014
     String documentationLink = DEFAULT_DOCUMENTATION_LINK; // to be actualized later on while parsing the "OpenMIMSLinks.cfg"

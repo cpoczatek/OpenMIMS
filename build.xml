@@ -16,9 +16,14 @@
       <!-- This doesn't makes sense now using git.
            Add dummy file.
       <exec executable="svnversion" output="buildnum.txt" ></exec>
-      -->
+      
       <exec executable="echo" output="buildnum.txt">
         <arg line="'git'" />
+      </exec>
+      -->
+      <exec executable="bash" output="buildnum.txt">
+          <arg value="-c"/>
+          <arg line='"git describe --all --long"' />
       </exec>
       <copy file="buildnum.txt" todir="${build.classes.dir}"/>
 <!-- Added to create list of /lib jars in file    -->
