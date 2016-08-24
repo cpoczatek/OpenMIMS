@@ -1052,7 +1052,7 @@ public class UI extends PlugInJFrame implements WindowListener, MimsUpdateListen
         Iterator iter = indices.iterator();
         int index;
         while (iter.hasNext()) {
-            index = (int)iter.next();
+            index = (Integer)iter.next();
             
             if (massImages[index] == null)
                 return;
